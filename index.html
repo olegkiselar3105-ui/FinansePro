@@ -1146,8 +1146,33 @@ function parse(raw){
 
 // ---------- команды в общей строке: бюджет, лимит, цели, долги ----------
 function goalDeposit(g,a,sg){const was=g.saved;g.saved=Math.max(0,Math.round((g.saved+sg*a)*100)/100);g.log=(g.log||[]).concat({d:ymd(new Date()),a:Math.round((g.saved-was)*100)/100}).slice(-200);return Math.round(Math.abs(g.saved-was)*100)/100}
+// ---------- числа словами и склонение имён для команд (голос через бота: «пятьсот», «Ивану», «Маше») ----------
+const NWD=(()=>{const m={};[['один одна одну одного',1],['два две двух',2],['три трех',3],['четыре четырех',4],['пять пяти',5],['шесть шести',6],['семь семи',7],['восемь восьми',8],['девять девяти',9],['десять десяти',10],['одиннадцать',11],['двенадцать',12],['тринадцать',13],['четырнадцать',14],['пятнадцать',15],['шестнадцать',16],['семнадцать',17],['восемнадцать',18],['девятнадцать',19],['двадцать',20],['тридцать',30],['сорок',40],['пятьдесят',50],['шестьдесят',60],['семьдесят',70],['восемьдесят',80],['девяносто',90],['сто',100],['двести',200],['триста',300],['четыреста',400],['пятьсот',500],['шестьсот',600],['семьсот',700],['восемьсот',800],['девятьсот',900]].forEach(([ws,v])=>ws.split(' ').forEach(w=>m[w]=v));return m})();
+const NWRE=(()=>{const W=Object.keys(NWD).sort((a,b)=>b.length-a.length).join('|')+'|тысяч[а-я]*|тыщ[а-я]*|миллион[а-я]*|полторы|полтора';
+  return new RegExp('(?<![а-я])(?:'+W+')(?![а-я])(?:\\s+(?:'+W+')(?![а-я]))*','g')})();
+function numWords(s){return s.replace(NWRE,(run,off,str)=>{
+  const ws=run.split(/\s+/);if(/^(?:тысяч|тыщ|миллион)/.test(ws[0])&&/\d\s*$/.test(str.slice(0,off)))return run;
+  let cur=0,tot=0;for(const w of ws){if(w in NWD)cur+=NWD[w];else if(w==='полторы'||w==='полтора')cur+=1.5;else if(/^миллион/.test(w)){tot+=(cur||1)*1e6;cur=0}else{tot+=(cur||1)*1000;cur=0}}
+  return String(tot+cur)})}
+const NAMES_F=('мария маша наташа наталья наталия елена лена ольга оля анна аня ирина татьяна таня светлана света юлия юля екатерина катя алена оксана людмила люда валентина галина лариса виктория вика дарья даша настя анастасия ксения ксюша алина диана вера надежда надя лиза елизавета софья соня полина кристина яна тамара нина инна жанна зоя роза лидия лиля лилия аурика дана раиса марина мила рита маргарита ангелина карина алла олеся регина василиса милана вероника валя галя мама бабушка сестра жена тетя').split(' ');
+const NAMES_M=('коля вася петя ваня витя толя костя митя федя саня женя леня боря родя сеня юра дима миша саша гриша паша алеша никита илья слава жора гена тима лева вова гоша сава').split(' ');
+const NAMES=[...NAMES_F,...NAMES_M],isFem=n=>NAMES_F.includes(nomName(String(n).split(/\s+/)[0]));
+function nomName(w){w=String(w).toLowerCase().replace(/ё/g,'е');if(NAMES.includes(w))return w;
+  for(const f of NAMES){const st=f.slice(0,-1);if(w.length>st.length&&w.startsWith(st)&&w.length<=f.length+2&&/^(?:а|я|е|и|у|ю|ы|ой|ей|ою|ею|ью|ие)$/.test(w.slice(st.length)))return f}
+  if(w.length<4)return w;
+  if(/(?:и|е|а)ю$/.test(w)&&!/ию$/.test(w)||/ию$/.test(w))return w.replace(/ию$/,'ий').replace(/ею$/,'ей').replace(/аю$/,'ай');
+  if(/[бвгдзклмнпрстфхцчшщ]ю$/.test(w))return w.slice(0,-1)+'ь';
+  if(/[бвгджзклмнпрстфхцчшщ]у$/.test(w))return w.slice(0,-1);
+  if(/[бвгджзклмнпрстфхцчшщ]е$/.test(w))return w.slice(0,-1)+'а';
+  return w}
 function voiceCmds(raw){
   let t=' '+String(raw||'').toLowerCase().replace(/ё/g,'е')+' ';const msgs=[];
+  // голосом числа часто приходят словами: «одолжил Ивану пятьсот» → 500 (только в командах про долги/цели/лимиты/бюджет)
+  if(/(?<![а-я])(?:долг|должен|должна|одолжил|занял|взаймы|вернул|вернули|отдал|погасил|цел[ьию](?![а-я])|лимит|бюджет|отложил|накопи|копи(?![а-я])|пополни|внес|положи|снял|сними|потратил из)/.test(t))t=numWords(t);
+  // «создай/добавь/запиши … долг/цель/лимит/бюджет» → просто команда; «долг: Олег должен 900» → «Олег должен 900»
+  t=t.replace(/(^|\s)(?:создай|создать|добавь|добавить|запиши|записать|заведи|завести|поставь|поставить|установи|установить|сделай)\s+(?=(?:нов\S*\s+)?(?:долг|цел[ьию]|лимит|бюджет))/g,'$1')
+   .replace(/(долг\S*|цел[ьию]|лимит\S*|бюджет)\s*:/g,'$1 ')
+   .replace(/(^|\s)(?:нов\S*\s+)?долг\S*\s+(?=[а-яa-z-]+\s+(?:должен|должна)(?:\s|$))/g,'$1');
   const AMT='(\\d{1,3}(?:\\s\\d{3})+|\\d+)(?:[.,](\\d{1,2}))?\\s*(тыс\\S*|млн|миллион\\S*|т(?=\\s|$|[,;.])|к(?=\\s|$|[,;.])|k(?=\\s|$|[,;.]))?(?:\\s*(?:лей|леев|лея|mdl|мдл))?';
   const val=(m,i)=>{let v=parseFloat(m[i].replace(/\s/g,'')+(m[i+1]?'.'+m[i+1]:''));if(m[i+2])v*=/^(млн|милл)/.test(m[i+2])?1e6:1000;return v};
   const W='[а-яa-z-]+',cap=w=>w.trim()?w.trim()[0].toUpperCase()+w.trim().slice(1):'Цель';
@@ -1178,31 +1203,70 @@ function voiceCmds(raw){
   for(const n of [2,1]){const NM=Array(n).fill(W).join('\\s+');
     take(new RegExp(B+'(?:пополни\\S*\\s+цель|в\\s+цель|на\\s+цель|внес\\S*\\s+в\\s+цель|положи\\S*\\s+в\\s+цель|отложи\\S*\\s+(?:в\\s+цель|на\\s+цель|в|на))\\s+('+NM+')\\s+(?:на\\s+)?'+AMT,'g'),m=>dep(m,2,words(m[1])));
     take(new RegExp(B+'(?:отложи\\S*|положи\\S*|внес\\S*|пополни\\S*)\\s+'+AMT+'\\s+(?:в\\s+цель\\s+|на\\s+цель\\s+|в\\s+|на\\s+)('+NM+')(?![а-яa-z-])','g'),m=>dep(m,1,words(m[4])))}
+  // снять из цели: «снял из цели отпуск 1000», «взял 500 из отпуска», «потратил с цели машина 300» (расход не создаётся)
+  const wd=(m,a,ws)=>{const g=findGoal(ws);if(!g)return false;const v=val(m,a);if(!(v>0))return false;const real=goalDeposit(g,v,-1);msgs.push('Из цели «'+g.name+'»: −'+fmt(real||v));return true};
+  for(const n of [2,1]){const NM=Array(n).fill(W).join('\\s+'),WV='(?:снял\\S*|сними\\S*|взял\\S*|забрал\\S*|потратил\\S*|вынул\\S*|вытащил\\S*|списал\\S*)',FR='(?:из\\s+цели\\s+|с\\s+цели\\s+|со\\s+цели\\s+|из\\s+|с\\s+|со\\s+)';
+    take(new RegExp(B+WV+'\\s+'+FR+'('+NM+')\\s+(?:на\\s+)?'+AMT,'g'),m=>wd(m,2,words(m[1])));
+    take(new RegExp(B+WV+'\\s+'+AMT+'\\s+'+FR+'('+NM+')(?![а-яa-z-])','g'),m=>wd(m,1,words(m[4])))}
   // долги: создать — «одолжил Ивану 500» (должен вам), «занял у Ивана 500» (вы должны), «долг Иван 500»; внести — «вернул Ивану 200», «Иван вернул 200», «долг Иван 200+»
-  const DR=x=>Math.max(0,x.amount-x.paid),RB='(?:[а-яa-z-]+)';
-  const findDebt=ws=>(cfg.debts||[]).find(d=>DR(d)>0&&ws.length&&ws.every(w=>words(d.who).some(x=>stemEq(w,x))));
-  const payDebt=(m,a,ws)=>{const d=findDebt(ws);if(!d)return false;const v=val(m,a);if(!(v>0))return false;
+  const DR=x=>Math.max(0,x.amount-x.paid),RB='(?:[а-яa-z-]+)',newDebts=[],newGoals=[];
+  // dir: 'in' — вам должны, 'out' — вы должны; strict — направление обязательно (иначе берём любой долг этого человека)
+  const findDebt=(ws,dir,strict)=>{const all=(cfg.debts||[]).filter(d=>DR(d)>0&&ws.length&&ws.every(w=>words(d.who).some(x=>stemEq(w,x))));
+    return (dir&&all.find(d=>d.dir===dir))||(strict?null:all[0])||null};
+  const payDebt=(m,a,ws,dir,strict)=>{const d=findDebt(ws,dir,strict);
+    if(!d){if(strict&&ws.length&&!/^(?:мне|ему|ей|им|нам)$/.test(ws.join(' '))){const nm=cap(ws.join(' ')),o=findDebt(ws);
+      msgs.push(o?'С «'+o.who+'» долг в другую сторону: '+(o.dir==='out'?'вы должны. Если это вы вернули — скажите «вернул '+o.who+' 100»':'вам должны. Если вам вернули — скажите «'+o.who+' вернул 100»'):'Долга «'+nm+'» нет. Сначала запишите: «'+nm+(isFem(nm)?' должна':' должен')+' мне 500»');return true}return false}
+    const v=val(m,a);if(!(v>0))return false;
     const add=Math.min(v,DR(d));d.paid=Math.min(d.amount,d.paid+v);d.log=(d.log||[]).concat({d:ymd(new Date()),a:add}).slice(-200);if(DR(d)<=0&&!d.closed)d.closed=ymd(new Date());
     const lk=d.dir==='out'&&linkDebtOn()&&addLinkedExpense('debt',add,'Возврат долга: '+d.who);
     msgs.push('Долг «'+d.who+'»: '+(d.dir==='in'?'вернули ':'вы вернули ')+fmt(add)+(DR(d)<=0?' · закрыт ✓':' · осталось '+fmt(Math.round(DR(d)*100)/100))+(lk?' · расход':''));return true};
-  const nom=w=>w.length>4&&/[бвгджзклмнпрстфхцчшщ][ау]$/.test(w)?w.slice(0,-1):w;
-  const mkDebt=(name,v,dir)=>{name=name.trim().replace(/^(у|для|перед)\s+/,'');if(!name||!(v>0))return false;
-    const nm=name.split(/\s+/).map(nom).map(cap).join(' ').slice(0,40),ex=(cfg.debts||[]).find(d=>DR(d)>0&&d.dir===dir&&words(d.who).length===words(nm).length&&words(nm).every(w=>words(d.who).some(x=>stemEq(w,x))));
-    if(ex)ex.amount=Math.round((ex.amount+v)*100)/100;else cfg.debts.push({id:uid(),who:nm,dir,amount:v,paid:0,due:'',created:ymd(new Date()),log:[]});
+  const mkDebt=(name,v,dir)=>{name=name.trim().replace(/^(у|для|перед|от)\s+/,'').replace(/^долг\S*\s+/,'');if(!name||!(v>0)||/^(?:я|мы|мне|нам|меня|мной|ему|ей|им)$/.test(name)||/^(?:по|за|на|в|с|со|из|к|о|об|при|про|под|над)\s/.test(name))return false;
+    const nm=name.split(/\s+/).map(nomName).map(cap).join(' ').slice(0,40),ex=(cfg.debts||[]).find(d=>DR(d)>0&&d.dir===dir&&words(d.who).length===words(nm).length&&words(nm).every(w=>words(d.who).some(x=>stemEq(w,x))));
+    let dd=ex;if(ex)ex.amount=Math.round((ex.amount+v)*100)/100;else{dd={id:uid(),who:nm,dir,amount:v,paid:0,due:'',created:ymd(new Date()),log:[]};cfg.debts.push(dd)}
+    newDebts.push(dd);
     const lk=dir==='in'&&linkDebtOn()&&addLinkedExpense('debt',v,'Долг: выдал '+nm);
-    msgs.push((dir==='in'?'Долг: '+nm+' должен вам '+fmt(ex?ex.amount:v):'Долг: вы должны '+nm+' '+fmt(ex?ex.amount:v))+(lk?' · расход':''));return true};
-  for(const n of [2,1]){const NM=Array(n).fill(W).join('\\s+');
-    take(new RegExp(B+'(?:вернул[аи]?|отдал[аи]?|погасил[аи]?|выплатил[аи]?|вернули|отдали)\\s+(?:долг\\s+)?(?:(?:ему|ей|у)\\s+)?('+NM+')\\s+(?:на\\s+)?'+AMT,'g'),m=>payDebt(m,2,words(m[1])));
-    take(new RegExp(B+'(?:вернул[аи]?|отдал[аи]?|погасил[аи]?|выплатил[аи]?)\\s+'+AMT+'\\s+(?:долга?\\s+)?('+NM+')(?![а-яa-z-])','g'),m=>payDebt(m,1,words(m[4])));
-    take(new RegExp(B+'('+NM+')\\s+(?:вернул[аи]?|отдал[аи]?|погасил[аи]?)\\s+(?:мне\\s+)?'+AMT,'g'),m=>payDebt(m,2,words(m[1])));
+    msgs.push((dir==='in'?'Долг: '+dd.who+(isFem(dd.who)?' должна':' должен')+' вам '+fmt(dd.amount):'Долг: вы должны '+dd.who+' '+fmt(dd.amount))+(lk?' · расход':''));return true};
+  const RV='(?:вернул[аи]?|отдал[аи]?|погасил[аи]?|выплатил[аи]?|вернули|отдали)';
+  for(const n of [2,1]){const NM=Array(n).fill(W).join('\\s+'),S=n===1;
+    // «мне вернули 50 Ивана», «мне вернул Иван 100», «Иван вернул мне 100» — деньги вернули вам (долг «мне должны»)
+    take(new RegExp(B+'мне\\s+'+RV+'\\s+'+AMT+'\\s+(?:долг\\s+)?(?:от\\s+)?('+NM+')(?![а-яa-z-])','g'),m=>payDebt(m,1,words(m[4]),'in',S));
+    take(new RegExp(B+'мне\\s+'+RV+'\\s+('+NM+')\\s+'+AMT,'g'),m=>payDebt(m,2,words(m[1]),'in',S));
+    take(new RegExp(B+'('+NM+')\\s+'+RV+'\\s+мне\\s+(?:долг\\s+)?(?:на\\s+)?'+AMT,'g'),m=>payDebt(m,2,words(m[1]),'in',S));
+    // «вернул Марии 200», «вернул 200 Марии» — вы возвращаете (вы должны)
+    take(new RegExp(B+RV+'\\s+(?:долг\\s+)?(?:(?:ему|ей|у)\\s+)?('+NM+')\\s+(?:на\\s+)?'+AMT,'g'),m=>payDebt(m,2,words(m[1]),'out'));
+    take(new RegExp(B+RV+'\\s+'+AMT+'\\s+(?:долга?\\s+)?('+NM+')(?![а-яa-z-])','g'),m=>payDebt(m,1,words(m[4]),'out'));
+    take(new RegExp(B+'('+NM+')\\s+(?:вернул[аи]?|отдал[аи]?|погасил[аи]?)\\s+'+AMT,'g'),m=>payDebt(m,2,words(m[1]),'in'));
     take(new RegExp(B+'долг\\S*\\s+('+NM+')\\s+'+AMT+'\\s*\\+(?=\\s|$|[,;.])','g'),m=>payDebt(m,2,words(m[1])));
     take(new RegExp(B+'(?:занял[аи]?|одолжил[аи]?|взял[аи]?\\s+в\\s+долг|взял[аи]?)\\s+'+AMT+'\\s+у\\s+('+NM+')(?![а-яa-z-])','g'),m=>mkDebt(m[4],val(m,1),'out'));
     take(new RegExp(B+'(?:я\\s+должен|я\\s+должна|занял[аи]?\\s+у|одолжил[аи]?\\s+у|взял[аи]?\\s+(?:в\\s+долг\\s+)?у|долг\\s+перед)\\s+('+NM+')\\s+(?:на\\s+)?'+AMT,'g'),m=>mkDebt(m[1],val(m,2),'out'));
     take(new RegExp(B+'(?:одолжил[аи]?|дал[аи]?\\s+в\\s+долг|дал[аи]?\\s+взаймы)\\s+'+AMT+'\\s+('+NM+')(?![а-яa-z-])','g'),m=>mkDebt(m[4],val(m,1),'in'));
     take(new RegExp(B+'(?:одолжил[аи]?|дал[аи]?\\s+в\\s+долг|дал[аи]?\\s+взаймы)\\s+('+NM+')\\s+(?:на\\s+)?'+AMT,'g'),m=>mkDebt(m[1],val(m,2),'in'));
+    // «дал Ивану в долг 500», «дал Ивану 500 в долг»
+    take(new RegExp(B+'дал[аи]?\\s+('+NM+')\\s+(?:в\\s+долг|взаймы)\\s+'+AMT,'g'),m=>mkDebt(m[1],val(m,2),'in'));
+    take(new RegExp(B+'дал[аи]?\\s+('+NM+')\\s+'+AMT+'\\s+(?:в\\s+долг|взаймы)','g'),m=>mkDebt(m[1],val(m,2),'in'));
+    // «Игорь одолжил мне 500», «Игорь дал мне в долг 500» — вы должны
+    take(new RegExp(B+'('+NM+')\\s+(?:одолжил[аи]?|ссудил[аи]?)\\s+мне\\s+(?:на\\s+)?'+AMT,'g'),m=>mkDebt(m[1],val(m,2),'out'));
+    take(new RegExp(B+'('+NM+')\\s+дал[аи]?\\s+мне\\s+(?:в\\s+долг\\s+|взаймы\\s+)?'+AMT+'(?:\\s+(?:в\\s+долг|взаймы))?','g'),m=>mkDebt(m[1],val(m,2),'out'));
+    // «Игорь занял у меня 500», «Игорь занял 500», «Игорь взял в долг 500» — он должен вам
+    take(new RegExp(B+'('+NM+')\\s+(?:занял[аи]?|взял[аи]?)\\s+(?:у\\s+меня\\s+)?(?:в\\s+долг\\s+)?'+AMT,'g'),m=>/(?:занял|взял[аи]?\s+(?:у\s+меня|в\s+долг))/.test(m[0])?mkDebt(m[1],val(m,2),'in'):false);
     take(new RegExp(B+'(?:мне\\s+должен\\s+|мне\\s+должна\\s+)('+NM+')\\s+(?:на\\s+)?'+AMT,'g'),m=>mkDebt(m[1],val(m,2),'in'));
     take(new RegExp(B+'('+NM+')\\s+(?:должен|должна)\\s+(?:мне\\s+)?(?:на\\s+)?'+AMT,'g'),m=>mkDebt(m[1],val(m,2),'in'));
+    // «должен Ивану 500», «задолжал Ивану 500» — вы должны
+    take(new RegExp(B+'(?:должен|должна|задолжал[аи]?)\\s+('+NM+')\\s+(?:на\\s+)?'+AMT,'g'),m=>mkDebt(m[1],val(m,2),'out'));
     take(new RegExp(B+'(?:новый\\s+)?долг\\S*\\s+(?:для\\s+)?('+NM+')\\s+(?:на\\s+)?'+AMT,'g'),m=>mkDebt(m[1],val(m,2),'in'))}
+  // срок: «до 20 числа», «до 15 ноября», «до 20.11», «до декабря», «через неделю», «вернёт до …» → дата долга или цели
+  const extDue=()=>{const now=new Date();now.setHours(12,0,0,0);const td=ymd(now),V='(?:(?:вернет|отдаст|верну|отдам|вернуть|срок|погасит|погашу|накопить|накоплю)\\s+)?',E='(?=[\\s,;.]|$)',MO='(янв|фев|мар|апр|мая|май|июн|июл|авг|сен|окт|ноя|дек)[а-я]*';
+    const mk=(y,mo,d)=>{const x=new Date(y,mo-1,d,12);return x.getMonth()===mo-1&&x.getDate()===d?x:null};
+    const fut=(mo,d,y)=>{let x=mk(y||now.getFullYear(),mo,d);if(x&&!y&&ymd(x)<td)x=mk(now.getFullYear()+1,mo,d);return x};
+    let m,x;
+    const done=(m,x)=>{if(!x)return null;t=t.replace(m[0],' ');return ymd(x)};
+    if((m=new RegExp('(^|[\\s,;.])'+V+'до\\s+(\\d{1,2})[./](\\d{1,2})(?:[./](\\d{2,4}))?'+E).exec(t)))return done(m,fut(+m[3],+m[2],m[4]?(m[4].length===2?2000+ +m[4]:+m[4]):0));
+    if((m=new RegExp('(^|[\\s,;.])'+V+'до\\s+(\\d{1,2})(?:-?го)?\\s+'+MO+'(?:\\s+(20\\d\\d))?'+E).exec(t)))return done(m,fut(MI_[m[3]],+m[2],m[4]?+m[4]:0));
+    if((m=new RegExp('(^|[\\s,;.])'+V+'до\\s+(\\d{1,2})(?:-?го)?\\s+числа'+E).exec(t))){x=mk(now.getFullYear(),now.getMonth()+1,+m[2]);if(x&&ymd(x)<td)x=mk(now.getFullYear()+(now.getMonth()===11?1:0),(now.getMonth()+1)%12+1,+m[2]);return done(m,x)}
+    if((m=new RegExp('(^|[\\s,;.])'+V+'до\\s+(?:конца\\s+)?'+MO+E).exec(t))){const mo=MI_[m[2]];let y=now.getFullYear();if(mo<now.getMonth()+1)y++;return done(m,new Date(y,mo,0,12))}
+    if((m=new RegExp('(^|[\\s,;.])'+V+'через\\s+(?:(\\d{1,3})\\s+)?(дн[а-я]*|день|недел[а-я]*|месяц[а-я]*)'+E).exec(t))){const k=m[2]?+m[2]:1,u=m[3];x=new Date(now);if(/^м/.test(u))x.setMonth(x.getMonth()+k);else x.setDate(x.getDate()+k*(/^н/.test(u)?7:1));return done(m,x)}
+    return null};
+  if(newDebts.length){const dt=extDue();if(dt){newDebts.forEach(d=>{d.due=dt});msgs[msgs.length-1]+=' · до '+dueShort(dt)}}
   // взнос плюсом: «5000+ отпуск», «5000+ в цель отпуск», «отпуск 5000+» (только в уже существующую цель)
   for(const n of [2,1]){const NM=Array(n).fill(W).join('\\s+');
     take(new RegExp(B+AMT+'\\s*\\+\\s*(?:(?:в|на)\\s+(?:цель\\s+)?)?('+NM+')(?![а-яa-z-])','g'),m=>dep(m,1,words(m[4]))||payDebt(m,1,words(m[4])));
@@ -1221,10 +1285,11 @@ function voiceCmds(raw){
   // новая цель (или новая сумма у уже существующей): «цель отпуск 50000», «накопить на машину 200 тысяч»
   const acc=w=>w.length<4?w:w.replace(/ую$/,'ая').replace(/юю$/,'яя').replace(/у$/,'а').replace(/ю$/,'я');
   const mkGoal=(name,v)=>{name=name.replace(/^(на|для)\s+/,'').trim().split(/\s+/).map(acc).join(' ');if(!name||!(v>0))return false;
-    const ex=findGoal(words(name));if(ex&&words(ex.name).length===words(name).length){ex.target=v;msgs.push('Цель «'+ex.name+'»: '+fmt(v))}
-    else{const nm=cap(name).slice(0,40);cfg.goals.push({id:uid(),name:nm,target:v,saved:0,plan:0,tag:'',created:ymd(new Date()),log:[]});msgs.push('Новая цель «'+nm+'»: '+fmt(v))}return true};
-  take(new RegExp(B+'(?:нов\\S*\\s+цел\\S*|цел[ьию]|накопи\\S*\\s+на|копи(?:ть)?\\s+на|хочу\\s+накопить\\s+на)\\s+([^\\d,;.]+?)\\s+(?:на\\s+|в размере\\s+)?'+AMT,'g'),m=>mkGoal(m[1],val(m,2)));
-  take(new RegExp(B+'(?:нов\\S*\\s+цел\\S*|цел[ьию]|накопи\\S*|копи(?:ть)?)\\s+'+AMT+'\\s+(?:на\\s+|для\\s+)?('+W+'(?:\\s+'+W+'(?![а-яa-z-])(?!\\s+\\d))?)','g'),m=>mkGoal(m[4],val(m,1)));
+    const ex=findGoal(words(name));if(ex&&words(ex.name).length===words(name).length){ex.target=v;newGoals.push(ex);msgs.push('Цель «'+ex.name+'»: '+fmt(v))}
+    else{const nm=cap(name).slice(0,40);const ng={id:uid(),name:nm,target:v,saved:0,plan:0,tag:'',created:ymd(new Date()),log:[]};cfg.goals.push(ng);newGoals.push(ng);msgs.push('Новая цель «'+nm+'»: '+fmt(v))}return true};
+  take(new RegExp(B+'(?:нов\\S*\\s+цел\\S*|(?<!(?:из|с|со|для|в|на|по)\\s)цел[ьию]|накопи\\S*\\s+на|копи(?:ть)?\\s+на|хочу\\s+накопить\\s+на)\\s+([^\\d,;.]+?)\\s+(?:на\\s+|в размере\\s+)?'+AMT,'g'),m=>mkGoal(m[1],val(m,2)));
+  take(new RegExp(B+'(?:нов\\S*\\s+цел\\S*|(?<!(?:из|с|со|для|в|на|по)\\s)цел[ьию]|накопи\\S*|копи(?:ть)?)\\s+'+AMT+'\\s+(?:на\\s+|для\\s+)?('+W+'(?:\\s+'+W+'(?![а-яa-z-])(?!\\s+\\d))?)','g'),m=>mkGoal(m[4],val(m,1)));
+  if(newGoals.length&&!newDebts.length){const dt=extDue();if(dt){newGoals.forEach(g=>{g.by=dt});msgs[msgs.length-1]+=' · к '+dueShort(dt)}}
   return{rest:t.replace(/\s+/g,' ').trim(),msgs}}
 
 
@@ -3543,7 +3608,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v23';
+const IB_VER='v24';
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
 // АДРЕС БОТА ПО УМОЛЧАНИЮ: впишите сюда адрес вашего воркера один раз — тогда всем пользователям (жене и др.) ничего вводить не нужно
@@ -3577,7 +3642,7 @@ async function inboxPull(fast,wait){
     if(IB.proc)return;IB.proc=true;     // записи разбирает кто-то один; остальное подберёт следующий опрос
     try{
     IB.procAt=Date.now();
-    const seen=new Set(ibSeen()),added=[],left=[],bad=[],badIds=[],okIds=[],fresh=[];let cmd=false;
+    const seen=new Set(ibSeen()),added=[],left=[],bad=[],badIds=[],okIds=[],fresh=[],notes={};let cmd=false;
     for(const it of items){
       if(!it||!it.id)continue;const sid=String(it.id);
       if(seen.has(sid)){okIds.push(sid);continue}                       // уже записано раньше — просто подтверждаем
@@ -3588,7 +3653,8 @@ async function inboxPull(fast,wait){
         if(needRate.size){try{await ratesRefresh(true)}catch{}needRate.clear();ibAt(it.ts,()=>{r=parse(cm.rest)})}
         if(cm.msgs.length)cmd=true;
         if(!r.length&&!cm.msgs.length){bad.push(text);badIds.push(sid);continue}
-        r.forEach(d=>{delete d.addCat;if(d.amount>0)added.push(d);else left.push(d)})
+        r.forEach(d=>{delete d.addCat;if(d.amount>0)added.push(d);else left.push(d)});
+        {const nt=[...cm.msgs,...r.filter(d=>d.amount>0).map(d=>(d.type==='income'?'Доход: ':'Расход: ')+d.note+' '+fmt(d.amount)+' '+cfg.cur)];if(nt.length)notes[sid]=nt.join('\n').slice(0,300)}
       }catch(e){bad.push(text);badIds.push(sid)}}                           // одна «битая» запись не должна блокировать остальные
     for(let w=0;w<30&&typeof CL==='object'&&CL.busy;w++)await new Promise(r=>setTimeout(r,200));
     let saved=true;
@@ -3600,7 +3666,7 @@ async function inboxPull(fast,wait){
     if(!saved)return;                       // не сохранилось — в очереди запись остаётся, следующий опрос повторит (ничего не теряется)
     fresh.forEach(i=>seen.add(i));ibSeenSave([...seen]);
     if(bad.length)toast('Бот: не понял — «'+bad.slice(0,2).join('», «').slice(0,120)+'»');
-    await ibCall('/api/ack',{ids:okIds,bad:badIds})}finally{IB.proc=false}}
+    await ibCall('/api/ack',{ids:okIds,bad:badIds,notes})}finally{IB.proc=false}}
   catch(e){if(IB.wakeAbort){IB.wakeAbort=false}else if(wait)IB.fail=(IB.fail||0)+1;IB.dbg={t:Date.now(),n:0,lp:IB.lp,err:String(e&&e.message||e).slice(0,60)};/* нет связи — тихо, повторим; а вот просроченную подпись Telegram показываем один раз */
     if(/HTTP 401/.test(String(e&&e.message))&&!IB.authWarned){IB.authWarned=true;try{toast('Бот: закрой и заново открой приложение')}catch{}}}
   finally{if(wait){IB.lpBusy=false;IB.ctl=null}else IB.busy=false;window.__ibBusy=false}}
@@ -3816,7 +3882,7 @@ const TOURS={
     {t:'#fab',pad:6,title:'Добавить операцию',text:'Нажмите «+» и напишите: «кофе 5, такси 12». Несколько записей можно сразу.'}
   ]},
   sheet:{steps:[
-    {t:'#inp',pad:8,title:'Или напишите',text:'Сумма, дата и категория определятся сами: «кофе 30 вчера», «такси 100 тег друзья». Так же создаются цели и лимиты: «цель отпуск 50000». То же самое можно отправить боту в чате — запись придёт сама.'},
+    {t:'#inp',pad:8,title:'Или напишите',text:'Сумма, дата и категория определятся сами: «кофе 30 вчера», «такси 100 тег друзья». Так же создаются цели, лимиты, бюджет и долги: «цель отпуск 50000», «одолжил Ивану 500». То же самое можно отправить боту в чате, текстом или голосом — запись придёт сама.'},
     {t:'#recic',pad:6,title:'Повторяющиеся',text:'Аренда, подписки, зарплата — настройте один раз, и записи будут появляться сами: каждую неделю, месяц или год.'},
     {t:()=>{const e=qa('#tpl');return e&&e.querySelector('.tq')?e:null},pad:6,title:'Быстрые шаблоны',text:'Частые записи — в одно касание. Нажмите и удерживайте шаблон, чтобы скрыть его.'},
     {t:'#sh .shf',pad:6,title:'Сохранение',text:'Включите автосохранение — запись добавится сама через 3 секунды. Или нажмите «Добавить».'}
