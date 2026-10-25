@@ -2897,16 +2897,13 @@ function renderSt(){
   $('#st').innerHTML=`<label>Валюта и курсы<button class="sm" id="cub">${E(cfg.cur)}</button></label>
 ${cfg.tplHide.length?`<label>Быстрые шаблоны<button class="sm" id="tpr">Вернуть скрытые (${cfg.tplHide.length})</button></label>`:''}
 ${(()=>{const v=cfg.theme==='light'||cfg.theme==='auto'?cfg.theme:'dark';return `<div class="thr"><span>Тема</span><div class="thm" id="thm" role="radiogroup" aria-label="Тема" data-v="${v==='light'?'l':v==='auto'?'a':'d'}"><i></i>${[['dark','Тёмная','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg>'],['auto','Авто','Авто'],['light','Светлая','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2.5 12h2M19.5 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>']].map(([k,n,h])=>`<button type="button" role="radio" data-th="${k}" aria-label="${n}" title="${n}" aria-checked="${v===k}" class="${v===k?'on':''}">${h}</button>`).join('')}</div></div>`})()}
-${IN_TG?`<label>Бот-ящик<input class="sm" id="botu" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://…workers.dev" value="${E(cfg.botUrl||'')}" aria-label="Адрес бота-ящика"></label>`:''}
-${homeBtn()}
-<button class="bkrow" id="tourb">Показать обучение</button>
 <button class="bkrow" id="bkp">Резервная копия</button>`;
   $('#thm').onclick=e=>{const b=e.target.closest('button[data-th]');if(!b)return;const k=b.dataset.th,cur=cfg.theme==='light'||cfg.theme==='auto'?cfg.theme:'dark';if(k===cur)return;
     cfg.theme=k;save();const g=$('#thm');g.dataset.v=k==='light'?'l':k==='auto'?'a':'d';
     g.querySelectorAll('button').forEach(x=>{const on=x===b;x.classList.toggle('on',on);x.setAttribute('aria-checked',String(on))});applyTheme(true)};
   $('#cub').onclick=e=>openCf('cur',e.currentTarget);
   if($('#tpr'))$('#tpr').onclick=()=>{cfg.tplHide=[];save();renderSt();toast('Шаблоны возвращены')};
-  homeBind();if($('#botu'))$('#botu').onchange=e=>{const v=String(e.target.value||'').trim();cfg.botUrl=v;save();if(ibBase()){window.__ibBusy=false;inboxPull()}};$('#bkp').onclick=()=>openBq('backup');$('#tourb').onclick=()=>{closeSettings();if(window.AppTour)AppTour.replay()}}
+  if($('#hsb'))homeBind();if($('#botu'))$('#botu').onchange=e=>{const v=String(e.target.value||'').trim();cfg.botUrl=v;save();if(ibBase()){window.__ibBusy=false;inboxPull()}};$('#bkp').onclick=()=>openBq('backup');if($('#tourb'))$('#tourb').onclick=()=>{closeSettings();if(window.AppTour)AppTour.replay()}}
 // ---- маленькое окошко снизу: подтверждение сброса и резервная копия ----
 const bq=$('#bq');let bqT=null,bqCb=null;
 function bqHtml(kind){if(kind==='save')return `<div class="bqt">Сохранить данные</div><div class="bqs">Выберите формат. JSON — полная копия для восстановления (операции, цели, долги, настройки). Excel (.xlsx) — таблица с листами по категориям и месяцам.</div><div class="bqb"><button class="sm pr" data-bq="json">Сохранить в JSON</button><button class="sm pr" data-bq="xlsx">Сохранить в Excel</button></div><div class="bqb"><button class="sm" data-bq="cancel">Не сейчас</button></div>`;
@@ -3493,11 +3490,11 @@ function ibAt(ts,fn){
   const D0=Date,t=(+ts>1e9&&+ts<4e9)?+ts*1000:0;if(!t){return fn()}
   class FD extends D0{constructor(...a){if(a.length)super(...a);else super(t)}static now(){return t}}
   globalThis.Date=FD;try{return fn()}finally{globalThis.Date=D0}}
-async function inboxPull(){
+async function inboxPull(fast){
   if(!IN_TG||!ibBase()||IB.busy)return;
   IB.busy=true;IB.last=Date.now();
   try{
-    const res=await ibCall('/api/pending'),items=Array.isArray(res&&res.items)?res.items:[];
+    const res=await ibCall(fast?'/api/pending?fast=1':'/api/pending'),items=Array.isArray(res&&res.items)?res.items:[];
     if(!items.length)return;
     const seen=new Set(ibSeen()),added=[],left=[],bad=[];let cmd=false;
     for(const it of items){
@@ -3515,7 +3512,8 @@ async function inboxPull(){
     if(left.length){drafts.push(...left);renderRev();setTimeout(()=>{try{if(!document.getElementById('spl')&&!isModalOpen())openSheet()}catch{}},2200)}
     if(bad.length)toast('Бот: не понял — «'+bad.slice(0,2).join('», «').slice(0,120)+'»');
     await ibCall('/api/ack',{ids:items.map(x=>x&&x.id).filter(Boolean)})}
-  catch{/* нет связи или бот не настроен — тихо, повторим при следующем открытии */}
+  catch(e){/* нет связи — тихо, повторим; а вот просроченную подпись Telegram показываем один раз */
+    if(/HTTP 401/.test(String(e&&e.message))&&!IB.authWarned){IB.authWarned=true;try{toast('Бот: закрой и заново открой приложение')}catch{}}}
   finally{IB.busy=false;window.__ibBusy=false}}
 // запуск: ждём первую сверку с облаком (чтобы записи не потерялись при объединении), но не дольше 3,5 с
 (function(){
@@ -3527,8 +3525,14 @@ async function inboxPull(){
     const cloudWait=typeof CL==='object'&&CL.on&&!CL.ready&&Date.now()-t0<3500;
     if(cloudWait)return void setTimeout(go,120);
     inboxPull()})();
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()-IB.last>15000)inboxPull()});
-  try{TGW.onEvent('activated',()=>{if(Date.now()-IB.last>15000)inboxPull()})}catch{}})();
+  // сразу забираем записи при любом возвращении в приложение (из чата, из фона, из другого окна)
+  const wake=()=>{if(!document.hidden&&Date.now()-IB.last>1500)inboxPull()};
+  document.addEventListener('visibilitychange',wake);
+  window.addEventListener('focus',wake);window.addEventListener('pageshow',wake);
+  try{TGW.onEvent('activated',wake)}catch{}
+  try{TGW.onEvent('viewportChanged',wake)}catch{}
+  // пока приложение открыто — лёгкая проверка раз в 6 секунд (воркер отвечает по одному ключу, без перебора очереди)
+  setInterval(()=>{if(!document.hidden&&!IB.busy&&ibBase())inboxPull(true)},6000)})();
 
 </script>
 <script>
@@ -3647,7 +3651,7 @@ if('serviceWorker' in navigator&&location.protocol!=='file:'){
 if(window.AppTour)return;
 const D=document,RM=matchMedia('(prefers-reduced-motion:reduce)').matches;
 const KEY='finapp.tour';
-const ALL=['welcome','list','sheet','stats','stats:trend','stats:cal','stats:tags','tags','tags:budget','tags:debts'];
+const ALL=['welcome','new15','list','sheet','stats','stats:trend','stats:cal','stats:tags','tags','tags:budget','tags:debts'];
 const q=(s,r)=>(r||D).querySelector(s);
 // первый подходящий элемент, не из «соседних» страниц, которые рисуются на время свайпа
 const qa=s=>[...D.querySelectorAll(s)].find(e=>!e.closest('[aria-hidden="true"]'))||null;
@@ -3671,7 +3675,7 @@ const sgmOf=a=>{const b=qa('[data-'+a+']');return b?b.closest('.sgm'):null};
 const TOURS={
   list:{steps:[
     {t:'#srch',pad:6,title:'Поиск',text:'Ищите по заметкам и категориям. Рядом откроются фильтры: сумма, период и тег.'},
-    {t:'#gear',pad:6,title:'Настройки',text:'Валюта и курсы, тема оформления, резервная копия. Здесь же можно снова открыть это обучение.'},
+    {t:'#gear',pad:6,title:'Настройки',text:'Валюта и курсы, тема оформления, резервная копия.'},
     {t:'.mo',pad:4,title:'Месяцы',text:'Листайте стрелками или свайпом по этой области — суммы и список пересчитаются за выбранный месяц.'},
     {t:'#sum',pad:8,title:'Остаток',text:'Доходы минус расходы за месяц. Включите «Переносить» — остаток прошлых месяцев будет добавляться сам.'},
     {t:()=>{const g=qa('#body .dg');if(!g)return qa('#body .emp');
@@ -3681,7 +3685,7 @@ const TOURS={
     {t:'#fab',pad:6,title:'Добавить операцию',text:'Нажмите «+» и напишите: «кофе 5, такси 12». Несколько записей можно сразу.'}
   ]},
   sheet:{steps:[
-    {t:'#inp',pad:8,title:'Или напишите',text:'Сумма, дата и категория определятся сами: «кофе 30 вчера», «такси 100 тег друзья». Так же создаются цели и лимиты: «цель отпуск 50000».'},
+    {t:'#inp',pad:8,title:'Или напишите',text:'Сумма, дата и категория определятся сами: «кофе 30 вчера», «такси 100 тег друзья». Так же создаются цели и лимиты: «цель отпуск 50000». То же самое можно отправить боту в чате — запись придёт сама.'},
     {t:'#recic',pad:6,title:'Повторяющиеся',text:'Аренда, подписки, зарплата — настройте один раз, и записи будут появляться сами: каждую неделю, месяц или год.'},
     {t:()=>{const e=qa('#tpl');return e&&e.querySelector('.tq')?e:null},pad:6,title:'Быстрые шаблоны',text:'Частые записи — в одно касание. Нажмите и удерживайте шаблон, чтобы скрыть его.'},
     {t:'#sh .shf',pad:6,title:'Сохранение',text:'Включите автосохранение — запись добавится сама через 3 секунды. Или нажмите «Добавить».'}
@@ -3721,14 +3725,29 @@ const SL=[
    `<div class="v1g"></div><svg class="v1" viewBox="96 96 320 320" width="116" height="116" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><linearGradient id="trg" x1="0" x2="1"><stop offset="0" style="stop-color:var(--g);stop-opacity:.3"/><stop offset=".5" style="stop-color:var(--g)"/><stop offset="1" style="stop-color:var(--g);stop-opacity:.3"/></linearGradient><clipPath id="trc"><rect x="96" y="96" width="320" height="104"/></clipPath></defs><g clip-path="url(#trc)"><rect class="bill" x="172" y="180" width="164" height="40" rx="10" fill="url(#trg)" stroke="none"/></g><path class="d" pathLength="1" d="M146 214 L150 178 C151 160 160 152 175 148 L316 126 C329 124 338 133 338 147 L338 196"/><rect class="d" pathLength="1" x="139" y="196" width="244" height="168" rx="40"/><circle class="dot" cx="335" cy="277" r="15" fill="currentColor" stroke="none"/></svg>`},
   {h:'Пишите — приложение разберётся',p:'Напишите несколько трат подряд. Сумма, категория и дата определятся сами.',v:
    `<div class="v2" style="display:flex;align-items:center;gap:18px"><div class="v2m"><b></b><b></b><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg></div><div class="v2r"><div style="--d:.5s"><em>☕</em><span>Кофе</span><b class="exp">−5</b></div><div style="--d:1s"><em>🚕</em><span>Такси</span><b class="exp">−12</b></div><div style="--d:1.5s"><em>💼</em><span>Зарплата</span><b class="inc">+1 500</b></div></div></div>`},
+  {h:'Записывайте через бота',p:'Напишите боту в чате «такси 120» или отправьте голосовое. Запись сама появится в приложении, как только вы его откроете.',v:
+   `<div class="v2" style="display:flex;align-items:center;gap:18px"><div class="v2m"><b></b><b></b><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 3L3 10.5l7 2.5 2.5 7z"/><path d="M21 3L10 13"/></svg></div><div class="v2r"><div style="--d:.5s"><em>🚕</em><span>Такси</span><b class="exp">−200</b></div><div style="--d:1s"><em>☕</em><span>Кофе</span><b class="exp">−50</b></div><div style="--d:1.5s"><em>💼</em><span>Зарплата</span><b class="inc">+500</b></div></div></div>`},
   {h:'Вся картина за секунды',p:'Остаток, динамика по месяцам, календарь трат и теги. Сравнивайте с прошлым месяцем.',v:
    `<div class="v3p"><b class="inc">−12%</b> к прошлому месяцу</div><div class="v3" style="display:flex">${[[46,62],[58,50],[40,70],[66,54],[52,44],[72,38]].map((p,i)=>`<div><i class="a" style="--h:${p[0]}%;--i:${i}"></i><i class="b" style="--h:${p[1]}%;--i:${i}"></i></div>`).join('')}</div>`},
   {h:'Планы и цели',p:'Копите на цели, задавайте бюджет и лимиты, записывайте долги — приложение напомнит о сроках.',v:
    `<div class="v4" style="display:flex">${[['Отпуск','65%','',0],['Лимит: продукты','84%','#f2c14e',1],['Бюджет месяца','40%','',2]].map(r=>`<div style="--w:${r[1]};--i:${r[3]};${r[2]?'--c:'+r[2]:''}"><span>${r[0]}</span><b>${r[1]}</b><s><u></u></s></div>`).join('')}</div>`}
 ];
 
+/* ---------- «Что нового»: показывается один раз после обновления ---------- */
+const NEWSL=[
+  {h:'Записи от бота — сразу',p:'Написали боту «такси 120» или отправили голосовое — откройте приложение из чата, и запись уже там. Перезапускать Telegram не нужно. Пока приложение открыто, оно само проверяет новые записи.',v:
+   `<div class="v2" style="display:flex;align-items:center;gap:18px"><div class="v2m"><b></b><b></b><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 3L3 10.5l7 2.5 2.5 7z"/><path d="M21 3L10 13"/></svg></div><div class="v2r"><div style="--d:.5s"><em>🚕</em><span>Такси</span><b class="exp">−200</b></div><div style="--d:1s"><em>☕</em><span>Кофе</span><b class="exp">−50</b></div><div style="--d:1.5s"><em>💼</em><span>Зарплата</span><b class="inc">+500</b></div></div></div>`},
+  {h:'Настройки стали чище',p:'Адрес бота теперь зашит в приложение, вводить его не нужно. «Добавить на экран «Домой»» — в меню «⋯» Telegram, обучение покажется само, когда нужно.',v:
+   `<div class="v2" style="display:flex;align-items:center;justify-content:center"><div class="v2r" style="width:220px"><div style="--d:.4s"><em>💱</em><span>Валюта и курсы</span></div><div style="--d:.9s"><em>🌓</em><span>Тема</span></div><div style="--d:1.4s"><em>💾</em><span>Резервная копия</span></div></div></div>`}
+];
+
 /* ---------- интерфейс ---------- */
 let root,hole,card,cT,cX,cDots,cSkip,cNext,wel,wSls,wDots,wSkip,wNext,pT,pB;
+function fillSlides(list){
+  q('.tr-sls',wel).innerHTML=list.map(s=>`<section class="tr-sl"><div class="tr-vis">${s.v}</div><h2>${s.h}</h2><p>${s.p}</p></section>`).join('');
+  q('.tr-dots',wel).innerHTML=list.map(()=>'<i></i>').join('');
+  wSls=[...wel.querySelectorAll('.tr-sl')];wDots=[...wel.querySelectorAll('.tr-dots i')];
+  wel.setAttribute('aria-label',list===NEWSL?'Что нового':'Знакомство с приложением')}
 let active=null,raf=0,last='',cool=0;
 
 function build(){
@@ -3767,10 +3786,11 @@ function build(){
 }
 
 /* ---------- знакомство ---------- */
-function runWelcome(){
+function runWelcome(news){
   if(active)return false;
   build();prep();
-  active={id:'welcome',kind:'wel',i:0};
+  const list=news?NEWSL:SL;fillSlides(list);
+  active={id:news?'news':'welcome',kind:'wel',i:0,list,news:!!news};
   // чистое состояние: анимации первого слайда проигрываются заново, как в первый раз
   wSls.forEach(x=>x.classList.remove('on','prev'));wDots.forEach(d=>d.classList.remove('on'));
   wSkip.style.visibility='';hole.style.opacity='';
@@ -3781,17 +3801,18 @@ function welGo(i){
   const a=active;if(!a||a.kind!=='wel')return;a.i=i;
   wSls.forEach((s,k)=>{s.classList.toggle('on',k===i);s.classList.toggle('prev',k<i)});
   wDots.forEach((d,k)=>d.classList.toggle('on',k===i));
-  wNext.textContent=i===SL.length-1?'Начать':'Далее';
-  wSkip.style.visibility=i===SL.length-1?'hidden':''}
-function welNext(){const a=active;if(!a||a.kind!=='wel')return;a.i<SL.length-1?welGo(a.i+1):finishWelcome('done')}
+  const L=a.list.length-1;
+  wNext.textContent=i===L?(a.news?'Понятно':'Начать'):'Далее';
+  wSkip.style.visibility=i===L||(a.news&&L<1)?'hidden':''}
+function welNext(){const a=active;if(!a||a.kind!=='wel')return;a.i<a.list.length-1?welGo(a.i+1):finishWelcome('done')}
 function finishWelcome(kind){
   if(!active||active.kind!=='wel')return;
-  active=null;
+  const news=active.news;active=null;
+  if(news){mark('new15');root.classList.remove('on','wel');cool=Date.now()+900;return}
   if(kind==='skip'){
     mark(ALL);root.classList.remove('on','wel');cool=Date.now()+900;
-    setTimeout(()=>{try{if(typeof toast==='function')toast('Обучение можно открыть в настройках')}catch(e){}},450);
     return}
-  mark('welcome');
+  mark(['welcome','new15']);
   // знакомство уходит, и сразу начинается разбор главного экрана
   root.classList.remove('wel');
   setTimeout(()=>{if(!runTour('list',{first:true})){root.classList.remove('on');cool=Date.now()+900}},420)}
@@ -3909,10 +3930,12 @@ function ctxKey(){
   if(tb==='tags')return sub&&sub!=='goals'?'tags:'+sub:'tags';
   return 'list'}
 const gate=()=>!active&&Date.now()>cool&&!D.hidden&&!q('#spl')&&!modalOpen()&&!q('#stw.on')&&!q('#fp.open');
-let pk='',pa=0;
+let pk='',pa=0,na=0;
 function consider(){
-  if(!gate())return;
+  if(!gate()){na=0;return}
   const S=seen();if(!S.welcome)return;
+  // после обновления один раз показываем «Что нового» (экран должен постоять спокойно)
+  if(!S.new15){if(!na)na=Date.now();if(Date.now()-na>=1800){na=0;runWelcome(true)}return}
   const key=ctxKey();
   if(S[key]||!TOURS[key]||key==='sheet'){pk='';return}
   if(key!==pk){pk=key;pa=Date.now();return}      // экран должен простоять спокойно, пока не покажем подсказку
@@ -3947,7 +3970,7 @@ function replay(){
   try{if(typeof tab!=='undefined'&&tab!=='list'&&typeof setTab==='function')setTab('list')}catch(e){}
   setTimeout(()=>{const go=()=>{if(gate())runWelcome();else setTimeout(go,500)};go()},650)}
 
-window.AppTour={replay,run:runTour,reset};
+window.AppTour={replay,run:runTour,reset,news:()=>{if(active)return;const m=seen();delete m.new15;try{localStorage.setItem(KEY,JSON.stringify(m))}catch(e){}try{if(typeof cfg==='object'&&cfg){cfg.tour=m;if(typeof save==='function')save()}}catch(e){}na=0}};
 if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',boot);else boot();
 })();
 </script>
