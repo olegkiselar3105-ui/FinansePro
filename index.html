@@ -828,6 +828,8 @@ html.intro #tabs,html.intro #fab{animation:inUp .9s cubic-bezier(.22,1,.36,1) .4
 .lnk{display:flex;align-items:center;gap:10px;padding:10px 2px;font-size:13px;color:var(--m2);cursor:pointer;line-height:1.35}
 .lnk input[type=checkbox]{flex:none;width:19px;height:19px;min-width:0;max-width:none;padding:0;margin:0;accent-color:var(--g);text-align:left}
 
+#st input.sm{width:58%;min-width:0;background:transparent;text-align:right;font:inherit;font-size:12px;outline:none}#st input.sm::placeholder{color:var(--m)}#st input.sm:focus{border-color:var(--m2)}
+
 </style></head>
 <body><div id="spl" aria-hidden="true">
 <svg class="spl-logo" viewBox="96 96 320 320" width="132" height="132" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
@@ -841,7 +843,7 @@ html.intro #tabs,html.intro #fab{animation:inUp .9s cubic-bezier(.22,1,.36,1) .4
 <div class="spl-t">Финансы</div></div>
 <script>window.__spl0=0;requestAnimationFrame(function(){window.__spl0=performance.now()})</script>
 <div id="w">
-<div class="hd"><button class="ic" id="srch" aria-label="Поиск" aria-expanded="false" title="Поиск"><svg class="x1" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><svg class="x2" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button><button type="button" id="cs" data-s="ok" aria-live="polite" aria-label="Синхронизация с облаком Telegram"><i></i><span class="csl">сохранено</span></button><b id="ttl">Операции</b><button class="ic" id="gear" aria-label="Настройки" title="Настройки"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button><div id="fl" inert><div class="fi"><input id="q" type="search" placeholder="Заметки и категории" autocomplete="off" aria-label="Поиск по заметкам и категориям" enterkeyhint="search"><button class="qf" id="qflt" type="button" aria-label="Фильтры: сумма, период, тег" aria-expanded="false" title="Фильтры"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16l-6 7v6l-4 2v-8z"/></svg></button></div></div></div>
+<div class="hd"><button class="ic" id="srch" aria-label="Поиск" aria-expanded="false" title="Поиск"><svg class="x1" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><svg class="x2" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button><button type="button" id="cs" data-s="ok" aria-live="polite" aria-label="Синхронизация с облаком Telegram"><i></i><span class="csl">сохранено</span></button><b id="ttl">Операции</b><button class="ic" id="gear" aria-label="Настройки" title="Настройки"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button><div id="fl" inert><div class="fi"><input id="q" type="search" placeholder="Заметки и категории" autocomplete="off" aria-label="Поиск по заметкам и категориям" enterkeyhint="search"><button class="qf" id="qflt" type="button" aria-label="Фильтры: сумма, период, тег" aria-expanded="false" title="Фильтры"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16l-6 7v6l-4 2v-8z"/></svg></button></div></div></div>
 <div id="stw" inert><div id="sti"><div id="st"></div></div></div>
 <div class="top" id="top"><div id="tin"><div class="mo"><button id="pv">‹</button><b id="mn"></b><button id="nx">›</button></div>
 <div class="sum" id="sum"></div></div></div>
@@ -2895,6 +2897,7 @@ function renderSt(){
   $('#st').innerHTML=`<label>Валюта и курсы<button class="sm" id="cub">${E(cfg.cur)}</button></label>
 ${cfg.tplHide.length?`<label>Быстрые шаблоны<button class="sm" id="tpr">Вернуть скрытые (${cfg.tplHide.length})</button></label>`:''}
 ${(()=>{const v=cfg.theme==='light'||cfg.theme==='auto'?cfg.theme:'dark';return `<div class="thr"><span>Тема</span><div class="thm" id="thm" role="radiogroup" aria-label="Тема" data-v="${v==='light'?'l':v==='auto'?'a':'d'}"><i></i>${[['dark','Тёмная','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg>'],['auto','Авто','Авто'],['light','Светлая','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2.5 12h2M19.5 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>']].map(([k,n,h])=>`<button type="button" role="radio" data-th="${k}" aria-label="${n}" title="${n}" aria-checked="${v===k}" class="${v===k?'on':''}">${h}</button>`).join('')}</div></div>`})()}
+${IN_TG?`<label>Бот-ящик<input class="sm" id="botu" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://…workers.dev" value="${E(cfg.botUrl||'')}" aria-label="Адрес бота-ящика"></label>`:''}
 ${homeBtn()}
 <button class="bkrow" id="tourb">Показать обучение</button>
 <button class="bkrow" id="bkp">Резервная копия</button>`;
@@ -2903,7 +2906,7 @@ ${homeBtn()}
     g.querySelectorAll('button').forEach(x=>{const on=x===b;x.classList.toggle('on',on);x.setAttribute('aria-checked',String(on))});applyTheme(true)};
   $('#cub').onclick=e=>openCf('cur',e.currentTarget);
   if($('#tpr'))$('#tpr').onclick=()=>{cfg.tplHide=[];save();renderSt();toast('Шаблоны возвращены')};
-  homeBind();$('#bkp').onclick=()=>openBq('backup');$('#tourb').onclick=()=>{closeSettings();if(window.AppTour)AppTour.replay()}}
+  homeBind();if($('#botu'))$('#botu').onchange=e=>{const v=String(e.target.value||'').trim();cfg.botUrl=v;save();if(ibBase()){window.__ibBusy=false;inboxPull()}};$('#bkp').onclick=()=>openBq('backup');$('#tourb').onclick=()=>{closeSettings();if(window.AppTour)AppTour.replay()}}
 // ---- маленькое окошко снизу: подтверждение сброса и резервная копия ----
 const bq=$('#bq');let bqT=null,bqCb=null;
 function bqHtml(kind){if(kind==='save')return `<div class="bqt">Сохранить данные</div><div class="bqs">Выберите формат. JSON — полная копия для восстановления (операции, цели, долги, настройки). Excel (.xlsx) — таблица с листами по категориям и месяцам.</div><div class="bqb"><button class="sm pr" data-bq="json">Сохранить в JSON</button><button class="sm pr" data-bq="xlsx">Сохранить в Excel</button></div><div class="bqb"><button class="sm" data-bq="cancel">Не сейчас</button></div>`;
@@ -3270,7 +3273,7 @@ async function cloudPull(m){const hb=cloudHash();let d;
   applyData(d,{replace:true});
   CL.lt=m.t;cloudPersist();CL.lh=cloudHash();
   try{if(applyRec())render()}catch{}
-  toast('Данные обновлены из облака')}
+  /* тихо: статус виден в индикаторе #cs */}
 
 // ---- слияние: правки на двух устройствах объединяются, а не затирают друг друга ----
 function cloudBase(h){if(!h)return;CL.sb=h;try{localStorage.setItem('finapp.synch',h)}catch{}}
@@ -3308,7 +3311,7 @@ async function cloudMerge(m){
   CL.lt=Date.now();cloudPersist();
   await cloudPush();
   try{if(applyRec())render()}catch{}
-  toast('Данные с двух устройств объединены')}
+  /* тихо */}
 
 // ---- ошибки ----
 function cloudErr(e){const m=String((e&&e.message)||e||'');
@@ -3318,7 +3321,8 @@ function cloudErr(e){const m=String((e&&e.message)||e||'');
   if(e&&e.corrupt)return {t:'other',m:'Облачные данные повреждены или записаны не до конца. Повторю позже.'};
   return {t:'other',m:'Ошибка облака Telegram: '+m.slice(0,80)}}
 function cloudFail(e){const x=cloudErr(e);CL.fails++;const first=CL.errShown!==x.t;CL.errShown=x.t;CL.lastErr=x;
-  csSet('err',x.m);if(first||CL.manual)toast('⚠ '+x.m);
+  csSet('err',x.m);if(CL.manual)toast('⚠ '+x.m);   // сообщение — только если сами нажали на индикатор; иначе тихо, повтор в фоне
+  void first;
   if(x.t==='net'||x.t==='other')CL.retryT=setTimeout(()=>cloudSync('retry'),Math.min(60000,5000*Math.pow(2,Math.min(CL.fails-1,4))))}
 
 // ---- автосохранение: через ~1 секунду после любого изменения данных ----
@@ -3460,12 +3464,69 @@ function hsInit(){
   if(!IN_TG||!(TGW.isVersionAtLeast&&TGW.isVersionAtLeast('8.0'))||typeof TGW.addToHomeScreen!=='function')return;
   HS.ok=true;
   try{TGW.checkHomeScreenStatus(s=>{HS.st=s||'';try{if($('#settings')||$('#st'))renderSt()}catch{}})}catch{HS.ok=false}
-  try{TGW.onEvent('homeScreenAdded',()=>{HS.st='added';toast('Значок добавлен на экран «Домой»');try{renderSt()}catch{}})}catch{}
+  try{TGW.onEvent('homeScreenAdded',()=>{HS.st='added';try{renderSt()}catch{}})}catch{}
   try{TGW.onEvent('homeScreenChecked',e=>{if(e&&e.status){HS.st=e.status}})}catch{}}
 function homeBtn(){return HS.ok&&HS.st!=='unsupported'&&HS.st!=='added'
   ?'<button class="bkrow" id="hsb">Добавить на экран «Домой»</button>':''}
 function homeBind(){const b=$('#hsb');if(b)b.onclick=()=>{try{TGW.addToHomeScreen()}catch{toast('Не удалось открыть окно добавления')}}}
 hsInit();
+
+// ================= Ящик бота: записи, присланные боту текстом или голосом =================
+// Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
+// забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
+const IB={busy:false,last:0};
+const ibBase=()=>{const u=String((cfg&&cfg.botUrl)||'').trim().replace(/\/+$/,'');return /^https:\/\/[^\s/]+(\/[^\s]*)?$/.test(u)?u:''};
+const ibSeen=()=>{try{const a=JSON.parse(localStorage.getItem('finapp.ibseen')||'[]');return Array.isArray(a)?a:[]}catch{return[]}};
+const ibSeenSave=a=>{try{localStorage.setItem('finapp.ibseen',JSON.stringify(a.slice(-400)))}catch{}};
+async function ibCall(path,body){
+  const c=new AbortController(),tm=setTimeout(()=>c.abort(),7000);
+  try{
+    const r=await fetch(ibBase()+path,{method:body?'POST':'GET',signal:c.signal,
+      headers:{'Authorization':'tma '+TGW.initData,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    return await r.json()}
+  finally{clearTimeout(tm)}}
+// «сегодня» для разбора = момент, когда сообщение отправлено боту (а не момент открытия приложения)
+function ibAt(ts,fn){
+  const D0=Date,t=(+ts>1e9&&+ts<4e9)?+ts*1000:0;if(!t){return fn()}
+  class FD extends D0{constructor(...a){if(a.length)super(...a);else super(t)}static now(){return t}}
+  globalThis.Date=FD;try{return fn()}finally{globalThis.Date=D0}}
+async function inboxPull(){
+  if(!IN_TG||!ibBase()||IB.busy)return;
+  IB.busy=true;IB.last=Date.now();
+  try{
+    const res=await ibCall('/api/pending'),items=Array.isArray(res&&res.items)?res.items:[];
+    if(!items.length)return;
+    const seen=new Set(ibSeen()),added=[],left=[],bad=[];let cmd=false;
+    for(const it of items){
+      if(!it||!it.id||seen.has(String(it.id)))continue;
+      const text=String(it.text||'').trim().slice(0,500);seen.add(String(it.id));if(!text)continue;
+      let cm={rest:text,msgs:[]},r=[];needRate.clear();
+      ibAt(it.ts,()=>{cm=voiceCmds(text);r=parse(cm.rest)});
+      if(needRate.size){try{await ratesRefresh(true)}catch{}needRate.clear();ibAt(it.ts,()=>{r=parse(cm.rest)})}
+      if(cm.msgs.length)cmd=true;
+      if(!r.length&&!cm.msgs.length){bad.push(text);continue}
+      r.forEach(d=>{delete d.addCat;if(d.amount>0)added.push(d);else left.push(d)})}
+    ibSeenSave([...seen]);
+    if(added.length)commit(added,false);
+    else if(cmd){save();render()}
+    if(left.length){drafts.push(...left);renderRev();setTimeout(()=>{try{if(!document.getElementById('spl')&&!isModalOpen())openSheet()}catch{}},2200)}
+    if(bad.length)toast('Бот: не понял — «'+bad.slice(0,2).join('», «').slice(0,120)+'»');
+    await ibCall('/api/ack',{ids:items.map(x=>x&&x.id).filter(Boolean)})}
+  catch{/* нет связи или бот не настроен — тихо, повторим при следующем открытии */}
+  finally{IB.busy=false;window.__ibBusy=false}}
+// запуск: ждём первую сверку с облаком (чтобы записи не потерялись при объединении), но не дольше 3,5 с
+(function(){
+  if(!IN_TG)return;
+  if(ibBase())window.__ibBusy=true;
+  const t0=Date.now();
+  (function go(){
+    if(!ibBase()){window.__ibBusy=false;return}
+    const cloudWait=typeof CL==='object'&&CL.on&&!CL.ready&&Date.now()-t0<3500;
+    if(cloudWait)return void setTimeout(go,120);
+    inboxPull()})();
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()-IB.last>15000)inboxPull()});
+  try{TGW.onEvent('activated',()=>{if(Date.now()-IB.last>15000)inboxPull()})}catch{}})();
 
 </script>
 <script>
@@ -3571,7 +3632,9 @@ if('serviceWorker' in navigator&&location.protocol!=='file:'){
     setTimeout(()=>{try{_animN.delete(month);_nP=null;runNums()}catch(e){}},rm?0:260);
     setTimeout(()=>{de.classList.remove('intro')},rm?400:2800);
     setTimeout(()=>{try{s.remove()}catch(e){}},rm?500:900)}
-  setTimeout(leave,Math.max(0,SHOW-(performance.now()-t0)));
+  // заставка ждёт, пока приложение забирает записи, присланные боту (но не дольше ~4,2 с)
+  const tryLeave=()=>{if(window.__ibBusy&&performance.now()-t0<4200)return void setTimeout(tryLeave,120);leave()};
+  setTimeout(tryLeave,Math.max(0,SHOW-(performance.now()-t0)));
   setTimeout(leave,4500);
 })();
 </script>
