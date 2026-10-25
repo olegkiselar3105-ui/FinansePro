@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ru"><head><meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://open.er-api.com; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#111111" id="tc">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="apple-mobile-web-app-title" content="Финансы">
@@ -3475,7 +3475,9 @@ hsInit();
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
 const IB={busy:false,last:0};
-const ibBase=()=>{const u=String((cfg&&cfg.botUrl)||'').trim().replace(/\/+$/,'');return /^https:\/\/[^\s/]+(\/[^\s]*)?$/.test(u)?u:''};
+// АДРЕС БОТА ПО УМОЛЧАНИЮ: впишите сюда адрес вашего воркера один раз — тогда всем пользователям (жене и др.) ничего вводить не нужно
+const BOT_URL='https://finansepro.olegkiselar3105.workers.dev';
+const ibBase=()=>{const u=String((cfg&&cfg.botUrl)||BOT_URL||'').trim().replace(/\/+$/,'');return /^https:\/\/[^\s/]+(\/[^\s]*)?$/.test(u)?u:''};
 const ibSeen=()=>{try{const a=JSON.parse(localStorage.getItem('finapp.ibseen')||'[]');return Array.isArray(a)?a:[]}catch{return[]}};
 const ibSeenSave=a=>{try{localStorage.setItem('finapp.ibseen',JSON.stringify(a.slice(-400)))}catch{}};
 async function ibCall(path,body){
