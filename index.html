@@ -704,6 +704,7 @@ html.intro .top{animation:inTop 1s cubic-bezier(.22,1,.36,1) .06s backwards}
 html.intro #mn{animation:inMn .9s cubic-bezier(.22,1,.36,1) .28s backwards}
 html.intro #chip{animation:inA .8s cubic-bezier(.22,1,.36,1) .2s backwards}
 html.intro #body .dg{animation:inDg .85s cubic-bezier(.22,1,.36,1) calc(.2s + var(--gi,0)*.07s) backwards}
+.sw.nwh{opacity:0!important;animation:none!important}.sw.nwa{animation:none!important;will-change:transform,opacity}
 html.intro #body .dg .sw:not(.sd){animation:inRow .7s cubic-bezier(.22,1,.36,1) calc(.34s + var(--ri,0)*.05s) backwards}
 html.intro #body>*:not(.dg){animation:inA .8s cubic-bezier(.22,1,.36,1) .2s backwards}
 html.intro #tabs,html.intro #fab{animation:inUp .9s cubic-bezier(.22,1,.36,1) .4s backwards}
@@ -1245,7 +1246,31 @@ function run(){
 function commit(list,withUndo){
   tx=[...list,...tx];save();
   const f=list[list.length-1].date.slice(0,7);if(!list.some(x=>x.date.startsWith(month)))month=f;
-  render();const ln=limitNote(list);if(withUndo){const ids=new Set(list.map(x=>x.id));toast('Добавлено: '+list.length+(ln?' · '+ln:''),'Отмена',()=>{tx=tx.filter(x=>!ids.has(x.id));tomb([...ids]);save();render()},'add')}}
+  render();const ln=limitNote(list);if(withUndo){const ids=new Set(list.map(x=>x.id));toast('Добавлено: '+list.length+(ln?' · '+ln:''),'Отмена',()=>{tx=tx.filter(x=>!ids.has(x.id));tomb([...ids]);save();render()},'add')}
+  try{animNew(list.map(x=>x.id),withUndo?260:0)}catch(e){}}
+// Новые записи по очереди «выезжают» из-за края карточки дня с пружинкой (бот и ручной ввод). Ждём, пока уйдёт заставка и закроется окно ввода.
+const SPRING=(()=>{const fb='cubic-bezier(.34,1.56,.64,1)';
+  try{const z=.58,w=2*Math.PI*2.2,wd=w*Math.sqrt(1-z*z),n=40,T=.85,pts=[];
+    for(let i=0;i<=n;i++){const t=i/n*T;pts.push(i===n?1:+(1-Math.exp(-z*w*t)*(Math.cos(wd*t)+z*w/wd*Math.sin(wd*t))).toFixed(4))}
+    const v='linear('+pts.join(', ')+')';return CSS.supports('animation-timing-function',v)?v:fb}catch(e){return fb}})();
+function animNew(ids,delay){
+  if(!ids||!ids.length||ids.length>15||!Element.prototype.animate||matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+  const S=new Set(ids.map(String)),html=document.documentElement,t0=Date.now();
+  const find=()=>[...document.querySelectorAll('#body .sw[data-id]:not(.sd)')].filter(e=>S.has(e.dataset.id));
+  find().forEach(e=>e.classList.add('nwh'));                            // сразу прячем, чтобы строка не мигнула до своего выезда
+  const done=el=>{if(html.classList.contains('intro'))return void setTimeout(()=>done(el),250);el.classList.remove('nwa')};
+  (function go(){
+    const els=find();
+    if(Date.now()-t0>9000){els.forEach(e=>e.classList.remove('nwh'));return}
+    if(document.getElementById('spl')||isModalOpen()||!els.length){setTimeout(go,150);return}
+    els.sort((a,b)=>a.getBoundingClientRect().top-b.getBoundingClientRect().top);
+    els.forEach((el,i)=>{
+      const o={fill:'backwards',delay:(delay||0)+Math.min(i,9)*120};
+      el.classList.remove('nwh');el.classList.add('nwa');
+      const mv=[{transform:'translate3d(56px,8px,0) scale(.96)'},{transform:'translate3d(0,0,0) scale(1)'}];
+      el.animate([{opacity:0},{opacity:1}],{...o,duration:260,easing:'ease-out'});
+      let a;try{a=el.animate(mv,{...o,duration:850,easing:SPRING})}catch(e){a=el.animate(mv,{...o,duration:700,easing:'cubic-bezier(.34,1.56,.64,1)'})}
+      a.onfinish=a.oncancel=()=>done(el)})})()}
 $('#go').onclick=()=>{if(inp.value.trim())run();else if(drafts.length)commitDrafts();else inp.focus()};inp.onkeydown=e=>{if(e.key==='Enter'){if(inp.value.trim())run();else if(drafts.length)commitDrafts()}};
 const atg=$('#atg');function syncAuto(){atg.classList.toggle('on',!!cfg.auto);atg.classList.toggle('off',!cfg.auto);atg.setAttribute('aria-pressed',!!cfg.auto);atg.innerHTML='Автосохранение: <b>'+(cfg.auto?'ВКЛ':'ВЫКЛ')+'</b>'}
 atg.onclick=()=>{cfg.auto=!cfg.auto;save();if(!cfg.auto)cancelAuto();syncAuto()};syncAuto();
@@ -3484,7 +3509,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v21';
+const IB_VER='v22';
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
 // АДРЕС БОТА ПО УМОЛЧАНИЮ: впишите сюда адрес вашего воркера один раз — тогда всем пользователям (жене и др.) ничего вводить не нужно
 const BOT_URL='https://finansepro.olegkiselar3105.workers.dev';
