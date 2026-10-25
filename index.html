@@ -441,7 +441,7 @@ button{transition:opacity .15s ease,color .2s ease,background-color .2s ease,bor
 .sw.swg>.r2,.sw.swg>.dh{will-change:transform}
 #rev .sw>.r{will-change:auto}
 /* группы дней за экраном не рисуются и не считаются заново при каждой перерисовке */
-.dg{content-visibility:auto;contain-intrinsic-size:auto 132px}
+.list.cv .dg{content-visibility:auto;contain-intrinsic-size:auto 132px}
 html.ncv .dg{content-visibility:visible}
 /* тост: плавно появляется и плавно исчезает */
 #toast{display:flex;visibility:hidden;opacity:0;pointer-events:none;transform:translate(-50%,14px) scale(.96);transition:opacity .2s ease,transform .3s cubic-bezier(.4,0,.2,1),visibility 0s .3s}
@@ -1945,7 +1945,10 @@ function render(){
   $('#ttl').textContent=ttlOf(tab);
   const dlst=$('#tgl');if(dlst)dlst.innerHTML=allTags().map(g=>`<option value="${E(g)}">`).join('');
   $('#top').style.display=tab==='list'&&searchOn()?'none':'';if(tab!=='list')$('#chip').innerHTML='';
-  buildPage(tab,$('#body'),false);hoistBar();fitSoon()}
+  const y0=window.scrollY||0;
+  buildPage(tab,$('#body'),false);hoistBar();
+  if(y0>0&&Math.abs((window.scrollY||0)-y0)>2&&document.documentElement.scrollHeight>=y0+innerHeight)window.scrollTo(0,y0);   // перерисовка (бот, облако) не сбрасывает прокрутку
+  fitSoon()}
 function buildPage(pg,B,peek){
   const [y,mo]=month.split('-').map(Number);
   const mt=tx.filter(t=>t.date.startsWith(month)).sort((a,b)=>b.date.localeCompare(a.date));
@@ -1970,7 +1973,7 @@ function buildPage(pg,B,peek){
           pre+=`<div class="cd" style="padding:2px 14px"><h4 style="margin-top:10px">Расходы по категориям</h4>`+Object.entries(by).sort((a,b)=>b[1]-a[1]).map(([id,v])=>{const c=cd(id),p=v/et*100;return `<div class="pl" data-cat="${id}" role="button" tabindex="0"><span class="pc" style="background:${c.c}">${p<1?'<1':Math.round(p)}%</span><span>${E(c.l)}</span><span>${fmt(v)}</span></div>`}).join('')+`</div>`}}}
     if(!L.length){B.innerHTML=pre+`<div class="emp">${full?'Ничего не найдено.':'Нет операций.<br>Нажмите «+» и напишите несколько позиций подряд.'}</div>`;return}
     const g={};L.forEach(t=>(g[t.date]=g[t.date]||[]).push(t));
-    B.innerHTML=pre+'<div class="list">'+Object.keys(g).sort().reverse().map(d=>{const l=g[d],di=l.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0),de=l.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+    B.innerHTML=pre+'<div class="list'+(L.length>500?' cv':'')+'">'+Object.keys(g).sort().reverse().map(d=>{const l=g[d],di=l.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0),de=l.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
       const wd=new Date(d+'T00:00:00').getDay();
       return `<div class="dg" style="contain-intrinsic-size:auto ${47+l.length*43}px"><div class="sw sd"><button class="swb" tabindex="-1" aria-label="Удалить день">${ITR}</button><div class="dh"><b>${full?(+d.slice(8))+' '+MS[+d.slice(5,7)-1]+' '+d.slice(0,4):+d.slice(8)}</b><i class="${wd%6===0?'we':''}">${['вс','пн','вт','ср','чт','пт','сб'][wd]}</i><span>${di?`<span class="inc">${fmt(di)}</span> `:''}${de?`<span class="exp">${fmt(de)}</span>`:''}</span></div></div>`+l.map(t=>rowMain(t)).join('')+`</div>`}).join('')+'</div>'}
   else if(pg==='stats'){
@@ -3173,14 +3176,18 @@ function recTick(){if(isModalOpen())return;if(applyRec()){render();toast('Доб
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)recTick()});
 // ---- прокрутка нужна только если содержимое реально не помещается над нижней панелью ----
 let _fitT=0;
+let _scT=0;window.addEventListener('scroll',()=>{_scT=Date.now()},{passive:true});
 function fitScroll(){const de=document.documentElement,B=$('#body'),tb=$('#tabs');if(!B||!tb)return;
-  de.classList.remove('ns');
-  const sy=window.scrollY||0;let bot=B.getBoundingClientRect().top+sy;
+  // пока палец листает список (или сразу после) — ничего не меряем и не прыгаем наверх
+  if(Date.now()-_scT<350||(typeof tp!=='undefined'&&tp&&tp.on)){fitSoon();return}
+  const sy=window.scrollY||0;
+  if(sy>0&&de.classList.contains('ns')===false&&de.scrollHeight>innerHeight+8)return;   // страница явно длиннее экрана и уже прокручена — отдельно проверять нечего
+  de.classList.remove('ns');let bot=B.getBoundingClientRect().top+sy;
   for(const c of B.children){const r=c.getBoundingClientRect();if(r.height>0&&r.bottom+sy>bot)bot=r.bottom+sy}
   const lim=tb.getBoundingClientRect().top+sy;
-  if(bot+4<=lim){de.classList.add('ns');if(sy)window.scrollTo(0,0)}}
+  if(bot+4<=lim){de.classList.add('ns');if(sy)window.scrollTo(0,0)}}   // содержимое действительно короче экрана
 function fitSoon(){clearTimeout(_fitT);_fitT=setTimeout(fitScroll,120)}
-try{new MutationObserver(fitSoon).observe($('#body'),{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','open','hidden']})}catch(e){}
+try{new MutationObserver(fitSoon).observe($('#body'),{childList:true,subtree:true})}catch(e){}   // атрибуты (анимации, свайпы строк) больше не запускают пересчёт
 try{new ResizeObserver(fitSoon).observe($('#body'))}catch(e){}
 ['resize','orientationchange','load'].forEach(ev=>window.addEventListener(ev,fitSoon));
 document.addEventListener('transitionend',fitSoon,true);document.addEventListener('animationend',fitSoon,true);
@@ -3477,8 +3484,8 @@ const BOT_URL='https://finansepro.olegkiselar3105.workers.dev';
 const ibBase=()=>{const u=String((cfg&&cfg.botUrl)||BOT_URL||'').trim().replace(/\/+$/,'');return /^https:\/\/[^\s/]+(\/[^\s]*)?$/.test(u)?u:''};
 const ibSeen=()=>{try{const a=JSON.parse(localStorage.getItem('finapp.ibseen')||'[]');return Array.isArray(a)?a:[]}catch{return[]}};
 const ibSeenSave=a=>{try{localStorage.setItem('finapp.ibseen',JSON.stringify(a.slice(-400)))}catch{}};
-async function ibCall(path,body){
-  const c=new AbortController(),tm=setTimeout(()=>c.abort(),7000);
+async function ibCall(path,body,ms,reg){
+  const c=new AbortController(),tm=setTimeout(()=>c.abort(),ms||7000);if(reg)reg(c);
   try{
     const r=await fetch(ibBase()+path,{method:body?'POST':'GET',signal:c.signal,
       headers:{'Authorization':'tma '+TGW.initData,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
@@ -3490,11 +3497,13 @@ function ibAt(ts,fn){
   const D0=Date,t=(+ts>1e9&&+ts<4e9)?+ts*1000:0;if(!t){return fn()}
   class FD extends D0{constructor(...a){if(a.length)super(...a);else super(t)}static now(){return t}}
   globalThis.Date=FD;try{return fn()}finally{globalThis.Date=D0}}
-async function inboxPull(fast){
+async function inboxPull(fast,wait){
   if(!IN_TG||!ibBase()||IB.busy)return;
-  IB.busy=true;IB.last=Date.now();
+  IB.busy=true;IB.last=Date.now();IB.ctl=null;
   try{
-    const res=await ibCall(fast?'/api/pending?fast=1':'/api/pending'),items=Array.isArray(res&&res.items)?res.items:[];
+    // wait=true — «долгий опрос»: сервер держит запрос до 20 с и отвечает сразу, как только бот получил сообщение
+    const res=await ibCall(wait?'/api/pending?wait=20':fast?'/api/pending?fast=1':'/api/pending',null,wait?28000:0,c=>{IB.ctl=c}),items=Array.isArray(res&&res.items)?res.items:[];
+    IB.lp=!!(res&&res.lp);IB.fail=0;
     if(!items.length)return;
     const seen=new Set(ibSeen()),added=[],left=[],bad=[];let cmd=false;
     for(const it of items){
@@ -3513,9 +3522,16 @@ async function inboxPull(fast){
     if(left.length){drafts.push(...left);renderRev();setTimeout(()=>{try{if(!document.getElementById('spl')&&!isModalOpen())openSheet()}catch{}},2200)}
     if(bad.length)toast('Бот: не понял — «'+bad.slice(0,2).join('», «').slice(0,120)+'»');
     await ibCall('/api/ack',{ids:items.map(x=>x&&x.id).filter(Boolean)})}
-  catch(e){/* нет связи — тихо, повторим; а вот просроченную подпись Telegram показываем один раз */
+  catch(e){IB.fail=(IB.fail||0)+1;/* нет связи — тихо, повторим; а вот просроченную подпись Telegram показываем один раз */
     if(/HTTP 401/.test(String(e&&e.message))&&!IB.authWarned){IB.authWarned=true;try{toast('Бот: закрой и заново открой приложение')}catch{}}}
-  finally{IB.busy=false;window.__ibBusy=false}}
+  finally{IB.busy=false;IB.ctl=null;window.__ibBusy=false}}
+// постоянный долгий опрос: сообщение боту появляется в приложении за секунду. Работает, если воркер с Durable Object (IB.lp)
+async function ibLoop(){
+  if(IB.loopOn)return;IB.loopOn=true;
+  for(;;){
+    if(!IN_TG||!ibBase()||document.hidden||IB.busy||!IB.lp){await new Promise(r=>setTimeout(r,document.hidden?1500:700));continue}
+    await inboxPull(false,true);
+    if(IB.fail)await new Promise(r=>setTimeout(r,Math.min(15000,2000*IB.fail)))}}
 // запуск: ждём первую сверку с облаком (чтобы записи не потерялись при объединении), но не дольше 3,5 с
 (function(){
   if(!IN_TG)return;
@@ -3525,9 +3541,11 @@ async function inboxPull(fast){
     if(!ibBase()){window.__ibBusy=false;return}
     const cloudWait=typeof CL==='object'&&CL.on&&!CL.ready&&Date.now()-t0<3500;
     if(cloudWait)return void setTimeout(go,120);
-    inboxPull()})();
+    inboxPull().then(ibLoop)})();
   // при любом возвращении в приложение — сразу забираем записи и ещё 15 секунд проверяем каждые 3 секунды
-  const wake=()=>{if(document.hidden)return;IB.burst=Date.now()+15000;if(Date.now()-IB.last>1200)inboxPull()};
+  const wake=()=>{if(document.hidden)return;IB.burst=Date.now()+15000;
+    if(IB.busy&&IB.ctl&&Date.now()-IB.last>2500){try{IB.ctl.abort()}catch{}}      // старый долгий запрос мог «заснуть» вместе с окном
+    if(Date.now()-IB.last>1200)setTimeout(()=>inboxPull(false),IB.busy?60:0)};
   document.addEventListener('visibilitychange',wake);
   window.addEventListener('focus',wake);window.addEventListener('pageshow',wake);
   try{TGW.onEvent('activated',wake)}catch{}
@@ -3538,7 +3556,7 @@ async function inboxPull(fast){
     const now=Date.now(),gap=now-IB.lt;IB.lt=now;IB.n++;
     if(!ibBase())return;
     if(gap>9000)IB.burst=now+15000;
-    if(IB.busy)return;
+    if(IB.busy||IB.lp)return;                         // при долгом опросе таймер не нужен
     if(now<IB.burst)inboxPull(false);
     else if(!document.hidden&&IB.n%2===0)inboxPull(IB.n%13!==0)},3000)})();
 
