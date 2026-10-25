@@ -3484,7 +3484,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v19';
+const IB_VER='v20';
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000};
 // АДРЕС БОТА ПО УМОЛЧАНИЮ: впишите сюда адрес вашего воркера один раз — тогда всем пользователям (жене и др.) ничего вводить не нужно
 const BOT_URL='https://finansepro.olegkiselar3105.workers.dev';
@@ -3505,13 +3505,17 @@ function ibAt(ts,fn){
   class FD extends D0{constructor(...a){if(a.length)super(...a);else super(t)}static now(){return t}}
   globalThis.Date=FD;try{return fn()}finally{globalThis.Date=D0}}
 async function inboxPull(fast,wait){
-  if(!IN_TG||!ibBase()||IB.busy)return;
-  IB.busy=true;IB.last=Date.now();IB.ctl=null;
+  if(!IN_TG||!ibBase())return;
+  // долгий и короткий запрос идут независимо: если долгий «завис» в сети, короткий всё равно заберёт запись
+  if(wait){if(IB.lpBusy)return;IB.lpBusy=true}else{if(IB.busy)return;IB.busy=true}
+  IB.last=Date.now();
   try{
-    // wait=true — «долгий опрос»: сервер держит запрос до 20 с и отвечает сразу, как только бот получил сообщение
-    const res=await ibCall(wait?'/api/pending?wait=20':fast?'/api/pending?fast=1':'/api/pending',null,wait?28000:0,c=>{IB.ctl=c}),items=Array.isArray(res&&res.items)?res.items:[];
-    IB.lp=!!(res&&res.lp);IB.fail=0;IB.dbg={t:Date.now(),n:items.length,lp:IB.lp,err:''};
+    // wait=true — «долгий опрос»: сервер держит запрос до ~12 с и отвечает сразу, как только бот получил сообщение
+    const res=await ibCall(wait?'/api/pending?wait=12':fast?'/api/pending?fast=1':'/api/pending',null,wait?22000:0,c=>{if(wait)IB.ctl=c}),items=Array.isArray(res&&res.items)?res.items:[];
+    IB.lp=!!(res&&res.lp);if(wait)IB.fail=0;IB.dbg={t:Date.now(),n:items.length,lp:IB.lp,err:''};
     if(!items.length)return;
+    if(IB.proc)return;IB.proc=true;     // записи разбирает кто-то один; остальное подберёт следующий опрос
+    try{
     const seen=new Set(ibSeen()),added=[],left=[],bad=[];let cmd=false;
     for(const it of items){
       if(!it||!it.id||seen.has(String(it.id)))continue;
@@ -3528,17 +3532,17 @@ async function inboxPull(fast,wait){
     else if(cmd){save();render()}
     if(left.length){drafts.push(...left);renderRev();setTimeout(()=>{try{if(!document.getElementById('spl')&&!isModalOpen())openSheet()}catch{}},2200)}
     if(bad.length)toast('Бот: не понял — «'+bad.slice(0,2).join('», «').slice(0,120)+'»');
-    await ibCall('/api/ack',{ids:items.map(x=>x&&x.id).filter(Boolean)})}
-  catch(e){IB.fail=(IB.fail||0)+1;IB.dbg={t:Date.now(),n:0,lp:IB.lp,err:String(e&&e.message||e).slice(0,60)};/* нет связи — тихо, повторим; а вот просроченную подпись Telegram показываем один раз */
+    await ibCall('/api/ack',{ids:items.map(x=>x&&x.id).filter(Boolean)})}finally{IB.proc=false}}
+  catch(e){if(IB.wakeAbort){IB.wakeAbort=false}else if(wait)IB.fail=(IB.fail||0)+1;IB.dbg={t:Date.now(),n:0,lp:IB.lp,err:String(e&&e.message||e).slice(0,60)};/* нет связи — тихо, повторим; а вот просроченную подпись Telegram показываем один раз */
     if(/HTTP 401/.test(String(e&&e.message))&&!IB.authWarned){IB.authWarned=true;try{toast('Бот: закрой и заново открой приложение')}catch{}}}
-  finally{IB.busy=false;IB.ctl=null;window.__ibBusy=false}}
+  finally{if(wait){IB.lpBusy=false;IB.ctl=null}else IB.busy=false;window.__ibBusy=false}}
 // постоянный долгий опрос: сообщение боту появляется в приложении за секунду. Работает, если воркер с Durable Object (IB.lp)
 async function ibLoop(){
   if(IB.loopOn)return;IB.loopOn=true;
   for(;;){
-    if(!IN_TG||!ibBase()||IB.busy||!IB.lp){await new Promise(r=>setTimeout(r,700));continue}
+    if(!IN_TG||!ibBase()||IB.lpBusy||!IB.lp){await new Promise(r=>setTimeout(r,700));continue}
     await inboxPull(false,true);
-    if(IB.fail)await new Promise(r=>setTimeout(r,Math.min(15000,2000*IB.fail)))}}
+    if(IB.fail)await new Promise(r=>setTimeout(r,Math.min(4000,800*IB.fail)))}}
 // запуск: ждём первую сверку с облаком (чтобы записи не потерялись при объединении), но не дольше 3,5 с
 (function(){
   if(!IN_TG)return;
@@ -3551,8 +3555,8 @@ async function ibLoop(){
     inboxPull().then(ibLoop)})();
   // при любом возвращении в приложение — сразу забираем записи и ещё 15 секунд проверяем каждые 3 секунды
   const wake=()=>{IB.burst=Date.now()+15000;
-    if(IB.busy&&IB.ctl&&Date.now()-IB.last>2500){try{IB.ctl.abort()}catch{}}      // старый долгий запрос мог «заснуть» вместе с окном
-    if(Date.now()-IB.last>1200)setTimeout(()=>inboxPull(false),IB.busy?60:0)};
+    if(IB.lpBusy&&IB.ctl&&Date.now()-IB.last>2500){IB.wakeAbort=true;try{IB.ctl.abort()}catch{}}      // старый долгий запрос мог «заснуть» вместе с окном
+    if(Date.now()-IB.last>1200)inboxPull(false)};
   document.addEventListener('visibilitychange',wake);
   window.addEventListener('focus',wake);window.addEventListener('pageshow',wake);
   try{TGW.onEvent('activated',wake)}catch{}
@@ -3563,7 +3567,8 @@ async function ibLoop(){
     const now=Date.now(),gap=now-IB.lt;IB.lt=now;IB.n++;
     if(!ibBase())return;
     if(gap>9000)IB.burst=now+15000;
-    if(IB.busy||IB.lp)return;                         // при долгом опросе таймер не нужен
+    if(IB.busy)return;
+    if(IB.lp){if(IB.n%2===0)inboxPull(false);return}   // долгий опрос идёт сам; короткий раз в 6 с — страховка, если долгий завис
     if(now<IB.burst)inboxPull(false);
     else if(IB.n%2===0)inboxPull(IB.n%13!==0)},3000)})();
 

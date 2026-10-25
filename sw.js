@@ -1,6 +1,6 @@
 // Версия теперь нужна только для чистки старого кэша; обновления приложения подхватываются сами:
 // страница и скрипты берутся из сети первыми (кэш — только запасной вариант без интернета).
-const VERSION='finance-v19';
+const VERSION='finance-v20';
 const SHELL=['./','index.html','manifest.webmanifest','icons/icon-192.png','icons/icon-512.png','icons/maskable-512.png','icons/apple-touch-icon.png','icons/favicon-32.png'];
 const WAIT=4000; // сколько ждём сеть, прежде чем открыть сохранённую копию
 
