@@ -3471,7 +3471,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB={busy:false,last:0};
+const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000};
 // АДРЕС БОТА ПО УМОЛЧАНИЮ: впишите сюда адрес вашего воркера один раз — тогда всем пользователям (жене и др.) ничего вводить не нужно
 const BOT_URL='https://finansepro.olegkiselar3105.workers.dev';
 const ibBase=()=>{const u=String((cfg&&cfg.botUrl)||BOT_URL||'').trim().replace(/\/+$/,'');return /^https:\/\/[^\s/]+(\/[^\s]*)?$/.test(u)?u:''};
@@ -3507,6 +3507,7 @@ async function inboxPull(fast){
       if(!r.length&&!cm.msgs.length){bad.push(text);continue}
       r.forEach(d=>{delete d.addCat;if(d.amount>0)added.push(d);else left.push(d)})}
     ibSeenSave([...seen]);
+    for(let w=0;w<30&&typeof CL==='object'&&CL.busy;w++)await new Promise(r=>setTimeout(r,200));
     if(added.length)commit(added,false);
     else if(cmd){save();render()}
     if(left.length){drafts.push(...left);renderRev();setTimeout(()=>{try{if(!document.getElementById('spl')&&!isModalOpen())openSheet()}catch{}},2200)}
@@ -3525,14 +3526,21 @@ async function inboxPull(fast){
     const cloudWait=typeof CL==='object'&&CL.on&&!CL.ready&&Date.now()-t0<3500;
     if(cloudWait)return void setTimeout(go,120);
     inboxPull()})();
-  // сразу забираем записи при любом возвращении в приложение (из чата, из фона, из другого окна)
-  const wake=()=>{if(!document.hidden&&Date.now()-IB.last>1500)inboxPull()};
+  // при любом возвращении в приложение — сразу забираем записи и ещё 15 секунд проверяем каждые 3 секунды
+  const wake=()=>{if(document.hidden)return;IB.burst=Date.now()+15000;if(Date.now()-IB.last>1200)inboxPull()};
   document.addEventListener('visibilitychange',wake);
   window.addEventListener('focus',wake);window.addEventListener('pageshow',wake);
   try{TGW.onEvent('activated',wake)}catch{}
   try{TGW.onEvent('viewportChanged',wake)}catch{}
-  // пока приложение открыто — лёгкая проверка раз в 6 секунд (воркер отвечает по одному ключу, без перебора очереди)
-  setInterval(()=>{if(!document.hidden&&!IB.busy&&ibBase())inboxPull(true)},6000)})();
+  // постоянный опрос раз в 3 секунды. Если окно «заморозили» и разморозили (таймер был остановлен) — считаем это возвращением.
+  // Сразу после открытия — полная проверка очереди; дальше раз в 6 секунд лёгкая (одна метка), раз в ~40 секунд полная.
+  setInterval(()=>{
+    const now=Date.now(),gap=now-IB.lt;IB.lt=now;IB.n++;
+    if(!ibBase())return;
+    if(gap>9000)IB.burst=now+15000;
+    if(IB.busy)return;
+    if(now<IB.burst)inboxPull(false);
+    else if(!document.hidden&&IB.n%2===0)inboxPull(IB.n%13!==0)},3000)})();
 
 </script>
 <script>
@@ -3651,7 +3659,7 @@ if('serviceWorker' in navigator&&location.protocol!=='file:'){
 if(window.AppTour)return;
 const D=document,RM=matchMedia('(prefers-reduced-motion:reduce)').matches;
 const KEY='finapp.tour';
-const ALL=['welcome','new15','list','sheet','stats','stats:trend','stats:cal','stats:tags','tags','tags:budget','tags:debts'];
+const ALL=['welcome','new16','list','sheet','stats','stats:trend','stats:cal','stats:tags','tags','tags:budget','tags:debts'];
 const q=(s,r)=>(r||D).querySelector(s);
 // первый подходящий элемент, не из «соседних» страниц, которые рисуются на время свайпа
 const qa=s=>[...D.querySelectorAll(s)].find(e=>!e.closest('[aria-hidden="true"]'))||null;
@@ -3735,17 +3743,15 @@ const SL=[
 
 /* ---------- «Что нового»: показывается один раз после обновления ---------- */
 const NEWSL=[
-  {h:'Записи от бота — сразу',p:'Написали боту «такси 120» или отправили голосовое — откройте приложение из чата, и запись уже там. Перезапускать Telegram не нужно. Пока приложение открыто, оно само проверяет новые записи.',v:
-   `<div class="v2" style="display:flex;align-items:center;gap:18px"><div class="v2m"><b></b><b></b><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 3L3 10.5l7 2.5 2.5 7z"/><path d="M21 3L10 13"/></svg></div><div class="v2r"><div style="--d:.5s"><em>🚕</em><span>Такси</span><b class="exp">−200</b></div><div style="--d:1s"><em>☕</em><span>Кофе</span><b class="exp">−50</b></div><div style="--d:1.5s"><em>💼</em><span>Зарплата</span><b class="inc">+500</b></div></div></div>`},
-  {h:'Настройки стали чище',p:'Адрес бота теперь зашит в приложение, вводить его не нужно. «Добавить на экран «Домой»» — в меню «⋯» Telegram, обучение покажется само, когда нужно.',v:
-   `<div class="v2" style="display:flex;align-items:center;justify-content:center"><div class="v2r" style="width:220px"><div style="--d:.4s"><em>💱</em><span>Валюта и курсы</span></div><div style="--d:.9s"><em>🌓</em><span>Тема</span></div><div style="--d:1.4s"><em>💾</em><span>Резервная копия</span></div></div></div>`}
+  {h:'Записи от бота — сразу',p:'Написали боту «такси 120» или отправили голосовое — откройте приложение из чата, и запись уже там. Перезапускать Telegram не нужно.',v:
+   `<div class="v2" style="display:flex;align-items:center;gap:18px"><div class="v2m"><b></b><b></b><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 3L3 10.5l7 2.5 2.5 7z"/><path d="M21 3L10 13"/></svg></div><div class="v2r"><div style="--d:.5s"><em>🚕</em><span>Такси</span><b class="exp">−200</b></div><div style="--d:1s"><em>☕</em><span>Кофе</span><b class="exp">−50</b></div><div style="--d:1.5s"><em>💼</em><span>Зарплата</span><b class="inc">+500</b></div></div></div>`}
 ];
 
 /* ---------- интерфейс ---------- */
 let root,hole,card,cT,cX,cDots,cSkip,cNext,wel,wSls,wDots,wSkip,wNext,pT,pB;
 function fillSlides(list){
   q('.tr-sls',wel).innerHTML=list.map(s=>`<section class="tr-sl"><div class="tr-vis">${s.v}</div><h2>${s.h}</h2><p>${s.p}</p></section>`).join('');
-  q('.tr-dots',wel).innerHTML=list.map(()=>'<i></i>').join('');
+  q('.tr-dots',wel).innerHTML=list.map(()=>'<i></i>').join('');q('.tr-dots',wel).hidden=list.length<2;
   wSls=[...wel.querySelectorAll('.tr-sl')];wDots=[...wel.querySelectorAll('.tr-dots i')];
   wel.setAttribute('aria-label',list===NEWSL?'Что нового':'Знакомство с приложением')}
 let active=null,raf=0,last='',cool=0;
@@ -3808,11 +3814,11 @@ function welNext(){const a=active;if(!a||a.kind!=='wel')return;a.i<a.list.length
 function finishWelcome(kind){
   if(!active||active.kind!=='wel')return;
   const news=active.news;active=null;
-  if(news){mark('new15');root.classList.remove('on','wel');cool=Date.now()+900;return}
+  if(news){mark('new16');root.classList.remove('on','wel');cool=Date.now()+900;return}
   if(kind==='skip'){
     mark(ALL);root.classList.remove('on','wel');cool=Date.now()+900;
     return}
-  mark(['welcome','new15']);
+  mark(['welcome','new16']);
   // знакомство уходит, и сразу начинается разбор главного экрана
   root.classList.remove('wel');
   setTimeout(()=>{if(!runTour('list',{first:true})){root.classList.remove('on');cool=Date.now()+900}},420)}
@@ -3935,7 +3941,7 @@ function consider(){
   if(!gate()){na=0;return}
   const S=seen();if(!S.welcome)return;
   // после обновления один раз показываем «Что нового» (экран должен постоять спокойно)
-  if(!S.new15){if(!na)na=Date.now();if(Date.now()-na>=1800){na=0;runWelcome(true)}return}
+  if(!S.new16){if(!na)na=Date.now();if(Date.now()-na>=1800){na=0;runWelcome(true)}return}
   const key=ctxKey();
   if(S[key]||!TOURS[key]||key==='sheet'){pk='';return}
   if(key!==pk){pk=key;pa=Date.now();return}      // экран должен простоять спокойно, пока не покажем подсказку
@@ -3970,7 +3976,7 @@ function replay(){
   try{if(typeof tab!=='undefined'&&tab!=='list'&&typeof setTab==='function')setTab('list')}catch(e){}
   setTimeout(()=>{const go=()=>{if(gate())runWelcome();else setTimeout(go,500)};go()},650)}
 
-window.AppTour={replay,run:runTour,reset,news:()=>{if(active)return;const m=seen();delete m.new15;try{localStorage.setItem(KEY,JSON.stringify(m))}catch(e){}try{if(typeof cfg==='object'&&cfg){cfg.tour=m;if(typeof save==='function')save()}}catch(e){}na=0}};
+window.AppTour={replay,run:runTour,reset,news:()=>{if(active)return;const m=seen();delete m.new16;try{localStorage.setItem(KEY,JSON.stringify(m))}catch(e){}try{if(typeof cfg==='object'&&cfg){cfg.tour=m;if(typeof save==='function')save()}}catch(e){}na=0}};
 if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',boot);else boot();
 })();
 </script>
