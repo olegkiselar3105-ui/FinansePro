@@ -2911,7 +2911,7 @@ ${IN_TG?'<button class="bkrow" id="ibdbg">Бот: проверить сейча�
   if($('#tpr'))$('#tpr').onclick=()=>{cfg.tplHide=[];save();renderSt();toast('Шаблоны возвращены')};
   if($('#hsb'))homeBind();if($('#botu'))$('#botu').onchange=e=>{const v=String(e.target.value||'').trim();cfg.botUrl=v;save();if(ibBase()){window.__ibBusy=false;inboxPull()}};if($('#ibdbg'))$('#ibdbg').onclick=async()=>{const u=ibBase();if(!u){toast('Бот: адрес не задан');return}
     IB.busy=false;try{IB.ctl&&IB.ctl.abort()}catch{}await new Promise(r=>setTimeout(r,80));await inboxPull(false);const d=IB.dbg||{};
-    toast(IB_VER+' · '+(IB.lp?'мгновенный':'обычный')+' · '+u.replace('https://','').slice(0,34)+' · '+(d.err?'ошибка '+d.err:'записей: '+(d.n||0)))};
+    toast(IB_VER+' · '+(IB.lp?'мгновенный':'обычный')+' · '+u.replace('https://','').slice(0,48)+(d.uid?' · id '+d.uid:'')+' · '+(d.err?'ошибка '+d.err:'записей: '+(d.n||0)))};
   $('#bkp').onclick=()=>openBq('backup');if($('#tourb'))$('#tourb').onclick=()=>{closeSettings();if(window.AppTour)AppTour.replay()}}
 // ---- маленькое окошко снизу: подтверждение сброса и резервная копия ----
 const bq=$('#bq');let bqT=null,bqCb=null;
@@ -3484,20 +3484,20 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v20';
-const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000};
+const IB_VER='v21';
+const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
 // АДРЕС БОТА ПО УМОЛЧАНИЮ: впишите сюда адрес вашего воркера один раз — тогда всем пользователям (жене и др.) ничего вводить не нужно
 const BOT_URL='https://finansepro.olegkiselar3105.workers.dev';
-const ibBase=()=>{const u=String((cfg&&cfg.botUrl)||BOT_URL||'').trim().replace(/\/+$/,'');return /^https:\/\/[^\s/]+(\/[^\s]*)?$/.test(u)?u:''};
+const ibBase=()=>{const u=String(BOT_URL||(cfg&&cfg.botUrl)||'').trim().replace(/\/+$/,'');return /^https:\/\/[^\s/]+(\/[^\s]*)?$/.test(u)?u:''};
 const ibSeen=()=>{try{const a=JSON.parse(localStorage.getItem('finapp.ibseen')||'[]');return Array.isArray(a)?a:[]}catch{return[]}};
 const ibSeenSave=a=>{try{localStorage.setItem('finapp.ibseen',JSON.stringify(a.slice(-400)))}catch{}};
 async function ibCall(path,body,ms,reg){
   const c=new AbortController(),tm=setTimeout(()=>c.abort(),ms||7000);if(reg)reg(c);
   try{
-    const r=await fetch(ibBase()+path,{method:body?'POST':'GET',signal:c.signal,
+    const r=await fetch(ibBase()+path+(body?'':(path.includes('?')?'&':'?')+'_='+Date.now()),{method:body?'POST':'GET',signal:c.signal,cache:'no-store',
       headers:{'Authorization':'tma '+TGW.initData,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
     if(!r.ok)throw new Error('HTTP '+r.status);
-    return await r.json()}
+    const j=await r.json();IB.ok=Date.now();return j}
   finally{clearTimeout(tm)}}
 // «сегодня» для разбора = момент, когда сообщение отправлено боту (а не момент открытия приложения)
 function ibAt(ts,fn){
@@ -3512,27 +3512,35 @@ async function inboxPull(fast,wait){
   try{
     // wait=true — «долгий опрос»: сервер держит запрос до ~12 с и отвечает сразу, как только бот получил сообщение
     const res=await ibCall(wait?'/api/pending?wait=12':fast?'/api/pending?fast=1':'/api/pending',null,wait?22000:0,c=>{if(wait)IB.ctl=c}),items=Array.isArray(res&&res.items)?res.items:[];
-    IB.lp=!!(res&&res.lp);if(wait)IB.fail=0;IB.dbg={t:Date.now(),n:items.length,lp:IB.lp,err:''};
+    IB.lp=!!(res&&res.lp);if(wait)IB.fail=0;IB.dbg={t:Date.now(),n:items.length,lp:IB.lp,err:'',uid:res&&res.uid||''};
     if(!items.length)return;
     if(IB.proc)return;IB.proc=true;     // записи разбирает кто-то один; остальное подберёт следующий опрос
     try{
-    const seen=new Set(ibSeen()),added=[],left=[],bad=[];let cmd=false;
+    IB.procAt=Date.now();
+    const seen=new Set(ibSeen()),added=[],left=[],bad=[],badIds=[],okIds=[],fresh=[];let cmd=false;
     for(const it of items){
-      if(!it||!it.id||seen.has(String(it.id)))continue;
-      const text=String(it.text||'').trim().slice(0,500);seen.add(String(it.id));if(!text)continue;
-      let cm={rest:text,msgs:[]},r=[];needRate.clear();
-      ibAt(it.ts,()=>{cm=voiceCmds(text);r=parse(cm.rest)});
-      if(needRate.size){try{await ratesRefresh(true)}catch{}needRate.clear();ibAt(it.ts,()=>{r=parse(cm.rest)})}
-      if(cm.msgs.length)cmd=true;
-      if(!r.length&&!cm.msgs.length){bad.push(text);continue}
-      r.forEach(d=>{delete d.addCat;if(d.amount>0)added.push(d);else left.push(d)})}
-    ibSeenSave([...seen]);
+      if(!it||!it.id)continue;const sid=String(it.id);
+      if(seen.has(sid)){okIds.push(sid);continue}                       // уже записано раньше — просто подтверждаем
+      const text=String(it.text||'').trim().slice(0,500);okIds.push(sid);fresh.push(sid);if(!text)continue;
+      try{
+        let cm={rest:text,msgs:[]},r=[];needRate.clear();
+        ibAt(it.ts,()=>{cm=voiceCmds(text);r=parse(cm.rest)});
+        if(needRate.size){try{await ratesRefresh(true)}catch{}needRate.clear();ibAt(it.ts,()=>{r=parse(cm.rest)})}
+        if(cm.msgs.length)cmd=true;
+        if(!r.length&&!cm.msgs.length){bad.push(text);badIds.push(sid);continue}
+        r.forEach(d=>{delete d.addCat;if(d.amount>0)added.push(d);else left.push(d)})
+      }catch(e){bad.push(text);badIds.push(sid)}}                           // одна «битая» запись не должна блокировать остальные
     for(let w=0;w<30&&typeof CL==='object'&&CL.busy;w++)await new Promise(r=>setTimeout(r,200));
-    if(added.length)commit(added,false);
-    else if(cmd){save();render()}
-    if(left.length){drafts.push(...left);renderRev();setTimeout(()=>{try{if(!document.getElementById('spl')&&!isModalOpen())openSheet()}catch{}},2200)}
+    let saved=true;
+    try{
+      if(added.length)commit(added,false);
+      else if(cmd){save();render()}
+      if(left.length){drafts.push(...left);renderRev();setTimeout(()=>{try{if(!document.getElementById('spl')&&!isModalOpen())openSheet()}catch{}},2200)}
+    }catch(e){saved=false;IB.dbg={t:Date.now(),n:0,lp:IB.lp,err:'запись: '+String(e&&e.message||e).slice(0,50)}}
+    if(!saved)return;                       // не сохранилось — в очереди запись остаётся, следующий опрос повторит (ничего не теряется)
+    fresh.forEach(i=>seen.add(i));ibSeenSave([...seen]);
     if(bad.length)toast('Бот: не понял — «'+bad.slice(0,2).join('», «').slice(0,120)+'»');
-    await ibCall('/api/ack',{ids:items.map(x=>x&&x.id).filter(Boolean)})}finally{IB.proc=false}}
+    await ibCall('/api/ack',{ids:okIds,bad:badIds})}finally{IB.proc=false}}
   catch(e){if(IB.wakeAbort){IB.wakeAbort=false}else if(wait)IB.fail=(IB.fail||0)+1;IB.dbg={t:Date.now(),n:0,lp:IB.lp,err:String(e&&e.message||e).slice(0,60)};/* нет связи — тихо, повторим; а вот просроченную подпись Telegram показываем один раз */
     if(/HTTP 401/.test(String(e&&e.message))&&!IB.authWarned){IB.authWarned=true;try{toast('Бот: закрой и заново открой приложение')}catch{}}}
   finally{if(wait){IB.lpBusy=false;IB.ctl=null}else IB.busy=false;window.__ibBusy=false}}
@@ -3561,6 +3569,31 @@ async function ibLoop(){
   window.addEventListener('focus',wake);window.addEventListener('pageshow',wake);
   try{TGW.onEvent('activated',wake)}catch{}
   try{TGW.onEvent('viewportChanged',wake)}catch{}
+  // любое касание экрана — тоже повод проверить очередь (на случай, если окно «спало» и события возвращения не пришли)
+  ['pointerdown','touchstart','keydown'].forEach(ev=>document.addEventListener(ev,()=>{if(ibBase()&&Date.now()-IB.last>2500)inboxPull(false)},{capture:true,passive:true}));
+  // сторож: если за 25 секунд не пришёл ни один ответ от бота — сбрасываем «зависшие» запросы и опрашиваем заново
+  setInterval(()=>{
+    if(!ibBase()||document.hidden||Date.now()-IB.ok<25000)return;
+    IB.busy=false;IB.lpBusy=false;if(Date.now()-(IB.procAt||0)>40000)IB.proc=false;
+    try{IB.ctl&&IB.ctl.abort()}catch{}
+    inboxPull(false)},5000);
+  // проверка новой версии приложения: GitHub Pages и Telegram любят держать старую копию страницы
+  let vcAt=0;
+  const verCheck=async()=>{
+    if(Date.now()-vcAt<10*60e3)return;vcAt=Date.now();
+    try{
+      const r=await fetch('index.html?_='+Date.now(),{cache:'no-store'});if(!r.ok)return;
+      const m=/const IB_VER='v(\d+)'/.exec(await r.text());if(!m||+m[1]<=+IB_VER.slice(1))return;
+      let tried='';try{tried=sessionStorage.getItem('finapp.vr')||''}catch{}
+      if(tried===m[1])return;                                                              // уже пробовали — без бесконечных перезагрузок
+      const tr=document.getElementById('tour');
+      if((typeof isModalOpen==='function'&&isModalOpen())||(tr&&tr.classList.contains('on'))||(typeof inp!=='undefined'&&inp&&inp.value.trim()))return;
+      try{sessionStorage.setItem('finapp.vr',m[1])}catch{}
+      const u=new URL(location.href);u.searchParams.set('v',m[1]);location.replace(u.toString())
+    }catch{}};
+  setTimeout(verCheck,2500);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});
+  try{TGW.onEvent('activated',verCheck)}catch{}
   // постоянный опрос раз в 3 секунды. Если окно «заморозили» и разморозили (таймер был остановлен) — считаем это возвращением.
   // Сразу после открытия — полная проверка очереди; дальше раз в 6 секунд лёгкая (одна метка), раз в ~40 секунд полная.
   setInterval(()=>{

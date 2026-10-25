@@ -1,6 +1,6 @@
 // Версия теперь нужна только для чистки старого кэша; обновления приложения подхватываются сами:
 // страница и скрипты берутся из сети первыми (кэш — только запасной вариант без интернета).
-const VERSION='finance-v20';
+const VERSION='finance-v21';
 const SHELL=['./','index.html','manifest.webmanifest','icons/icon-192.png','icons/icon-512.png','icons/maskable-512.png','icons/apple-touch-icon.png','icons/favicon-32.png'];
 const WAIT=4000; // сколько ждём сеть, прежде чем открыть сохранённую копию
 
@@ -22,6 +22,7 @@ const fresh=(r)=>fetch(r.url,{cache:'no-cache',credentials:'same-origin'}).then(
 self.addEventListener('fetch',e=>{
   const r=e.request;
   if(r.method!=='GET'||new URL(r.url).origin!==location.origin)return;
+  if(new URL(r.url).searchParams.has('_'))return;   // проверки версии и «живые» запросы с меткой _ идут напрямую в сеть и не попадают в кэш
   const isPage=r.mode==='navigate'||/\.(html|webmanifest|js)$/.test(new URL(r.url).pathname)||new URL(r.url).pathname.endsWith('/');
   if(isPage){
     // сеть первой (всегда свежая версия), при отсутствии интернета или долгом ответе — кэш
