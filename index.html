@@ -29,6 +29,8 @@ html.nt *:not(.thm i),html.nt *:not(.thm i)::before,html.nt *:not(.thm i)::after
 html{scroll-padding-top:var(--sat);background:var(--bg)}
 html,body{touch-action:pan-y pinch-zoom;overscroll-behavior-y:none}
 html.ns,html.ns body{overflow:hidden;height:100%}
+#vb{position:fixed;right:8px;bottom:calc(2px + var(--sab,0px));z-index:5;font-size:10px;line-height:12px;letter-spacing:.2px;color:var(--m);opacity:.45;pointer-events:none;user-select:none;-webkit-user-select:none;font-variant-numeric:tabular-nums}
+#body .dg{will-change:auto}
 #body{position:relative;display:flow-root;min-height:55vh;touch-action:pan-y pinch-zoom;will-change:transform}
 #tabs{touch-action:none}
 *,*:before,*:after{box-sizing:inherit;margin:0}
@@ -832,7 +834,7 @@ html.intro #tabs,html.intro #fab{animation:inUp .9s cubic-bezier(.22,1,.36,1) .4
 #st input.sm{width:58%;min-width:0;background:transparent;text-align:right;font:inherit;font-size:12px;outline:none}#st input.sm::placeholder{color:var(--m)}#st input.sm:focus{border-color:var(--m2)}
 
 </style></head>
-<body><div id="spl" aria-hidden="true">
+<body><div id="vb" aria-hidden="true"></div><div id="spl" aria-hidden="true">
 <svg class="spl-logo" viewBox="96 96 320 320" width="132" height="132" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
 <defs><linearGradient id="splg" x1="0" x2="1"><stop offset="0" style="stop-color:var(--g);stop-opacity:.3"/><stop offset=".5" style="stop-color:var(--g)"/><stop offset="1" style="stop-color:var(--g);stop-opacity:.3"/></linearGradient>
 <clipPath id="splc"><rect x="96" y="96" width="320" height="104"/></clipPath></defs>
@@ -1960,6 +1962,39 @@ function animNums(root){if(RM)return;root.querySelectorAll('[data-cn]').forEach(
   if(from===to)return;const t0=performance.now(),d=1000;el.textContent=fmt(Math.round(from))+suf;
   const step=n=>{const k=Math.min(1,(n-t0)/d);if(k<1){el.textContent=fmt(Math.round(from+(to-from)*smoother(k)))+suf;setBlur(el,speedOf(k));el._r=requestAnimationFrame(step)}else{el.textContent=fmt(Math.round(to))+suf;setBlur(el,0)}};
   el._r=requestAnimationFrame(step)})}
+
+// ---- плавное обновление списка операций: ничего не мигает, плашки дней и строки переезжают на новые места ----
+let _fk='';
+const FLIP_EASE='cubic-bezier(.22,1,.36,1)',FLIP_MS=560;
+function flipKey(){return [tab,month,fday||'',fcat?fcat.id:'',ftag||'',typeof q==='string'?q:'',searchOn()?1:0].join('|')}
+function flipSnap(){
+  const key=flipKey(),same=key===_fk;_fk=key;
+  if(!same||tab!=='list'||!Element.prototype.animate||matchMedia('(prefers-reduced-motion:reduce)').matches||document.getElementById('spl')||document.documentElement.classList.contains('intro'))return null;
+  const B=document.getElementById('body');if(!B)return null;
+  const dgs=[...B.querySelectorAll('.dg[data-d]')];if(!dgs.length)return null;
+  const m={dg:{},row:{}};
+  dgs.forEach(d=>{const r=d.getBoundingClientRect();m.dg[d.dataset.d]={t:r.top,h:r.height};
+    d.querySelectorAll('.sw[data-id]:not(.sd)').forEach(w=>{m.row[w.dataset.id]=w.getBoundingClientRect().top-r.top})});
+  return m}
+function flipRun(m){
+  if(!m)return;
+  try{
+    const B=document.getElementById('body');if(!B)return;
+    const nd=[...B.querySelectorAll('.dg[data-d]')];
+    if(!nd.length||nd.length>60)return;
+    const opt={duration:FLIP_MS,easing:FLIP_EASE};
+    nd.forEach(d=>{
+      const o=m.dg[d.dataset.d],r=d.getBoundingClientRect();
+      if(!o){                                                 // новый день — мягко проявляется сверху
+        d.animate([{opacity:0,transform:'translate3d(0,-14px,0) scale(.985)'},{opacity:1,transform:'none'}],opt);return}
+      const dy=o.t-r.top,dh=o.h-r.height;
+      if(Math.abs(dy)>1)d.animate([{transform:'translate3d(0,'+dy+'px,0)'},{transform:'none'}],opt);
+      if(Math.abs(dh)>1)d.animate([{height:o.h+'px'},{height:r.height+'px'}],opt);   // плашка дня плавно растёт/сжимается
+      d.querySelectorAll('.sw[data-id]:not(.sd)').forEach(w=>{
+        const ro=m.row[w.dataset.id];if(ro==null)return;
+        const dr=ro-(w.getBoundingClientRect().top-r.top);
+        if(Math.abs(dr)>1)w.animate([{transform:'translate3d(0,'+dr+'px,0)'},{transform:'none'}],opt)})})
+  }catch(e){}}
 function render(){
   pgSettle();openSw=null;sd=null;
   if(month!==_wm){WO=woFor(month);_wm=month}
@@ -1974,9 +2009,10 @@ function render(){
   const dlst=$('#tgl');if(dlst)dlst.innerHTML=allTags().map(g=>`<option value="${E(g)}">`).join('');
   $('#top').style.display=tab==='list'&&searchOn()?'none':'';if(tab!=='list')$('#chip').innerHTML='';
   const y0=window.scrollY||0;
+  const fs=flipSnap();
   buildPage(tab,$('#body'),false);hoistBar();
   if(y0>0&&Math.abs((window.scrollY||0)-y0)>2&&document.documentElement.scrollHeight>=y0+innerHeight)window.scrollTo(0,y0);   // перерисовка (бот, облако) не сбрасывает прокрутку
-  fitSoon()}
+  flipRun(fs);fitSoon()}
 function buildPage(pg,B,peek){
   const [y,mo]=month.split('-').map(Number);
   const mt=tx.filter(t=>t.date.startsWith(month)).sort((a,b)=>b.date.localeCompare(a.date));
@@ -2003,7 +2039,7 @@ function buildPage(pg,B,peek){
     const g={};L.forEach(t=>(g[t.date]=g[t.date]||[]).push(t));
     B.innerHTML=pre+'<div class="list'+(L.length>500?' cv':'')+'">'+Object.keys(g).sort().reverse().map(d=>{const l=g[d],di=l.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0),de=l.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
       const wd=new Date(d+'T00:00:00').getDay();
-      return `<div class="dg" style="contain-intrinsic-size:auto ${47+l.length*43}px"><div class="sw sd"><button class="swb" tabindex="-1" aria-label="Удалить день">${ITR}</button><div class="dh"><b>${full?(+d.slice(8))+' '+MS[+d.slice(5,7)-1]+' '+d.slice(0,4):+d.slice(8)}</b><i class="${wd%6===0?'we':''}">${['вс','пн','вт','ср','чт','пт','сб'][wd]}</i><span>${di?`<span class="inc">${fmt(di)}</span> `:''}${de?`<span class="exp">${fmt(de)}</span>`:''}</span></div></div>`+l.map(t=>rowMain(t)).join('')+`</div>`}).join('')+'</div>'}
+      return `<div class="dg" data-d="${d}" style="contain-intrinsic-size:auto ${47+l.length*43}px"><div class="sw sd"><button class="swb" tabindex="-1" aria-label="Удалить день">${ITR}</button><div class="dh"><b>${full?(+d.slice(8))+' '+MS[+d.slice(5,7)-1]+' '+d.slice(0,4):+d.slice(8)}</b><i class="${wd%6===0?'we':''}">${['вс','пн','вт','ср','чт','пт','сб'][wd]}</i><span>${di?`<span class="inc">${fmt(di)}</span> `:''}${de?`<span class="exp">${fmt(de)}</span>`:''}</span></div></div>`+l.map(t=>rowMain(t)).join('')+`</div>`}).join('')+'</div>'}
   else if(pg==='stats'){
     if(AS==='trend'){B.innerHTML=subAn()+trendHtml(peek);return}
     if(AS==='cal'){B.innerHTML=subAn()+calHtml(!peek);if(!peek)animNums(B);return}
@@ -2928,15 +2964,13 @@ function renderSt(){
   $('#st').innerHTML=`<label>Валюта и курсы<button class="sm" id="cub">${E(cfg.cur)}</button></label>
 ${cfg.tplHide.length?`<label>Быстрые шаблоны<button class="sm" id="tpr">Вернуть скрытые (${cfg.tplHide.length})</button></label>`:''}
 ${(()=>{const v=cfg.theme==='light'||cfg.theme==='auto'?cfg.theme:'dark';return `<div class="thr"><span>Тема</span><div class="thm" id="thm" role="radiogroup" aria-label="Тема" data-v="${v==='light'?'l':v==='auto'?'a':'d'}"><i></i>${[['dark','Тёмная','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg>'],['auto','Авто','Авто'],['light','Светлая','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2.5 12h2M19.5 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>']].map(([k,n,h])=>`<button type="button" role="radio" data-th="${k}" aria-label="${n}" title="${n}" aria-checked="${v===k}" class="${v===k?'on':''}">${h}</button>`).join('')}</div></div>`})()}
-${IN_TG?'<button class="bkrow" id="ibdbg">Бот: проверить сейчас</button>':''}<button class="bkrow" id="bkp">Резервная копия</button>`;
+<button class="bkrow" id="bkp">Резервная копия</button>`;
   $('#thm').onclick=e=>{const b=e.target.closest('button[data-th]');if(!b)return;const k=b.dataset.th,cur=cfg.theme==='light'||cfg.theme==='auto'?cfg.theme:'dark';if(k===cur)return;
     cfg.theme=k;save();const g=$('#thm');g.dataset.v=k==='light'?'l':k==='auto'?'a':'d';
     g.querySelectorAll('button').forEach(x=>{const on=x===b;x.classList.toggle('on',on);x.setAttribute('aria-checked',String(on))});applyTheme(true)};
   $('#cub').onclick=e=>openCf('cur',e.currentTarget);
   if($('#tpr'))$('#tpr').onclick=()=>{cfg.tplHide=[];save();renderSt();toast('Шаблоны возвращены')};
-  if($('#hsb'))homeBind();if($('#botu'))$('#botu').onchange=e=>{const v=String(e.target.value||'').trim();cfg.botUrl=v;save();if(ibBase()){window.__ibBusy=false;inboxPull()}};if($('#ibdbg'))$('#ibdbg').onclick=async()=>{const u=ibBase();if(!u){toast('Бот: адрес не задан');return}
-    IB.busy=false;try{IB.ctl&&IB.ctl.abort()}catch{}await new Promise(r=>setTimeout(r,80));await inboxPull(false);const d=IB.dbg||{};
-    toast(IB_VER+' · '+(IB.lp?'мгновенный':'обычный')+' · '+u.replace('https://','').slice(0,48)+(d.uid?' · id '+d.uid:'')+' · '+(d.err?'ошибка '+d.err:'записей: '+(d.n||0)))};
+  if($('#hsb'))homeBind();if($('#botu'))$('#botu').onchange=e=>{const v=String(e.target.value||'').trim();cfg.botUrl=v;save();if(ibBase()){window.__ibBusy=false;inboxPull()}}
   $('#bkp').onclick=()=>openBq('backup');if($('#tourb'))$('#tourb').onclick=()=>{closeSettings();if(window.AppTour)AppTour.replay()}}
 // ---- маленькое окошко снизу: подтверждение сброса и резервная копия ----
 const bq=$('#bq');let bqT=null,bqCb=null;
@@ -3509,7 +3543,8 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v22';
+const IB_VER='v23';
+try{document.getElementById('vb').textContent=IB_VER}catch(e){}
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
 // АДРЕС БОТА ПО УМОЛЧАНИЮ: впишите сюда адрес вашего воркера один раз — тогда всем пользователям (жене и др.) ничего вводить не нужно
 const BOT_URL='https://finansepro.olegkiselar3105.workers.dev';
