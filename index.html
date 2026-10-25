@@ -1826,7 +1826,10 @@ function swapAnim(dir,fn,els,from,op){els=els.filter(Boolean);settleAll();
     const inn=els.map(e=>e.animate([{transform:`translate3d(${dir*60}px,0,0)`,opacity:0},{transform:'translate3d(0,0,0)',opacity:1}],{duration:360,easing:'cubic-bezier(.16,1,.3,1)'}));
     out.forEach(x=>x.cancel());f.anims=inn;
     inn[0].onfinish=()=>{if(flight===f){flight=null;wc(els,false)}}}}
-function setTab(t){settleAll();if(t===tab){window.scrollTo({top:0,behavior:'smooth'});return}slideTo(t,0,0,null)}
+function setTab(t){settleAll();
+  // повторное нажатие на открытую вкладку возвращает наверх — но не во время/сразу после прокрутки: палец, которым гасят инерцию у нижней панели, не должен кидать список в начало
+  if(t===tab){let sc=0;try{sc=_scT}catch{}if(Date.now()-sc<900)return;window.scrollTo({top:0,behavior:'smooth'});return}
+  slideTo(t,0,0,null)}
 
 // ---------- фильтры поиска: тип, сумма, период, тег ----------
 const FL={type:'',min:'',max:'',from:'',to:'',tag:''};
@@ -2900,13 +2903,16 @@ function renderSt(){
   $('#st').innerHTML=`<label>Валюта и курсы<button class="sm" id="cub">${E(cfg.cur)}</button></label>
 ${cfg.tplHide.length?`<label>Быстрые шаблоны<button class="sm" id="tpr">Вернуть скрытые (${cfg.tplHide.length})</button></label>`:''}
 ${(()=>{const v=cfg.theme==='light'||cfg.theme==='auto'?cfg.theme:'dark';return `<div class="thr"><span>Тема</span><div class="thm" id="thm" role="radiogroup" aria-label="Тема" data-v="${v==='light'?'l':v==='auto'?'a':'d'}"><i></i>${[['dark','Тёмная','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg>'],['auto','Авто','Авто'],['light','Светлая','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2.5 12h2M19.5 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>']].map(([k,n,h])=>`<button type="button" role="radio" data-th="${k}" aria-label="${n}" title="${n}" aria-checked="${v===k}" class="${v===k?'on':''}">${h}</button>`).join('')}</div></div>`})()}
-<button class="bkrow" id="bkp">Резервная копия</button>`;
+${IN_TG?'<button class="bkrow" id="ibdbg">Бот: проверить сейчас</button>':''}<button class="bkrow" id="bkp">Резервная копия</button>`;
   $('#thm').onclick=e=>{const b=e.target.closest('button[data-th]');if(!b)return;const k=b.dataset.th,cur=cfg.theme==='light'||cfg.theme==='auto'?cfg.theme:'dark';if(k===cur)return;
     cfg.theme=k;save();const g=$('#thm');g.dataset.v=k==='light'?'l':k==='auto'?'a':'d';
     g.querySelectorAll('button').forEach(x=>{const on=x===b;x.classList.toggle('on',on);x.setAttribute('aria-checked',String(on))});applyTheme(true)};
   $('#cub').onclick=e=>openCf('cur',e.currentTarget);
   if($('#tpr'))$('#tpr').onclick=()=>{cfg.tplHide=[];save();renderSt();toast('Шаблоны возвращены')};
-  if($('#hsb'))homeBind();if($('#botu'))$('#botu').onchange=e=>{const v=String(e.target.value||'').trim();cfg.botUrl=v;save();if(ibBase()){window.__ibBusy=false;inboxPull()}};$('#bkp').onclick=()=>openBq('backup');if($('#tourb'))$('#tourb').onclick=()=>{closeSettings();if(window.AppTour)AppTour.replay()}}
+  if($('#hsb'))homeBind();if($('#botu'))$('#botu').onchange=e=>{const v=String(e.target.value||'').trim();cfg.botUrl=v;save();if(ibBase()){window.__ibBusy=false;inboxPull()}};if($('#ibdbg'))$('#ibdbg').onclick=async()=>{const u=ibBase();if(!u){toast('Бот: адрес не задан');return}
+    IB.busy=false;try{IB.ctl&&IB.ctl.abort()}catch{}await new Promise(r=>setTimeout(r,80));await inboxPull(false);const d=IB.dbg||{};
+    toast(IB_VER+' · '+(IB.lp?'мгновенный':'обычный')+' · '+u.replace('https://','').slice(0,34)+' · '+(d.err?'ошибка '+d.err:'записей: '+(d.n||0)))};
+  $('#bkp').onclick=()=>openBq('backup');if($('#tourb'))$('#tourb').onclick=()=>{closeSettings();if(window.AppTour)AppTour.replay()}}
 // ---- маленькое окошко снизу: подтверждение сброса и резервная копия ----
 const bq=$('#bq');let bqT=null,bqCb=null;
 function bqHtml(kind){if(kind==='save')return `<div class="bqt">Сохранить данные</div><div class="bqs">Выберите формат. JSON — полная копия для восстановления (операции, цели, долги, настройки). Excel (.xlsx) — таблица с листами по категориям и месяцам.</div><div class="bqb"><button class="sm pr" data-bq="json">Сохранить в JSON</button><button class="sm pr" data-bq="xlsx">Сохранить в Excel</button></div><div class="bqb"><button class="sm" data-bq="cancel">Не сейчас</button></div>`;
@@ -3478,6 +3484,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
+const IB_VER='v19';
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000};
 // АДРЕС БОТА ПО УМОЛЧАНИЮ: впишите сюда адрес вашего воркера один раз — тогда всем пользователям (жене и др.) ничего вводить не нужно
 const BOT_URL='https://finansepro.olegkiselar3105.workers.dev';
@@ -3503,7 +3510,7 @@ async function inboxPull(fast,wait){
   try{
     // wait=true — «долгий опрос»: сервер держит запрос до 20 с и отвечает сразу, как только бот получил сообщение
     const res=await ibCall(wait?'/api/pending?wait=20':fast?'/api/pending?fast=1':'/api/pending',null,wait?28000:0,c=>{IB.ctl=c}),items=Array.isArray(res&&res.items)?res.items:[];
-    IB.lp=!!(res&&res.lp);IB.fail=0;
+    IB.lp=!!(res&&res.lp);IB.fail=0;IB.dbg={t:Date.now(),n:items.length,lp:IB.lp,err:''};
     if(!items.length)return;
     const seen=new Set(ibSeen()),added=[],left=[],bad=[];let cmd=false;
     for(const it of items){
@@ -3522,14 +3529,14 @@ async function inboxPull(fast,wait){
     if(left.length){drafts.push(...left);renderRev();setTimeout(()=>{try{if(!document.getElementById('spl')&&!isModalOpen())openSheet()}catch{}},2200)}
     if(bad.length)toast('Бот: не понял — «'+bad.slice(0,2).join('», «').slice(0,120)+'»');
     await ibCall('/api/ack',{ids:items.map(x=>x&&x.id).filter(Boolean)})}
-  catch(e){IB.fail=(IB.fail||0)+1;/* нет связи — тихо, повторим; а вот просроченную подпись Telegram показываем один раз */
+  catch(e){IB.fail=(IB.fail||0)+1;IB.dbg={t:Date.now(),n:0,lp:IB.lp,err:String(e&&e.message||e).slice(0,60)};/* нет связи — тихо, повторим; а вот просроченную подпись Telegram показываем один раз */
     if(/HTTP 401/.test(String(e&&e.message))&&!IB.authWarned){IB.authWarned=true;try{toast('Бот: закрой и заново открой приложение')}catch{}}}
   finally{IB.busy=false;IB.ctl=null;window.__ibBusy=false}}
 // постоянный долгий опрос: сообщение боту появляется в приложении за секунду. Работает, если воркер с Durable Object (IB.lp)
 async function ibLoop(){
   if(IB.loopOn)return;IB.loopOn=true;
   for(;;){
-    if(!IN_TG||!ibBase()||document.hidden||IB.busy||!IB.lp){await new Promise(r=>setTimeout(r,document.hidden?1500:700));continue}
+    if(!IN_TG||!ibBase()||IB.busy||!IB.lp){await new Promise(r=>setTimeout(r,700));continue}
     await inboxPull(false,true);
     if(IB.fail)await new Promise(r=>setTimeout(r,Math.min(15000,2000*IB.fail)))}}
 // запуск: ждём первую сверку с облаком (чтобы записи не потерялись при объединении), но не дольше 3,5 с
@@ -3543,7 +3550,7 @@ async function ibLoop(){
     if(cloudWait)return void setTimeout(go,120);
     inboxPull().then(ibLoop)})();
   // при любом возвращении в приложение — сразу забираем записи и ещё 15 секунд проверяем каждые 3 секунды
-  const wake=()=>{if(document.hidden)return;IB.burst=Date.now()+15000;
+  const wake=()=>{IB.burst=Date.now()+15000;
     if(IB.busy&&IB.ctl&&Date.now()-IB.last>2500){try{IB.ctl.abort()}catch{}}      // старый долгий запрос мог «заснуть» вместе с окном
     if(Date.now()-IB.last>1200)setTimeout(()=>inboxPull(false),IB.busy?60:0)};
   document.addEventListener('visibilitychange',wake);
@@ -3558,7 +3565,7 @@ async function ibLoop(){
     if(gap>9000)IB.burst=now+15000;
     if(IB.busy||IB.lp)return;                         // при долгом опросе таймер не нужен
     if(now<IB.burst)inboxPull(false);
-    else if(!document.hidden&&IB.n%2===0)inboxPull(IB.n%13!==0)},3000)})();
+    else if(IB.n%2===0)inboxPull(IB.n%13!==0)},3000)})();
 
 </script>
 <script>
