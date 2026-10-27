@@ -49,16 +49,13 @@ var api=function(st,o){o=o||{};if(o.m)muteC=Date.now()+o.m;H(st||'light',o.k)};
 api.n=function(ms){api(ms>=12?'medium':ms>=8?'light':'select')};   // совместимость со старым vib(мс)
 api.sw=function(st){api(st||'select',{m:450})};                    // отклик жеста: после него клик-отклик молчит
 api.mute=function(ms){muteC=Date.now()+ms};
+api.age=function(){return Date.now()-last};
 window.hap=api;
-// касания кнопок и элементов: отклик на click (а не на касание), поэтому при прокрутке списка вибрации нет
-var SEL='button,a[href],[role="button"],[role="tab"],[role="switch"],[data-t],.r2,.dh,.cd,.chip,summary,label,.tg';
-var SKIP='#cm,#tour,#ov,input:not([type="checkbox"]),textarea,select,[disabled],[aria-disabled="true"],.dis';
+// только служебный клик iOS-трюка не должен попасть в приложение; на обычные нажатия кнопок вибрации нет
 addEventListener('click',function(e){
-  if(inp&&(e.target===inp||e.target===lab)){e.stopImmediatePropagation();return}   // служебный клик iOS-трюка не должен попасть в приложение
-  if(!e.isTrusted||Date.now()<muteC)return;
-  var t=e.target;if(!t||!t.closest||document.documentElement.classList.contains('selm'))return;
-  if(t.closest(SKIP)||!t.closest(SEL))return;
-  H('light','c')},true);
+  if(inp&&(e.target===inp||e.target===lab)){e.stopImmediatePropagation();return}
+  // кнопка «Отмена» на плашке удаления
+  if(e.isTrusted&&e.target&&e.target.closest&&e.target.closest('#toast .tbt'))H('light','undo')},true);
 })();
 </script>
 <script>document.documentElement.classList.add("splh");setTimeout(function(){document.documentElement.classList.remove("splh")},7000)</script>
@@ -3269,6 +3266,7 @@ function toastDel(n,undo){const el=$('#toast'),live=!!delB&&el.classList.contain
 function toast(m,lbl,fn,kind,html){const el=$('#toast');clearTimeout(tt);if(!_tb)delB=null;_tb=0;
   el.dataset.k=kind||'';
   el.innerHTML=(TIC[kind]?`<span class="tic">${TIC[kind]}</span>`:'')+`<span class="ttx">${html!=null?html:E(m)}</span>`+(lbl?`<button type="button" class="tbt">${lbl}</button>`:'');
+  if(kind==='del'){try{if(hap.age()>1500)hap('medium',{k:'del'})}catch(e){}}   // удаление: один отклик (если свайп/меню уже не дали его только что)
   const was=el.classList.contains('on');void el.offsetWidth;el.classList.add('on');if(was&&el.animate&&!matchMedia('(prefers-reduced-motion:reduce)').matches)el.animate([{transform:'translateY(0) scale(1)'},{transform:'translateY(-4px) scale(1.02)',offset:.4},{transform:'translateY(0) scale(1)'}],{duration:460,easing:'cubic-bezier(.32,.72,0,1)'});
   if(lbl)el.querySelector('button').onclick=()=>{clearTimeout(tt);el.classList.remove('on');fn()};
   tt=setTimeout(()=>{el.classList.remove('on');delB=null},TOAST_MS)}
@@ -4142,7 +4140,7 @@ D.addEventListener('click',e=>{
   const t=targets().find(t=>t.el.contains(e.target));if(!t)return;
   if(t.day){const ids=dayIds(t.day),all=ids.every(i=>sel.keys.has(i));ids.forEach(i=>all?sel.keys.delete(i):sel.keys.add(i))}
   else{sel.keys.has(t.key)?sel.keys.delete(t.key):sel.keys.add(t.key)}
-  vib(6);paint()},true);
+  paint()},true);
 new MutationObserver(()=>{if(!sel.on)return;if(ctxKey()!==sel.ctx){exit(true);return}paint()}).observe($('#body'),{childList:true});
 
 /* ---------- «⋯»: действия над выбранными ---------- */
@@ -4335,7 +4333,6 @@ function build(){
   root.addEventListener('click',e=>{
     const a=active;if(!a)return;
     const n=Date.now();if(n-tapAt<320)return;tapAt=n;
-    try{hap('light',{k:'tr'})}catch(x){}
     if(e.target.closest('.tr-skip')){a.kind==='wel'?finishWelcome('skip'):end('skip');return}
     a.kind==='wel'?welNext():next()});
   // свайп: влево — дальше, вправо — назад; работает и в знакомстве, и в подсказках по экрану. Кнопки и касание «Далее» остаются.
