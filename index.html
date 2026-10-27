@@ -2966,6 +2966,25 @@ var OS={y:0,v:0,raf:0,last:0,drag:0};
   addEventListener('wheel',e=>{if(tab!=='list'||isModalOpen()||spOpen()||(window.scrollY||0)>0||e.ctrlKey)return;
     if(e.deltaY>=0){wa=0;return}
     const n=performance.now();if(n-wt>400)wa=0;wt=n;wa-=e.deltaY;if(wa>110){wa=0;setSearch(true)}},{passive:true});
+  // ---- отскок на инерции: бросок доехал до края — страница чуть выходит за край и пружиной возвращается ----
+  // Работает на всех вкладках (прокручивается всё окно). Касание пальцем, программные прокрутки (смена вкладки, scrollTo) и открытые окна не отскакивают.
+  let touching=false,lastTE=0,lastWh=0,py=window.scrollY||0,pt=performance.now(),pv=0,run=0;
+  document.addEventListener('touchstart',()=>{touching=true},{passive:true,capture:true});
+  const te=()=>{touching=false;lastTE=Date.now()};
+  document.addEventListener('touchend',te,{passive:true,capture:true});document.addEventListener('touchcancel',te,{passive:true,capture:true});
+  addEventListener('wheel',()=>{lastWh=Date.now()},{passive:true,capture:true});
+  addEventListener('scroll',()=>{
+    const y=window.scrollY||0,now=performance.now(),dt=Math.max(1,now-pt),maxY=Math.max(0,document.documentElement.scrollHeight-innerHeight);
+    const v=(y-py)/dt*1000;if(dt>100){pv=0;run=0}pv=.5*pv+.5*v;run=dt<64&&Math.abs(v)>120?run+1:0;
+    const prev=py;py=y;pt=now;
+    if(touching||OS.drag||isModalOpen()||maxY<=0||y<0||y>maxY)return;
+    if(Date.now()-lastTE>3000&&Date.now()-lastWh>250)return;      // не после касания/колеса — значит прокрутка программная
+    if(run<3)return;                                              // резкий прыжок (смена вкладки) — не инерция
+    if(window.matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+    const hitTop=prev>0&&y<=0&&pv<-250,hitBot=prev<maxY-1&&y>=maxY-1&&pv>250;
+    if(!hitTop&&!hitBot)return;
+    const v0=Math.min(2400,Math.abs(pv)*.6);if(v0<140)return;     // 2400 ≈ 55 px выхода за край у самого сильного броска
+    stop();OS.y=0;OS.v=hitTop?v0:-v0;OS.last=performance.now();W.style.willChange='transform';OS.raf=requestAnimationFrame(tick)},{passive:true});
 })();
 $('#chip').onclick=e=>{if(e.target.closest('[data-a="clr"]')){if(fcat)fcat=null;else if(ftag){ftag=null;ftagR=null;if(ftagBk==='stats'){tab='stats';AS='tags'}else{tab='tags';ps='goals'}}else if(fday){fday=null;tab='stats';AS='cal'}render();window.scrollTo(0,0)}};
 const shift=d=>{fcat=null;fday=null;const [y,m]=month.split('-').map(Number);month=mk(new Date(y,m-1+d,1));render()};
