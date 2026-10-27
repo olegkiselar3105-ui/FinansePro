@@ -993,7 +993,7 @@ html.selm #selbar,html.selm #selmore{opacity:1;pointer-events:auto;transform:non
 
 /* v33: поиск и фильтры — панель под основным блоком, раскрывается жестом «потянуть вниз» */
 #sp{height:0;overflow:hidden;margin:0}
-#sp .spi{padding:0 0 10px;transition:opacity .3s ease}
+#sp .spi{padding:0 0 10px}
 #sp .spc{border:.5px solid var(--l);background:var(--s);border-radius:18px;padding:0 14px}
 #sp .fi{display:flex;align-items:center;gap:8px;height:44px}
 #sp .qf{width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex:none;margin-right:-8px;color:var(--m2);background:none;border:0;padding:0}
@@ -1018,7 +1018,7 @@ html.selm #selbar,html.selm #selmore{opacity:1;pointer-events:auto;transform:non
 /* v38: «Настройки» — список в стиле iOS: крупный заголовок, карточки, цветные иконки, шевроны */
 :root #body #st{padding:0;border:0;border-radius:0;background:none;box-shadow:none}
 :root #body #st>*+*{border-top:0}
-#st .lt{margin:2px 2px 14px;font-size:33px;font-weight:700;line-height:1.12;letter-spacing:-.022em;color:var(--t)}
+#st .lt{touch-action:pan-y;margin:2px 2px 14px;font-size:33px;font-weight:700;line-height:1.12;letter-spacing:-.022em;color:var(--t)}
 #st .sgh{margin:24px 0 8px 18px;font-size:13.5px;font-weight:500;letter-spacing:.005em;color:var(--m)}
 #st .lt+.sc{margin-top:0}
 #st .sc{background:var(--s);border-radius:24px;overflow:hidden;border:.5px solid var(--l)}
@@ -1030,7 +1030,7 @@ html.selm #selbar,html.selm #selmore{opacity:1;pointer-events:auto;transform:non
 #st .pn b{font-size:16.5px;font-weight:600;color:var(--t);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #st .pn small{font-size:13px;color:var(--m);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #st .rw{position:relative;display:flex;align-items:center;gap:14px;width:100%;min-height:56px;padding:0 16px;text-align:left;font-family:inherit;font-size:16px;color:var(--t);background:none;border:0;cursor:pointer;transition:background-color .18s ease}
-#st .rw::before{content:"";position:absolute;left:60px;right:0;top:0;border-top:.5px solid var(--l)}
+#st .rw::before{content:"";position:absolute;left:16px;right:0;top:0;border-top:.5px solid var(--l)}
 :root[data-theme=light] #st .rw::before{border-top-color:#e3e3e0}
 #st .rw:first-child::before,#st .pf+.rw::before{display:block}
 #st .sc>.rw:first-child::before{display:none}
@@ -1044,6 +1044,13 @@ html.selm #selbar,html.selm #selmore{opacity:1;pointer-events:auto;transform:non
 #st .rw.rd .rl{color:var(--rd)}
 #st .rw.tr{cursor:default}
 #st .rw.tr .thm{flex:none}
+/* v43: пустая верхняя строка убрана — название теперь в плавающей полосе */
+.hd{height:0;min-height:0;margin:0;overflow:hidden}
+#w{padding-top:12px}
+/* v44: крупный заголовок вкладки сверху (как в «Настройках»); верхняя полоса дублирует его при прокрутке */
+#lt0{margin:-8px 2px 2px;padding:10px 0 8px;touch-action:pan-y;-webkit-user-select:none;user-select:none;font-size:33px;font-weight:700;line-height:1.12;letter-spacing:-.022em;color:var(--t);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* v45: верхняя выезжающая полоса убрана — остаётся только крупный заголовок */
+#nb{display:none!important}
 </style>
 </head>
 <body><div id="vb" aria-hidden="true"></div><div id="spl" aria-hidden="true">
@@ -1059,6 +1066,7 @@ html.selm #selbar,html.selm #selmore{opacity:1;pointer-events:auto;transform:non
 <script>window.__spl0=0;requestAnimationFrame(function(){window.__spl0=performance.now()})</script>
 <div id="w">
 <div class="hd"><button class="ic" id="srch" aria-label="Поиск" aria-expanded="false" title="Поиск"><svg class="x1" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><svg class="x2" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button><button type="button" id="cs" data-s="ok" aria-live="polite" aria-label="Синхронизация с облаком Telegram"><i></i><span class="csl">сохранено</span></button></div>
+<h1 class="lt" id="lt0"></h1>
 <div class="top" id="top"><div id="tin"><div class="mo"><button id="pv">‹</button><b id="mn"></b><button id="nx">›</button></div>
 <div class="sum" id="sum"></div></div></div>
 <div id="sp" inert><div class="spi"><div class="spc"><div class="fi"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input id="q" type="search" placeholder="Заметки и категории" autocomplete="off" aria-label="Поиск по заметкам и категориям" enterkeyhint="search"><button class="qf" id="qflt" type="button" aria-label="Фильтры: сумма, период, тег" aria-expanded="false" title="Фильтры"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16l-6 7v6l-4 2v-8z"/></svg></button></div>
@@ -2124,16 +2132,18 @@ function settleFlight(){const f=flight;if(!f)return;flight=null;
   if(f.stage===1&&f.fn)f.fn();
   wc(f.els,false)}
 // dir=+1: old content leaves to the left, new arrives from the right; from/op = current visual state of els[0] (finger drag)
-function swapAnim(dir,fn,els,from,op){els=els.filter(Boolean);settleAll();
+function swapAnim(dir,fn,els,from,op,soft){els=els.filter(Boolean);settleAll();
   if(RM||!els.length||!els[0].animate){fn();return}
   const f0=from||0,o0=op==null?1:op;
+  // soft — переходы с «Настройками»: короче и мягче уход, длиннее и плавнее появление, небольшой сдвиг
+  const oD=soft?190:140,oX=soft?22:90,oE=soft?'cubic-bezier(.4,0,.2,1)':'cubic-bezier(.4,0,1,1)',iD=soft?560:360,iX=soft?30:60,iE=soft?'cubic-bezier(.32,.72,0,1)':'cubic-bezier(.16,1,.3,1)';
   wc(els,true);
-  const out=els.map((e,i)=>e.animate([{transform:`translate3d(${i?0:f0}px,0,0)`,opacity:i?1:o0},{transform:`translate3d(${-dir*90}px,0,0)`,opacity:0}],{duration:140,easing:'cubic-bezier(.4,0,1,1)',fill:'forwards'}));
+  const out=els.map((e,i)=>e.animate([{transform:`translate3d(${i?0:f0}px,0,0)`,opacity:i?1:o0},{transform:`translate3d(${-dir*oX}px,0,0)`,opacity:0}],{duration:oD,easing:oE,fill:'forwards'}));
   els.forEach(e=>{e.style.transform='';e.style.opacity='';e.style.transition=''});
   const f={stage:1,fn,anims:out,els};flight=f;
   out[0].onfinish=()=>{if(flight!==f)return;f.stage=2;
     try{fn()}catch(err){console.error(err)}
-    const inn=els.map(e=>e.animate([{transform:`translate3d(${dir*60}px,0,0)`,opacity:0},{transform:'translate3d(0,0,0)',opacity:1}],{duration:360,easing:'cubic-bezier(.16,1,.3,1)'}));
+    const inn=els.map(e=>e.animate([{transform:`translate3d(${dir*iX}px,0,0)`,opacity:0},{transform:'translate3d(0,0,0)',opacity:1}],{duration:iD,easing:iE}));
     out.forEach(x=>x.cancel());f.anims=inn;
     inn[0].onfinish=()=>{if(flight===f){flight=null;wc(els,false)}}}}
 function setTab(t){settleAll();
@@ -2287,7 +2297,7 @@ function render(){
   const ex_=cOn&&Math.abs(prior)>=.005?`<small>С прошлых месяцев: ${prior<0?'−':'+'}${fmt(Math.round(Math.abs(prior)))}</small>`:'';
   {const sm=$('#sum'),h=`<div class="sht"><small>Остаток · ${cfg.cur}</small><label class="cry">Переносить<button type="button" class="tg${cOn?' on':''}" id="carry" role="switch" aria-checked="${cOn}" aria-label="Переносить остаток"></button></label></div><div class="bw"><div class="bl"><b class="tot" id="sbal" data-v="${bal}" style="font-size:${numSz((bal<0?'−':'')+fmt(Math.round(Math.abs(bal))))}px">${bal<0&&Math.round(Math.abs(bal))>0?'−':''}${fmt(Math.round(Math.abs(bal)))}</b><div class="io"><span>Доход<b class="inc" id="sinc" data-v="${I}">${fmt(Math.round(I))}</b></span><span>Расход<b class="exp" id="sexp" data-v="${X}">${fmt(Math.round(X))}</b></span></div></div>${gaugeHtml(X)}</div>${budgetLine(X)}${debtNote()}`;if(sm._h!==h){sm.innerHTML=h;sm._h=h;runNums();runGauge()}};
   buildTabs();
-  $('#ttl').textContent=ttlOf(tab);
+  $('#ttl').textContent=ttlOf(tab);setLt0(tab);
   const dlst=$('#tgl');if(dlst)dlst.innerHTML=allTags().map(g=>`<option value="${E(g)}">`).join('');
   $('#top').style.display=tab==='settings'||(tab==='list'&&searchOn())?'none':'';$('#sp').style.display=tab==='list'?'':'none';if(tab!=='list')$('#chip').innerHTML='';
   const y0=window.scrollY||0;
@@ -2595,9 +2605,11 @@ $('#tabs').onclick=e=>{if(isModalOpen()||tbdBlock)return;const b=e.target.closes
 // so the next page is actually visible while dragging. Release continues from the finger's position.
 const bodyEl=$('#body'),GAP=16;
 let tp=null,tpBlock=false,tpRaf=0,cur=null;
-const TP_SKIP='.swb,#top,#tabs,#fab,.hd,#sp,#stw,#sh,#ed,#gd,#cf,#bq,#nc,#cp,#ov,#toast,#tour,input,select,textarea';
+const TP_SKIP='#lt0,#st .lt,.swb,#top,#tabs,#fab,.hd,#sp,#stw,#sh,#ed,#gd,#cf,#bq,#nc,#cp,#ov,#toast,#tour,input,select,textarea';
+const setLt0=t=>{const e=document.getElementById('lt0');if(!e)return;e.style.display=t==='settings'?'none':'';e.textContent=ttlOf(t)};
 const ttlOf=t=>t==='list'?(ftag?'#'+ftag+(fcat?' › '+cd(fcat.id).l:''):fcat?cd(fcat.id).l:fday?dayLbl(fday):'Операции'):t==='stats'?'Аналитика':t==='tags'?'Планы':t==='settings'?'Настройки':'Советы';
 const tabInd=()=>$('#tabs').querySelector('.ind');
+function ltPop(s){const e=document.getElementById('lt0');if(RM||!e||!e.animate)return;e.animate([{opacity:0,transform:`translate3d(${s*28}px,0,0)`},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:380,easing:'cubic-bezier(.22,1,.36,1)'})}
 function mkNb(t,s,key){const el=document.createElement('div');
   const bt=bodyEl.getBoundingClientRect().top+scrollY,off=Math.max(0,scrollY-bt);
   el.style.cssText=`position:absolute;top:${off}px;width:100%;left:${s>0?'calc(100% + '+GAP+'px)':'calc(-100% - '+GAP+'px)'}`;
@@ -2645,7 +2657,8 @@ function slideTo(t,fromX,v,hint){
   if(tab==='list'){fcat=null;ftag=null;fday=null}
   tab=t;const ind=tabInd();if(ind)ind.style.transition='';moveInd();$('#ttl').textContent=ttlOf(t);
   if(clamp){nb.el.remove();
-    swapAnim(s,()=>{render();window.scrollTo(0,0)},stSw?[bodyEl,$('#top')]:[bodyEl],fromX||0,1-Math.min(.3,Math.abs(fromX||0)/420));return}
+    swapAnim(s,()=>{render();window.scrollTo(0,0)},stSw?[bodyEl,$('#top'),$('#lt0'),$('#sbw')]:[bodyEl,$('#lt0')],fromX||0,1-Math.min(.3,Math.abs(fromX||0)/420),stSw);return}
+  setLt0(t);ltPop(s);
   if(RM||!bodyEl.animate){finishSlide(nb);return}
   const W=bodyEl.offsetWidth+GAP,x0=fromX||0,target=-s*W,rem=Math.abs(target-x0);
   const dur=Math.round(Math.max(200,Math.min(380,rem*.9/Math.max(.8,Math.abs(v||0)*1.5))));
@@ -2767,6 +2780,40 @@ addEventListener('blur',()=>{if(tp&&tp.on)endTp({pointerId:tp.id},true)});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&tp&&tp.on)endTp({pointerId:tp.id},true)});
 document.addEventListener('click',e=>{if(tpBlock){e.stopPropagation();e.preventDefault()}},true);
 
+
+// ---------- v46: свайп по крупному заголовку листает вкладки ----------
+(function(){
+  const SEL='#lt0,#st .lt';let g=null;
+  const nbT=s=>TABS[TABS.indexOf(tab)+s]||null;
+  function reset(h,anim){if(!h)return;if(anim&&!RM){h.style.transition='transform .34s cubic-bezier(.22,1,.36,1),opacity .34s ease';setTimeout(()=>{h.style.transition=''},380)}h.style.transform='';h.style.opacity=''}
+  document.addEventListener('pointerdown',e=>{
+    if(e.pointerType==='mouse'&&e.button!==0)return;
+    if(!e.isPrimary||isModalOpen()||tbd||ms)return;
+    const h=e.target.closest&&e.target.closest(SEL);if(!h)return;
+    settleAll();
+    g={id:e.pointerId,x:e.clientX,y:e.clientY,on:false,dx:0,lx:e.clientX,lt:performance.now(),v:0,h}});
+  document.addEventListener('pointermove',e=>{
+    if(!g||e.pointerId!==g.id)return;
+    const dx=e.clientX-g.x,dy=e.clientY-g.y;
+    if(!g.on){
+      if(Math.abs(dx)>=6&&Math.abs(dx)>Math.abs(dy)*1.1){g.on=true;g.x=e.clientX;try{g.h.setPointerCapture(e.pointerId)}catch{}g.h.style.transition='none';return}
+      if(Math.abs(dy)>10)g=null;return}
+    const d=e.clientX-g.x,n=performance.now(),dt=n-g.lt;
+    if(dt>0)g.v=.5*g.v+.5*((g.lx-e.clientX)/dt);g.lx=e.clientX;g.lt=n;g.dx=d;
+    const ok=nbT(d<0?1:-1),x=ok?d*.5:rubber(d);
+    g.h.style.transform=`translate3d(${x}px,0,0)`;g.h.style.opacity=ok?String(1-Math.min(.55,Math.abs(d)/240)):''});
+  function end(e,cancel){
+    if(!g||e.pointerId!==g.id)return;const p=g;g=null;
+    if(!p.on)return;
+    tpBlock=true;setTimeout(()=>tpBlock=false,120);
+    const dx=p.dx,s=dx<0?1:-1,t=nbT(s),fwd=s*p.v>0;
+    const go=!cancel&&!!t&&!(s*p.v<-.35)&&(Math.abs(dx)>=44||(fwd&&Math.abs(p.v)>.3&&Math.abs(dx)>=16));
+    if(go){reset(p.h,false);try{hap.sw('select')}catch(_){}settleAll();slideTo(t,0,0,null)}
+    else reset(p.h,true)}
+  document.addEventListener('pointerup',e=>end(e,false));
+  document.addEventListener('pointercancel',e=>end(e,true));
+  addEventListener('blur',()=>{if(g&&g.on)end({pointerId:g.id},true)});
+})();
 // drag a finger across the bottom tab bar: the glass indicator follows the finger
 let tbd=null,tbdBlock=false;const tbEl=$('#tabs');
 function tabBtnAt(x){const bs=[...tbEl.querySelectorAll('[data-t]')];let best=bs[0],bd=1e9;
@@ -2795,14 +2842,28 @@ tbEl.addEventListener('pointercancel',e=>endTbd(e,true));
 let qRaf=0;const qRender=()=>{clearTimeout(qRaf);qRaf=setTimeout(()=>{qRaf=0;render()},90)};
 $('#q').oninput=e=>{q=e.target.value;qRender()};
 // ---- поиск и фильтры: панель под основным блоком, выезжает жестом «потянуть вниз» на верху списка ----
-let spT=0;
-function spAnim(on,instant){const sp=$('#sp'),inn=sp.firstElementChild;clearTimeout(spT);
-  const cur=sp.getBoundingClientRect().height,tgt=on?inn.scrollHeight:0;
-  if(instant||(!cur&&!tgt)||sp.style.display==='none'){sp.style.transition='none';sp.style.height=on?'auto':'0px';inn.style.opacity='';return}
-  sp.style.transition='none';sp.style.height=cur+'px';void sp.offsetHeight;
-  sp.style.transition='height '+(on?'.5s':'.38s')+' cubic-bezier(.22,1,.36,1)';sp.style.height=tgt+'px';
-  if(on){inn.style.opacity='';spT=setTimeout(()=>{if(sp.classList.contains('open'))sp.style.height='auto'},540)}
-  else{inn.style.opacity='0';spT=setTimeout(()=>{inn.style.opacity=''},420)}}
+// v47: панель поиска ведёт пружина (rAF): скорость пальца при отпускании переходит в анимацию, её можно перехватить в полёте
+const SP={h:0,v:0,tg:0,raf:0,last:0,on:false,v0:null};
+const spPaint=h=>{const sp=$('#sp'),inn=sp.firstElementChild,n=inn.scrollHeight||1,p=Math.max(0,Math.min(1,h/(n*.7)));
+  sp.style.height=Math.max(0,h)+'px';inn.style.opacity=String(p);inn.style.transform='translate3d(0,'+((p-1)*12).toFixed(2)+'px,0)'};
+const spStop=()=>{cancelAnimationFrame(SP.raf);SP.raf=0};
+function spRest(){const sp=$('#sp'),inn=sp.firstElementChild;spStop();SP.v=0;sp.style.transition='none';
+  sp.style.height=SP.on?'auto':'0px';inn.style.opacity='';inn.style.transform='';inn.style.willChange=''}
+function spTick(t){
+  const dt=Math.min(.034,Math.max(.001,(t-SP.last)/1000));SP.last=t;
+  const k=SP.on?300:280,z=SP.on?.9:1,c=2*z*Math.sqrt(k),n=Math.max(1,Math.ceil(dt/.004)),d=dt/n;
+  let h=SP.h,v=SP.v;
+  for(let i=0;i<n;i++){v+=(-k*(h-SP.tg)-c*v)*d;h+=v*d}
+  if(h<0){h=0;v=0}
+  SP.h=h;SP.v=v;
+  if(Math.abs(h-SP.tg)<.35&&Math.abs(v)<10){spRest();return}
+  spPaint(h);SP.raf=requestAnimationFrame(spTick)}
+function spAnim(on,instant){const sp=$('#sp'),inn=sp.firstElementChild,run=!!SP.raf;spStop();SP.on=!!on;
+  if(instant||sp.style.display==='none'||matchMedia('(prefers-reduced-motion:reduce)').matches){SP.v0=null;spRest();return}
+  const cur=sp.getBoundingClientRect().height;SP.tg=on?inn.scrollHeight:0;
+  if(!cur&&!SP.tg){spRest();return}
+  SP.h=cur;SP.v=SP.v0!==null?SP.v0:(run?SP.v:0);SP.v0=null;sp.style.transition='none';inn.style.willChange='opacity,transform';
+  SP.last=performance.now();SP.raf=requestAnimationFrame(spTick)}
 document.addEventListener('pointerdown',e=>{if(fpEl.classList.contains('open')&&!e.target.closest('#fp,#qflt,#toast')){fpSet(false);e.stopPropagation();e.preventDefault();swallowClick()}},true);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&fpEl.classList.contains('open'))fpSet(false)});
 function setSearch(on,instant){const sp=$('#sp'),b=$('#srch');on=!!on;
@@ -2836,13 +2897,14 @@ addEventListener('scroll',()=>{const sp=$('#sp');if(!sp.classList.contains('open
       if(dy<=0){g.base=t.clientY;g.bx=t.clientX;return}
       if(Math.abs(dx)>dy){g=null;return}
       if(dy<8)return;
-      g.on=true;clearTimeout(spT);sp.style.transition='none';sp.style.height='0px'}
+      g.on=true;spStop();sp.style.transition='none';g.h0=sp.getBoundingClientRect().height;g.h=g.h0;g.v=0;g.lt=performance.now();inn.style.willChange='opacity,transform'}
     if(e.cancelable)e.preventDefault();
-    pullSet(Math.min(nat(),Math.max(0,dy-8)*.85))},{passive:false});
-  function pullSet(h){g.h=h;sp.style.height=h+'px';const n=nat()||1;inn.style.opacity=String(Math.min(1,h/(n*.65)))}
+    {const n=nat(),d=g.h0+Math.max(0,dy-8)*.85;pullSet(d<=n?d:n+34*(1-Math.exp(-(d-n)/70)))}},{passive:false});
+  function pullSet(h){const now=performance.now(),dt=now-g.lt;if(dt>0)g.v=.65*g.v+.35*((h-g.h)/dt*1000);g.lt=now;g.h=h;spPaint(h)}
   function pullEnd(ok){const p=g;g=null;if(!p||!p.on)return;
-    const n=nat();
-    if(ok&&p.h>=Math.min(n*.5,60))setSearch(true);else spAnim(false)}
+    const n=nat(),v=performance.now()-p.lt>90?0:Math.max(-2200,Math.min(2200,p.v));
+    SP.v0=v;
+    if(ok&&p.h+v*.16>=Math.min(n*.5,60))setSearch(true);else spAnim(false)}
   document.addEventListener('touchend',()=>pullEnd(true),{passive:true});
   document.addEventListener('touchcancel',()=>pullEnd(false),{passive:true});
   // мышь / тачпад: прокрутка вверх колесом на самом верху списка
@@ -3333,7 +3395,7 @@ if(_mqL){const _tch=()=>{if(cfg.theme==='auto')applyTheme(true)};if(_mqL.addEven
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&cfg.theme==='auto'&&isLight()!==(document.documentElement.getAttribute('data-theme')==='light'))applyTheme(false)});
 // ---- всплывающее меню настроек (поверх страницы, ничего не сдвигает) ----
 function stHtml(){
-  const ri=(c,g)=>`<i class="ii" style="background:${c}"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${g}</svg></i>`;
+  const ri=()=>'';
   const CH='<svg class="ch" width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.2 1.2L6.8 7l-5.6 5.8"/></svg>';
   const row=(id,col,g,label,val,cls)=>`<button type="button" class="rw${cls?' '+cls:''}" id="${id}">${ri(col,g)}<span class="rl">${label}</span>${val!=null?`<span class="rv">${val}</span>`:''}${CH}</button>`;
   let nm='Гость',sub='Данные хранятся на этом устройстве',ph='';
@@ -3348,8 +3410,8 @@ ${row('cub','#2f6df6','<path d="M12 3.5v17M16.2 7.6c0-1.6-1.9-2.8-4.2-2.8s-4.2 1
 ${cfg.tplHide.length?row('tpr','#f39a1f','<path d="M13 3L5 13.5h6L10 21l8-10.5h-6z"/>','Быстрые шаблоны','Вернуть ('+cfg.tplHide.length+')'):''}</div>
 <div class="sgh">Внешний вид</div>
 <div class="sc">${thm}</div>
-<div class="sgh">Обучение</div>
-<div class="sc">${row('tr1','#8a45d6','<path d="M4.5 12a7.5 7.5 0 1 0 2.4-5.5M4.5 4.5v4h4"/>','Пройти заново')}${row('tr2','#6b6b72','<circle cx="12" cy="12" r="8"/><path d="M9.2 9.2l5.6 5.6M14.8 9.2l-5.6 5.6"/>','Завершить')}</div>
+<div class="sgh">Поддержка и помощь</div>
+<div class="sc">${row('hlp','','','Обучение')}${row('ctc','','','Написать нам')}</div>
 <div class="sgh">Категория/Активы</div>
 <div class="sc">${row('cin','#22a845','<path d="M12 4.5v10M7.8 10.6l4.2 4.2 4.2-4.2M5 19.5h14"/>','Категория доходов')}${row('cex','#f39a1f','<path d="M12 19.5v-10M7.8 13.4l4.2-4.2 4.2 4.2M5 4.5h14"/>','Категория расходов')}</div>
 <div class="sgh">Резервная копия</div>
@@ -3361,17 +3423,27 @@ function bindSt(){
   $('#cub').onclick=e=>openCf('cur',e.currentTarget);
   if($('#tpr'))$('#tpr').onclick=()=>{cfg.tplHide=[];save();renderSt();toast('Шаблоны возвращены')};
   if($('#hsb'))homeBind();if($('#botu'))$('#botu').onchange=e=>{const v=String(e.target.value||'').trim();cfg.botUrl=v;save();if(ibBase()){window.__ibBusy=false;inboxPull()}}
-  $('#cin').onclick=e=>openCf('catsI',e.currentTarget);$('#cex').onclick=e=>openCf('catsE',e.currentTarget);$('#bki').onclick=()=>openBq('import');$('#bke').onclick=()=>openBq('export');$('#bkr').onclick=()=>openBq('reset');$('#tr1').onclick=()=>{closeSettings();if(window.AppTour)setTimeout(()=>AppTour.replay(),700)};$('#tr2').onclick=()=>{if(window.AppTour)AppTour.stop()};if($('#tourb'))$('#tourb').onclick=()=>{closeSettings();if(window.AppTour)AppTour.replay()}}
+  $('#cin').onclick=e=>openCf('catsI',e.currentTarget);$('#cex').onclick=e=>openCf('catsE',e.currentTarget);$('#bki').onclick=()=>openBq('import');$('#bke').onclick=()=>openBq('export');$('#bkr').onclick=()=>openBq('reset');$('#hlp').onclick=()=>openBq('help');$('#ctc').onclick=()=>openBq('contact');if($('#tourb'))$('#tourb').onclick=()=>{closeSettings();if(window.AppTour)AppTour.replay()}}
 function renderSt(){const el=$('#st');if(!el||tab!=='settings')return;el.innerHTML=stHtml();bindSt()}
 // ---- маленькое окошко снизу: подтверждение сброса и резервная копия ----
 const bq=$('#bq');let bqT=null,bqCb=null;
-function bqHtml(kind){if(kind==='save')return `<div class="bqt">Сохранить данные</div><div class="bqs">Выберите формат. JSON — полная копия для восстановления (операции, цели, долги, настройки). Excel (.xlsx) — таблица с листами по категориям и месяцам.</div><div class="bqb"><button class="sm pr" data-bq="json">Сохранить в JSON</button><button class="sm pr" data-bq="xlsx">Сохранить в Excel</button></div><div class="bqb"><button class="sm" data-bq="cancel">Не сейчас</button></div>`;
+function bqHtml(kind){if(kind==='help')return `<div class="bqt">Обучение</div><div class="bqb"><button class="sm pr" data-bq="tourgo">Повторить</button><button class="sm pr" data-bq="tourstop">Завершить</button></div><div class="bqb"><button class="sm" data-bq="cancel">Отмена</button></div>`;
+  if(kind==='contact')return `<div class="bqt">Написать нам</div><div class="bqb"><button class="sm pr" data-bq="cttg">Написать в Telegram</button><button class="sm pr" data-bq="ctem">Отправить на e-mail</button></div><div class="bqb"><button class="sm" data-bq="cancel">Отмена</button></div>`;
+  if(kind==='save')return `<div class="bqt">Сохранить данные</div><div class="bqs">Выберите формат. JSON — полная копия для восстановления (операции, цели, долги, настройки). Excel (.xlsx) — таблица с листами по категориям и месяцам.</div><div class="bqb"><button class="sm pr" data-bq="json">Сохранить в JSON</button><button class="sm pr" data-bq="xlsx">Сохранить в Excel</button></div><div class="bqb"><button class="sm" data-bq="cancel">Не сейчас</button></div>`;
   if(kind==='export')return `<div class="bqt">Экспорт</div><div class="bqs">JSON — полная копия для восстановления (операции, цели, долги, настройки). Excel (.xlsx) — таблица с листами по категориям и месяцам.</div><div class="bqb"><button class="sm pr" data-bq="json">Экспорт JSON</button><button class="sm pr" data-bq="xlsx">Экспорт Excel</button></div><div class="bqb"><button class="sm" data-bq="cancel">Отмена</button></div>`;
   if(kind==='import')return `<div class="bqt">Импорт</div><div class="bqs">JSON — восстановление из копии: добавится то, чего нет, ничего не затрётся. Excel / CSV — даты, суммы и категории распределятся сами, дубликаты пропускаются.</div><div class="bqb"><button class="sm pr" data-bq="impj">Импорт JSON</button><button class="sm pr" data-bq="imp">Импорт Excel</button></div><div class="bqb"><button class="sm" data-bq="cancel">Отмена</button></div>`;
   return kind==='reset'
    ?`<div class="bqt">Вы точно в этом уверены?</div><div class="bqs">Все операции будут удалены. Это нельзя отменить — сначала можно сохранить резервную копию (Настройки → Экспорт).</div><div class="bqb"><button class="sm" data-bq="cancel">Отмена</button><button class="sm del" data-bq="reset">Сбросить</button></div>`
    :`<div class="bqt">Экспорт, импорт и сброс</div><div class="bqs">JSON — полная копия для восстановления (операции, цели, долги, настройки). Excel (.xlsx) — таблица с листами по категориям и месяцам. При импорте даты, суммы и категории распределятся сами, дубликаты пропускаются.</div><div class="bqb"><button class="sm" data-bq="json">Экспорт JSON</button><button class="sm" data-bq="xlsx">Экспорт Excel</button></div><div class="bqb"><button class="sm pr" data-bq="impj">Импорт JSON</button><button class="sm pr" data-bq="imp">Импорт Excel</button></div><div class="bqb"><button class="sm del" data-bq="toreset">Сбросить все операции</button></div>`}
 function bqShow(html,kind){cancelGestures();stCover(true);lockBg(true);bqT=kind;bq.innerHTML=html;bq.classList.add('on');ov.className='on'}
+// ---- поддержка: заполните адрес e-mail и имя в Telegram ----
+const SUPPORT={email:'olegkiselar3@gmail.com',tg:'olegkr31'};
+function supportTg(){const u=String(SUPPORT.tg||'').replace(/^@/,'').trim();if(!u){toast('Контакт Telegram пока не указан');return}
+  const url='https://t.me/'+u;try{if(IN_TG&&TGW.openTelegramLink){TGW.openTelegramLink(url);return}}catch(e){}
+  window.open(url,'_blank')}
+function supportMail(){const m=String(SUPPORT.email||'').trim();if(!m){toast('Адрес e-mail пока не указан');return}
+  const a=document.createElement('a');a.href='mailto:'+m+'?subject='+encodeURIComponent('Finance Pro — обращение')+'&body='+encodeURIComponent('\n\n—\nВерсия приложения: '+(typeof IB_VER!=='undefined'?IB_VER:''));
+  a.style.display='none';document.body.appendChild(a);a.click();a.remove()}
 function openBq(kind){if(isModalOpen())return;bqShow(bqHtml(kind),kind)}
 // свои окна вместо системных alert/confirm (на телефоне системные могут не показываться)
 function bqAsk(title,text,ok,cb){if(bq.classList.contains('on'))closeBq();bqCb=cb;
@@ -3382,6 +3454,10 @@ function closeBq(){if(!bqT&&!bq.classList.contains('on'))return;bq.classList.rem
 bq.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const a=b.dataset.bq;
   if(a==='cancel'){bqCb=null;closeBq()}
   else if(a==='askyes'){const cb=bqCb;bqCb=null;closeBq();if(cb)setTimeout(cb,30)}
+  else if(a==='tourgo'){closeBq();closeSettings();if(window.AppTour)setTimeout(()=>AppTour.replay(),700)}
+  else if(a==='tourstop'){closeBq();if(window.AppTour)AppTour.stop()}
+  else if(a==='cttg'){closeBq();supportTg()}
+  else if(a==='ctem'){closeBq();supportMail()}
   else if(a==='toreset'){bqT='reset';bq.innerHTML=bqHtml('reset')}
   else if(a==='reset'){const oTx=tx,oLn=learn;tx=[];learn={};tomb(oTx.map(t=>t.id));save();closeBq();render();toast('Все операции удалены','Отмена',()=>{untomb(oTx.map(t=>t.id));tx=oTx;learn=oLn;save();render()},'del')}
   else if(a==='json'){exportJSON();closeBq();toast('Копия сохранена · JSON',null,null,'save')}
@@ -3935,7 +4011,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v39';
+const IB_VER='v47';
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
 // АДРЕС БОТА ПО УМОЛЧАНИЮ: впишите сюда адрес вашего воркера один раз — тогда всем пользователям (жене и др.) ничего вводить не нужно
@@ -4066,9 +4142,7 @@ async function ibLoop(){
   const bigTitle=()=>[...document.querySelectorAll('#st .lt')].find(e=>!e.closest('[aria-hidden="true"]'))||null;
   function upd(){raf=0;
     const y=Math.max(0,window.scrollY||0);let p,pb;
-    const lt=(typeof tab!=='undefined'&&tab==='settings')?bigTitle():null;
-    if(lt){const bh=nb.offsetHeight,r=lt.getBoundingClientRect();p=c01((bh+14-r.bottom)/14);pb=c01(y/10)}
-    else{p=c01((y-4)/20);pb=c01((y-2)/12)}
+    p=c01((y-6)/22);pb=c01((y-2)/12);
     p=Math.round(p*100)/100;pb=Math.round(pb*100)/100;
     if(p!==lp){lp=p;nb.style.setProperty('--p',p)}
     if(pb!==lb){lb=pb;nb.style.setProperty('--pb',pb)}}
