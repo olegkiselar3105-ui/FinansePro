@@ -2901,23 +2901,23 @@ addEventListener('scroll',()=>{const sp=$('#sp');if(!sp.classList.contains('open
 // Вся страница (#w) тянется за пальцем у верхнего и нижнего края с затуханием и возвращается пружиной без колебаний.
 // Список у верхней границы: потянули вниз по списку — выезжает поиск; по верхнему блоку (заголовок, карточка месяца) — растягивается страница.
 // Поиск открыт и пуст: свайп вверх на верху списка сворачивает его вслед за пальцем; отпустили — пружина докручивает до конца или возвращает.
-var OS={y:0,v:0,raf:0,last:0,drag:0};
+var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
 (function(){const sp=$('#sp'),inn=sp.firstElementChild,W=$('#w'),RB=120,RK=RB*1.6,WN=Math.sqrt(260);
   const rb=d=>d>0?RB*(1-Math.exp(-d/RK)):0,rbi=y=>y>0?-RK*Math.log(Math.max(1e-4,1-y/RB)):0;
   const cv=v=>Math.max(-3000,Math.min(3000,v)),nat=()=>inn.scrollHeight,
     skip='#tabs,#fab,.hd,#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc,#ov,#toast,#tour,#cm,#fp,input,select,textarea,.swb';
   const paint=y=>{W.style.transform=y?'translate3d(0,'+y.toFixed(2)+'px,0)':''};
   const stop=()=>{cancelAnimationFrame(OS.raf);OS.raf=0};
-  const rest=()=>{stop();OS.y=0;OS.v=0;paint(0);W.style.willChange=''};
+  const rest=()=>{stop();OS.k=0;OS.y=0;OS.v=0;paint(0);W.style.willChange=''};
   function tick(t){
     const dt=Math.min(.034,Math.max(.001,(t-OS.last)/1000));OS.last=t;
-    const k=260,c=2*Math.sqrt(k),n=Math.max(1,Math.ceil(dt/.004)),d=dt/n;
+    const k=OS.k||260,c=2*Math.sqrt(k),n=Math.max(1,Math.ceil(dt/.004)),d=dt/n;
     let y=OS.y,v=OS.v;
     for(let i=0;i<n;i++){v+=(-k*y-c*v)*d;y+=v*d}
     OS.y=y;OS.v=v;
     if(Math.abs(y)<.3&&Math.abs(v)<14){rest();return}
     paint(y);OS.raf=requestAnimationFrame(tick)}
-  function release(y,v){stop();OS.y=y;OS.v=y>0?Math.max(v,-WN*y):Math.min(v,-WN*y);   // скорость не даёт перелететь через ноль
+  function release(y,v){stop();OS.k=0;OS.y=y;OS.v=y>0?Math.max(v,-WN*y):Math.min(v,-WN*y);   // скорость не даёт перелететь через ноль
     OS.last=performance.now();W.style.willChange='transform';OS.raf=requestAnimationFrame(tick)}
   const spOpen=()=>sp.classList.contains('open');
   const canCollapse=()=>spOpen()&&!q&&!fOn()&&!fpEl.classList.contains('open');
@@ -2983,8 +2983,8 @@ var OS={y:0,v:0,raf:0,last:0,drag:0};
     if(window.matchMedia('(prefers-reduced-motion:reduce)').matches)return;
     const hitTop=prev>0&&y<=0&&pv<-250,hitBot=prev<maxY-1&&y>=maxY-1&&pv>250;
     if(!hitTop&&!hitBot)return;
-    const v0=Math.min(2400,Math.abs(pv)*.6);if(v0<140)return;     // 2400 ≈ 55 px выхода за край у самого сильного броска
-    stop();OS.y=0;OS.v=hitTop?v0:-v0;OS.last=performance.now();W.style.willChange='transform';OS.raf=requestAnimationFrame(tick)},{passive:true});
+    const v0=Math.min(1000,Math.abs(pv)*.22);if(v0<90)return;      // мягкая и длинная пружина: 1000 ≈ 45 px выхода за край у самого сильного броска
+    stop();OS.k=64;OS.y=0;OS.v=hitTop?v0:-v0;OS.last=performance.now();W.style.willChange='transform';OS.raf=requestAnimationFrame(tick)},{passive:true});
 })();
 $('#chip').onclick=e=>{if(e.target.closest('[data-a="clr"]')){if(fcat)fcat=null;else if(ftag){ftag=null;ftagR=null;if(ftagBk==='stats'){tab='stats';AS='tags'}else{tab='tags';ps='goals'}}else if(fday){fday=null;tab='stats';AS='cal'}render();window.scrollTo(0,0)}};
 const shift=d=>{fcat=null;fday=null;const [y,m]=month.split('-').map(Number);month=mk(new Date(y,m-1+d,1));render()};
