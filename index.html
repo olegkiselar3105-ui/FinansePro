@@ -947,7 +947,7 @@ html.selm #selbar,html.selm #selmore{opacity:1;pointer-events:auto;transform:non
 :root #tabs{right:var(--rx);background:var(--gloss),var(--gbarT)}
 #tabs button[data-t]{flex:1 1 0;min-width:0}
 #fab{right:calc(var(--rx) + min(100vw - 32px,528px)/8 - 28px);bottom:calc(14px + var(--tbh) + var(--fabg) + var(--sab))}
-#w{padding-bottom:calc(210px + var(--sab))}
+#w{padding-bottom:calc(14px + var(--tbh) + var(--fabg) + 62px + var(--sab))}
 #st .trw{display:flex;gap:6px}
 :root #toast{bottom:calc(160px + var(--sab))}
 
@@ -2851,7 +2851,7 @@ function spRest(){const sp=$('#sp'),inn=sp.firstElementChild;spStop();SP.v=0;sp.
   sp.style.height=SP.on?'auto':'0px';inn.style.opacity='';inn.style.transform='';inn.style.willChange=''}
 function spTick(t){
   const dt=Math.min(.034,Math.max(.001,(t-SP.last)/1000));SP.last=t;
-  const k=SP.on?300:280,z=SP.on?.9:1,c=2*z*Math.sqrt(k),n=Math.max(1,Math.ceil(dt/.004)),d=dt/n;
+  const k=SP.on?120:100,z=1,c=2*z*Math.sqrt(k),n=Math.max(1,Math.ceil(dt/.004)),d=dt/n;
   let h=SP.h,v=SP.v;
   for(let i=0;i<n;i++){v+=(-k*(h-SP.tg)-c*v)*d;h+=v*d}
   if(h<0){h=0;v=0}
@@ -2899,7 +2899,7 @@ addEventListener('scroll',()=>{const sp=$('#sp');if(!sp.classList.contains('open
       if(dy<8)return;
       g.on=true;spStop();sp.style.transition='none';g.h0=sp.getBoundingClientRect().height;g.h=g.h0;g.v=0;g.lt=performance.now();inn.style.willChange='opacity,transform'}
     if(e.cancelable)e.preventDefault();
-    {const n=nat(),d=g.h0+Math.max(0,dy-8)*.85;pullSet(d<=n?d:n+34*(1-Math.exp(-(d-n)/70)))}},{passive:false});
+    {const n=nat(),d=g.h0+Math.max(0,dy-8)*.85;pullSet(d<=n?d:n+(1-1/((d-n)*.55/260+1))*260)}},{passive:false});
   function pullSet(h){const now=performance.now(),dt=now-g.lt;if(dt>0)g.v=.65*g.v+.35*((h-g.h)/dt*1000);g.lt=now;g.h=h;spPaint(h)}
   function pullEnd(ok){const p=g;g=null;if(!p||!p.on)return;
     const n=nat(),v=performance.now()-p.lt>90?0:Math.max(-2200,Math.min(2200,p.v));
@@ -2912,6 +2912,33 @@ addEventListener('scroll',()=>{const sp=$('#sp');if(!sp.classList.contains('open
   addEventListener('wheel',e=>{if(tab!=='list'||isModalOpen()||sp.classList.contains('open')||(window.scrollY||0)>0||e.ctrlKey)return;
     if(e.deltaY>=0){wa=0;return}
     const n=performance.now();if(n-wt>400)wa=0;wt=n;wa-=e.deltaY;if(wa>110){wa=0;setSearch(true)}},{passive:true});
+})();
+// v49: панель поиска открыта и пуста — смах вверх сначала целиком уходит на её закрытие (список не листается), листание начинается со следующего касания
+(function(){const sp=$('#sp'),inn=sp.firstElementChild;let c=null;
+  const skipC='#tabs,#fab,.hd,#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc,#ov,#toast,#tour,#fp,select,textarea';
+  const can=()=>tab==='list'&&sp.classList.contains('open')&&!q&&!fOn()&&!fpEl.classList.contains('open')&&!isModalOpen()&&(window.scrollY||0)<=0;
+  document.addEventListener('touchstart',e=>{c=null;
+    if(e.touches.length!==1||!can())return;
+    if(e.target.closest&&e.target.closest(skipC))return;
+    c={y:e.touches[0].clientY,x:e.touches[0].clientX,on:false,n:0,h:0,v:0,lt:0}},{passive:true});
+  document.addEventListener('touchmove',e=>{if(!c)return;
+    if(e.touches.length!==1||isModalOpen()||!sp.classList.contains('open')){end(false);return}
+    const t=e.touches[0],dy=t.clientY-c.y,dx=t.clientX-c.x;
+    if(!c.on){
+      if((window.scrollY||0)>0){c=null;return}
+      if(dy>8){c=null;return}
+      if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>8){c=null;return}
+      if(dy>-4)return;
+      c.on=true;window.__spPull=true;spStop();sp.style.transition='none';
+      c.h=sp.getBoundingClientRect().height;c.n=c.h||inn.scrollHeight;c.lt=performance.now();inn.style.willChange='opacity,transform'}
+    if(e.cancelable)e.preventDefault();
+    const h=Math.max(0,Math.min(c.n,c.n+dy+4)),now=performance.now(),dt=now-c.lt;
+    if(dt>0)c.v=.65*c.v+.35*((h-c.h)/dt*1000);c.lt=now;c.h=h;spPaint(h)},{passive:false});
+  function end(ok){const p=c;c=null;window.__spPull=false;if(!p||!p.on)return;
+    const v=performance.now()-p.lt>90?0:Math.max(-2500,Math.min(2500,p.v));SP.v0=v;
+    if(ok&&p.h+v*.16<p.n*.5)setSearch(false);else setSearch(true)}
+  document.addEventListener('touchend',()=>end(true),{passive:true});
+  document.addEventListener('touchcancel',()=>end(false),{passive:true});
 })();
 $('#chip').onclick=e=>{if(e.target.closest('[data-a="clr"]')){if(fcat)fcat=null;else if(ftag){ftag=null;ftagR=null;if(ftagBk==='stats'){tab='stats';AS='tags'}else{tab='tags';ps='goals'}}else if(fday){fday=null;tab='stats';AS='cal'}render();window.scrollTo(0,0)}};
 const shift=d=>{fcat=null;fday=null;const [y,m]=month.split('-').map(Number);month=mk(new Date(y,m-1+d,1));render()};
@@ -4011,7 +4038,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v47';
+const IB_VER='v49';
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
 // АДРЕС БОТА ПО УМОЛЧАНИЮ: впишите сюда адрес вашего воркера один раз — тогда всем пользователям (жене и др.) ничего вводить не нужно
@@ -4222,6 +4249,59 @@ async function ibLoop(){
 })();
 </script>
 <script>
+// ---------- v48: резиновая оттяжка и отскок на краях страницы — как в нативном iOS ----------
+(function(){const w=document.getElementById('w'),sp=document.getElementById('sp');if(!w)return;
+  const rm=()=>matchMedia('(prefers-reduced-motion:reduce)').matches;
+  const R={x:0,v:0,raf:0,last:0},skip='#tabs,#fab,.hd,#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc,#ov,#toast,#tour,#sp,#fp,#stw,input,select,textarea';
+  let g=null,touching=false,py=0,pt=0,pv=0;
+  const rub=d=>d?Math.sign(d)*(1-1/(Math.abs(d)*.55/300+1))*300:0;
+  const paint=()=>{w.style.transform=Math.abs(R.x)<.05?'':'translate3d(0,'+R.x.toFixed(2)+'px,0)'};
+  const stop=()=>{cancelAnimationFrame(R.raf);R.raf=0};
+  const maxY=()=>Math.max(0,document.documentElement.scrollHeight-innerHeight);
+  function tick(t){const dt=Math.min(.034,Math.max(.001,(t-R.last)/1000));R.last=t;
+    const k=100,c=2*Math.sqrt(k),n=Math.max(1,Math.ceil(dt/.004)),d=dt/n;let x=R.x,v=R.v;
+    for(let i=0;i<n;i++){v+=(-k*x-c*v)*d;x+=v*d}
+    R.x=x;R.v=v;
+    if(Math.abs(x)<.3&&Math.abs(v)<8){R.x=0;R.v=0;R.raf=0;w.style.transform='';w.style.willChange='';return}
+    paint();R.raf=requestAnimationFrame(tick)}
+  const go=v0=>{stop();R.v=v0;R.last=performance.now();w.style.willChange='transform';R.raf=requestAnimationFrame(tick)};
+  const modal=()=>typeof isModalOpen==='function'&&isModalOpen();
+  const topOk=()=>!(typeof tab!=='undefined'&&tab==='list'&&sp&&!sp.classList.contains('open'));   // у списка с закрытым поиском сверху работает жест поиска
+  document.addEventListener('touchstart',e=>{touching=true;g=null;
+    if(rm()||e.touches.length!==1||modal())return;
+    if(e.target.closest&&e.target.closest(skip))return;
+    if(R.raf)stop();
+    g={base:null,bx:0,m:0,x0:R.x,v:0,lt:0,lx:0}},{passive:true});
+  document.addEventListener('touchmove',e=>{if(!g)return;
+    if(window.__spPull){g=null;return}
+    if(e.touches.length!==1||modal()){end();return}
+    const t=e.touches[0],y=window.scrollY||0,top=y<=0,bot=y>=maxY()-1;
+    if(!g.m){
+      if(!top&&!bot){g.base=null;return}
+      if(g.base===null){g.base=t.clientY;g.bx=t.clientX;return}
+      const dy=t.clientY-g.base,dx=t.clientX-g.bx;
+      if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>8){g=null;return}
+      if(dy>8&&top&&topOk())g.m=1;else if(dy<-8&&bot)g.m=-1;
+      else{if(dy*(top?1:-1)<0||Math.abs(dy)<=8){if(Math.abs(dy)>8)g.base=t.clientY}return}
+      g.lt=performance.now();g.lx=g.x0;w.style.willChange='transform'}
+    if(e.cancelable)e.preventDefault();
+    const dy=t.clientY-g.base;let raw=(dy-g.m*8)*.85;if(raw*g.m<0)raw=0;
+    const x=g.x0+rub(raw),n=performance.now(),dt=n-g.lt;
+    if(dt>0)g.v=.65*g.v+.35*((x-g.lx)/dt*1000);g.lt=n;g.lx=x;R.x=x;paint()},{passive:false});
+  function end(){touching=false;const p=g;g=null;if(!p||!p.m)return;
+    const v=performance.now()-p.lt>90?0:Math.max(-2500,Math.min(2500,p.v));go(v)}
+  document.addEventListener('touchend',end,{passive:true});
+  document.addEventListener('touchcancel',end,{passive:true});
+  // инерционная прокрутка упёрлась в край — страница чуть отскакивает пропорционально скорости
+  addEventListener('scroll',()=>{const y=window.scrollY||0,n=performance.now(),dt=n-pt;let v=0;
+    if(dt>0&&dt<120)v=(y-py)/dt*1000;
+    if(!touching&&!g&&!R.raf&&!rm()&&!modal()){
+      const mx=maxY();
+      if(y<=0&&py>0&&pv<-450&&topOk())go(Math.min(1300,-pv*.3));
+      else if(mx>0&&y>=mx-1&&py<mx-1&&pv>450)go(-Math.min(1300,pv*.3))}
+    pv=v||pv*.5;py=y;pt=n},{passive:true});
+})();
+
 // ---------- PWA: офлайн-режим (service worker) ----------
 if('serviceWorker' in navigator&&location.protocol!=='file:'){
   const sw=navigator.serviceWorker,hadCtl=!!sw.controller;let reloading=false;
