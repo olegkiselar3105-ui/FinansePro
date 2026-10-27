@@ -18,6 +18,49 @@ var W=window.Telegram&&Telegram.WebApp,TGI=!!(W&&W.initData);window.__TG=TGI?W:n
 window.tgChrome=function(l){if(!TGI)return;var c=l?"#e4e4e1":"#111111";try{W.setBackgroundColor(c)}catch(e){}try{W.isVersionAtLeast("6.9")&&W.setHeaderColor(c)}catch(e){}try{W.isVersionAtLeast("7.10")&&W.setBottomBarColor(c)}catch(e){}};
 if(TGI){document.documentElement.classList.add("tgapp");try{W.ready()}catch(e){}try{W.expand()}catch(e){}try{W.isVersionAtLeast("7.7")&&W.disableVerticalSwipes()}catch(e){}}
 var _s=JSON.parse(localStorage.getItem("finapp.settings")||"null"),_t=(_s&&_s.theme)||(TGI?"auto":""),_l=_t==="light"||(_t==="auto"&&(TGI?W.colorScheme==="light":(window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches)));if(_l){document.documentElement.setAttribute("data-theme","light");document.getElementById("tc").content="#e4e4e1"}window.tgChrome(_l)}catch(e){}</script>
+<script>
+/* ВИБРООТКЛИК. Порядок: Telegram HapticFeedback (Mini App, iPhone и Android) → navigator.vibrate (Android) → «свитч»-трюк iOS Safari/PWA (17.4+).
+   Не чаще одного отклика за ~45 мс; одинаковый ключ не повторяется 260 мс; после жеста (свайп, долгое нажатие) клик-отклик глушится, чтобы не было двойной вибрации. */
+(function(){
+var W=window.__TG,HF=null;
+try{if(W&&W.HapticFeedback&&(!W.isVersionAtLeast||W.isVersionAtLeast('6.1')))HF=W.HapticFeedback}catch(e){}
+var last=0,muteC=0,lk='',lkT=0,inp=null,lab=null;
+var ios=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+var VP={select:4,soft:8,light:8,medium:14,rigid:16,heavy:22,success:[10,40,14],warning:[18,40,18],error:[22,40,22]};
+function mk(){if(inp||!document.body)return;
+  lab=document.createElement('label');lab.setAttribute('aria-hidden','true');
+  lab.style.cssText='position:fixed;left:-40px;top:-40px;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden';
+  inp=document.createElement('input');inp.type='checkbox';inp.setAttribute('switch','');inp.tabIndex=-1;
+  lab.appendChild(inp);document.body.appendChild(lab)}
+function tick(){mk();if(!inp)return;try{lab.click()}catch(e){}}
+function H(st,key){
+  var n=Date.now();
+  if(n-last<45)return;
+  if(key&&key===lk&&n-lkT<260)return;
+  last=n;lk=key||'';lkT=n;
+  if(HF){try{
+    if(st==='select')HF.selectionChanged();
+    else if(st==='success'||st==='warning'||st==='error')HF.notificationOccurred(st);
+    else HF.impactOccurred(st);
+    return}catch(e){}}
+  try{if(navigator.vibrate){navigator.vibrate(VP[st]||10);return}}catch(e){}
+  if(ios)tick()}
+var api=function(st,o){o=o||{};if(o.m)muteC=Date.now()+o.m;H(st||'light',o.k)};
+api.n=function(ms){api(ms>=12?'medium':ms>=8?'light':'select')};   // совместимость со старым vib(мс)
+api.sw=function(st){api(st||'select',{m:450})};                    // отклик жеста: после него клик-отклик молчит
+api.mute=function(ms){muteC=Date.now()+ms};
+window.hap=api;
+// касания кнопок и элементов: отклик на click (а не на касание), поэтому при прокрутке списка вибрации нет
+var SEL='button,a[href],[role="button"],[role="tab"],[role="switch"],[data-t],.r2,.dh,.cd,.chip,summary,label,.tg';
+var SKIP='#cm,#tour,#ov,input:not([type="checkbox"]),textarea,select,[disabled],[aria-disabled="true"],.dis';
+addEventListener('click',function(e){
+  if(inp&&(e.target===inp||e.target===lab)){e.stopImmediatePropagation();return}   // служебный клик iOS-трюка не должен попасть в приложение
+  if(!e.isTrusted||Date.now()<muteC)return;
+  var t=e.target;if(!t||!t.closest||document.documentElement.classList.contains('selm'))return;
+  if(t.closest(SKIP)||!t.closest(SEL))return;
+  H('light','c')},true);
+})();
+</script>
 <script>document.documentElement.classList.add("splh");setTimeout(function(){document.documentElement.classList.remove("splh")},7000)</script>
 <title>Финансы</title>
 <style>
@@ -886,7 +929,22 @@ html.selm #tabs,html.selm #fab{opacity:0;pointer-events:none;transform:translate
 #selmore{right:var(--rx);width:62px;height:62px;border-radius:50%;display:flex;align-items:center;justify-content:center;padding:0}
 html.selm #selbar,html.selm #selmore{opacity:1;pointer-events:auto;transform:none}
 #selmore:active{transform:scale(.9)}
-</style></head>
+</style><style id="v27">
+/* v27: номер версии виден поверх нижнего градиента (раньше его закрывал body::after с таким же z-index) */
+#vb{left:8px;right:auto;z-index:12;opacity:.6;color:var(--m2)}
+/* v27: в «поднятой» копии карточки не должно быть внешнего отступа — он давал лишнюю полоску сверху */
+#cm .cml>*{margin-top:0!important;margin-bottom:0!important}
+#cm.on .cml{transform:translateY(-3px) scale(1.03)}
+/* v27: лёгкое «приподнимание» при зажатии (как в iOS) */
+.pr-t{transition:transform .26s cubic-bezier(.2,.8,.2,1),box-shadow .26s ease;will-change:transform}
+.prs{transform:translateY(-3px) scale(1.012);box-shadow:0 10px 26px rgba(0,0,0,.34);position:relative;z-index:4}
+.sw.prs{transform:translateY(-1.5px) scale(1.01)}
+:root[data-theme=light] .prs{box-shadow:0 10px 26px rgba(30,30,50,.2)}
+@media (prefers-reduced-motion:reduce){.pr-t{transition:none}.prs{transform:none}}
+/* v27: свайпы в обучении: страница под окном не двигается, жест не превращается в прокрутку */
+#tour{touch-action:none}
+</style>
+</head>
 <body><div id="vb" aria-hidden="true"></div><div id="spl" aria-hidden="true">
 <svg class="spl-logo" viewBox="96 96 320 320" width="132" height="132" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
 <defs><linearGradient id="splg" x1="0" x2="1"><stop offset="0" style="stop-color:var(--g);stop-opacity:.3"/><stop offset=".5" style="stop-color:var(--g)"/><stop offset="1" style="stop-color:var(--g);stop-opacity:.3"/></linearGradient>
@@ -2325,7 +2383,7 @@ function commitSw(w){
   // 1) строка доезжает за экран плавной iOS-кривой, красная кнопка заполняет ширину
   w.classList.add('armed');setRv(w,W,true);
   if(!RM){c.style.transition='transform .36s cubic-bezier(.32,.72,0,1)'}
-  try{if(navigator.vibrate)navigator.vibrate(10)}catch{}
+  try{hap.sw('medium')}catch{}
   const GAP=RM?0:70;
   if(isDraft){
     const dl=document.querySelector(`#rev .dl[data-id="${w.dataset.id}"]`),rh=drafts.length===1?document.querySelector('#rev .rh'):null;
@@ -2356,7 +2414,7 @@ function onSwMove(e){if(!sd||e.pointerId!==sd.id)return;const dx=e.clientX-sd.x,
     else if(ay>=10){sd=null;return}else return}
   let rv=sd.base-dx;if(rv<0)rv*=.25;if(rv>sd.W)rv=sd.W;
   const n=performance.now(),dt=n-sd.lt;if(dt>0){sd.v=.6*sd.v+.4*((sd.lx-e.clientX)/dt)}sd.lx=e.clientX;sd.lt=n;
-  const ar=rv>sd.W*.5;if(ar!==sd.armed){sd.armed=ar;sd.w.classList.toggle('armed',ar);if(navigator.vibrate)try{navigator.vibrate(8)}catch{}}
+  const ar=rv>sd.W*.5;if(ar!==sd.armed){sd.armed=ar;sd.w.classList.toggle('armed',ar);try{hap.sw('light')}catch{}}
   setRv(sd.w,rv,false)}
 function endSw(e,cancel){if(!sd||e.pointerId!==sd.id)return;const d=sd;sd=null;if(!d.on)return;
   swBlock=true;setTimeout(()=>swBlock=false,60);const rv=+d.w.dataset.rv||0;
@@ -2595,7 +2653,7 @@ function endTp(e,cancel){
   const x=p.nb&&nt?Math.max(-W,Math.min(W,dx)):rubber(dx);
   // tiniest deliberate swipe is enough: ~18px, or a quick flick; a flick back the other way cancels
   const fwd=s*p.v>0,go=!cancel&&!!nt&&dx!==0&&!(s*p.v<-.35)&&(Math.abs(dx)>=18||(fwd&&Math.abs(p.v)>.25&&Math.abs(dx)>=6));
-  if(go)slideSub(nt,x,Math.abs(p.v),p.nb);else snapBack(x,p.nb)}
+  if(go){try{hap.sw('select')}catch(e){}slideSub(nt,x,Math.abs(p.v),p.nb)}else snapBack(x,p.nb)}
 document.addEventListener('pointerup',e=>endTp(e,false));
 document.addEventListener('pointercancel',e=>endTp(e,true));
 bodyEl.addEventListener('lostpointercapture',e=>{if(e.target!==bodyEl)return;endTp(e,false)});
@@ -2620,7 +2678,7 @@ tbEl.addEventListener('pointermove',e=>{
   const lo=bs[0].offsetLeft,hi=last.offsetLeft+last.offsetWidth-w;
   const left=Math.min(hi,Math.max(lo,e.clientX-tr.left-tbEl.clientLeft-w/2));
   ind.style.width=w+'px';ind.style.transform=`translate(${left}px,${hb.offsetTop}px)`;
-  tbd.hov=hb.dataset.t;bs.forEach(b=>b.classList.toggle('on',b===hb))});
+  if(tbd.hov!==hb.dataset.t){try{hap.sw('select')}catch(e){}}tbd.hov=hb.dataset.t;bs.forEach(b=>b.classList.toggle('on',b===hb))});
 function endTbd(e,cancel){
   if(!tbd||e.pointerId!==tbd.id)return;const d=tbd;tbd=null;if(!d.on)return;
   tbdBlock=true;setTimeout(()=>tbdBlock=false,120);
@@ -2649,7 +2707,7 @@ topEl.addEventListener('pointermove',e=>{if(!ms||e.pointerId!==ms.id)return;cons
   ms.dx=dx;const n=performance.now(),dt=n-ms.lt;if(dt>0)ms.v=.6*ms.v+.4*((ms.lx-e.clientX)/dt);ms.lx=e.clientX;ms.lt=n;
   const t=$('#tin');t.style.transition='none';t.style.transform=`translateX(${dx*.55}px)`;t.style.opacity=String(1-Math.min(.6,Math.abs(dx)/260))});
 function endMs(e,cancel){if(!ms||e.pointerId!==ms.id)return;const m=ms;ms=null;if(!m.on)return;msBlock=true;setTimeout(()=>msBlock=false,60);
-  if(!cancel&&(Math.abs(m.dx)>40||(Math.abs(m.v)>.4&&Math.abs(m.dx)>16)))monthSwap(m.dx<0?1:-1,m.dx*.55,1-Math.min(.6,Math.abs(m.dx)/260));
+  if(!cancel&&(Math.abs(m.dx)>40||(Math.abs(m.v)>.4&&Math.abs(m.dx)>16))){try{hap.sw('select')}catch(e){}monthSwap(m.dx<0?1:-1,m.dx*.55,1-Math.min(.6,Math.abs(m.dx)/260))}
   else{const t=$('#tin');t.style.transition='transform .5s cubic-bezier(.22,1,.36,1),opacity .3s';t.style.transform='';t.style.opacity=''}}
 topEl.addEventListener('pointerup',e=>endMs(e,false));topEl.addEventListener('pointercancel',e=>endMs(e,true));
 topEl.addEventListener('click',e=>{if(msBlock){e.stopPropagation();e.preventDefault()}},true);
@@ -3662,7 +3720,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v24';
+const IB_VER='v27';
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
 // АДРЕС БОТА ПО УМОЛЧАНИЮ: впишите сюда адрес вашего воркера один раз — тогда всем пользователям (жене и др.) ничего вводить не нужно
@@ -3915,7 +3973,7 @@ const P={
  plus:'<path d="M12 5v14M5 12h14"/>',
  dots:'<circle cx="5.5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18.5" cy="12" r="1.6"/>'};
 const ic=k=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[k]||''}</svg>`;
-const vib=n=>{try{navigator.vibrate&&navigator.vibrate(n)}catch(e){}};
+const vib=n=>{try{hap.n(n)}catch(e){}};
 const modal=()=>{try{return isModalOpen()}catch(e){return false}};
 const tourOn=()=>{const t=D.getElementById('tour');return !!(t&&t.classList.contains('on'))};
 
@@ -3934,7 +3992,8 @@ function show(o){build();clearTimeout(outT);
   mm.innerHTML=items.map((it,i)=>`<button type="button" class="cmi${it.red?' red':''}${it.dis?' dis':''}" role="menuitem" data-i="${i}">${ic(it.ic)}<span>${it.t}</span></button>`).join('');
   ml.hidden=true;ml.innerHTML='';
   if(o.node){const r=o.node.getBoundingClientRect(),c=o.node.cloneNode(true);c.removeAttribute('data-id');c.querySelectorAll('[id]').forEach(x=>x.removeAttribute('id'));
-    ml.appendChild(c);Object.assign(ml.style,{left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px'});ml.hidden=false;o.rect=r}
+    ml.appendChild(c);Object.assign(ml.style,{left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px'});ml.hidden=false;o.rect=r;
+    if(o.lift&&!RM){ml.style.transition='none';ml.style.transform=o.node.classList.contains('sw')?'translateY(-1.5px) scale(1.01)':'translateY(-3px) scale(1.012)'}}
   cm.classList.remove('on');cm.style.display='block';
   const W=Math.min(300,innerWidth-24);mm.style.width=W+'px';const H=mm.offsetHeight,vh=innerHeight,vw=innerWidth,top0=40;
   let l,t,ox;
@@ -3943,11 +4002,13 @@ function show(o){build();clearTimeout(outT);
     t=r.bottom+12;if(t+H>vh-16){t=r.top-12-H;if(t<top0){t=Math.max(top0,Math.min(vh-16-H,(vh-H)/2))}}
     ox=(x-l)+'px '+(t>r.top?'0px':H+'px')}
   mm.style.left=l+'px';mm.style.top=t+'px';mm.style.transformOrigin=ox;
-  void cm.offsetWidth;cm.classList.add('on')}
+  void cm.offsetWidth;
+  if(o.lift&&!RM){ml.style.transition='';ml.style.transform=''}
+  cm.classList.add('on')}
 function close(){if(!open)return;open=false;pressing=false;cm.classList.remove('on');clearTimeout(outT);outT=setTimeout(()=>{if(!open){cm.style.display='none';ml.innerHTML='';ml.hidden=true}},420)}
 function setHi(i){if(i===hi)return;hi=i;mm.querySelectorAll('.cmi').forEach((b,k)=>b.classList.toggle('hi',k===i));if(i>=0)vib(5)}
 function hit(x,y){const bs=mm.querySelectorAll('.cmi');for(let i=0;i<bs.length;i++){const r=bs[i].getBoundingClientRect();if(x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom)return i}return -1}
-function pick(i){const it=items[i];if(!it||it.dis)return;close();hold(500);setTimeout(()=>{try{it.fn()}catch(e){console.error(e)}},RM?0:120)}
+function pick(i){const it=items[i];if(!it||it.dis)return;close();hold(500);try{hap(it.red?'medium':'light',{m:500,k:'pk'})}catch(e){}setTimeout(()=>{try{it.fn()}catch(e){console.error(e)}},RM?0:120)}
 D.addEventListener('pointermove',e=>{
   if(pend){if(Math.hypot(e.clientX-pend.x,e.clientY-pend.y)>9)cancelPend();return}
   if(open&&pressing&&e.pointerId===pid){setHi(hit(e.clientX,e.clientY))}},true);
@@ -4019,17 +4080,26 @@ function planDel(ws){
   if(RM||!nodes.length||typeof fxCollapse!=='function')fin();else Promise.all(nodes.map(n=>fxCollapse(n))).then(fin)}
 
 /* ---------- долгое нажатие ---------- */
-let pend=null,pT=0;
-function cancelPend(){clearTimeout(pT);pend=null}
+let pend=null,pT=0,lT=0,lifted=null,liftOut=0;
+// «приподнять» карточку, пока палец удерживается; liftOff(true) — мгновенно (когда открывается меню), иначе плавно опускаем
+function liftOn(n){if(!n||!n.isConnected)return;liftOff(true);lifted=n;n.classList.add('pr-t','prs')}
+function liftOff(instant){clearTimeout(liftOut);const n=lifted;lifted=null;if(!n)return;
+  if(instant){n.classList.remove('prs','pr-t');return}
+  n.classList.remove('prs');liftOut=setTimeout(()=>n.classList.remove('pr-t'),420)}
+function cancelPend(){clearTimeout(pT);clearTimeout(lT);pend=null;liftOff()}
 D.addEventListener('pointerdown',e=>{
   if(e.pointerType==='mouse'&&e.button!==0)return;
   if(open||sel.on||modal()||D.getElementById('spl')||tourOn())return;
   const w=whatIs(e.target);if(!w)return;
   pend={id:e.pointerId,x:e.clientX,y:e.clientY,w,type:e.pointerType};
-  clearTimeout(pT);pT=setTimeout(()=>{
-    const p=pend;pend=null;if(!p||!p.w.node.isConnected)return;
+  clearTimeout(pT);clearTimeout(lT);
+  if(!RM)lT=setTimeout(()=>{if(pend&&pend.w===w&&!open)liftOn(w.node)},110);
+  pT=setTimeout(()=>{
+    const p=pend;pend=null;clearTimeout(lT);if(!p||!p.w.node.isConnected){liftOff(true);return}
     try{sd=null}catch(x){}try{if(openSw)closeSw(openSw)}catch(x){}
-    vib(14);show({items:menuFor(p.w),node:p.w.node,x:p.x,y:p.y,press:true,pid:p.id})},e.pointerType==='mouse'?500:420)},true);
+    const wasLift=!!lifted;liftOff(true);
+    try{hap('medium',{m:900,k:'lp'})}catch(x){}
+    show({items:menuFor(p.w),node:p.w.node,x:p.x,y:p.y,press:true,pid:p.id,lift:wasLift})},e.pointerType==='mouse'?500:420)},true);
 D.addEventListener('contextmenu',e=>{
   if(sel.on||modal()||open){if(e.target.closest&&e.target.closest('#body,#cm'))e.preventDefault();return}
   const w=whatIs(e.target);if(!w)return;e.preventDefault();cancelPend();
@@ -4265,13 +4335,35 @@ function build(){
   root.addEventListener('click',e=>{
     const a=active;if(!a)return;
     const n=Date.now();if(n-tapAt<320)return;tapAt=n;
+    try{hap('light',{k:'tr'})}catch(x){}
     if(e.target.closest('.tr-skip')){a.kind==='wel'?finishWelcome('skip'):end('skip');return}
     a.kind==='wel'?welNext():next()});
-  // свайп по знакомству
-  let sx=null;
-  wel.addEventListener('touchstart',e=>{sx=e.touches[0].clientX},{passive:true});
-  wel.addEventListener('touchend',e=>{if(sx==null)return;const dx=e.changedTouches[0].clientX-sx;sx=null;
-    if(dx<-45){tapAt=Date.now();welNext()}else if(dx>45&&active&&active.kind==='wel'&&active.i>0)welGo(active.i-1)},{passive:true});
+  // свайп: влево — дальше, вправо — назад; работает и в знакомстве, и в подсказках по экрану. Кнопки и касание «Далее» остаются.
+  // На последнем шаге свайп вперёд ничего не закрывает (закрыть можно кнопкой), чтобы обучение не завершалось случайно.
+  const trSwipe=dir=>{const a=active;if(!a)return;tapAt=Date.now();
+    if(a.kind==='wel'){
+      if(dir>0){if(a.i<a.list.length-1){try{hap.sw('select')}catch(e){}welNext()}}
+      else if(a.i>0){try{hap.sw('select')}catch(e){}welGo(a.i-1)}}
+    else if(a.kind==='spot'){
+      if(dir>0){if(a.i<a.steps.length-1){try{hap.sw('select')}catch(e){}next()}}
+      else if(a.i>0){try{hap.sw('select')}catch(e){}prev()}}};
+  let tsw=null;
+  root.addEventListener('touchstart',e=>{if(e.touches.length!==1){tsw=null;return}const t=e.touches[0];tsw={x:t.clientX,y:t.clientY,t:performance.now(),done:false}},{passive:true});
+  root.addEventListener('touchmove',e=>{
+    if(!tsw||tsw.done||e.touches.length!==1)return;
+    const t=e.touches[0],dx=t.clientX-tsw.x,dy=t.clientY-tsw.y,ax=Math.abs(dx),ay=Math.abs(dy);
+    if(ax>=44&&ax>ay*1.4){tsw.done=true;trSwipe(dx<0?1:-1)}          // жест засчитан сразу, как палец прошёл порог
+    else if(ay>=16&&ay>ax*1.4)tsw=null},{passive:true});            // явно вертикальное движение — не свайп
+  root.addEventListener('touchend',e=>{
+    const s0=tsw;tsw=null;if(!s0||s0.done)return;
+    const t=e.changedTouches[0],dx=t.clientX-s0.x,dy=t.clientY-s0.y,ax=Math.abs(dx),ay=Math.abs(dy);
+    if(ax>=30&&ax>ay*1.4&&(ax>=44||performance.now()-s0.t<260))trSwipe(dx<0?1:-1)},{passive:true});   // короткий быстрый «щелчок» пальцем тоже считается
+  root.addEventListener('touchcancel',()=>{tsw=null},{passive:true});
+  // мышь (Telegram Desktop): перетаскивание
+  let msw=null;
+  root.addEventListener('pointerdown',e=>{msw=(e.pointerType==='mouse'&&e.button===0)?{x:e.clientX,y:e.clientY}:null});
+  root.addEventListener('pointerup',e=>{const s0=msw;msw=null;if(!s0||e.pointerType!=='mouse')return;
+    const dx=e.clientX-s0.x,dy=e.clientY-s0.y;if(Math.abs(dx)>=60&&Math.abs(dx)>Math.abs(dy)*1.4)trSwipe(dx<0?1:-1)});
   D.addEventListener('keydown',e=>{if(!active)return;
     if(e.key==='Escape'){e.preventDefault();e.stopPropagation();active.kind==='wel'?finishWelcome('skip'):end('skip')}
     else if(e.key==='ArrowRight'){e.preventDefault();e.stopPropagation();active.kind==='wel'?welNext():next()}
@@ -4356,6 +4448,7 @@ function showStep(first){
   },swap?140:0)}
 
 function next(){const a=active;if(!a||a.kind!=='spot')return;a.i<a.steps.length-1?(a.i++,a.miss=0,showStep(false)):end('done')}
+function prev(){const a=active;if(!a||a.kind!=='spot'||a.i<=0)return;a.i--;a.miss=0;showStep(false)}
 
 function end(kind,silent){
   const a=active;if(!a||a.kind!=='spot')return;
