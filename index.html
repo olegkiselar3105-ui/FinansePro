@@ -1012,7 +1012,8 @@ html.selm #selbar,html.selm #selmore{opacity:1;pointer-events:auto;transform:non
 
 /* v38: верхняя строка как в iOS — прозрачная и без названия вверху страницы; при прокрутке плавно появляется матовая плашка с названием */
 #nb{position:fixed;left:0;right:0;top:0;height:calc(var(--sat) + 46px);z-index:9;pointer-events:none;--p:0;--pb:0}
-#nb .nbg{position:absolute;inset:0;background:rgba(var(--bgr),.72);-webkit-backdrop-filter:blur(24px) saturate(1.8);backdrop-filter:blur(24px) saturate(1.8);box-shadow:0 .5px 0 rgba(var(--wr),.16);opacity:var(--pb);transition:opacity .22s ease}
+#nb .nbg{position:absolute;inset:0;background:rgba(var(--bgr),.72);-webkit-backdrop-filter:blur(24px) saturate(1.8);backdrop-filter:blur(24px) saturate(1.8);box-shadow:0 .5px 0 rgba(var(--wr),.16);opacity:var(--pb);visibility:hidden;transition:opacity .22s ease,visibility 0s .22s}
+#nb.on .nbg{visibility:visible;transition:opacity .22s ease,visibility 0s}
 #nb #ttl{position:absolute;left:64px;right:64px;top:var(--sat);height:46px;display:flex;align-items:center;justify-content:center;margin:0;font-size:17px;font-weight:600;line-height:1;letter-spacing:-.01em;color:var(--t);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:var(--p);transform:translate3d(0,calc((1 - var(--p))*7px),0);transition:opacity .22s ease,transform .3s cubic-bezier(.22,1,.36,1)}
 @media (prefers-reduced-motion:reduce){#nb .nbg,#nb #ttl{transition:none!important}}
 
@@ -1758,7 +1759,11 @@ ov.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault()});
 ov.addEventListener('touchmove',e=>{e.preventDefault()},{passive:false});
 ov.onclick=()=>{if($('#nc').classList.contains('on'))closeNc(false);else if(rcS)closeRc();else if(bqT)closeBq();else if(cpS)closeCp();else if(cfT)closeCf();else if(gT)closeGoal();else if(eT)closeEdit();else if(sh.classList.contains('on')){inp.value='';closeSheet()}else{ov.className='';lockBg(false)}};
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){if($('#nc').classList.contains('on'))closeNc(false);else if(rcS)closeRc();else if(bqT)closeBq();else if(cpS)closeCp();else if(cfT)closeCf();else if(gT)closeGoal();else if(eT)closeEdit();else if(sh.classList.contains('on')){inp.value='';closeSheet()}}});
-document.addEventListener('touchmove',e=>{if(isModalOpen()&&!e.target.closest('#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc,#rev'))e.preventDefault()},{passive:false});
+// перф: блокирующий touchmove на документе заставляет iOS ждать JS перед каждым стартом прокрутки — вешаем его только на жесты, начатые при открытом окне
+{const modalTM=e=>{if(isModalOpen()&&!e.target.closest('#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc,#rev'))e.preventDefault()};let mtOn=false;
+ const mtOff=()=>{if(mtOn){mtOn=false;document.removeEventListener('touchmove',modalTM)}};
+ document.addEventListener('touchstart',()=>{mtOff();if(isModalOpen()){mtOn=true;document.addEventListener('touchmove',modalTM,{passive:false})}},{passive:true,capture:true});
+ document.addEventListener('touchend',mtOff,{passive:true,capture:true});document.addEventListener('touchcancel',mtOff,{passive:true,capture:true})}
 document.addEventListener('pointerdown',e=>{if(isModalOpen()&&!e.target.closest('#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc,#ov,#toast,#tour')){e.stopPropagation();e.preventDefault()}},true);
 
 
@@ -2921,7 +2926,7 @@ document.addEventListener('touchmove',e=>{
   if(e.touches.length!==1||isModalOpen()||(sd&&sd.on)){tl=null;axisLock=null;return}
   const t=e.touches[0],ax=Math.abs(t.clientX-tl.x),ay=Math.abs(t.clientY-tl.y);
   if(!axisLock){if(Math.max(ax,ay)<5)return;axisLock=ax>=ay*.85?'h':'v'}
-  if(axisLock==='h'&&e.cancelable)e.preventDefault()},{passive:false});
+  },{passive:true});   // перф: пассивный — горизонталь и так не прокручивается (touch-action:pan-y)
 const tlEnd=()=>{tl=null;axisLock=null};
 document.addEventListener('touchend',tlEnd,{passive:true});
 document.addEventListener('touchcancel',tlEnd,{passive:true});
@@ -3113,14 +3118,15 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
   function toScroll(t){const sy=window.scrollY||0;OS.y=0;OS.v=0;paint(0);
     g.mode='scroll';g.on=true;g.p0=sy;g.base=t.clientY;g.lp=sy;g.vp=0;g.vy=0;g.ly=0;g.lt=performance.now()}
   let g=null;
-  document.addEventListener('touchstart',e=>{g=null;
+  document.addEventListener('touchstart',e=>{tmOff();g=null;
     if(e.touches.length!==1||isModalOpen())return;
     const el=e.target;if(el.closest&&el.closest(skip))return;
     const grab=OS.raf?OS.y:0;if(OS.raf){stop();OS.drag=1;W.style.willChange='transform'}   // страница ещё возвращается — можно поймать пальцем
     const mom=!!MM.raf;if(mom){momStop();OS.drag=1}                                       // v49: ручная инерция тоже ловится пальцем
-    g={top:!!(el.closest&&el.closest('#top,#lt0,#chip,#st .lt')),mode:mom?'scroll':grab?'stretch':'',on:!!grab||mom,p0:window.scrollY||0,lp:window.scrollY||0,vp:0,vy:0,base:e.touches[0].clientY,bx:e.touches[0].clientX,y0:grab,sgn:grab<0?-1:1,D0:grab?rbi(Math.abs(grab)):0,h0:0,h:0,v:0,lt:performance.now(),ly:grab}
+    g={top:!!(el.closest&&el.closest('#top,#lt0,#chip,#st .lt')),mode:mom?'scroll':grab?'stretch':'',on:!!grab||mom,p0:window.scrollY||0,lp:window.scrollY||0,vp:0,vy:0,base:e.touches[0].clientY,bx:e.touches[0].clientX,y0:grab,sgn:grab<0?-1:1,D0:grab?rbi(Math.abs(grab)):0,h0:0,h:0,v:0,lt:performance.now(),ly:grab};
+    tmArm();   // растяжение у края работает и для жеста, начатого в середине списка
   },{passive:true});
-  document.addEventListener('touchmove',e=>{if(!g)return;
+  const onTM=e=>{if(!g)return;
     if(e.touches.length!==1||isModalOpen()){finish(false);return}
     const t=e.touches[0],sy=window.scrollY||0,maxY=Math.max(0,document.documentElement.scrollHeight-innerHeight);
     let dy=t.clientY-g.base;const dx=t.clientX-g.bx;
@@ -3150,8 +3156,10 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
     else{
       const n=nat(),d=g.mode==='search'?g.h0+Math.max(0,dy)*.85:g.h0+dy,h=d<=n?Math.max(0,d):n+34*(1-Math.exp(-(d-n)/70));
       if(dt>0){const iv=(h-g.h)/Math.max(dt,8)*1000;g.v=g.sv?.65*g.v+.35*iv:iv;g.sv=1}g.lt=now;g.h=h;spPaint(h)}
-  },{passive:false});
-  function finish(ok){const p=g;g=null;OS.drag=0;if(!p||!p.on)return;
+  };
+  // блокирующий touchmove на время жеста (нужен для растяжения у края)
+  let tmOn=false;const tmArm=()=>{if(!tmOn){tmOn=true;document.addEventListener('touchmove',onTM,{passive:false})}},tmOff=()=>{if(tmOn){tmOn=false;document.removeEventListener('touchmove',onTM)}};
+  function finish(ok){tmOff();const p=g;g=null;OS.drag=0;if(!p||!p.on)return;
     const v=performance.now()-p.lt>90?0:cv(p.v);
     if(p.mode==='scroll'){const stale=performance.now()-p.lt>90;
       if(OS.y){release(OS.y,stale||!ok?0:cv(p.vy));return}
@@ -3169,7 +3177,7 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
     const n=performance.now();if(n-wt>400)wa=0;wt=n;wa-=e.deltaY;if(wa>110){wa=0;setSearch(true)}},{passive:true});
   // ---- отскок на инерции: бросок доехал до края — страница чуть выходит за край и пружиной возвращается ----
   // Работает на всех вкладках (прокручивается всё окно). Касание пальцем, программные прокрутки (смена вкладки, scrollTo) и открытые окна не отскакивают.
-  let touching=false,lastTE=0,lastWh=0,py=window.scrollY||0,pt=performance.now(),pv=0,run=0;
+  const RMq=matchMedia('(prefers-reduced-motion:reduce)');let touching=false,lastTE=0,lastWh=0,py=window.scrollY||0,pt=performance.now(),pv=0,run=0;
   document.addEventListener('touchstart',()=>{touching=true},{passive:true,capture:true});
   const te=()=>{touching=false;lastTE=Date.now()};
   document.addEventListener('touchend',te,{passive:true,capture:true});document.addEventListener('touchcancel',te,{passive:true,capture:true});
@@ -3181,7 +3189,7 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
     if(touching||OS.drag||isModalOpen())return;const maxY=Math.max(0,document.documentElement.scrollHeight-innerHeight);if(maxY<=0||y<0||y>maxY)return;
     if(Date.now()-lastTE>3000&&Date.now()-lastWh>250)return;      // не после касания/колеса — значит прокрутка программная
     if(run<3)return;                                              // резкий прыжок (смена вкладки) — не инерция
-    if(window.matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+    if(RMq.matches)return;
     const hitTop=prev>0&&y<=0&&pv<-250,hitBot=prev<maxY-1&&y>=maxY-1&&pv>250;
     if(!hitTop&&!hitBot)return;
     if(MM.raf||performance.now()<MM.skip)return;                  // v49: край в ручной инерции обрабатывает она сама
@@ -4503,7 +4511,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v63';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v65';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.2';  // версия, которую видит человек (внизу экрана и в письме в поддержку)
 try{document.getElementById('vb').textContent=APP_VER}catch(e){}
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
@@ -4592,7 +4600,11 @@ async function ibLoop(){
   try{TGW.onEvent('activated',wake)}catch{}
   try{TGW.onEvent('viewportChanged',wake)}catch{}
   // любое касание экрана — тоже повод проверить очередь (на случай, если окно «спало» и события возвращения не пришли)
-  ['pointerdown','touchstart','keydown'].forEach(ev=>document.addEventListener(ev,()=>{if(ibBase()&&Date.now()-IB.last>2500)inboxPull(false)},{capture:true,passive:true}));
+  document.addEventListener('keydown',()=>{if(ibBase()&&Date.now()-IB.last>2500)inboxPull(false)},{capture:true,passive:true});
+  {let pT=0;const go=()=>{if(typeof _scT!=='undefined'&&Date.now()-_scT<300){pT=setTimeout(go,320);return}if(ibBase()&&Date.now()-IB.last>2500)inboxPull(false)};
+   const arm=()=>{clearTimeout(pT);pT=setTimeout(go,380)};
+   document.addEventListener('touchend',arm,{capture:true,passive:true});document.addEventListener('pointerup',arm,{capture:true,passive:true});
+   document.addEventListener('touchstart',()=>clearTimeout(pT),{capture:true,passive:true})}
   // сторож: если за 25 секунд не пришёл ни один ответ от бота — сбрасываем «зависшие» запросы и опрашиваем заново
   setInterval(()=>{
     if(!ibBase()||document.hidden||Date.now()-IB.ok<25000)return;
@@ -4638,7 +4650,7 @@ async function ibLoop(){
     p=c01((y-6)/22);pb=c01((y-2)/12);
     p=Math.round(p*100)/100;pb=Math.round(pb*100)/100;
     if(p!==lp){lp=p;nb.style.setProperty('--p',p)}
-    if(pb!==lb){lb=pb;nb.style.setProperty('--pb',pb)}}
+    if(pb!==lb){lb=pb;nb.style.setProperty('--pb',pb);nb.classList.toggle('on',pb>0)}}
   const q=()=>{if(!raf)raf=requestAnimationFrame(upd)};
   window.addEventListener('scroll',q,{passive:true});window.addEventListener('resize',q);
   try{const bd=document.getElementById('body');if(bd){new MutationObserver(q).observe(bd,{childList:true});if(window.ResizeObserver)new ResizeObserver(q).observe(bd)}}catch(e){}
@@ -4786,12 +4798,12 @@ let cm,mb,ml,mm,open=false,items=[],hi=-1,pressing=false,pid=null,supp=false,sup
 function build(){if(cm)return;
   cm=D.createElement('div');cm.id='cm';cm.innerHTML='<div class="cmb"></div><div class="cml" hidden></div><div class="cmm" role="menu"></div>';
   D.body.appendChild(cm);mb=cm.firstChild;ml=cm.children[1];mm=cm.children[2];
-  mb.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();hold(450);trail=true;clearTimeout(trailT);trailT=setTimeout(()=>{trail=false},1500);close()});
+  mb.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();hold(450);trail=true;shArm();clearTimeout(trailT);trailT=setTimeout(()=>{trail=false;shOff()},1500);close()});
   mm.addEventListener('click',e=>{const b=e.target.closest('.cmi');if(!b)return;e.preventDefault();e.stopPropagation();pick(+b.dataset.i)});
   ['pointerdown','touchstart'].forEach(ev=>cm.addEventListener(ev,e=>e.stopPropagation(),{passive:true}))}
 function hold(ms){supp=true;clearTimeout(suppT);suppT=setTimeout(()=>{supp=false},ms||400)}
 D.addEventListener('click',e=>{if(supp){e.stopPropagation();e.preventDefault()}},true);
-function show(o){build();clearTimeout(outT);if(window.__tap)window.__tap.t=performance.now();
+function show(o){build();shArm();clearTimeout(outT);if(window.__tap)window.__tap.t=performance.now();
   if(o.pid!=null)calm(o.pid,o.node);
   items=o.items;hi=-1;open=true;fromPress=!!o.press;pressing=!!o.press;pid=o.pid;
   mm.innerHTML=items.map((it,i)=>`<button type="button" class="cmi${it.red?' red':''}${it.dis?' dis':''}" role="menuitem" data-i="${i}">${ic(it.ic)}<span>${it.t}</span></button>`).join('');
@@ -4823,7 +4835,7 @@ window.addEventListener('pointermove',e=>{
   if(!shield())return;
   if(open&&pressing&&e.pointerId===pid)setHi(hit(e.clientX,e.clientY));
   e.stopImmediatePropagation()},true);
-const trailEnd=()=>{clearTimeout(trailT);trailT=setTimeout(()=>{trail=false},60)};
+const trailEnd=()=>{clearTimeout(trailT);trailT=setTimeout(()=>{trail=false;if(!open)shOff()},60)};
 window.addEventListener('pointerup',trailEnd,true);window.addEventListener('pointercancel',trailEnd,true);
 function release(e,cancel){
   if(pend&&e.pointerId===pend.id)cancelPend();
@@ -4832,7 +4844,8 @@ function release(e,cancel){
   if(!cancel&&hi>=0)pick(hi);else setHi(-1)}
 D.addEventListener('pointerup',e=>release(e,false),true);
 D.addEventListener('pointercancel',e=>release(e,true),true);
-window.addEventListener('touchmove',e=>{if(!shield())return;if(e.cancelable)e.preventDefault();e.stopImmediatePropagation()},{passive:false,capture:true});
+const shTM=e=>{if(!shield()){shOff();return}if(e.cancelable)e.preventDefault();e.stopImmediatePropagation()};let shOn=false;
+const shArm=()=>{if(!shOn){shOn=true;window.addEventListener('touchmove',shTM,{passive:false,capture:true})}},shOff=()=>{if(shOn){shOn=false;window.removeEventListener('touchmove',shTM,true)}};
 window.addEventListener('wheel',e=>{if(shield()){e.preventDefault();e.stopImmediatePropagation()}},{passive:false,capture:true});
 // в момент открытия меню все начатые фоном жесты (карусель страниц, свайп строки, тянуть-поиск, пружина) отменяются — как будто палец ушёл с экрана
 function calm(id,node){
