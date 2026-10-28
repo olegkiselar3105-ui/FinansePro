@@ -1162,6 +1162,15 @@ button,a,label,select,summary{touch-action:manipulation}
 html.plk #lk,#lk.on{visibility:visible;opacity:1;transform:none;pointer-events:auto;transition:opacity .34s cubic-bezier(.4,0,.2,1),transform .5s cubic-bezier(.22,1,.36,1),visibility 0s}
 @media (prefers-reduced-motion:reduce){#lk,html.plk #lk,#lk.on{transition:none}}
 </style>
+<style id="v68">
+/* v68: главный блок (месяц + остаток/доход/расход) неподвижный, список заезжает под него; блок полупрозрачный, сквозь него виден размытый список */
+#top{position:sticky;top:8px;z-index:8;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--tp1) 62%,transparent),color-mix(in srgb,var(--tp2) 54%,transparent));
+  -webkit-backdrop-filter:blur(22px) saturate(1.7);backdrop-filter:blur(22px) saturate(1.7);
+  box-shadow:inset 0 .5px 0 rgba(var(--wr),.16),0 8px 24px rgba(0,0,0,.20)}
+:root[data-theme=light] #top{box-shadow:inset 0 .5px 0 rgba(var(--wr),.14),0 8px 24px rgba(30,30,50,.10)}
+</style>
+
 </head>
 <body><div id="lk" role="dialog" aria-modal="true" aria-label="PIN-код"></div><div id="vb" aria-hidden="true"></div><div id="spl" aria-hidden="true">
 <svg class="spl-logo" viewBox="96 96 320 320" width="132" height="132" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
@@ -4519,7 +4528,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v67';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v68';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.2';  // версия, которую видит человек (внизу экрана и в письме в поддержку)
 try{document.getElementById('vb').textContent=APP_VER}catch(e){}
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
