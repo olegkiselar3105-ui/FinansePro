@@ -3177,7 +3177,7 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
     const n=performance.now();if(n-wt>400)wa=0;wt=n;wa-=e.deltaY;if(wa>110){wa=0;setSearch(true)}},{passive:true});
   // ---- отскок на инерции: бросок доехал до края — страница чуть выходит за край и пружиной возвращается ----
   // Работает на всех вкладках (прокручивается всё окно). Касание пальцем, программные прокрутки (смена вкладки, scrollTo) и открытые окна не отскакивают.
-  const RMq=matchMedia('(prefers-reduced-motion:reduce)');let touching=false,lastTE=0,lastWh=0,py=window.scrollY||0,pt=performance.now(),pv=0,run=0;
+  const RMq=matchMedia('(prefers-reduced-motion:reduce)');let wcT=0,touching=false,lastTE=0,lastWh=0,py=window.scrollY||0,pt=performance.now(),pv=0,run=0;
   document.addEventListener('touchstart',()=>{touching=true},{passive:true,capture:true});
   const te=()=>{touching=false;lastTE=Date.now()};
   document.addEventListener('touchend',te,{passive:true,capture:true});document.addEventListener('touchcancel',te,{passive:true,capture:true});
@@ -3186,6 +3186,9 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
     const y=window.scrollY||0,now=performance.now(),dt=Math.max(1,now-pt);
     const v=(y-py)/dt*1000;if(dt>100){pv=0;run=0}pv=.5*pv+.5*v;run=dt<64&&Math.abs(v)>120?run+1:0;
     const prev=py;py=y;pt=now;
+    // перф: перед краем заранее выносим страницу в отдельный слой — иначе в момент удара о край слой создаётся посреди анимации и кадр «залипает»
+    if(!touching&&!OS.raf&&Math.abs(pv)>600){const mx0=document.documentElement.scrollHeight-innerHeight;
+      if(mx0>0&&(y<700||y>mx0-700)){W.style.willChange='transform';clearTimeout(wcT);wcT=setTimeout(()=>{if(!OS.raf&&!OS.y&&!OS.drag&&!MM.raf)W.style.willChange=''},900)}}
     if(touching||OS.drag||isModalOpen())return;const maxY=Math.max(0,document.documentElement.scrollHeight-innerHeight);if(maxY<=0||y<0||y>maxY)return;
     if(Date.now()-lastTE>3000&&Date.now()-lastWh>250)return;      // не после касания/колеса — значит прокрутка программная
     if(run<3)return;                                              // резкий прыжок (смена вкладки) — не инерция
@@ -4511,7 +4514,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v65';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v66';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.2';  // версия, которую видит человек (внизу экрана и в письме в поддержку)
 try{document.getElementById('vb').textContent=APP_VER}catch(e){}
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
