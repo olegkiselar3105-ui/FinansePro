@@ -702,6 +702,8 @@ html.ncv .dg{content-visibility:visible}
 :root #fp .fh{padding-bottom:8px;margin-bottom:2px;border-bottom:1px solid var(--sep)}
 :root #fp .fr{padding:9px 0;border-bottom:1px solid var(--sep)}
 :root #fp .fr:last-child{border-bottom:0}
+/* v67: под «от»/«до» (сумма и дата) лишняя линия убрана — остаётся только разделитель строки */
+:root #fp .fr input,:root #fp .dfw{border-bottom:0}
 :root #cf label{border-bottom:1px solid var(--sep)}
 :root #cf label:last-of-type{border-bottom:0}
 :root #ed .ef,:root #gd .ef,:root #rc .ef{border-bottom:1px solid var(--sep)}
@@ -3085,14 +3087,17 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
     skip='#lk,#tabs,#fab,.hd,#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc,#ov,#toast,#tour,#cm,#fp,input,select,textarea,.swb';
   const paint=y=>{W.style.transform=y?'translate3d(0,'+y.toFixed(2)+'px,0)':''};
   const stop=()=>{cancelAnimationFrame(OS.raf);OS.raf=0};
-  const rest=()=>{stop();OS.k=0;OS.y=0;OS.v=0;paint(0);W.style.willChange=''};
+  let rcT=0;
+  // слой страницы снимаем не сразу после остановки, а когда всё затихло: иначе в момент снятия строки чуть «щёлкают» на долю пикселя
+  const rest=()=>{stop();OS.k=0;OS.y=0;OS.v=0;W.style.transform='translate3d(0,0,0)';clearTimeout(rcT);
+    rcT=setTimeout(()=>{if(!OS.raf&&!OS.y&&!OS.drag&&!MM.raf){W.style.transform='';W.style.willChange=''}},450)};
   function tick(t){
     const dt=Math.min(.034,Math.max(.001,(t-OS.last)/1000));OS.last=t;
     const k=OS.k||169,c=2*Math.sqrt(k),n=Math.max(1,Math.ceil(dt/.004)),d=dt/n;
     let y=OS.y,v=OS.v;
     for(let i=0;i<n;i++){v+=(-k*y-c*v)*d;y+=v*d}
     OS.y=y;OS.v=v;
-    if(Math.abs(y)<.3&&Math.abs(v)<14){rest();return}
+    if(Math.abs(y)<.05&&Math.abs(v)<5){rest();return}
     paint(y);OS.raf=requestAnimationFrame(tick)}
   function release(y,v){stop();OS.k=0;OS.y=y;OS.v=y>0?Math.max(v,-WN*y):Math.min(v,-WN*y);   // скорость не даёт перелететь через ноль
     OS.last=performance.now();W.style.willChange='transform';OS.raf=requestAnimationFrame(tick)}
@@ -4514,7 +4519,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v66';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v67';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.2';  // версия, которую видит человек (внизу экрана и в письме в поддержку)
 try{document.getElementById('vb').textContent=APP_VER}catch(e){}
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
