@@ -210,6 +210,7 @@ option{background:var(--s);color:var(--t)}
 #bq .bqb+.bqb{margin-top:8px}
 #bq .bqs.pre{white-space:pre-line;max-height:46vh;overflow-y:auto}
 #bq .bqb .sm{flex:1;padding:10px 12px;font-size:14px;text-align:center}
+#bq a.sm{display:flex;align-items:center;justify-content:center;text-decoration:none;-webkit-touch-callout:none}#bq a.sm.pr{color:var(--on)}
 #bq .del{color:var(--rd);border-color:rgba(227,144,144,.35)}
 @media (prefers-reduced-motion:reduce){#bq{transition:none!important}}
 #st #cats input{width:auto;text-align:left;font-size:14px}
@@ -1099,11 +1100,64 @@ html.plk #lk,#lk.on{display:flex}
 #lk .lkp{display:grid;grid-template-columns:repeat(3,72px);gap:14px 22px;justify-content:center}
 #lk .lkp button{width:72px;height:72px;border-radius:50%;border:.5px solid var(--b1);font-size:26px;display:flex;align-items:center;justify-content:center;background:rgba(var(--wr),.04)}
 #lk .lkp button:active{background:rgba(var(--wr),.16)}
+#lk .lkp button.lkbio{border-color:transparent;background:none;color:var(--t)}#lk .lkp button.lkbio svg{width:34px;height:34px;display:block;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}#lk .lkp button.lkbio:active{background:rgba(var(--wr),.12)}
 #lk .lkf{margin-top:20px;font-size:13px;color:var(--m2);padding:8px 12px}
 #lk .lkb{display:flex;gap:10px;margin-top:18px}
 #lk .lkb .sm{padding:10px 16px;font-size:14px}
 #lk .del,#bq .del{color:var(--rd)}
 #bq .bqa{gap:6px}#bq .bqa .sm{flex:1;padding:9px 4px;font-size:13px;text-align:center}
+</style>
+<style id="perf53">
+/* v53: меню долгого нажатия — размытие фона не анимируется (дорого на iOS), плавно меняется только прозрачность; слои меню вынесены на GPU */
+#cm .cmb{background:rgba(0,0,0,.30);-webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);opacity:0;transition:opacity .28s cubic-bezier(.32,.72,0,1);will-change:opacity}
+#cm.on .cmb{opacity:1}
+:root[data-theme=light] #cm .cmb{background:rgba(20,20,30,.18)}
+#cm .cmm,#cm .cml{will-change:transform,opacity;-webkit-backface-visibility:hidden;backface-visibility:hidden}
+#cm .cmm{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#cm,#cm *{-webkit-tap-highlight-color:transparent}
+button,a,label,select,summary{touch-action:manipulation}
+</style>
+<style id="win54">
+/* v54: единый принцип окон — вырастают из точки нажатия, затем по центру экрана; клавиатура сдвигает вверх только если не помещается */
+:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){
+  top:calc(50% + var(--vvt,0px) + (var(--sat) - var(--sab,0px))/2);bottom:auto;
+  translate:0 calc(-50% + var(--ky,0px));
+  transform-origin:var(--o,50% 50%);
+  max-height:min(calc(100vh - var(--sat) - var(--sab,0px) - 28px),var(--kmax,100vh));
+  overflow-y:auto;overscroll-behavior:contain}
+:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):not(.on){transform:scale(.14)}
+</style>
+<style id="layer55">
+/* v55: плашки («Удалено · Отмена», «Сохранено» и т.п.) всегда поверх «+», вкладок, панели выбора и окон.
+   Шкала слоёв: фон/шапка 5–9 < вкладки 10 < «+» 15 < панель выбора 16 < окна 40–50 < подсказки 100 < ПЛАШКА 300 < PIN-экран 500 */
+:root{--z-fab:15;--z-toast:300}
+:root #toast{
+  z-index:var(--z-toast);
+  isolation:isolate;
+  /* низ плашки = верх кнопки «+» (14 + вкладки + зазор + 62) + 12px воздуха: геометрически не пересекается с «+» */
+  bottom:calc(14px + var(--tbh) + var(--fabg) + 62px + 12px + var(--sab));
+  /* вместе с «+» и вкладками смещается, когда браузер сжимает окно (клавиатура) */
+  translate:0 var(--lay,0px);
+  pointer-events:none}
+:root #toast.on{pointer-events:auto}
+/* нижние элементы интерфейса — строго ниже плашки, порядок задан явно */
+:root #tabs{z-index:10}
+:root #fab{z-index:var(--z-fab)}
+:root :is(#selbar,#selmore){z-index:16}
+/* повторяющиеся операции: сумма, сразу за ней крупный значок паузы/пуска на уровне строки */
+:root #rc .rcr{display:grid;grid-template-columns:minmax(0,1fr) auto auto;column-gap:10px;align-items:center;padding:10px 0;cursor:pointer;color:var(--t);-webkit-tap-highlight-color:transparent}
+:root #rc .rcr:active{opacity:.6}
+:root #rc .rcr.ps .rcn,:root #rc .rcr.ps .rca,:root #rc .rcr.ps small{opacity:.5}
+:root #rc .rcr small{grid-column:1/-1;margin-top:2px;font-size:11.5px;color:var(--m)}
+:root #rc .rcr .rcp{width:32px;height:32px;margin:-6px -6px -6px -2px;display:flex;align-items:center;justify-content:center;padding:0;color:var(--t);opacity:.85}
+:root #rc .rcr .rcp svg{width:22px;height:22px;display:block}
+:root #rc .rcr .rcp:active{opacity:.4}
+/* плашки («Удалено · Отмена», «Сохранено» и т.п.) всплывают ПОВЕРХ кнопки «+»: по высоте — на уровне самой кнопки, слой выше неё (z-index 300) */
+:root #toast{bottom:calc(14px + var(--tbh) + var(--fabg) + 7px + var(--sab))}
+/* экран PIN: одна и та же анимация и при появлении, и при уходе после ввода PIN (плавное проявление с лёгким масштабом; при запуске приложения экран закрыт сразу, без вспышки содержимого) */
+#lk{display:flex;visibility:hidden;opacity:0;transform:scale(1.04);pointer-events:none;transition:opacity .34s cubic-bezier(.4,0,.2,1),transform .5s cubic-bezier(.22,1,.36,1),visibility 0s .5s}
+html.plk #lk,#lk.on{visibility:visible;opacity:1;transform:none;pointer-events:auto;transition:opacity .34s cubic-bezier(.4,0,.2,1),transform .5s cubic-bezier(.22,1,.36,1),visibility 0s}
+@media (prefers-reduced-motion:reduce){#lk,html.plk #lk,#lk.on{transition:none}}
 </style>
 </head>
 <body><div id="lk" role="dialog" aria-modal="true" aria-label="PIN-код"></div><div id="vb" aria-hidden="true"></div><div id="spl" aria-hidden="true">
@@ -1286,6 +1340,7 @@ const tomb=ids=>{if(!_obj(cfg.del))cfg.del={};const n=Date.now();[].concat(ids).
 const untomb=ids=>{if(!_obj(cfg.del))return;[].concat(ids).forEach(id=>{delete cfg.del[String(id)]})};
 buildAll();snapTx(false);
 let month=curM(),tab='list',drafts=[],undoIds=null,KD='expense',RG='month';
+const PGY={};let pgCur=null,pgFresh=false,scRaf=0;   // v55: прокрутка каждой страницы (см. pgKey)
 function mk(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
 function ymd(d){return mk(d)+'-'+String(d.getDate()).padStart(2,'0')}
 const save=()=>{snapTx(true);S.set('finapp.tx',tx);S.set('finapp.settings',cfg);S.set('finapp.learn',learn);cloudTouch()};
@@ -1659,7 +1714,15 @@ $('#go').onclick=()=>{if(inp.value.trim())run();else if(drafts.length)commitDraf
 const atg=$('#atg');function syncAuto(){atg.classList.toggle('on',!!cfg.auto);atg.classList.toggle('off',!cfg.auto);atg.setAttribute('aria-pressed',!!cfg.auto);atg.innerHTML='Автосохранение: <b>'+(cfg.auto?'ВКЛ':'ВЫКЛ')+'</b>'}
 atg.onclick=()=>{cfg.auto=!cfg.auto;save();if(!cfg.auto)cancelAuto();syncAuto()};syncAuto();
 const fab=$('#fab'),ov=$('#ov'),sh=$('#sh');
-function setOrigin(el,src){const r=src.getBoundingClientRect();el.style.setProperty('--o',(r.left+r.width/2-el.offsetLeft)+'px '+(r.top+r.height/2-el.offsetTop)+'px')}
+// все окна «вырастают» из точки нажатия (если нажатия не было — из центра источника), затем стоят по центру экрана
+window.__tap=null;
+addEventListener('pointerdown',e=>{if(e.target.closest&&e.target.closest('#cm'))return;window.__tap={x:e.clientX,y:e.clientY,t:performance.now()}},true);
+function setOrigin(el,src){
+  let x,y;const T=window.__tap;
+  if(T&&performance.now()-T.t<4000){x=T.x;y=T.y}
+  else{const r=(src||fab).getBoundingClientRect();x=r.left+r.width/2;y=r.top+r.height/2}
+  const ky=parseFloat(el.style.getPropertyValue('--ky'))||0,ty=ky-el.offsetHeight/2;
+  el.style.setProperty('--o',(x-el.offsetLeft)+'px '+(y-(el.offsetTop+ty))+'px')}
 const isModalOpen=()=>sh.classList.contains('on')||($('#ed')&&$('#ed').classList.contains('on'))||($('#gd')&&$('#gd').classList.contains('on'))||($('#cf')&&$('#cf').classList.contains('on'))||($('#bq')&&$('#bq').classList.contains('on'))||($('#nc')&&$('#nc').classList.contains('on'))||($('#cp')&&$('#cp').classList.contains('on'))||($('#rc')&&$('#rc').classList.contains('on'));
 function cancelGestures(){
   try{if(typeof openSw!=='undefined'&&openSw)closeSw(openSw)}catch{}
@@ -2380,6 +2443,7 @@ function flipRun(m){
   }catch(e){}}
 function render(){
   pgSettle();openSw=null;sd=null;
+  {const k=pgKey();if(pgCur==null)pgCur=k;else if(k!==pgCur){if(!pgFresh)PGY[pgCur]=Math.max(0,window.scrollY||0);pgFresh=false;pgCur=k}}   // v55
   if(month!==_wm){WO=woFor(month);_wm=month}
   const [y,mo]=month.split('-').map(Number);$('#mn').textContent=MN[mo-1]+' '+y;$('#mn').title=mStart()>1?dLbl(pFrom(month))+' – '+dLbl(pTo(month)):'';
   const mt=tx.filter(t=>mOf(t.date)===month).sort((a,b)=>b.date.localeCompare(a.date));
@@ -2701,9 +2765,30 @@ const setLt0=t=>{const e=document.getElementById('lt0');if(!e)return;e.style.dis
 const ttlOf=t=>t==='list'?(ftag?'#'+ftag+(fcat?' › '+cd(fcat.id).l:''):fcat?cd(fcat.id).l:fday?dayLbl(fday):'Операции'):t==='stats'?'Аналитика':t==='tags'?'Планы':t==='settings'?'Настройки':'Советы';
 const tabInd=()=>$('#tabs').querySelector('.ind');
 function ltPop(s){const e=document.getElementById('lt0');if(RM||!e||!e.animate)return;e.animate([{opacity:0,transform:`translate3d(${s*28}px,0,0)`},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:380,easing:'cubic-bezier(.22,1,.36,1)'})}
+// ---------- v55: у каждой страницы своя позиция прокрутки ----------
+// Прокручивается всё окно, поэтому позицию каждой страницы (вкладка / раздел / отфильтрованный список) запоминаем сами
+// и возвращаем при возврате. Если у соседних страниц позиция совпадает — переход чисто горизонтальный;
+// если различается — окно плавно доезжает до позиции новой страницы синхронно со сдвигом.
+function pgKey(t,sub){t=t||tab;
+  if(t==='stats')return 'stats:'+(sub||AS);
+  if(t==='tags')return 'tags:'+(sub||ps);
+  if(t==='list')return 'list'+(ftag?'#'+ftag:'')+(fcat?'|'+fcat.id:'')+(fday?'@'+fday:'');
+  return t}
+function pgSave(){if(pgCur==null)pgCur=pgKey();PGY[pgCur]=Math.max(0,window.scrollY||0);pgFresh=true}
+function pgApply(){window.scrollTo(0,PGY[pgKey()]||0)}
+const bez=(x1,y1,x2,y2)=>t=>{if(t<=0)return 0;if(t>=1)return 1;let a=0,b=1,m=t;
+  for(let i=0;i<24;i++){m=(a+b)/2;const x=3*(1-m)*(1-m)*m*x1+3*(1-m)*m*m*x2+m*m*m;if(x<t)a=m;else b=m}
+  return 3*(1-m)*(1-m)*m*y1+3*(1-m)*m*m*y2+m*m*m};
+const easeSc=bez(.22,1,.36,1);
+function pgScrollStop(){if(scRaf){cancelAnimationFrame(scRaf);scRaf=0}}
+function pgScroll(y0,y1,dur){pgScrollStop();if(Math.abs(y1-y0)<1)return;const t0=performance.now();
+  const step=n=>{const p=Math.min(1,(n-t0)/dur);window.scrollTo({top:y0+(y1-y0)*easeSc(p),behavior:'instant'});scRaf=p<1?requestAnimationFrame(step):0};
+  scRaf=requestAnimationFrame(step)}
+// палец коснулся экрана во время доезда — завершаем переход сразу, чтобы жест не боролся с анимацией
+document.addEventListener('touchstart',()=>{if(scRaf)settleAll()},{passive:true,capture:true});
 function mkNb(t,s,key){const el=document.createElement('div');
-  const bt=bodyEl.getBoundingClientRect().top+scrollY,off=Math.max(0,scrollY-bt);
-  el.style.cssText=`position:absolute;top:${off}px;width:100%;left:${s>0?'calc(100% + '+GAP+'px)':'calc(-100% - '+GAP+'px)'}`;
+  const bt=bodyEl.getBoundingClientRect().top+scrollY;
+  el.style.cssText=`position:absolute;top:0;width:100%;left:${s>0?'calc(100% + '+GAP+'px)':'calc(-100% - '+GAP+'px)'}`;
   el.inert=true;el.setAttribute('aria-hidden','true');
   bodyEl.appendChild(el);
   const S=key?SUBS[t]:null,old=S?S.get():null;if(S)S.set(key);
@@ -2717,20 +2802,28 @@ function mkNb(t,s,key){const el=document.createElement('div');
   {const bar=el.querySelector(':scope > .sbt');if(bar){const w=document.createElement('div');w.style.display='flow-root';el.insertBefore(w,bar);w.appendChild(bar);
     const r=document.createElement('div');r.style.display='flow-root';while(w.nextSibling)r.appendChild(w.nextSibling);el.appendChild(r)}}
   if(t==='stats'&&(S?key:AS)==='all'){try{_pieSeen.add(month)}catch(e){}}
-  return{el,t:key||t,s,off,bt}}
+  // где окажется прокрутка после перехода: своя сохранённая позиция новой страницы (не дальше, чем позволяет её высота)
+  const Y=Math.max(0,scrollY),Hn=Math.max(el.offsetHeight,parseFloat(getComputedStyle(bodyEl).minHeight)||0),
+    below=$('#w').getBoundingClientRect().bottom+scrollY-bt-bodyEl.offsetHeight,
+    padB=parseFloat(getComputedStyle(document.documentElement).paddingBottom)||0,
+    maxY=Math.max(0,bt+Hn+Math.max(0,below)+padB-innerHeight),
+    Ty=Math.min(PGY[pgKey(t,key)]||0,maxY),cc=Math.max(0,Y-bt),ct=Math.max(0,Ty-bt);
+  let off=0,anim=false;
+  if(ct>0&&ct<=cc)off=cc-ct;            // новая страница глубже в тексте не уходит — просто показываем её на своём уровне, без вертикального движения
+  else if(Math.abs(Ty-Y)>1)anim=true;   // уровни разные — окно плавно доедет
+  el.style.top=off+'px';
+  return{el,t:key||t,s,off,bt,fin:Ty,anim}}
 function finishSlide(nb){
   bodyEl.style.transform='';bodyEl.style.willChange='';
+  pgScrollStop();
   if(nb&&nb.el.parentNode)nb.el.remove();
   render();
-  if(nb&&nb.off>0)window.scrollTo(0,nb.bt)}
+  if(nb)window.scrollTo(0,nb.fin)}
 let softA=null;
 function softIn(strong){if(RM||!bodyEl.animate)return;try{if(softA)softA.cancel()}catch{}
   const a=bodyEl.animate(strong?[{opacity:0,transform:'translate3d(0,10px,0)'},{opacity:1,transform:'none'}]:[{opacity:.55},{opacity:1}],{duration:strong?300:200,easing:'cubic-bezier(.16,1,.3,1)'});
   softA=a;a.onfinish=a.oncancel=()=>{if(softA===a)softA=null}}
 function settleAll(){if(softA){try{softA.cancel()}catch{}softA=null}settleFlight();pgSettle()}
-function wouldClamp(nb){if(!(nb.off>0))return false;const min=parseFloat(getComputedStyle(bodyEl).minHeight)||0;
-  const est=document.documentElement.scrollHeight-bodyEl.offsetHeight+Math.max(nb.el.offsetHeight,min);
-  return est-innerHeight<nb.bt-1}
 // instantly complete / abort whatever the carousel is doing, so a new gesture never fights an old animation
 function pgSettle(){
   if(tpRaf){cancelAnimationFrame(tpRaf);tpRaf=0}
@@ -2740,16 +2833,17 @@ function pgSettle(){
     return}
   if(tp&&tp.on){if(tp.nb)tp.nb.el.remove();tp=null;bodyEl.style.transform='';bodyEl.style.willChange='';const i=tabInd();if(i)i.style.transition='';moveInd();sbSync(false)}}
 function slideTo(t,fromX,v,hint){document.documentElement.classList.remove('intro');   // v51: смена вкладки во время заставки — без повторного «появления» (оно и давало мерцание)
-  
+  pgSave();
+
   const s=TABS.indexOf(t)>TABS.indexOf(tab)?1:-1;
   {const sb=sbwEl().querySelector('.sbt');if(sb){const w=document.createElement('div');w.style.display='flow-root';w.appendChild(sb);bodyEl.insertBefore(w,bodyEl.firstChild)}}
   let nb=hint&&hint.t===t&&hint.el.isConnected?hint:null;
   if(!nb){if(hint)hint.el.remove();nb=mkNb(t,s)}
-  const stSw=t==='settings'||tab==='settings',clamp=wouldClamp(nb)||stSw;
+  const stSw=t==='settings'||tab==='settings',clamp=stSw;
   if(tab==='list'){fcat=null;ftag=null;fday=null}
   tab=t;const ind=tabInd();if(ind)ind.style.transition='';moveInd();$('#ttl').textContent=ttlOf(t);
   if(clamp){nb.el.remove();
-    swapAnim(s,()=>{render();window.scrollTo(0,0)},stSw?[bodyEl,$('#top'),$('#lt0'),$('#sbw')]:[bodyEl,$('#lt0')],fromX||0,1-Math.min(.3,Math.abs(fromX||0)/420),stSw);return}
+    swapAnim(s,()=>{render();pgApply()},stSw?[bodyEl,$('#top'),$('#lt0'),$('#sbw')]:[bodyEl,$('#lt0')],fromX||0,1-Math.min(.3,Math.abs(fromX||0)/420),stSw);return}
   setLt0(t);ltPop(s);
   if(RM||!bodyEl.animate){finishSlide(nb);return}
   const W=bodyEl.offsetWidth+GAP,x0=fromX||0,target=-s*W,rem=Math.abs(target-x0);
@@ -2757,6 +2851,7 @@ function slideTo(t,fromX,v,hint){document.documentElement.classList.remove('intr
   bodyEl.style.willChange='transform';
   const a=bodyEl.animate([{transform:`translate3d(${x0}px,0,0)`},{transform:`translate3d(${target}px,0,0)`}],{duration:dur,easing:'cubic-bezier(.22,1,.36,1)',fill:'forwards'});
   bodyEl.style.transform='';
+  if(nb.anim)pgScroll(Math.max(0,scrollY),nb.fin,dur);
   const c={a,nb,kind:'go'};cur=c;
   a.onfinish=()=>{if(cur!==c)return;cur=null;try{a.cancel()}catch{}finishSlide(nb)}}
 function snapBack(x,nb){
@@ -2799,20 +2894,19 @@ function sbDrag(x,W,nt){const S=SUBS[tab],bar=sbwEl().querySelector('.sbt');if(!
   sbPlace(ind,b.offsetLeft+(n.offsetLeft-b.offsetLeft)*p,b.offsetWidth+(n.offsetWidth-b.offsetWidth)*p,false)}
 function slideSub(key,fromX,v,hint){
   const S=SUBS[tab];if(!S)return;
+  pgSave();
   const s=S.list.indexOf(key)>S.list.indexOf(S.get())?1:-1;
   let nb=hint&&hint.t===key&&hint.el.isConnected?hint:null;
   if(!nb){if(hint)hint.el.remove();nb=mkNb(tab,s,key)}
-  const clamp=wouldClamp(nb);
   S.set(key);
   sbwEl().querySelectorAll('.sbt button').forEach(b=>b.classList.toggle('on',b.dataset.as===key||b.dataset.ps===key));sbSync(true);
-  if(clamp){nb.el.remove();
-    swapAnim(s,()=>{render();window.scrollTo(0,0)},[bodyEl],fromX||0,1-Math.min(.3,Math.abs(fromX||0)/420));return}
   if(RM||!bodyEl.animate){finishSlide(nb);return}
   const W=bodyEl.offsetWidth+GAP,x0=fromX||0,target=-s*W,rem=Math.abs(target-x0);
   const dur=Math.round(Math.max(200,Math.min(380,rem*.9/Math.max(.8,Math.abs(v||0)*1.5))));
   bodyEl.style.willChange='transform';
   const a=bodyEl.animate([{transform:`translate3d(${x0}px,0,0)`},{transform:`translate3d(${target}px,0,0)`}],{duration:dur,easing:'cubic-bezier(.22,1,.36,1)',fill:'forwards'});
   bodyEl.style.transform='';
+  if(nb.anim)pgScroll(Math.max(0,scrollY),nb.fin,dur);
   const c={a,nb,kind:'go'};cur=c;
   a.onfinish=()=>{if(cur!==c)return;cur=null;try{a.cancel()}catch{}finishSlide(nb)}}
 // фиксация направления жеста: если палец пошёл по горизонтали — вертикальную прокрутку блокируем до конца жеста
@@ -2954,13 +3048,15 @@ function spAnim(on,instant){const sp=$('#sp'),inn=sp.firstElementChild,run=!!SP.
   if(instant||sp.style.display==='none'||matchMedia('(prefers-reduced-motion:reduce)').matches){SP.v0=null;spRest();return}
   const cur=sp.getBoundingClientRect().height;SP.tg=on?inn.scrollHeight:0;
   if(!cur&&!SP.tg){spRest();return}
-  SP.h=cur;SP.v=SP.v0!==null?SP.v0:(run?SP.v:0);SP.v0=null;sp.style.transition='none';inn.style.willChange='opacity,transform';
+  SP.h=cur;SP.v=SP.v0!==null?SP.v0:(run?SP.v:0);SP.v0=null;
+  {const w=Math.sqrt(SP.on?300:280),cap=w*Math.abs(SP.tg-cur)*.95+60;SP.v=Math.max(-cap,Math.min(cap,SP.v))}   // v60: скорость жеста не должна быть больше, чем нужно, чтобы дойти до цели — иначе перелёт
+  sp.style.transition='none';inn.style.willChange='opacity,transform';
   SP.last=performance.now();SP.raf=requestAnimationFrame(spTick)}
 document.addEventListener('pointerdown',e=>{if(fpEl.classList.contains('open')&&!e.target.closest('#fp,#qflt,#toast')){fpSet(false);e.stopPropagation();e.preventDefault();swallowClick()}},true);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&fpEl.classList.contains('open'))fpSet(false)});
 function setSearch(on,instant){const sp=$('#sp'),b=$('#srch');on=!!on;
   sp.classList.toggle('open',on);sp.inert=!on;b.classList.toggle('on',on);b.setAttribute('aria-expanded',on);
-  if(on){fpSync();if(tab!=='list'){tab='list';render()}spAnim(true,instant)}
+  if(on){if(tab!=='list'){tab='list';render()}spAnim(true,instant);setTimeout(fpSync,260)}   // v60: заполнение панели фильтров — после старта анимации, а не перед ней
   else{fpSet(false);const had=!!q||fOn();clearTimeout(qRaf);qRaf=0;$('#q').value='';q='';fReset(true);$('#q').blur();spAnim(false,instant);if(had)render()}}
 $('#srch').onclick=()=>{if(!isModalOpen())setSearch(!$('#sp').classList.contains('open'))};
 // касание вне строки поиска убирает пустой поиск (если что-то введено или выбран фильтр — оставляем, чтобы не терять результаты)
@@ -3053,7 +3149,7 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
       if(dt>0)g.v=.6*g.v+.4*((y-g.ly)/dt*1000);g.ly=y;g.lt=now;OS.y=y;paint(y)}
     else{
       const n=nat(),d=g.mode==='search'?g.h0+Math.max(0,dy)*.85:g.h0+dy,h=d<=n?Math.max(0,d):n+34*(1-Math.exp(-(d-n)/70));
-      if(dt>0)g.v=.65*g.v+.35*((h-g.h)/dt*1000);g.lt=now;g.h=h;spPaint(h)}
+      if(dt>0){const iv=(h-g.h)/Math.max(dt,8)*1000;g.v=g.sv?.65*g.v+.35*iv:iv;g.sv=1}g.lt=now;g.h=h;spPaint(h)}
   },{passive:false});
   function finish(ok){const p=g;g=null;OS.drag=0;if(!p||!p.on)return;
     const v=performance.now()-p.lt>90?0:cv(p.v);
@@ -3079,10 +3175,10 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
   document.addEventListener('touchend',te,{passive:true,capture:true});document.addEventListener('touchcancel',te,{passive:true,capture:true});
   addEventListener('wheel',()=>{lastWh=Date.now()},{passive:true,capture:true});
   addEventListener('scroll',()=>{
-    const y=window.scrollY||0,now=performance.now(),dt=Math.max(1,now-pt),maxY=Math.max(0,document.documentElement.scrollHeight-innerHeight);
+    const y=window.scrollY||0,now=performance.now(),dt=Math.max(1,now-pt);
     const v=(y-py)/dt*1000;if(dt>100){pv=0;run=0}pv=.5*pv+.5*v;run=dt<64&&Math.abs(v)>120?run+1:0;
     const prev=py;py=y;pt=now;
-    if(touching||OS.drag||isModalOpen()||maxY<=0||y<0||y>maxY)return;
+    if(touching||OS.drag||isModalOpen())return;const maxY=Math.max(0,document.documentElement.scrollHeight-innerHeight);if(maxY<=0||y<0||y>maxY)return;
     if(Date.now()-lastTE>3000&&Date.now()-lastWh>250)return;      // не после касания/колеса — значит прокрутка программная
     if(run<3)return;                                              // резкий прыжок (смена вкладки) — не инерция
     if(window.matchMedia('(prefers-reduced-motion:reduce)').matches)return;
@@ -3604,7 +3700,7 @@ ${cfg.tplHide.length?row('tpr','#f39a1f','<path d="M13 3L5 13.5h6L10 21l8-10.5h-
 <div class="sgh">Безопасность</div>
 <div class="sc">${row('pin','','','PIN-код',pinOn()?'Вкл':'Выкл')}${row('prv','','','Скрытие сумм',PRV?'Вкл':'Выкл')}</div>
 <div class="sgh">Категория/Активы</div>
-<div class="sc">${row('cin','#22a845','<path d="M12 4.5v10M7.8 10.6l4.2 4.2 4.2-4.2M5 19.5h14"/>','Категория доходов')}${row('cex','#f39a1f','<path d="M12 19.5v-10M7.8 13.4l4.2-4.2 4.2 4.2M5 4.5h14"/>','Категория расходов')}${row('lkr','','','Записывать в расходы')}${row('crs','','','Перенос на следующий месяц')}${row('mst','','','Начало месяца',mStart()+' число')}</div>
+<div class="sc">${row('cin','#22a845','<path d="M12 4.5v10M7.8 10.6l4.2 4.2 4.2-4.2M5 19.5h14"/>','Категория доходов')}${row('cex','#f39a1f','<path d="M12 19.5v-10M7.8 13.4l4.2-4.2 4.2 4.2M5 4.5h14"/>','Категория расходов')}${row('lkr','','','Записывать в расходы')}${row('crs','','','Перенос на следующий месяц')}${row('rcs','','','Повторяющиеся операции',(cfg.rec||[]).length?String(cfg.rec.length):'Нет')}${row('mst','','','Начало месяца',mStart()+' число')}</div>
 <div class="sgh">Поддержка и помощь</div>
 <div class="sc">${row('hlp','','','Обучение')}${row('ctc','','','Написать нам')}</div>
 <div class="sgh">Резервная копия</div>
@@ -3619,7 +3715,7 @@ function bindSt(){
   if($('#crs'))$('#crs').onclick=()=>{cbM=shiftMonth(curM(),1);openBq('carry')};
   if($('#tpr'))$('#tpr').onclick=()=>{cfg.tplHide=[];save();renderSt();toast('Шаблоны возвращены')};
   if($('#hsb'))homeBind();if($('#botu'))$('#botu').onchange=e=>{const v=String(e.target.value||'').trim();cfg.botUrl=v;save();if(ibBase()){window.__ibBusy=false;inboxPull()}}
-  $('#cin').onclick=e=>openCf('catsI',e.currentTarget);$('#cex').onclick=e=>openCf('catsE',e.currentTarget);$('#bki').onclick=()=>openBq('import');$('#bke').onclick=()=>openBq('export');$('#bkr').onclick=()=>openBq('reset');$('#hlp').onclick=()=>openBq('help');$('#ctc').onclick=()=>openBq('contact');if($('#tourb'))$('#tourb').onclick=()=>{closeSettings();if(window.AppTour)AppTour.replay()}}
+  $('#cin').onclick=e=>openCf('catsI',e.currentTarget);$('#cex').onclick=e=>openCf('catsE',e.currentTarget);if($('#rcs'))$('#rcs').onclick=()=>openRcSt();$('#bki').onclick=()=>openBq('import');$('#bke').onclick=()=>openBq('export');$('#bkr').onclick=()=>openBq('reset');$('#hlp').onclick=()=>openBq('help');$('#ctc').onclick=()=>openBq('contact');if($('#tourb'))$('#tourb').onclick=()=>{closeSettings();if(window.AppTour)AppTour.replay()}}
 function renderSt(){const el=$('#st');if(!el||tab!=='settings')return;el.innerHTML=stHtml();bindSt()}
 // ---- маленькое окошко снизу: подтверждение сброса и резервная копия ----
 const bq=$('#bq');let bqT=null,bqCb=null;
@@ -3637,29 +3733,33 @@ function saveCb(){const inp=$('#cbam'),v=pn(inp&&inp.value);if(!(v>0)){toast('У
 function bqHtml(kind){
   if(kind==='prv')return `<div class="bqt">Скрытие сумм</div>${bqTg('tgprv','Скрывать суммы','Вместо цифр показывается •••',PRV)}${bqTg('tgprf','Включать поворотом экрана','Переворот телефона экраном вниз',FLP.want)}<div class="bqs" style="font-size:11px;line-height:1.45;margin-top:12px;opacity:.8">Положите телефон экраном вниз примерно на секунду — суммы скроются, и вы почувствуете короткую вибрацию. Переверните экраном вниз ещё раз — суммы снова появятся. Телефон должен лежать почти горизонтально: наклон или положение в руке не считаются. Работает, пока приложение открыто.</div><div class="bqb"><button class="sm pr" data-bq="cancel">Готово</button></div>`;
   if(kind==='mstart')return `<div class="bqt">Начало месяца</div><div class="bqs">С какого числа начинается ваш месяц — например, день зарплаты.</div><div class="bqm"><button type="button" class="sm" data-bq="msm" aria-label="Раньше">−</button><span class="mn" id="msn">${msV} число</span><button type="button" class="sm" data-bq="msp" aria-label="Позже">+</button></div><div class="bqs" id="msh">${E(msHint())}</div><div class="bqb"><button class="sm" data-bq="cancel">Отмена</button><button class="sm pr" data-bq="mssave">Сохранить</button></div>`;
-  if(kind==='pin'){if(!pinOn())return `<div class="bqt">PIN-код</div><div class="bqs">Защитите приложение 4-значным PIN-кодом. Он спрашивается при открытии и после того, как вы сворачиваете приложение.</div><div class="bqb"><button class="sm" data-bq="cancel">Закрыть</button><button class="sm pr" data-bq="pinset">Установить PIN</button></div>`;
-    return `<div class="bqt">PIN-код включён</div><div class="bqs">Спрашивать PIN после сворачивания:</div><div class="bqm bqa">${[[0,'Сразу'],[60,'1 мин'],[300,'5 мин'],[900,'15 мин']].map(([v,l])=>`<button type="button" class="sm${pinAuto()===v?' pr':''}" data-bq="pa" data-v="${v}">${l}</button>`).join('')}</div><div class="bqb"><button class="sm" data-bq="pinchg">Сменить PIN</button><button class="sm del" data-bq="pinoff">Отключить</button></div><div class="bqb"><button class="sm" data-bq="cancel">Закрыть</button></div>`}
+  if(kind==='pin'){if(!pinOn())return `<div class="bqt">PIN-код</div><div class="bqs">Защитите приложение 4-значным PIN-кодом. Он спрашивается при открытии и после того, как вы сворачиваете приложение. После этого можно включить вход по Face ID или отпечатку.</div><div class="bqb"><button class="sm" data-bq="cancel">Закрыть</button><button class="sm pr" data-bq="pinset">Установить PIN</button></div>`;
+    return `<div class="bqt">PIN-код включён</div><div class="bqs">Спрашивать PIN после сворачивания:</div><div class="bqm bqa">${[[0,'Сразу'],[60,'1 мин'],[300,'5 мин'],[900,'15 мин']].map(([v,l])=>`<button type="button" class="sm${pinAuto()===v?' pr':''}" data-bq="pa" data-v="${v}">${l}</button>`).join('')}</div>${(!BIO.ready||BIO.be)?bqTg('tgbio',bioName(),'Вход без ввода PIN',bioOn()):''}<div class="bqb"><button class="sm" data-bq="pinchg">Сменить PIN</button><button class="sm del" data-bq="pinoff">Отключить</button></div><div class="bqb"><button class="sm" data-bq="cancel">Закрыть</button></div>`}
   if(kind==='link')return `<div class="bqt">Записывать в расходы</div><div class="bqs">Взносы в цели и долги будут записываться как расходы — их учтут бюджет, лимиты и прогноз.</div>${bqTg('tglg','Цели','',linkGoalOn())}${bqTg('tgld','Долги','',linkDebtOn())}<div class="bqb"><button class="sm pr" data-bq="cancel">Готово</button></div>`;
   if(kind==='carry'){const own=bmOwn(cbM),eff=budgetOf(cbM);
     return `<div class="bqt">Перенос на следующий месяц</div>${bqTg('tgcb','Переносить остаток','Остаток прошлых месяцев добавляется к текущему',!!cfg.carry)}${bqTg('tgcr','Переносить бюджет','Бюджет действует и в следующих месяцах',carryBudOn())}<div class="bqm"><button type="button" class="sm" data-bq="cmp" aria-label="Предыдущий месяц">‹</button><span class="mn">${E(MN[+cbM.slice(5,7)-1]+' '+cbM.slice(0,4))}</span><button type="button" class="sm" data-bq="cmn" aria-label="Следующий месяц">›</button></div><label class="bqf"><span>Бюджет, ${E(cfg.cur)}</span><input class="bqi" id="cbam" inputmode="decimal" value="${eff||''}" placeholder="20 000" autocomplete="off"></label><div class="bqs" id="cbh">${E(cbHint())}</div><div class="bqb">${own?'<button class="sm del" data-bq="cbdel">Убрать</button>':''}<button class="sm pr" data-bq="cbsave">Сохранить</button></div><div class="bqb"><button class="sm" data-bq="cancel">Закрыть</button></div>`}
   return bqHtml0(kind)}
 function bqHtml0(kind){if(kind==='help')return `<div class="bqt">Обучение</div><div class="bqb"><button class="sm pr" data-bq="tourgo">Повторить</button><button class="sm pr" data-bq="tourstop">Завершить</button></div><div class="bqb"><button class="sm" data-bq="cancel">Отмена</button></div>`;
-  if(kind==='contact')return `<div class="bqt">Написать нам</div><div class="bqb"><button class="sm pr" data-bq="cttg">Написать в Telegram</button><button class="sm pr" data-bq="ctem">Отправить на e-mail</button></div><div class="bqb"><button class="sm" data-bq="cancel">Отмена</button></div>`;
+  if(kind==='contact')return `<div class="bqt">Написать нам</div><div class="bqb"><button class="sm pr" data-bq="cttg">Написать в Telegram</button><a class="sm pr" id="ctem" href="${E(mailUrl())}">Написать на e-mail</a></div>`;
   if(kind==='save')return `<div class="bqt">Сохранить данные</div><div class="bqs">Выберите формат. JSON — полная копия для восстановления (операции, цели, долги, настройки). Excel (.xlsx) — таблица с листами по категориям и месяцам.</div><div class="bqb"><button class="sm pr" data-bq="json">Сохранить в JSON</button><button class="sm pr" data-bq="xlsx">Сохранить в Excel</button></div><div class="bqb"><button class="sm" data-bq="cancel">Не сейчас</button></div>`;
   if(kind==='export')return `<div class="bqt">Экспорт</div><div class="bqs">JSON — полная копия для восстановления (операции, цели, долги, настройки). Excel (.xlsx) — таблица с листами по категориям и месяцам.</div><div class="bqb"><button class="sm pr" data-bq="json">Экспорт JSON</button><button class="sm pr" data-bq="xlsx">Экспорт Excel</button></div><div class="bqb"><button class="sm" data-bq="cancel">Отмена</button></div>`;
   if(kind==='import')return `<div class="bqt">Импорт</div><div class="bqs">JSON — восстановление из копии: добавится то, чего нет, ничего не затрётся. Excel / CSV — даты, суммы и категории распределятся сами, дубликаты пропускаются.</div><div class="bqb"><button class="sm pr" data-bq="impj">Импорт JSON</button><button class="sm pr" data-bq="imp">Импорт Excel</button></div><div class="bqb"><button class="sm" data-bq="cancel">Отмена</button></div>`;
   return kind==='reset'
    ?`<div class="bqt">Вы точно в этом уверены?</div><div class="bqs">Все операции будут удалены. Это нельзя отменить — сначала можно сохранить резервную копию (Настройки → Экспорт).</div><div class="bqb"><button class="sm" data-bq="cancel">Отмена</button><button class="sm del" data-bq="reset">Сбросить</button></div>`
    :`<div class="bqt">Экспорт, импорт и сброс</div><div class="bqs">JSON — полная копия для восстановления (операции, цели, долги, настройки). Excel (.xlsx) — таблица с листами по категориям и месяцам. При импорте даты, суммы и категории распределятся сами, дубликаты пропускаются.</div><div class="bqb"><button class="sm" data-bq="json">Экспорт JSON</button><button class="sm" data-bq="xlsx">Экспорт Excel</button></div><div class="bqb"><button class="sm pr" data-bq="impj">Импорт JSON</button><button class="sm pr" data-bq="imp">Импорт Excel</button></div><div class="bqb"><button class="sm del" data-bq="toreset">Сбросить все операции</button></div>`}
-function bqShow(html,kind){cancelGestures();stCover(true);lockBg(true);bqT=kind;bq.innerHTML=html;bq.classList.add('on');ov.className='on'}
+function bqShow(html,kind){cancelGestures();stCover(true);lockBg(true);bqT=kind;bq.innerHTML=html;try{setOrigin(bq)}catch(e){}bq.classList.add('on');ov.className='on'}
 // ---- поддержка: заполните адрес e-mail и имя в Telegram ----
-const SUPPORT={email:'olegkiselar3@gmail.com',tg:'olegkr31'};
+const SUPPORT={email:'olegkiselar3105@gmail.com',tg:'olegkr31'};
 function supportTg(){const u=String(SUPPORT.tg||'').replace(/^@/,'').trim();if(!u){toast('Контакт Telegram пока не указан');return}
   const url='https://t.me/'+u;try{if(IN_TG&&TGW.openTelegramLink){TGW.openTelegramLink(url);return}}catch(e){}
   window.open(url,'_blank')}
-function supportMail(){const m=String(SUPPORT.email||'').trim();if(!m){toast('Адрес e-mail пока не указан');return}
-  const a=document.createElement('a');a.href='mailto:'+m+'?subject='+encodeURIComponent('Finance Pro — обращение')+'&body='+encodeURIComponent('\n\n—\nВерсия приложения: '+(typeof IB_VER!=='undefined'?IB_VER:''));
-  a.style.display='none';document.body.appendChild(a);a.click();a.remove()}
+// v58: письмо в поддержку — обычная ссылка mailto: в окне «Написать нам». Нажатие по настоящей ссылке iOS/Android обрабатывают сами:
+// сразу открывается окно нового письма в штатной почте (Почта на iPhone, Gmail/почта на Android) с готовыми адресом, темой и текстом.
+// Раньше переход запускался из JS после закрытия окна — Safari, режим «На экран Домой» и Telegram такое могли молча блокировать.
+function mailUrl(){
+  const m=String(SUPPORT.email||'').trim(),
+    body='\r\n\r\n—\r\nВерсия приложения: '+(typeof APP_VER!=='undefined'?APP_VER:'')+(IN_TG?' · Telegram':'');
+  return 'mailto:'+m+'?subject='+encodeURIComponent('Finance Pro — обращение')+'&body='+encodeURIComponent(body)}
 function openBq(kind){if(isModalOpen())return;bqShow(bqHtml(kind),kind)}
 // свои окна вместо системных alert/confirm (на телефоне системные могут не показываться)
 function bqAsk(title,text,ok,cb){if(bq.classList.contains('on'))closeBq();bqCb=cb;
@@ -3667,13 +3767,15 @@ function bqAsk(title,text,ok,cb){if(bq.classList.contains('on'))closeBq();bqCb=c
 function bqInfo(title,text){if(bq.classList.contains('on'))closeBq();bqCb=null;
   bqShow(`<div class="bqt">${E(title)}</div><div class="bqs pre">${E(text)}</div><div class="bqb"><button class="sm pr" data-bq="cancel">Понятно</button></div>`,'info')}
 function closeBq(){if(!bqT&&!bq.classList.contains('on'))return;bq.classList.remove('on');bqT=null;if(!isModalOpen()){ov.className='';lockBg(false)}cancelGestures();stCover(false)}
-bq.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const a=b.dataset.bq;
+bq.addEventListener('click',e=>{
+  if(e.target.closest('a[href^="mailto:"]')){setTimeout(closeBq,350);return}   // ссылку не трогаем — её откроет система
+  if(bqT==='contact'&&!e.target.closest('button')){closeBq();return}              // «Написать нам»: касание любой другой части окна закрывает его
+  const b=e.target.closest('button');if(!b)return;const a=b.dataset.bq;
   if(a==='cancel'){bqCb=null;closeBq()}
   else if(a==='askyes'){const cb=bqCb;bqCb=null;closeBq();if(cb)setTimeout(cb,30)}
   else if(a==='tourgo'){closeBq();closeSettings();if(window.AppTour)setTimeout(()=>AppTour.replay(),700)}
   else if(a==='tourstop'){closeBq();if(window.AppTour)AppTour.stop()}
   else if(a==='cttg'){closeBq();supportTg()}
-  else if(a==='ctem'){closeBq();supportMail()}
   else if(a==='toreset'){bqT='reset';bq.innerHTML=bqHtml('reset')}
   else if(a==='reset'){const oTx=tx,oLn=learn;tx=[];learn={};tomb(oTx.map(t=>t.id));save();closeBq();render();toast('Все операции удалены','Отмена',()=>{untomb(oTx.map(t=>t.id));tx=oTx;learn=oLn;save();render()},'del')}
   else if(a==='json'){exportJSON();closeBq();toast('Копия сохранена · JSON',null,null,'save')}
@@ -3690,8 +3792,9 @@ bq.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   else if(a==='pinset'){closeBq();setTimeout(()=>lkShow('set1',()=>{stRows();toast('PIN-код включён')}),250)}
   else if(a==='pa'){const r=pinRec();if(r){r.a=+b.dataset.v;pinSave(r)}bq.innerHTML=bqHtml('pin')}
   else if(a==='pinchg'){closeBq();setTimeout(()=>lkShow('verify',()=>setTimeout(()=>lkShow('set1',()=>toast('PIN-код изменён')),60)),250)}
-  else if(a==='pinoff'){closeBq();setTimeout(()=>lkShow('verify',()=>{try{localStorage.removeItem('finapp.pin')}catch(e){}stRows();toast('PIN-код отключён')}),250)}
+  else if(a==='pinoff'){closeBq();setTimeout(()=>lkShow('verify',()=>{try{localStorage.removeItem('finapp.pin');localStorage.removeItem('finapp.bio');localStorage.removeItem('finapp.bioc')}catch(e){}stRows();toast('PIN-код отключён')}),250)}
   else if(a==='tgprv'){prvSet(!PRV)}
+  else if(a==='tgbio'){bioToggle(b)}
   else if(a==='tgprf'){flToggle(b)}
   else if(a==='cbsave')saveCb()
   else if(a==='cbdel'){if(_obj(cfg.bm))delete cfg.bm[cbM];save();bq.innerHTML=bqHtml('carry');toast('Бюджет месяца убран')}});
@@ -3702,12 +3805,87 @@ function pinRec(){try{return JSON.parse(localStorage.getItem('finapp.pin')||'nul
 function pinSave(r){try{localStorage.setItem('finapp.pin',JSON.stringify(r))}catch(e){}}
 function pinAuto(){const r=pinRec();return r&&Number.isFinite(r.a)?r.a:60}
 async function pinHash(p,salt){const t=salt+':'+p;try{const d=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return Array.from(new Uint8Array(d)).map(x=>x.toString(16).padStart(2,'0')).join('')}catch(e){let h=5381;for(let k=0;k<4000;k++)for(let i=0;i<t.length;i++)h=((h<<5)+h+t.charCodeAt(i))|0;return 'f'+h}}
-function lkBuild(){if(!LKE)return;LKE.innerHTML=`<button type="button" class="lkx" data-k="x" aria-label="Отмена">×</button><div class="lkc"><div class="lkt"></div><div class="lks"></div><div class="lkd"><i></i><i></i><i></i><i></i></div><div class="lkp">${[1,2,3,4,5,6,7,8,9,'',0,'<'].map(k=>k===''?'<span></span>':`<button type="button" data-k="${k}" aria-label="${k==='<'?'Удалить':k}">${k==='<'?'⌫':k}</button>`).join('')}</div><button type="button" class="lkf" data-k="f">Забыли PIN?</button></div><div class="lkq"><div class="lkt">Сбросить PIN?</div><div class="lks" style="max-width:290px">Чтобы сбросить PIN, нужно удалить все данные приложения на этом устройстве: операции, цели, долги и настройки. Это нельзя отменить.</div><div class="lkb"><button type="button" class="sm" data-k="fn">Отмена</button><button type="button" class="sm del" data-k="fy">Удалить данные</button></div></div>`}
+
+// ================= Биометрия: Face ID / Touch ID / отпечаток пальца =================
+// В Telegram — встроенная биометрия Telegram (BiometricManager, Telegram 7.2+): сам выбирает Face ID на iPhone и отпечаток/лицо на Android.
+// Вне Telegram (PWA, браузер) — системная проверка устройства через WebAuthn. PIN остаётся запасным способом входа.
+const BIO={be:'',type:'',ready:false,busy:false,okAt:0,initP:null};
+const _ios=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const BM=(IN_TG&&TGW.BiometricManager&&(!TGW.isVersionAtLeast||TGW.isVersionAtLeast('7.2')))?TGW.BiometricManager:null;
+function bioOn(){try{return localStorage.getItem('finapp.bio')==='1'}catch(e){return false}}
+function bioInit(){
+  if(BIO.initP)return BIO.initP;
+  BIO.initP=new Promise(res=>{
+    if(BM){let done=false;const f=()=>{if(done)return;done=true;BIO.be=BM.isBiometricAvailable?'tg':'';BIO.type=BM.biometricType||'unknown';BIO.ready=true;res()};
+      try{BM.init(f)}catch(e){f()}setTimeout(f,2500)}
+    else if(!IN_TG&&window.PublicKeyCredential&&navigator.credentials&&PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable){
+      PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().then(a=>{BIO.be=a?'wa':'';BIO.ready=true;res()}).catch(()=>{BIO.ready=true;res()})}
+    else{BIO.ready=true;res()}});
+  return BIO.initP}
+function bioKind(){
+  if(BIO.be==='tg')return BIO.type==='face'?'face':BIO.type==='finger'?'finger':'bio';
+  return _ios?(Math.max(screen.width,screen.height)>=812?'face':'finger'):'finger'}
+function bioName(){const k=bioKind();return k==='face'?(_ios?'Face ID':'Вход по лицу'):k==='finger'?(_ios?'Touch ID':'Отпечаток пальца'):'Биометрия'}
+const BIO_ICO={face:"<path d='M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2'/><path d='M9 9.5v1.5M15 9.5v1.5M12 9.5v4h-1M9 16c1.7 1.2 4.3 1.2 6 0'/>",
+  finger:"<path d='M6.5 9a6 6 0 0 1 11 0'/><path d='M5 14c0-1 .1-2 .4-3M19 11c.3 1 .5 2 .5 3 0 2.5-.5 4.5-1.5 6'/><path d='M8.5 20c.7-1.5 1-3.4 1-5.5a2.5 2.5 0 0 1 5 0c0 2 .3 3.8 1 5.2'/><path d='M12 11.5c-1.7 0-3 1.3-3 3 0 1.6-.2 3-.7 4.2'/>"};
+function bioDraw(){
+  if(!LKE)return;const b=LKE.querySelector('.lkbio');if(!b)return;
+  const show=bioOn()&&(LK.mode==='unlock'||LK.mode==='verify')&&(!BIO.ready||!!BIO.be);
+  b.style.visibility=show?'visible':'hidden';
+  if(show){const k=bioKind()==='face'?'face':'finger';if(b.dataset.ic!==k){b.dataset.ic=k;b.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true">'+BIO_ICO[k]+'</svg>'}b.setAttribute('aria-label',bioName())}}
+function b64u(b){let s='';new Uint8Array(b).forEach(x=>s+=String.fromCharCode(x));return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+function unb64u(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';const r=atob(s),a=new Uint8Array(r.length);for(let i=0;i<r.length;i++)a[i]=r.charCodeAt(i);return a}
+async function bioEnroll(){
+  if(BIO.be==='tg'){
+    if(BM.isAccessGranted)return true;
+    if(BM.isAccessRequested)return 'denied';
+    return new Promise(res=>{try{BM.requestAccess({reason:'Вход в Finance Pro без PIN-кода'},g=>res(g?true:'denied'))}catch(e){res(false)}})}
+  if(BIO.be==='wa'){
+    const c=await navigator.credentials.create({publicKey:{
+      challenge:crypto.getRandomValues(new Uint8Array(32)),
+      rp:{name:'Finance Pro'},
+      user:{id:crypto.getRandomValues(new Uint8Array(16)),name:'finance-pro',displayName:'Finance Pro'},
+      pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
+      authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required',residentKey:'discouraged'},
+      attestation:'none',timeout:60000}});
+    if(!c)return false;
+    localStorage.setItem('finapp.bioc',b64u(c.rawId));return true}
+  return false}
+async function bioCheck(){
+  if(BIO.be==='tg')return new Promise(res=>{try{BM.authenticate({reason:'Разблокировать Finance Pro'},ok=>res(!!ok))}catch(e){res(false)}});
+  if(BIO.be==='wa'){
+    let id='';try{id=localStorage.getItem('finapp.bioc')||''}catch(e){}
+    if(!id)return false;
+    try{const r=await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),allowCredentials:[{type:'public-key',id:unb64u(id),transports:['internal']}],userVerification:'required',timeout:60000}});return !!r}catch(e){return false}}
+  return false}
+async function bioUnlock(manual){
+  if(!bioOn()||BIO.busy||!LKE||!LKE.classList.contains('on'))return;
+  if(LK.mode!=='unlock'&&LK.mode!=='verify')return;
+  await bioInit();
+  if(!BIO.be||BIO.busy||!LKE.classList.contains('on')||(LK.mode!=='unlock'&&LK.mode!=='verify')){bioDraw();return}
+  bioDraw();BIO.busy=true;let ok=false;
+  try{ok=await bioCheck()}catch(e){ok=false}finally{BIO.busy=false;BIO.okAt=Date.now()}
+  if(!LKE.classList.contains('on'))return;
+  if(ok){LK.tries=0;const cb=LK.cb;lkHide();if(cb)cb();return}
+  LK.msg=manual?'Не удалось распознать. Введите PIN':'Нажмите значок или введите PIN';LK.err=!!manual;LK.hint=1;lkDraw()}
+async function bioToggle(btn){
+  if(bioOn()){try{localStorage.removeItem('finapp.bio');localStorage.removeItem('finapp.bioc')}catch(e){}tgSet(btn,false);toast(bioName()+' выключен');return}
+  await bioInit();
+  if(!BIO.be){toast(IN_TG?'Биометрия недоступна в этом Telegram или на устройстве':'Биометрия недоступна на этом устройстве');return}
+  BIO.busy=true;let r=false;
+  try{r=await bioEnroll()}catch(e){r=false}finally{BIO.busy=false;BIO.okAt=Date.now()}
+  if(r===true){try{localStorage.setItem('finapp.bio','1')}catch(e){}tgSet(btn,true);toast(bioName()+' включён')}
+  else if(r==='denied'){toast('Доступ запрещён. Разрешите в настройках Telegram');try{BM.openSettings()}catch(e){}}
+  else toast('Не удалось включить: '+bioName())}
+bioInit();
+// облако Telegram включено, ошибок нет и хотя бы одна успешная сверка была — после сброса данные вернутся из облака
+function pinCloudOk(){try{return !!(IN_TG&&CL.on&&!CL.lastErr&&(CL.sb||CL.lastSync))}catch(e){return false}}
+function lkBuild(){if(!LKE)return;LKE.innerHTML=`<button type="button" class="lkx" data-k="x" aria-label="Отмена">×</button><div class="lkc"><div class="lkt"></div><div class="lks"></div><div class="lkd"><i></i><i></i><i></i><i></i></div><div class="lkp">${[1,2,3,4,5,6,7,8,9,'',0,'<'].map(k=>k===''?'<button type="button" class="lkbio" data-k="bio" aria-label="Биометрия" style="visibility:hidden"></button>':`<button type="button" data-k="${k}" aria-label="${k==='<'?'Удалить':k}">${k==='<'?'⌫':k}</button>`).join('')}</div><button type="button" class="lkf" data-k="f">Забыли PIN?</button></div><div class="lkq"><div class="lkt">Сбросить PIN?</div><div class="lks" style="max-width:290px">Чтобы сбросить PIN, нужно удалить все данные приложения на этом устройстве: операции, цели, долги и настройки. Это нельзя отменить.</div><div class="lkb"><button type="button" class="sm" data-k="fn">Отмена</button><button type="button" class="sm del" data-k="fy">Удалить данные</button></div></div>`}
 function lkDraw(){if(!LKE)return;const T={unlock:'Введите PIN',verify:'Введите текущий PIN',set1:'Придумайте PIN',set2:'Повторите PIN'};
   LKE.querySelector('.lkt').textContent=T[LK.mode]||'';const s=LKE.querySelector('.lks');s.textContent=LK.msg||(LK.mode==='set1'?'4 цифры':'');s.classList.toggle('er',!!LK.err);
   LKE.querySelectorAll('.lkd i').forEach((d,i)=>d.classList.toggle('on',i<LK.buf.length));
-  LKE.querySelector('.lkx').style.display=LK.mode==='unlock'?'none':'';LKE.querySelector('.lkf').style.display=(LK.mode==='unlock'||LK.mode==='verify')?'':'none'}
-function lkShow(mode,cb){if(!LKE)return;if(!LKE.firstChild)lkBuild();LK.mode=mode;LK.buf='';LK.first='';LK.cb=cb||null;LK.msg='';LK.err=false;LKE.classList.remove('cf');LKE.classList.add('on');lkDraw()}
+  LKE.querySelector('.lkx').style.display=LK.mode==='unlock'?'none':'';bioDraw();LKE.querySelector('.lkf').style.display=(LK.mode==='unlock'||LK.mode==='verify')?'':'none'}
+function lkShow(mode,cb){if(!LKE)return;if(!LKE.firstChild)lkBuild();LK.mode=mode;LK.buf='';LK.first='';LK.cb=cb||null;LK.msg='';LK.err=false;LKE.classList.remove('cf');LKE.classList.add('on');lkDraw();if((mode==='unlock'||mode==='verify')&&bioOn())setTimeout(()=>bioUnlock(false),mode==='unlock'?250:450)}
 function lkHide(){if(!LKE)return;LKE.classList.remove('on','cf');document.documentElement.classList.remove('plk');LK.mode='';LK.buf=''}
 function lkFail(msg){LK.buf='';LK.msg=msg;LK.err=true;const d=LKE.querySelector('.lkd');d.classList.remove('sh');void d.offsetWidth;d.classList.add('sh');if(navigator.vibrate)try{navigator.vibrate(60)}catch(e){}lkDraw()}
 async function lkDone(){LK.busy=true;const v=LK.buf;
@@ -3720,18 +3898,22 @@ async function lkDone(){LK.busy=true;const v=LK.buf;
   }finally{LK.busy=false}}
 if(LKE)LKE.addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;const k=b.dataset.k;
   if(k==='x'){lkHide();return}
-  if(k==='f'){LKE.classList.add('cf');return}
+  if(k==='bio'){bioUnlock(true);return}
+  if(k==='f'){const cl=pinCloudOk(),t=LKE.querySelector('.lkq .lks'),y=LKE.querySelector('[data-k="fy"]');
+    if(t)t.textContent=cl?'PIN будет сброшен, а данные на этом телефоне удалены. Сразу после этого приложение загрузит операции, цели, долги и настройки обратно из облака Telegram — если они там сохранены. Если в облаке пусто, данные пропадут.':'Чтобы сбросить PIN, нужно удалить все данные приложения на этом устройстве: операции, цели, долги и настройки. Это нельзя отменить.';
+    if(y)y.textContent=cl?'Сбросить PIN':'Удалить данные';
+    LKE.classList.add('cf');return}
   if(k==='fn'){LKE.classList.remove('cf');return}
-  if(k==='fy'){try{Object.keys(localStorage).filter(x=>x.indexOf('finapp.')===0).forEach(x=>localStorage.removeItem(x))}catch(e){}location.reload();return}
+  if(k==='fy'){const cl=pinCloudOk();try{Object.keys(localStorage).filter(x=>x.indexOf('finapp.')===0).forEach(x=>localStorage.removeItem(x));if(cl)localStorage.setItem('finapp.rst','1')}catch(e){}location.reload();return}
   if(LK.busy)return;
   if(Date.now()<LK.until){LK.msg='Подождите '+Math.ceil((LK.until-Date.now())/1000)+' сек';LK.err=true;lkDraw();return}
   if(k==='<'){LK.buf=LK.buf.slice(0,-1);lkDraw();return}
-  if(LK.buf.length>=4)return;LK.buf+=k;if(LK.err){LK.err=false;LK.msg=''}lkDraw();if(LK.buf.length===4)await lkDone()});
+  if(LK.buf.length>=4)return;LK.buf+=k;if(LK.err||LK.hint){LK.err=false;LK.hint=0;LK.msg=''}lkDraw();if(LK.buf.length===4)await lkDone()});
 document.addEventListener('keydown',e=>{if(!LKE||!LKE.classList.contains('on')||LKE.classList.contains('cf'))return;
   const k=/^\d$/.test(e.key)?e.key:e.key==='Backspace'?'<':e.key==='Escape'&&LK.mode!=='unlock'?'x':'';if(!k)return;const b=LKE.querySelector('[data-k="'+k+'"]');if(b){e.preventDefault();b.click()}});
 let _lkHid=0;
-function lkAway(){if(pinOn()&&!_lkHid)_lkHid=Date.now()}
-function lkBack(){if(!_lkHid)return;const away=(Date.now()-_lkHid)/1000;_lkHid=0;if(pinOn()&&away>=pinAuto()&&!(LKE&&LKE.classList.contains('on')))lkShow('unlock')}
+function lkAway(){if(BIO.busy)return;if(pinOn()&&!_lkHid)_lkHid=Date.now()}
+function lkBack(){if(!_lkHid)return;if(BIO.busy||Date.now()-BIO.okAt<2000){_lkHid=0;return}const away=(Date.now()-_lkHid)/1000;_lkHid=0;if(pinOn()&&away>=pinAuto()&&!(LKE&&LKE.classList.contains('on')))lkShow('unlock')}
 document.addEventListener('visibilitychange',()=>{if(document.hidden)lkAway();else lkBack()});
 try{TGW.onEvent('deactivated',lkAway);TGW.onEvent('activated',lkBack)}catch(e){}
 if(pinOn()){lkBuild();lkShow('unlock')}
@@ -3761,8 +3943,9 @@ async function flToggle(btn){
   if(!ok){tgSet(btn,false);toast('Нет доступа к датчикам движения');return}
   flSave(true);FLP.got=0;flStart();tgSet(btn,true);toast('Переверните телефон экраном вниз');
   setTimeout(()=>{if(FLP.want&&!FLP.got){flSave(false);flStop();const t=document.querySelector('#bq [data-bq="tgprf"]');if(t)tgSet(t,false);toast('Датчик положения недоступен на этом устройстве')}},3000)}
-if(FLP.want){flStart();   // iOS даёт доступ к датчику только после касания — запрашиваем при первом клике
-  const D=window.DeviceOrientationEvent;if(D&&typeof D.requestPermission==='function')document.addEventListener('click',()=>{try{D.requestPermission().catch(()=>{})}catch(e){}},{once:true,capture:true})}
+// v61: при запуске доступ к датчику больше НЕ запрашивается (раньше iPhone спрашивал разрешение при каждом входе в приложение).
+// Разрешение просят один раз — когда человек сам включает «Включать поворотом экрана» (flToggle); дальше датчик просто слушаем молча.
+if(FLP.want)flStart();
 
 $('#fi').onchange=e=>{const f=e.target.files[0];if(f)importFile(f,e.target)};
 
@@ -3783,7 +3966,7 @@ function cpHtml(){const s=cpS,inc=s.type==='income';
 function cpRender(){const g=cpEl.querySelector('.cpg'),top=g?g.scrollTop:0;cpEl.innerHTML=cpHtml();const g2=cpEl.querySelector('.cpg');if(g2&&cpS.view==='grid')g2.scrollTop=top}
 function openCp(type,cur,cb,chg){if(cpS||isCpBusy())return;cpS={type:type==='income'?'income':'expense',cur,cb,chg,edit:false,view:'grid',id:null};cpRender();
   ['sh','ed','gd','cf'].forEach(id=>{const e=$('#'+id);if(e&&e.classList.contains('on'))e.classList.add('sub')});
-  cpEl.classList.add('on');ov.className='on'}
+  try{setOrigin(cpEl)}catch(e){}cpEl.classList.add('on');ov.className='on'}
 const isCpBusy=()=>$('#nc').classList.contains('on')||bq.classList.contains('on');
 function closeCp(){if(!cpS&&!cpEl.classList.contains('on'))return;cpEl.classList.remove('on');cpS=null;document.querySelectorAll('.sub').forEach(e=>e.classList.remove('sub'))}
 function cpSave(){const s=cpS,c=cd(s.id),nm=($('#cpn').value||'').trim();if(!nm){toast('Введите название');return}
@@ -3820,7 +4003,7 @@ let ncCb=null,ncCancel=null,ncType='expense';
 function openNc(type,done,cancel){const el=$('#nc');ncType=type==='income'?'income':'expense';ncCb=done;ncCancel=cancel||null;
   el.innerHTML=`<div class="nct">Новая категория · ${ncType==='income'?'доход':'расход'}</div><div class="ncr"><input type="color" id="ncc" value="${nextColor(ncType==='income')}" aria-label="Цвет"><input id="ncn" placeholder="Название" maxlength="40" autocomplete="off" aria-label="Название новой категории" enterkeyhint="next"></div><input id="ncw" placeholder="Ключевые слова: детск, игрушк" autocomplete="off" aria-label="Слова для голосового ввода"><div class="ncb"><button class="sm" id="ncx">Отмена</button><button class="sm pr" id="nca">Добавить</button></div>`;
   ['sh','ed','gd','cf'].forEach(id=>{const e=$('#'+id);if(e&&e.classList.contains('on'))e.classList.add('sub')});
-  el.classList.add('on');ov.className='on';
+  try{setOrigin(el)}catch(e){}el.classList.add('on');ov.className='on';
   setTimeout(()=>{const n=$('#ncn');if(n)n.focus({preventScroll:true})},140)}
 function closeNc(ok){const el=$('#nc');if(!el.classList.contains('on'))return;el.classList.remove('on');
   document.querySelectorAll('.sub').forEach(e=>e.classList.remove('sub'));
@@ -3856,7 +4039,11 @@ function toastDel(n,undo){const el=$('#toast'),live=!!delB&&el.classList.contain
     el.animate([{transform:'translateY(0) scale(1)'},{transform:'translateY(-3px) scale(1.018)',offset:.4},{transform:'translateY(0) scale(1)'}],{duration:480,easing:'cubic-bezier(.32,.72,0,1)'});
     return}
   toast(null,'Отмена',()=>{const u=b.u.slice().reverse();if(delB===b)delB=null;u.forEach(f=>f())},'del',delMsg(b.n))}
-function toast(m,lbl,fn,kind,html){const el=$('#toast');clearTimeout(tt);if(!_tb)delB=null;_tb=0;
+// Плашка показывается только для отмены действия (кнопка «Отмена» / «Сохранить»). Подтверждения вроде «Сохранено» не показываем:
+// человек и так видит, что сделал. Остаются только короткие объяснения, почему действие не выполнилось (ошибки и «укажите сумму»).
+function toast(m,lbl,fn,kind,html){
+  if(!lbl&&!(m!=null&&/^(⚠|Введите|Выберите|Укажите|Число месяца|Платежей|Дата окончания|Не удалось|Нет доступа|Датчик|Доступ запрещён|Биометрия недоступна|В таблице нет|Пока нечего|Новых данных|Ничего не изменилось|Облако Telegram недоступно|Контакт|Бот:)/.test(String(m)))){if(!_tb)delB=null;_tb=0;return}
+  const el=$('#toast');clearTimeout(tt);if(!_tb)delB=null;_tb=0;
   el.dataset.k=kind||'';
   el.innerHTML=(TIC[kind]?`<span class="tic">${TIC[kind]}</span>`:'')+`<span class="ttx">${html!=null?html:E(m)}</span>`+(lbl?`<button type="button" class="tbt">${lbl}</button>`:'');
   if(kind==='del'){try{if(hap.age()>1500)hap('medium',{k:'del'})}catch(e){}}   // удаление: один отклик (если свайп/меню уже не дали его только что)
@@ -3939,10 +4126,10 @@ function rcRender(){if(!rcS)return;
   if(rcS.view==='form'){rcEl.innerHTML=rcFormHtml();return}
   const L=cfg.rec;
   rcEl.innerHTML=`<div class="rct"><span>Повторяющиеся операции</span><button class="x" data-rc="close" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div>`+
-    (L.length?`<div class="rcl">${L.map(r=>{const c=cd(r.category),inc=r.type==='income',nx=recNext(r),left=recLeft(r),parts=[cap(recText(r))];
+    (L.length?`<div class="rch" style="padding:0 0 6px">Нажмите на операцию, чтобы изменить её. Кнопка справа — пауза.</div><div class="rcl">${L.map(r=>{const c=cd(r.category),inc=r.type==='income',nx=recNext(r),left=recLeft(r),parts=[cap(recText(r))];
       if(r.paused)parts.push('на паузе');else if(nx)parts.push('следующая: '+recDate(nx));else if(r.end)parts.push('завершена');
       if(r.end&&!(left===0&&!r.paused&&!nx))parts.push('до '+recDate(r.end)+(left>0?' · осталось '+left:''));
-      return `<div class="rcr${r.paused?' ps':''}"><button class="rci" data-rc="edit" data-id="${E(r.id)}"><span class="rcn">${E(r.note||c.n)}</span><span class="rca ${inc?'inc':'exp'}">${inc?'+':'−'}${fmt(r.amount)} ${E(cfg.cur)}</span><small>${E(parts.join(' · '))}</small></button><button class="rcp" data-rc="pause" data-id="${E(r.id)}" aria-label="${r.paused?'Возобновить':'Поставить на паузу'}">${r.paused?RC_PLAY:RC_PAUSE}</button></div>`}).join('')}</div>`
+      return `<div class="rcr${r.paused?' ps':''}" data-rc="edit" data-id="${E(r.id)}" role="button" tabindex="0"><span class="rcn">${E(r.note||c.n)}</span><span class="rca ${inc?'inc':'exp'}">${inc?'+':'−'}${fmt(r.amount)} ${E(cfg.cur)}</span><button type="button" class="rcp" data-rc="pause" data-id="${E(r.id)}" aria-label="${r.paused?'Возобновить':'Поставить на паузу'}">${r.paused?RC_PLAY:RC_PAUSE}</button><small>${E(parts.join(' · '))}</small></div>`}).join('')}</div>`
       :`<div class="rch">Аренда, подписка, зарплата, рассрочка — добавьте один раз, и запись будет появляться сама в нужный день.</div>`)+
     `<div class="rcf"><button class="sm pr" data-rc="new">+ Добавить</button></div>`}
 function rcCollect(){if(!rcS||rcS.view!=='form'||!$('#rca'))return;const f=rcS.f;
@@ -3971,36 +4158,40 @@ function rcSave(){rcCollect();const f=rcS.f,am=pn(f.amount),td=ymd(new Date());
   else{r={id:uid(),...base,start:td,end:'',done:'',paused:false};cfg.rec.push(r)}
   r.end=end;
   const n=applyRec();save();if(n)render();
-  rcS={view:'list'};rcRender();rcEl.scrollTop=0;
+  rcS={view:'list',st:!!(rcS&&rcS.st)};rcRender();rcEl.scrollTop=0;
   const nx=recNext(r);toast(n?'Сохранено · запись на сегодня добавлена':nx?'Сохранено · следующая: '+recDate(nx):'Сохранено')}
-function rcDel(){const i=cfg.rec.findIndex(x=>x.id===rcS.id);if(i<0){rcS={view:'list'};rcRender();return}
-  const it=cfg.rec[i];cfg.rec.splice(i,1);tomb(it.id);save();rcS={view:'list'};rcRender();
+function rcDel(){const i=cfg.rec.findIndex(x=>x.id===rcS.id);if(i<0){rcS={view:'list',st:!!(rcS&&rcS.st)};rcRender();return}
+  const it=cfg.rec[i];cfg.rec.splice(i,1);tomb(it.id);save();rcS={view:'list',st:!!(rcS&&rcS.st)};rcRender();
   toast('Повтор удалён','Отмена',()=>{untomb(it.id);cfg.rec.splice(Math.min(i,cfg.rec.length),0,it);save();if(rcS&&rcS.view==='list')rcRender()},'del')}
 // пауза: записи не создаются; при возобновлении пропущенные за время паузы не добавляются
 function rcPause(id){const r=cfg.rec.find(x=>x.id===id);if(!r)return;
   r.paused=!r.paused;if(!r.paused)r.start=ymd(new Date());
   const n=r.paused?0:applyRec();save();if(n)render();
-  rcS={view:'list'};rcRender();
+  rcS={view:'list',st:!!(rcS&&rcS.st)};rcRender();
   const nx=recNext(r);toast(r.paused?'Поставлено на паузу':'Возобновлено'+(n?' · запись на сегодня добавлена':nx?' · следующая: '+recDate(nx):''))}
 function openRc(){if(rcS||!sh.classList.contains('on'))return;cancelAuto();
   if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
-  rcS={view:'list'};rcRender();rcEl.scrollTop=0;
+  rcS={view:'list',st:!!(rcS&&rcS.st)};rcRender();rcEl.scrollTop=0;
   ['sh','ed','gd','cf'].forEach(id=>{const e=$('#'+id);if(e&&e.classList.contains('on'))e.classList.add('sub')});
-  rcEl.classList.add('on');ov.className='on'}
-function closeRc(){if(!rcS&&!rcEl.classList.contains('on'))return;rcEl.classList.remove('on');rcS=null;document.querySelectorAll('.sub').forEach(e=>e.classList.remove('sub'))}
+  try{setOrigin(rcEl)}catch(e){}rcEl.classList.add('on');ov.className='on'}
+function closeRc(){if(!rcS&&!rcEl.classList.contains('on'))return;const st=!!(rcS&&rcS.st);rcEl.classList.remove('on');rcS=null;document.querySelectorAll('.sub').forEach(e=>e.classList.remove('sub'));
+  if(st){stCover(false);if(!isModalOpen()){ov.className='';lockBg(false)}cancelGestures();const q=$('#rcs .rv');if(q)q.textContent=(cfg.rec||[]).length?String(cfg.rec.length):'Нет'}}
+// список повторяющихся операций из настроек: нажатие на операцию открывает её редактирование (как у категорий)
+function openRcSt(){if(rcS||isModalOpen())return;cancelGestures();stCover(true);lockBg(true);
+  rcS={view:'list',st:true};rcRender();rcEl.scrollTop=0;try{setOrigin(rcEl)}catch(e){}rcEl.classList.add('on');ov.className='on'}
 $('#recic').onclick=openRc;
-rcEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!rcS)return;const a=b.dataset.rc;
+rcEl.addEventListener('click',e=>{const b=e.target.closest('button')||e.target.closest('.rcr[data-rc]');if(!b||!rcS)return;const a=b.dataset.rc;
   if(a==='close')closeRc();
   else if(a==='new')rcForm(null);
   else if(a==='edit')rcForm(b.dataset.id);
-  else if(a==='back'){rcS={view:'list'};rcRender()}
+  else if(a==='back'){rcS={view:'list',st:!!(rcS&&rcS.st)};rcRender()}
   else if(a==='save')rcSave();
   else if(a==='del')rcDel();
   else if(a==='pause')rcPause(b.dataset.id||rcS.id);
   else if(b.dataset.rt&&rcS.view==='form'){rcCollect();const f=rcS.f;f.type=b.dataset.rt;
     if(!ALL.some(c=>c.id===f.category&&c.inc===(f.type==='income')))f.category=rcDef(f.type);rcRender()}});
 rcEl.addEventListener('change',e=>{if(!rcS||rcS.view!=='form')return;if(e.target.id==='rcf'||e.target.id==='rcm'){rcCollect();rcVis()}});
-rcEl.addEventListener('keydown',e=>{if(rcS&&rcS.view==='form'&&e.key==='Enter'&&e.target.tagName==='INPUT'){e.preventDefault();rcSave()}});
+rcEl.addEventListener('keydown',e=>{if(rcS&&rcS.view==='list'&&(e.key==='Enter'||e.key===' ')&&e.target.classList&&e.target.classList.contains('rcr')){e.preventDefault();e.target.click();return}if(rcS&&rcS.view==='form'&&e.key==='Enter'&&e.target.tagName==='INPUT'){e.preventDefault();rcSave()}});
 ['pointerdown','pointermove','pointerup'].forEach(ev=>rcEl.addEventListener(ev,e=>e.stopPropagation()));
 ['touchstart','touchmove'].forEach(ev=>rcEl.addEventListener(ev,e=>e.stopPropagation(),{passive:true}));
 // при запуске и когда возвращаетесь в приложение — создаём наступившие записи
@@ -4107,7 +4298,7 @@ async function cloudPull(m){const hb=cloudHash();let d;
   if(cloudHash()!==hb){await cloudPush();return}   // пока читали, пользователь внёс правки — они важнее
   if(isModalOpen()){CL.retryT=setTimeout(()=>cloudSync('modal'),2500);return 'defer'}   // не меняем данные под открытым окном
   try{if(tx.length){const b=JSON.stringify(collectData());if(b.length<9e5)localStorage.setItem('finapp.bak',b)}}catch{}   // страховка: прежние локальные данные
-  applyData(d,{replace:true});
+  applyData(d,{replace:true});CL.pulled=true;
   CL.lt=m.t;cloudPersist();CL.lh=cloudHash();
   try{if(applyRec())render()}catch{}
   /* тихо: статус виден в индикаторе #cs */}
@@ -4187,7 +4378,8 @@ async function cloudSync(why){
     else if(!edited&&m.t>CL.lt)r=await cloudPull(m);                       // основы нет (первый запуск после обновления): новее по времени
     else await cloudPush();                                                // локальная новее (или равна, но изменена)
     if(r==='defer')defer=true;
-    else{ok=true;cloudBase(CL.lh);CL.lastSync=Date.now();CL.fails=0;CL.lastErr=null;CL.errShown='';csSet('ok','');if(CL.manual)toast('Облако Telegram: всё сохранено')}
+    else{ok=true;cloudBase(CL.lh);CL.lastSync=Date.now();CL.fails=0;CL.lastErr=null;CL.errShown='';csSet('ok','');if(CL.manual)toast('Облако Telegram: всё сохранено');
+      try{if(localStorage.getItem('finapp.rst')){localStorage.removeItem('finapp.rst');if(CL.pulled)toast('Данные восстановлены из облака Telegram')}}catch{}}
   }catch(e){cloudFail(e)}
   finally{
     CL.busy=false;CL.manual=false;
@@ -4311,8 +4503,9 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v52';
-try{document.getElementById('vb').textContent=IB_VER}catch(e){}
+const IB_VER='v63';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const APP_VER='1.2';  // версия, которую видит человек (внизу экрана и в письме в поддержку)
+try{document.getElementById('vb').textContent=APP_VER}catch(e){}
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
 // АДРЕС БОТА ПО УМОЛЧАНИЮ: впишите сюда адрес вашего воркера один раз — тогда всем пользователям (жене и др.) ничего вводить не нужно
 const BOT_URL='https://finansepro.olegkiselar3105.workers.dev';
@@ -4460,6 +4653,7 @@ async function ibLoop(){
   const vv=window.visualViewport,root=document.documentElement,$i=id=>document.getElementById(id);
   const IDS=['sh','ed','gd','cf','nc','cp','rc'],SEL='#sh,#ed,#gd,#cf,#nc,#cp,#rc';
   const probe=document.createElement('div');probe.style.cssText='position:fixed;top:0;left:0;width:0;height:var(--sat);visibility:hidden;pointer-events:none';document.body.appendChild(probe);
+  const probeB=document.createElement('div');probeB.style.cssText='position:fixed;top:0;left:0;width:0;height:var(--sab);visibility:hidden;pointer-events:none';document.body.appendChild(probeB);
   let baseH=window.innerHeight,raf=0,lastOut=0,savedY=0,_lay='',_vvt='';const kc=new Map();
   const editable=()=>{const a=document.activeElement;return !!a&&(a.tagName==='TEXTAREA'||a.tagName==='SELECT'||(a.tagName==='INPUT'&&!/^(checkbox|radio|button|color|range|file|submit|reset)$/.test(a.type)))};
   const anyOpen=()=>IDS.some(id=>{const e=$i(id);return e&&e.classList.contains('on')});
@@ -4470,12 +4664,12 @@ async function ibLoop(){
     const shrink=baseH-window.innerHeight;
     const lay=(shrink>120?shrink:0)+'px';if(lay!==_lay){_lay=lay;root.style.setProperty('--lay',lay)}
     const vt=t+'px';if(vt!==_vvt){_vvt=vt;root.style.setProperty('--vvt',vt)}
-    const kbOpen=foc&&(baseH-h)>120,sat=probe.offsetHeight,T0=sat+72;
+    const kbOpen=foc&&(baseH-h)>120,sat=probe.offsetHeight,sab=probeB.offsetHeight,L=window.innerHeight;
     const tgt=kbOpen?document.activeElement.closest(SEL):null;
     IDS.forEach(id=>{const el=$i(id);if(!el)return;let ky=0,km=null;
       if(el===tgt){const avail=h-sat-8-14,need=el.scrollHeight,H=Math.min(need,avail);
         if(need>avail)km=avail;
-        ky=Math.max(Math.min(T0,h-14-H),sat+8)-T0}
+        const cur=L/2+(sat-sab)/2-H/2;ky=Math.max(Math.min(0,(h-14)-(cur+H)),(sat+8)-cur)}
       const key=ky+'|'+(km||'');if(kc.get(id)===key)return;kc.set(id,key);
       el.style.setProperty('--ky',ky+'px');
       if(km)el.style.setProperty('--kmax',km+'px');else el.style.removeProperty('--kmax')})}
@@ -4592,12 +4786,13 @@ let cm,mb,ml,mm,open=false,items=[],hi=-1,pressing=false,pid=null,supp=false,sup
 function build(){if(cm)return;
   cm=D.createElement('div');cm.id='cm';cm.innerHTML='<div class="cmb"></div><div class="cml" hidden></div><div class="cmm" role="menu"></div>';
   D.body.appendChild(cm);mb=cm.firstChild;ml=cm.children[1];mm=cm.children[2];
-  mb.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();hold(450);close()});
+  mb.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();hold(450);trail=true;clearTimeout(trailT);trailT=setTimeout(()=>{trail=false},1500);close()});
   mm.addEventListener('click',e=>{const b=e.target.closest('.cmi');if(!b)return;e.preventDefault();e.stopPropagation();pick(+b.dataset.i)});
   ['pointerdown','touchstart'].forEach(ev=>cm.addEventListener(ev,e=>e.stopPropagation(),{passive:true}))}
 function hold(ms){supp=true;clearTimeout(suppT);suppT=setTimeout(()=>{supp=false},ms||400)}
 D.addEventListener('click',e=>{if(supp){e.stopPropagation();e.preventDefault()}},true);
-function show(o){build();clearTimeout(outT);
+function show(o){build();clearTimeout(outT);if(window.__tap)window.__tap.t=performance.now();
+  if(o.pid!=null)calm(o.pid,o.node);
   items=o.items;hi=-1;open=true;fromPress=!!o.press;pressing=!!o.press;pid=o.pid;
   mm.innerHTML=items.map((it,i)=>`<button type="button" class="cmi${it.red?' red':''}${it.dis?' dis':''}" role="menuitem" data-i="${i}">${ic(it.ic)}<span>${it.t}</span></button>`).join('');
   ml.hidden=true;ml.innerHTML='';
@@ -4612,16 +4807,24 @@ function show(o){build();clearTimeout(outT);
     t=r.bottom+12;if(t+H>vh-16){t=r.top-12-H;if(t<top0){t=Math.max(top0,Math.min(vh-16-H,(vh-H)/2))}}
     ox=(x-l)+'px '+(t>r.top?'0px':H+'px')}
   mm.style.left=l+'px';mm.style.top=t+'px';mm.style.transformOrigin=ox;
+  hr={l:l,t:t,w:W,r:[...mm.querySelectorAll('.cmi')].map(b=>({y:b.offsetTop,h:b.offsetHeight}))};
   void cm.offsetWidth;
   if(o.lift&&!RM){ml.style.transition='';ml.style.transform=''}
   cm.classList.add('on')}
 function close(){if(!open)return;open=false;pressing=false;cm.classList.remove('on');clearTimeout(outT);outT=setTimeout(()=>{if(!open){cm.style.display='none';ml.innerHTML='';ml.hidden=true}},420)}
 function setHi(i){if(i===hi)return;hi=i;mm.querySelectorAll('.cmi').forEach((b,k)=>b.classList.toggle('hi',k===i));if(i>=0)vib(5)}
-function hit(x,y){const bs=mm.querySelectorAll('.cmi');for(let i=0;i<bs.length;i++){const r=bs[i].getBoundingClientRect();if(x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom)return i}return -1}
-function pick(i){const it=items[i];if(!it||it.dis)return;close();hold(500);try{hap(it.red?'medium':'light',{m:500,k:'pk'})}catch(e){}setTimeout(()=>{try{it.fn()}catch(e){console.error(e)}},RM?0:120)}
-D.addEventListener('pointermove',e=>{
+function hit(x,y){if(!hr||x<hr.l||x>hr.l+hr.w)return -1;const yy=y-hr.t;for(let i=0;i<hr.r.length;i++){const r=hr.r[i];if(yy>=r.y&&yy<=r.y+r.h)return i}return -1}
+function pick(i){const it=items[i];if(!it||it.dis)return;if(window.__tap)window.__tap.t=performance.now();close();hold(500);try{hap(it.red?'medium':'light',{m:500,k:'pk'})}catch(e){}setTimeout(()=>{try{it.fn()}catch(e){console.error(e)}},RM?0:120)}
+// пока меню открыто (и до конца касания, которым его закрыли) — движения пальца не доходят ни до каруселей страниц, ни до свайпов строк, ни до прокрутки
+let trail=false,trailT=0,hr=null;
+const shield=()=>open||trail;
+window.addEventListener('pointermove',e=>{
   if(pend){if(Math.hypot(e.clientX-pend.x,e.clientY-pend.y)>9)cancelPend();return}
-  if(open&&pressing&&e.pointerId===pid){setHi(hit(e.clientX,e.clientY))}},true);
+  if(!shield())return;
+  if(open&&pressing&&e.pointerId===pid)setHi(hit(e.clientX,e.clientY));
+  e.stopImmediatePropagation()},true);
+const trailEnd=()=>{clearTimeout(trailT);trailT=setTimeout(()=>{trail=false},60)};
+window.addEventListener('pointerup',trailEnd,true);window.addEventListener('pointercancel',trailEnd,true);
 function release(e,cancel){
   if(pend&&e.pointerId===pend.id)cancelPend();
   if(!(open&&pressing&&e.pointerId===pid))return;
@@ -4629,7 +4832,14 @@ function release(e,cancel){
   if(!cancel&&hi>=0)pick(hi);else setHi(-1)}
 D.addEventListener('pointerup',e=>release(e,false),true);
 D.addEventListener('pointercancel',e=>release(e,true),true);
-D.addEventListener('touchmove',e=>{if(open&&pressing&&e.cancelable)e.preventDefault()},{passive:false,capture:true});
+window.addEventListener('touchmove',e=>{if(!shield())return;if(e.cancelable)e.preventDefault();e.stopImmediatePropagation()},{passive:false,capture:true});
+window.addEventListener('wheel',e=>{if(shield()){e.preventDefault();e.stopImmediatePropagation()}},{passive:false,capture:true});
+// в момент открытия меню все начатые фоном жесты (карусель страниц, свайп строки, тянуть-поиск, пружина) отменяются — как будто палец ушёл с экрана
+function calm(id,node){
+  try{const tg=node&&node.isConnected?node:D;tg.dispatchEvent(new PointerEvent('pointercancel',{pointerId:id,pointerType:'touch',isPrimary:true,bubbles:true}))}catch(e){}
+  try{D.dispatchEvent(new Event('touchcancel',{bubbles:true}))}catch(e){}
+  try{pgSettle()}catch(e){}
+  try{sd=null}catch(e){}}
 
 /* ---------- что нажато ---------- */
 const ctxKey=()=>{try{return [tab,ps,AS,month,fday,ftag,fcat&&fcat.id,searchOn()].join('|')}catch(e){return ''}};
