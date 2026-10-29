@@ -1184,7 +1184,7 @@ html:root :is(#ed,#gd,#rc,#nc) label.ef :is(input,select,.cpb){display:block;wid
 html:root :is(#ed,#gd,#rc) label.ef:has(select,.cpb)::after{content:"";position:absolute;right:18px;top:50%;margin-top:-2px;border:5px solid transparent;border-top-color:var(--m2)}
 html:root :is(#ed #eam,#gd #gam){display:block;width:100%;box-sizing:border-box;font-size:18px!important;font-weight:400;letter-spacing:0;text-align:left;color:var(--t)!important;padding:14px 16px 12px!important;border:1px solid var(--sbd);border-radius:18px;margin:0!important}
 html:root :is(#ed #eam,#gd #gam):focus{border-color:var(--sa);box-shadow:0 0 0 1px var(--sa);outline:0}
-.fl-sum{position:relative;height:16px}.fl-sum b{position:absolute;left:14px;top:7px;padding:0 5px;background:var(--sb);font:400 12px/1.2 inherit;color:var(--m2);z-index:1}
+.fl-sum{position:relative;height:16px}.fl-sum b{position:absolute;left:14px;top:7px;padding:0 5px;background:var(--sb);font-size:12px;font-weight:400;line-height:1.2;color:var(--m2);z-index:1}
 html:root #ed .sgm{display:flex;flex:1;margin-right:10px;padding:0;gap:0;background:none;border:1px solid rgba(128,128,140,.6);border-radius:999px;overflow:hidden}
 html:root #ed .sgm button{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 8px;min-height:46px;border-radius:0;background:none;box-shadow:none;color:var(--t);font-size:14px;font-weight:600}
 html:root #ed .sgm button::before{content:"\2295";font-size:17px}
@@ -1203,8 +1203,142 @@ html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){opacity:1;transition:transform .2
 html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc).on{transition:transform .42s cubic-bezier(.12,.9,.1,1),visibility 0s,translate .45s cubic-bezier(.32,.72,0,1)}
 html:root #sh.on.fxl{transition:transform .42s cubic-bezier(.12,.9,.1,1),visibility 0s,translate 0s}
 html:root #sh :is(.fld,#tpl,#rev,.shf){opacity:1!important;transform:none!important;transition:none!important}
-html:root #ov{transition:opacity .28s ease,visibility 0s .28s}
-html:root #ov.on{transition:opacity .28s ease}
+html:root #ov{transition:opacity .34s ease,visibility 0s .34s}
+html:root #ov.on{transition:opacity .45s ease}
+/* ===== v98: геометрия и анимации по видео ===== */
+/* полноширинные шторки от самого низа экрана (все окна, кроме окна операции) */
+html:root :is(#gd,#cf,#bq,#nc,#cp,#rc){left:0!important;right:0!important;bottom:0!important;max-width:none!important;margin:0!important;border-radius:28px 28px 0 0!important;padding-bottom:calc(18px + var(--sab,0px))!important}
+html:root.kbo :is(#gd,#cf,#bq,#nc,#cp,#rc){padding-bottom:18px!important}
+html:root :is(#gd,#cf,#bq,#nc,#cp,#rc):not(.on){transform:translateY(calc(100% - var(--ky,0px)))!important}
+/* окно операции — карточка с полями по бокам, как в первом видео */
+html:root :is(#sh,#ed){left:12px!important;right:12px!important;max-width:none!important;margin:0!important;bottom:calc(var(--sab,0px) + 12px)!important}
+html:root :is(#sh,#ed):not(.on){transform:translateY(calc(100% + var(--sab,0px) + 12px - var(--ky,0px)))!important}
+@media(min-width:640px){html:root :is(#gd,#cf,#bq,#nc,#cp,#rc){max-width:560px!important;margin:0 auto!important}html:root :is(#sh,#ed){max-width:520px!important;margin:0 auto!important}}
+/* открытие 450мс (плавное замедление), закрытие 340мс (разгон вниз за экран); сдвиг под клавиатуру 300мс */
+html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){transition:transform .34s cubic-bezier(.55,.06,.68,.19),visibility 0s .34s,translate .3s cubic-bezier(.25,.8,.25,1)}
+html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc).on{transition:transform .45s cubic-bezier(.215,.61,.355,1),visibility 0s,translate .3s cubic-bezier(.25,.8,.25,1)}
+html:root #sh.on.fxl{transition:transform .45s cubic-bezier(.215,.61,.355,1),visibility 0s,translate 0s}
+/* окно операции: «Расход/Доход» + дата в первой строке, затем сумма, категория, заметка */
+html:root #ed{display:flex!important;flex-wrap:wrap;align-items:center;column-gap:10px}
+html:root #ed>*{flex:0 0 100%;order:5;min-width:0}
+html:root #ed::before{order:-1}
+html:root #ed .eh{display:contents}
+html:root #ed label.dchip{order:0;flex:0 0 auto;position:relative;display:flex!important;align-items:center;gap:8px;height:46px;margin:0!important;padding:0 14px!important;border:0!important;border-radius:14px;background:var(--stn);box-shadow:none!important;color:var(--t);font-size:14px;font-weight:600}
+html:root #ed label.dchip::before{content:"";width:18px;height:18px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4' y='5' width='16' height='15' rx='2'/%3E%3Cpath d='M4 10h16M9 3v4M15 3v4'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4' y='5' width='16' height='15' rx='2'/%3E%3Cpath d='M4 10h16M9 3v4M15 3v4'/%3E%3C/svg%3E") center/contain no-repeat}
+html:root #ed label.dchip .dtx{white-space:nowrap}
+html:root #ed label.dchip input{position:absolute!important;inset:0;width:100%!important;height:100%;opacity:0;padding:0!important;font-size:16px!important}
+html:root #ed .fl-sum{order:1;margin-top:12px}html:root #ed #eam{order:1}
+html:root #ed .eo{order:2}
+html:root #ed label.ef:has(#eca){order:3}html:root #ed label.ef:has(#eno){order:4}
+html:root #ed .shf{order:9}
+html:root #ed::before{flex:0 0 100%}
+html:root #ed label.dchip:focus-within{box-shadow:none!important;border:0!important}
+html:root #ed::before{width:100%;max-width:none;border-radius:0;opacity:1;background:linear-gradient(rgba(128,128,128,.55),rgba(128,128,128,.55)) center/40px 5px no-repeat}
+/* слой окна готов заранее, а раскладка внутри окна не пересчитывает страницу и наоборот */
+html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){will-change:transform;contain:layout style}
+html:root #ov{will-change:opacity}
+html:root #ov{touch-action:none}
+
+/* ===== v101: окно операции — плоский компактный вид: строки с линиями вместо рамок и «таблеток» ===== */
+html:root #ed label.dchip{width:36px;height:36px;min-width:0;padding:0!important;justify-content:center;gap:0;border-radius:0;background:none;color:var(--m2)}
+html:root #ed label.dchip .dtx{display:none}
+html:root #ed label.dchip::before{width:22px;height:22px}
+html:root #ed .fl-sum{display:none}
+html:root #ed #eam{font-size:26px!important;font-weight:500;padding:12px 0 6px!important;border:0!important;border-bottom:1px solid var(--sep)!important;border-radius:0!important;margin:6px 0 0!important;box-shadow:none!important;background:none}
+html:root #ed #eam:focus{border-bottom:2px solid var(--t)!important;box-shadow:none!important}
+html:root #ed label.ef{display:flex!important;align-items:center;justify-content:space-between;gap:12px;margin:0!important;padding:9px 0!important;border:0!important;border-bottom:1px solid var(--sep)!important;border-radius:0!important;box-shadow:none!important}
+html:root #ed label.ef:focus-within{border-bottom:1px solid var(--t)!important;box-shadow:none!important}
+html:root #ed label.ef .fl{position:static;flex:none;padding:0;background:none;font-size:13px;color:var(--m2)}
+html:root #ed label.ef :is(input,.cpb){flex:1;min-width:0;width:auto!important;text-align:right!important;text-align-last:right!important;font-size:15px!important;padding:2px 0!important}
+html:root #ed label.ef:has(.cpb){padding-right:0!important}
+html:root #ed label.ef:has(.cpb)::after{right:0;margin-top:-2px;display:none}
+html:root #ed .ef.tgf{display:block!important;margin:0!important;padding:9px 0!important;border:0!important;border-bottom:1px solid var(--sep)!important;border-radius:0!important}
+html:root #ed .tgf .tgw{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;justify-content:flex-start}
+html:root #ed .tgf input{flex:1 1 120px;width:auto;min-width:100px;font-size:15px!important;text-align:left!important;padding:2px 0;border:0!important;background:none}
+html:root #ed .tgc{padding:0;border:0;border-radius:0;background:none;font-size:14px;color:var(--t)}
+html:root #ed .shf{margin-top:12px}
+html:root #ed :is(.sm.pr,.sm.del){height:44px}
+html:root #ed .sm.del{width:44px;background-size:20px}
+
+/* ===== v102: окно обучения — нижняя шторка, как остальные окна ===== */
+html:root #tour .tr-w{left:0;right:0;top:auto;bottom:0;width:auto;max-width:none;max-height:92%;margin:0 auto;padding:0 18px calc(14px + var(--sab,0px));border-radius:28px 28px 0 0;background:var(--sb);-webkit-backdrop-filter:none;backdrop-filter:none;border:0;border-top:.5px solid var(--sbd);box-shadow:none;transform:translate3d(0,100%,0);transition:transform .34s cubic-bezier(.55,.06,.68,.19),opacity 0s .34s,visibility 0s .34s}
+html:root #tour.wel .tr-w{transform:translate3d(0,0,0);transition:transform .45s cubic-bezier(.215,.61,.355,1),opacity 0s,visibility 0s}
+@media(min-width:640px){html:root #tour .tr-w{max-width:560px}}
+html:root #tour .tr-w::before{content:"";display:block;width:40px;height:5px;border-radius:4px;background:var(--m,#888);opacity:.45;margin:10px auto 18px}
+html:root #tour .tr-w .tr-f{position:relative;display:block;height:44px;min-height:0;margin-top:18px}
+html:root #tour .tr-dots{position:absolute;left:0;top:50%;transform:translate(0,-50%);transition:left .55s var(--tre),transform .55s var(--tre)}
+html:root #tour .tr-dots.mid{left:50%;transform:translate(-50%,-50%)}
+html:root #tour .tr-back,html:root #tour .tr-next{position:absolute;top:0;height:44px;display:flex;align-items:center}
+html:root #tour .tr-back{left:0;padding:0 14px 0 0;font-size:14px;color:var(--m2);opacity:0;pointer-events:none;transition:opacity .35s ease,color .2s ease}
+html:root #tour .tr-back.show{opacity:1;pointer-events:auto}
+html:root #tour .tr-next{right:0;padding:0 24px;border-radius:999px}
+
+/* ===== v103: слайды обучения подстраиваются под экран (--vs считается в fit()) ===== */
+html:root #tour .tr-vis{zoom:var(--vs,1)}
+html:root #tour .tr-sl h2{font-size:calc(21px*var(--vs,1))}
+html:root #tour .tr-sl:first-child h2{font-size:calc(25px*var(--vs,1))}
+html:root #tour .tr-sl p{font-size:calc(14px*var(--vs,1));max-width:min(100%,calc(300px*var(--vs,1)))}
+
+/* ===== v104: единый плоский стиль для всех окон (операция, добавление, цель/долг/лимит/бюджет, повтор, категория) ===== */
+/* Расход/Доход и прочие переключатели: текст с линией, без «таблеток» */
+html:root #rc .rce{padding:0 0 4px}
+/* сумма цели/долга — как сумма операции */
+html:root #gd #gam{font-size:26px!important;font-weight:500;padding:12px 0 6px!important;border:0!important;border-bottom:1px solid var(--sep)!important;border-radius:0!important;margin:6px 0 0!important;box-shadow:none!important;background:none}
+html:root #gd #gam:focus{border-bottom:2px solid var(--t)!important;box-shadow:none!important}
+html:root #gd .fl-sum{display:none}
+/* поля — строки: подпись слева, значение справа, линия снизу */
+html:root :is(#gd,#rc,#nc) label.ef{display:flex!important;align-items:center;justify-content:space-between;gap:12px;margin:0!important;padding:9px 0!important;border:0!important;border-bottom:1px solid var(--sep)!important;border-radius:0!important;box-shadow:none!important}
+html:root :is(#gd,#rc,#nc) label.ef:focus-within{border-bottom:1px solid var(--t)!important;box-shadow:none!important}
+html:root :is(#gd,#rc,#nc) label.ef .fl{position:static;flex:none;padding:0;background:none;font-size:13px;color:var(--m2)}
+html:root :is(#gd,#rc,#nc) label.ef :is(input,select,.cpb){flex:1;min-width:0;width:auto!important;text-align:right!important;text-align-last:right!important;font-size:15px!important;padding:2px 0!important;background:none}
+html:root :is(#gd,#rc,#nc) label.ef:has(select)::after{right:0;margin-top:-2px}
+html:root :is(#gd,#rc,#nc) label.ef select{padding-right:16px!important}
+html:root :is(#gd,#rc,#nc) label.ef:has(.cpb)::after{display:none}
+/* кнопки внизу: одинаковая высота */
+html:root :is(#gd,#rc) .shf{margin-top:12px}
+html:root :is(#gd,#rc) .shf .sm:not(.pr):not(.del){height:44px;padding:0 18px;border-radius:999px}
+html:root :is(#gd,#rc) :is(.sm.pr,.sm.del){height:44px}
+html:root :is(#gd,#rc) .sm.del{width:44px;background-size:20px}
+/* окно добавления: строка ввода — просто линия, быстрые шаблоны — текст без «таблеток», тег — простая строка */
+html:root #sh .tq{padding:6px 0;border:0;border-radius:0;background:none;color:var(--m2);font-size:13px;border-bottom:1px solid var(--sep)}
+html:root #sh #tpl{gap:16px}
+html:root #sh .shf .atg{border:0;border-radius:0;background:none;padding:8px 0}
+html:root #sh .shf .atg.on,html:root #sh .shf .atg.off{background:none;border:0}
+html:root #sh :is(.sm.pr){height:44px}
+
+/* ===== v105: Расх./Дох. — «таблетки» как в Аналитике; дата — просто иконка; без кнопки удаления в окне операции ===== */
+html:root :is(#ed,#gd,#rc,#nc) .sgm{display:inline-flex;flex:0 0 auto;margin:0;padding:0;gap:4px;background:none;border:0;border-radius:0;overflow:visible}
+html:root :is(#ed,#gd,#rc,#nc) .sgm button{flex:none;display:block;min-height:0;padding:6px 14px;border:.5px solid var(--b3);border-radius:20px;background:none;box-shadow:none;color:var(--m2);font-size:13px;font-weight:400}
+html:root :is(#ed,#gd,#rc,#nc) .sgm button::before{content:none!important}
+html:root :is(#ed,#gd,#rc,#nc) .sgm button.on{color:var(--on);background:var(--t);border-color:var(--t);font-weight:500}
+html:root #ed .eh .sgm{order:0;flex:0 0 auto;margin:0}
+html:root #ed label.ef.dchip,html:root #ed label.ef.dchip:focus-within{display:flex!important;margin:0 0 0 auto!important;padding:0!important;border:0!important;border-bottom:0!important;border-radius:0!important;box-shadow:none!important;background:none!important}
+html:root #ed .shf{display:none}
+
+/* ===== v106: лупа в начале строки ввода окна добавления ===== */
+html:root #sh .fld>svg{flex:none;color:var(--m);margin-right:4px;pointer-events:none}
+
+/* ===== v107: строка ввода — как строка поиска (скруглённая, с лупой); тег — кнопка «+ Тег», поле открывается по нажатию ===== */
+html:root #sh .fld{height:44px;padding:0 14px;gap:8px;background:var(--s);border:.5px solid var(--l);border-radius:22px;box-shadow:none}
+html:root #sh .fld:focus-within{border-color:var(--b2)}
+html:root #sh #inp{padding:0;height:100%}
+
+/* ===== v108: «+ Тег» — в одной строке с заметкой, категорией и датой ===== */
+html:root #sh .r.tgo .tgi{display:block}
+html:root #sh .r.tgo .tgp{display:none}
+
+/* ===== v109: фиксированные места в строке записи: заметка | категория | +Тег | сумма | дата; сумма никогда не режется ===== */
+html:root #sh .r{grid-template-columns:14px minmax(0,1fr) 72px 48px 62px 28px;grid-template-areas:"s n c g m z";column-gap:4px}
+html:root #sh .r .cpb{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;min-width:0}
+html:root #sh .r .tgp{grid-area:g;min-width:0;padding:2px 0;font-size:12px;color:var(--m2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left}
+html:root #sh .r .tgi{grid-area:g;display:none;justify-self:end;position:relative;z-index:2;width:96px;min-width:0;font-size:14px;padding:3px 6px;background:var(--sb);border-bottom:.5px solid var(--b2);text-overflow:ellipsis}
+html:root #sh .r .am{min-width:0;width:100%;text-align:right;padding-left:0;padding-right:0;font-size:14px}
+html:root #sh .r .ac{width:28px;justify-content:center}
+html:root #sh .dp{position:relative;min-width:28px;width:28px;padding:0;justify-content:center}
+html:root #sh .dp span{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:-5px;font-size:9px;line-height:1;color:var(--m2);white-space:nowrap}
+
+/* ===== v110: между записями в окне добавления — одна линия (оставляем нижнюю у строки тегов) ===== */
+html:root #sh #rev .sw,html:root #sh #rev .sw .r{border-bottom:0!important}
 </style>
 </head>
 <body><div id="lk" role="dialog" aria-modal="true" aria-label="PIN-код"></div><div id="vb" aria-hidden="true"></div><div id="spl" aria-hidden="true">
@@ -1242,7 +1376,7 @@ html:root #ov.on{transition:opacity .28s ease}
 <div class="fr"><b>Тег</b><select id="fptag" aria-label="Тег"></select></div>
 </div>
 <div id="sh" class="glass" role="dialog" aria-label="Новая операция">
-<div class="fld"><input id="inp" placeholder="Введите: траты, лимиты, цели, бюджет, долги" autocomplete="off" enterkeyhint="done"><button type="button" class="rcic" id="recic" aria-label="Повторяющиеся операции" aria-haspopup="dialog"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg></button></div>
+<div class="fld"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input id="inp" placeholder="Заметки, бюджет, лимиты, цели" autocomplete="off" enterkeyhint="done"><button type="button" class="rcic" id="recic" aria-label="Повторяющиеся операции" aria-haspopup="dialog"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg></button></div>
 <div id="tpl"></div>
 <div id="rev"></div>
 <div class="shf"><button class="sm atg" id="atg" type="button"></button><button class="sm pr" id="go">Добавить</button></div>
@@ -1768,6 +1902,7 @@ const fab=$('#fab'),ov=$('#ov'),sh=$('#sh');
 window.__tap=null;
 addEventListener('pointerdown',e=>{if(e.target.closest&&e.target.closest('#cm'))return;window.__tap={x:e.clientX,y:e.clientY,t:performance.now()}},true);
 function setOrigin(el,src){
+  if(el&&/^(sh|ed|gd|cf|bq|nc|cp|rc)$/.test(el.id))return;   // шторки выезжают снизу: точка отсчёта не нужна, а чтение размеров форсировало раскладку
   let x,y;const T=window.__tap;
   if(T&&performance.now()-T.t<4000){x=T.x;y=T.y}
   else{const r=(src||fab).getBoundingClientRect();x=r.left+r.width/2;y=r.top+r.height/2}
@@ -1787,21 +1922,28 @@ function cancelGestures(){
 function unlockIfIdle(){if(isModalOpen())return false;ov.className='';lockBg(false);return true}
 let lockRaf=0;
 function lockBg(on){
+  // блокировка фона — тяжёлая (пересчёт всей страницы), поэтому при открытии окна она идёт уже ПОСЛЕ старта анимации, а не перед ней;
+  // экран всё это время перекрыт оверлеем, так что касания до страницы не доходят
   const w=$('#w'),tb=$('#tabs'),fb=$('#topact');
-  document.documentElement.style.overflow=on?'hidden':'';
-  document.body.style.overflow=on?'hidden':'';
-  document.body.style.touchAction=on?'none':'';
   cancelAnimationFrame(lockRaf);
-  const apply=()=>{lockRaf=0;if(w){w.style.pointerEvents=on?'none':'';if(on)w.setAttribute('inert','');else w.removeAttribute('inert')}
+  const apply=()=>{lockRaf=0;
+    document.documentElement.style.overflow=on?'hidden':'';
+    document.body.style.overflow=on?'hidden':'';
+    document.body.style.touchAction='';   // жесты под окном гасит сам оверлей (touch-action:none), а не весь body — смена touch-action у body пересчитывала всю страницу
+    if(w){w.style.pointerEvents='';if(on)w.setAttribute('inert','');else w.removeAttribute('inert')}   // inert уже отключает касания
     if(tb)tb.style.pointerEvents=on?'none':'';
     if(fb)fb.style.pointerEvents=on?'none':''};
-  if(on)lockRaf=requestAnimationFrame(()=>{lockRaf=requestAnimationFrame(apply)});else apply();
+  if(on)lockRaf=requestAnimationFrame(()=>{lockRaf=requestAnimationFrame(apply)});else apply()
 }
+
 function openSheet(){if(!drafts.length){const el=$('#rev');el.classList.remove('anim','clearing');el.innerHTML=''}syncAuto();cancelGestures();lockBg(true);setOrigin(sh,fab);sh.classList.add('on');ov.className='on';ignore=false;renderTpl()}
 function closeSheet(){cancelAuto();sh.classList.remove('on');unlockIfIdle();cancelGestures()}
 fab.onclick=()=>{if(!isModalOpen())openSheet()};$('#thlp').onclick=()=>{if(isModalOpen())return;if(window.AppTour)AppTour.show()};inp.oninput=()=>{cancelAuto();syncBtn()};
-sh.addEventListener('pointerdown',e=>{e.stopPropagation();if(autoT&&e.target.closest('.fld,#rev input,#rev select,#rev .sg,#rev .dp,#rev .cpb'))cancelAuto()});
+sh.addEventListener('pointerdown',e=>{e.stopPropagation();if(autoT&&e.target.closest('.fld,#rev input,#rev select,#rev .sg,#rev .dp,#rev .cpb,#rev .tgp'))cancelAuto()});
 sh.addEventListener('pointermove',e=>e.stopPropagation());
+{const rv=$('#rev');
+ rv.addEventListener('click',e=>{const b=e.target.closest('.tgp');if(!b)return;const dl=b.closest('.r');if(!dl)return;dl.classList.add('tgo');const i=dl.querySelector('.tgi');if(i)i.focus()});
+ rv.addEventListener('focusout',e=>{const i=e.target;if(i.classList&&i.classList.contains('tgi')&&!i.value.trim()){const dl=i.closest('.r');if(dl)dl.classList.remove('tgo')}})}
 sh.addEventListener('pointerup',e=>e.stopPropagation());
 sh.addEventListener('touchstart',e=>e.stopPropagation(),{passive:true});
 sh.addEventListener('touchmove',e=>e.stopPropagation(),{passive:true});
@@ -1844,8 +1986,10 @@ function row(t,dr,i=0){const c=cd(t.category),inc=t.type==='income',td=ymd(new D
 <button type="button" class="cpb" data-f="category" data-cpo="1" style="color:${c.c}">${E(c.l)}</button>
 <input data-f="note" value="${E(t.note)}" placeholder="Заметка">
 <input class="am ${inc?'inc':'exp'}" data-f="amount" inputmode="decimal" value="${t.amount||''}" placeholder="0">
+
+<button type="button" class="tgp">+ Тег</button><input class="tgi" data-f="tagadd" list="tgl" placeholder="#друзья" autocomplete="off" autocapitalize="none" enterkeyhint="done">
 <span class="ac"><label class="dp" aria-label="Изменить дату">${dv}${ICAL}<input type="date" data-f="date" value="${t.date}"></label></span></div></div>`+
-  `<div class="dl" data-id="${t.id}" style="--i:${i}">${t.oc?`<span class="dt">${fmt(t.oa)} ${E(t.oc)}</span>`:''}${dr&&t.oc&&!(parseFloat(cfg.rates[t.oc])>0)?`<label class="rtl">курс: 1 ${E(t.oc)} = <input class="rtin" data-f="rate" data-c="${E(t.oc)}" inputmode="decimal" placeholder="?" autocomplete="off"> ${E(cfg.cur)}</label>`:''}${tagChips(t)}<input class="tgi" data-f="tagadd" list="tgl" placeholder="+ Тег" autocomplete="off" autocapitalize="none" enterkeyhint="done"></div>`}
+  `<div class="dl" data-id="${t.id}" style="--i:${i}">${t.oc?`<span class="dt">${fmt(t.oa)} ${E(t.oc)}</span>`:''}${dr&&t.oc&&!(parseFloat(cfg.rates[t.oc])>0)?`<label class="rtl">курс: 1 ${E(t.oc)} = <input class="rtin" data-f="rate" data-c="${E(t.oc)}" inputmode="decimal" placeholder="?" autocomplete="off"> ${E(cfg.cur)}</label>`:''}${tagChips(t)}</div>`}
 let autoT=null,autoN=0,autoEnd=0;
 function cancelAuto(){if(autoT){clearInterval(autoT);autoT=null;syncBtn()}}
 function startAuto(){cancelAuto();autoEnd=Date.now()+3000;autoN=3;const b=$('#go');if(b){b.classList.remove('tm');void b.offsetWidth}
@@ -2818,16 +2962,15 @@ function readEd(){if(!eT)return;const g=k=>{const el=$(k);return el?el.value:''}
   if(/^\d{4}-\d{2}-\d{2}$/.test(g('#eda')))eT.date=g('#eda');
   const en=$('#etn');if(en&&en.value.trim()){addTags(eT,en.value);en.value=''}}
 function renderEd(){const t=eT,inc=t.type==='income';
-  ed.innerHTML=`<div class="eh"><span class="sgm"><button data-et="expense" class="${inc?'':'on'}">Расход</button><button data-et="income" class="${inc?'on':''}">Доход</button></span><button class="x" id="ecl" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div>
-<input id="eam" class="${inc?'inc':'exp'}" inputmode="decimal" value="${t.amount||''}" placeholder="0" aria-label="Сумма">
+  ed.innerHTML=`<div class="eh"><span class="sgm"><button data-et="expense" class="${inc?'':'on'}">Расх.</button><button data-et="income" class="${inc?'on':''}">Дох.</button></span><button class="x" id="ecl" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div>
+<input id="eam" class="${inc?'inc':'exp'}" inputmode="decimal" value="${t.amount||''}" placeholder="Сумма" aria-label="Сумма">
 ${t.oc?`<div class="eo">${fmt(t.oa)} ${E(t.oc)}</div>`:''}
 <label class="ef">Заметка<input id="eno" type="text" value="${E(t.note)}" placeholder="Заметка"></label>
 <label class="ef">Категория<button type="button" class="cpb" id="eca">${E(cd(t.category).l)}</button></label>
 
 <label class="ef">Дата<input id="eda" type="date" value="${t.date}"></label>
-<div class="ef tgf"><span>Теги</span><div class="tgw">${(t.tags||[]).map(g=>`<button class="tgc" data-er="${E(g)}">#${E(g)} ×</button>`).join('')}<input id="etn" type="text" list="tgl" placeholder="+ Тег" autocomplete="off" autocapitalize="none" enterkeyhint="done"></div></div>
-${(()=>{const sg=allTags().filter(g=>!(t.tags||[]).includes(g)).slice(0,8);return sg.length?`<div class="tgw" style="padding-top:8px">${sg.map(g=>`<button class="tgc sg2" data-es="${E(g)}">+ #${E(g)}</button>`).join('')}</div>`:''})()}
-<div class="shf"><button class="sm del" id="edel">Удалить</button><button class="sm pr" id="esv">Сохранить</button></div>`}
+<div class="ef tgf"><div class="tgw">${(t.tags||[]).map(g=>`<button class="tgc" data-er="${E(g)}">#${E(g)} ×</button>`).join('')}<input id="etn" type="text" list="tgl" placeholder="например: #друзья" aria-label="Теги" autocomplete="off" autocapitalize="none" enterkeyhint="done"></div></div>
+<div class="shf"><button class="sm pr" id="esv">Сохранить</button></div>`}
 function saveEd(){if(!eT)return;readEd();if(!(eT.amount>0)){toast('Укажите сумму');return}
   const o=tx.find(x=>x.id===eT.id);if(!o){closeEdit();return}
   if(eT.category!==o.category&&eT.note)learn[norm(eT.note)]=eT.category;
@@ -3741,22 +3884,50 @@ function delCat(id){const c=cd(id);if(CPROT.includes(id))return;
     buildAll();save();render();renderCf()})}
 // перетаскивание строк за ≡ (порядок сохраняется в cfg.ord)
 function catDrag(list,type){
-  list.addEventListener('pointerdown',e=>{const h=e.target.closest('.crh');if(!h)return;const row=h.closest('.crw');if(!row)return;e.preventDefault();
-    try{h.setPointerCapture(e.pointerId)}catch(_){}
-    let y0=e.clientY;row.classList.add('drag');row.style.transition='none';
-    const mv=ev=>{ev.preventDefault();const y=ev.clientY;
-      for(let n=0;n<4;n++){const rr=row.getBoundingClientRect(),mid=rr.top+rr.height/2,pv=row.previousElementSibling,nx=row.nextElementSibling;
-        if(pv&&mid<pv.getBoundingClientRect().top+pv.offsetHeight/2){y0-=pv.offsetHeight;list.insertBefore(row,pv);row.style.transform='translateY('+(y-y0)+'px)'}
-        else if(nx&&mid>nx.getBoundingClientRect().top+nx.offsetHeight/2){y0+=nx.offsetHeight;list.insertBefore(row,nx.nextElementSibling);row.style.transform='translateY('+(y-y0)+'px)'}
-        else break}
-      row.style.transform='translateY('+(y-y0)+'px)'};
-    const up=()=>{h.removeEventListener('pointermove',mv);h.removeEventListener('pointerup',up);h.removeEventListener('pointercancel',up);
-      row.style.transition='transform .22s cubic-bezier(.2,.9,.3,1)';row.style.transform='';
-      setTimeout(()=>{row.classList.remove('drag');row.style.transition=''},230);
-      const ids=[...list.children].map(r=>r.dataset.id);cfg.ord=(cfg.ord&&typeof cfg.ord==='object')?cfg.ord:{};
-      if(JSON.stringify(cfg.ord[type]||[])!==JSON.stringify(ids)){cfg.ord[type]=ids;buildAll();save();render()}};
-    h.addEventListener('pointermove',mv);h.addEventListener('pointerup',up);h.addEventListener('pointercancel',up)})}
-function openCf(mode,src){if(isModalOpen())return;cadOpen=false;cancelGestures();setOrigin(cf,src||fab);stCover(true);lockBg(true);cfT=mode;renderCf();cf.scrollTop=0;cf.classList.add('on');ov.className='on'}
+  // строки не переносятся в DOM во время жеста (это сбрасывало захват пальца): двигаем transform'ом, соседи едут анимацией, порядок фиксируем один раз при отпускании
+  list.addEventListener('pointerdown',e=>{
+    const h=e.target.closest('.crh');if(!h||list._dg||(e.pointerType==='mouse'&&e.button))return;
+    const row=h.closest('.crw');if(!row)return;
+    const rows=[...list.children].filter(r=>r.classList.contains('crw')),a=rows.indexOf(row);if(a<0)return;
+    e.preventDefault();
+    const sc=cf,tops=rows.map(r=>r.offsetTop),hs=rows.map(r=>r.offsetHeight),n=rows.length;
+    const gap=n>1?tops[1]-tops[0]-hs[0]:0,step=hs[a]+gap;
+    const minDy=tops[0]-tops[a],maxDy=tops[n-1]+hs[n-1]-hs[a]-tops[a];
+    const y0=e.clientY,s0=sc.scrollTop,id=e.pointerId,ovy=sc.style.overflowY,EASE='transform .2s cubic-bezier(.2,.8,.3,1)';
+    let cy=y0,b=a,raf=0,live=true,dy=0;
+    list._dg=1;try{h.setPointerCapture(id)}catch(_){}
+    sc.style.overflowY='hidden';                       // прокрутка окна не спорит с жестом
+    row.classList.add('drag');row.style.transition='none';row.style.willChange='transform';
+    rows.forEach((r,i)=>{if(i!==a){r.style.transition=EASE;r.style.willChange='transform'}});
+    const shift=nb=>rows.forEach((r,i)=>{if(i===a)return;const d=(i>a&&i<=nb)?-step:(i<a&&i>=nb)?step:0;r.style.transform=d?'translate3d(0,'+d+'px,0)':''});
+    const frame=()=>{raf=0;if(!live)return;
+      const cr=sc.getBoundingClientRect(),E=56;let v=0;                 // автопрокрутка у краёв окна
+      if(cy<cr.top+E)v=-(1-Math.max(0,cy-cr.top)/E)*9;else if(cy>cr.bottom-E)v=(1-Math.max(0,cr.bottom-cy)/E)*9;
+      if(v)sc.scrollTop+=v;
+      dy=Math.max(minDy,Math.min(maxDy,(cy-y0)+(sc.scrollTop-s0)));
+      row.style.transform='translate3d(0,'+dy+'px,0)';
+      const c=tops[a]+dy+hs[a]/2;let nb=0;for(let i=0;i<n;i++)if(i!==a&&tops[i]+hs[i]/2<c)nb++;
+      if(nb!==b){b=nb;shift(b)}
+      if(v)raf=requestAnimationFrame(frame)};
+    const mv=ev=>{if(ev.pointerId!==id)return;ev.preventDefault();cy=ev.clientY;if(!raf)raf=requestAnimationFrame(frame)};
+    const done=cancel=>{if(!live)return;live=false;cancelAnimationFrame(raf);
+      h.removeEventListener('pointermove',mv);h.removeEventListener('pointerup',up);h.removeEventListener('pointercancel',cn);
+      try{h.releasePointerCapture(id)}catch(_){}
+      if(cancel){b=a;shift(a)}
+      const fin=b>a?tops[b]+hs[b]-hs[a]-tops[a]:b<a?tops[b]-tops[a]:0;
+      const commit=()=>{
+        rows.forEach(r=>{r.style.transition='none';r.style.transform='';r.style.willChange=''});
+        if(b!==a){const others=rows.filter(r=>r!==row);list.insertBefore(row,others[b]||others[others.length-1].nextSibling)}
+        row.classList.remove('drag');sc.style.overflowY=ovy;void list.offsetHeight;rows.forEach(r=>r.style.transition='');list._dg=0;
+        if(!cancel&&b!==a){const ids=[...list.children].filter(r=>r.dataset&&r.dataset.id).map(r=>r.dataset.id);
+          cfg.ord=(cfg.ord&&typeof cfg.ord==='object')?cfg.ord:{};
+          if(JSON.stringify(cfg.ord[type]||[])!==JSON.stringify(ids))requestAnimationFrame(()=>{cfg.ord[type]=ids;buildAll();save();render()})}};
+      row.style.transition='';
+      if(row.animate){const an=row.animate([{transform:'translate3d(0,'+dy+'px,0)'},{transform:'translate3d(0,'+fin+'px,0)'}],{duration:200,easing:'cubic-bezier(.2,.8,.3,1)',fill:'forwards'});an.onfinish=()=>{an.cancel();commit()}}
+      else commit()};
+    const up=ev=>{if(ev.pointerId===id)done(false)},cn=ev=>{if(ev.pointerId===id)done(true)};
+    h.addEventListener('pointermove',mv);h.addEventListener('pointerup',up);h.addEventListener('pointercancel',cn)})}
+function openCf(mode,src){if(isModalOpen())return;cadOpen=false;cancelGestures();setOrigin(cf,src||fab);stCover(true);lockBg(true);cfT=mode;renderCf();cf.classList.add('on');ov.className='on';requestAnimationFrame(()=>{cf.scrollTop=0})}
 function closeCf(){if(!cfT&&!cf.classList.contains('on'))return;cf.classList.remove('on');cfT=null;unlockIfIdle();cancelGestures();if(!isModalOpen())stCover(false)}
 cf.addEventListener('click',e=>{if(e.target.closest('#cfx'))closeCf()});
 cf.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'&&e.target.type!=='color'){e.preventDefault();e.target.blur()}});
@@ -4533,7 +4704,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v97';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v110';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия, которую видит человек (внизу экрана и в письме в поддержку)
 try{document.getElementById('vb').textContent=APP_VER}catch(e){}
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
@@ -4685,7 +4856,7 @@ async function ibLoop(){
   // безобидное предупреждение ResizeObserver не должно светиться красным
   window.addEventListener('error',e=>{if(e&&/ResizeObserver loop/.test(e.message||'')){e.stopImmediatePropagation();e.preventDefault()}},true);
   const vv=window.visualViewport,root=document.documentElement,$i=id=>document.getElementById(id);
-  const IDS=['sh','ed','gd','cf','nc','cp','rc'],SEL='#sh,#ed,#gd,#cf,#nc,#cp,#rc';
+  const IDS=['sh','ed','gd','cf','bq','nc','cp','rc'],SEL='#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc',FLT={sh:1,ed:1};
   const probe=document.createElement('div');probe.style.cssText='position:fixed;top:0;left:0;width:0;height:var(--sat);visibility:hidden;pointer-events:none';document.body.appendChild(probe);
   const probeB=document.createElement('div');probeB.style.cssText='position:fixed;top:0;left:0;width:0;height:var(--sab);visibility:hidden;pointer-events:none';document.body.appendChild(probeB);
   let baseH=window.innerHeight,raf=0,lastOut=0,savedY=0,_lay='',_vvt='';const kc=new Map();
@@ -4699,11 +4870,11 @@ async function ibLoop(){
     const lay=(shrink>120?shrink:0)+'px';if(lay!==_lay){_lay=lay;root.style.setProperty('--lay',lay)}
     const vt=t+'px';if(vt!==_vvt){_vvt=vt;root.style.setProperty('--vvt',vt)}
     const kbOpen=foc&&(baseH-h)>120,sat=probe.offsetHeight,sab=probeB.offsetHeight,L=window.innerHeight;
-    const tgt=kbOpen?document.activeElement.closest(SEL):null;
+    root.classList.toggle('kbo',kbOpen);const tgt=kbOpen?document.activeElement.closest(SEL):null;
     IDS.forEach(id=>{const el=$i(id);if(!el)return;let ky=0,km=null;
-      if(el===tgt){const avail=h-sat-8-14,need=el.scrollHeight,H=Math.min(need,avail);
+      if(el===tgt){const gp=FLT[id]?14:0,avail=h-sat-8-gp,need=el.scrollHeight,H=Math.min(need,avail);
         if(need>avail)km=avail;
-        const cur=L-sab-12-H;ky=Math.max(Math.min(0,(h-14)-(cur+H)),(sat+8)-cur)}
+        const cur=FLT[id]?L-sab-12-H:L-H;ky=Math.max(Math.min(0,(t+h-gp)-(cur+H)),(t+sat+8)-cur)}
       const key=ky+'|'+(km||'');if(kc.get(id)===key)return;kc.set(id,key);
       el.style.setProperty('--ky',ky+'px');
       if(km)el.style.setProperty('--kmax',km+'px');else el.style.removeProperty('--kmax')})}
@@ -5112,11 +5283,15 @@ const SL=[
 ];
 
 /* ---------- интерфейс ---------- */
-let root,wel,trk,wSls,wDots,wSkip,wNext,active=null,cool=0;
+let root,wel,trk,wSls,wDots,wSkip,wDotsBox,wNext,active=null,cool=0;
 /* лента слайдов двигается из JS и ВСЕГДА целыми пикселями: дробный сдвиг даёт размытый текст, а в последний кадр он «щёлкал» в чёткий */
 let X=0,STEP=0,anim=0;
 function setX(x){X=x;trk.style.transform='translate3d('+Math.round(x)+'px,0,0)'}
-function fit(){if(!trk)return;const W=Math.floor(trk.offsetWidth);if(!W)return;trk.style.setProperty('--sw',W+'px');STEP=W+40;cancelAnimationFrame(anim);setX(-(active?active.i:0)*STEP)}
+function fit(){if(!trk)return;const W=Math.floor(trk.offsetWidth);if(!W)return;trk.style.setProperty('--sw',W+'px');STEP=W+40;
+  {/* v103: масштаб картинок и текста слайдов под ширину (и высоту) экрана; макет рассчитан на ~340px */
+   let vs=Math.max(.85,Math.min(1.2,W/340));const H=window.innerHeight||700;vs=Math.max(.6,Math.min(vs,(H*.92-230)/150));
+   trk.style.setProperty('--vs',vs.toFixed(2))}
+  cancelAnimationFrame(anim);setX(-(active?active.i:0)*STEP)}
 function moveTo(i,inst){
   cancelAnimationFrame(anim);
   const from=X,to=-i*STEP;
@@ -5132,39 +5307,51 @@ function build(){
   root=D.createElement('div');root.id='tour';
   root.innerHTML=
    `<div class="tr-bd"></div>`+
-   `<div class="tr-card tr-w glass" role="dialog" aria-modal="true" aria-label="Возможности приложения"><div class="tr-sls">${SL.map(s=>`<section class="tr-sl"><div class="tr-vis">${s.v}</div><h2>${s.h}</h2><p>${s.p}</p></section>`).join('')}</div><div class="tr-f"><div class="tr-dots">${SL.map(()=>'<i></i>').join('')}</div><div class="tr-btns"><button type="button" class="tr-skip">Пропустить</button><button type="button" class="tr-next">Далее</button></div></div></div>`;
+   `<div class="tr-card tr-w glass" role="dialog" aria-modal="true" aria-label="Возможности приложения"><div class="tr-sls">${SL.map(s=>`<section class="tr-sl"><div class="tr-vis">${s.v}</div><h2>${s.h}</h2><p>${s.p}</p></section>`).join('')}</div><div class="tr-f"><div class="tr-dots">${SL.map(()=>'<i></i>').join('')}</div><button type="button" class="tr-back">Назад</button><button type="button" class="tr-next">Далее</button></div></div>`;
   D.body.appendChild(root);
   void root.offsetWidth; // исходные стили посчитаны до смены класса — иначе при самом первом показе переходов нет
   wel=q('.tr-w',root);
-  trk=q('.tr-sls',wel);wSls=[...wel.querySelectorAll('.tr-sl')];wDots=[...wel.querySelectorAll('.tr-dots i')];wSkip=q('.tr-skip',wel);wNext=q('.tr-next',wel);
+  trk=q('.tr-sls',wel);wSls=[...wel.querySelectorAll('.tr-sl')];wDots=[...wel.querySelectorAll('.tr-dots i')];wSkip=q('.tr-back',wel);wDotsBox=q('.tr-dots',wel);wNext=q('.tr-next',wel);
 
   // пока идёт показ, приложение под ним не должно реагировать на касания и прокрутку
   ['touchstart','touchmove','touchend','touchcancel','pointerdown','pointermove','pointerup','mousedown','mouseup','click','wheel','contextmenu'].forEach(ev=>
     root.addEventListener(ev,e=>{e.stopPropagation();if(ev==='touchmove'||ev==='wheel'||ev==='contextmenu')e.preventDefault()},{passive:false}));
-  // касание в любом месте = «Далее»; «Пропустить» закрывает всё
+  // кнопки «Назад» / «Далее», тап по затемнению или свайп вниз за полоску закрывает
   let tapAt=0;
   root.addEventListener('click',e=>{
     if(!active)return;
     const n=Date.now();if(n-tapAt<320)return;tapAt=n;
-    if(e.target.closest('.tr-skip')){finish();return}
+    if(e.target.closest('.tr-back')){if(active.i>0){hs();go(active.i-1)}return}
+    if(e.target.closest('.tr-next')){next();return}
     const d=e.target.closest('.tr-dots i');if(d){const k=wDots.indexOf(d);if(k>-1&&k!==active.i){hs();go(k)}return}
-    next()});
+    if(!e.target.closest('.tr-w'))finish()});   // тап по затемнению закрывает, как у остальных окон
   // листание: окно следует за пальцем; влево — дальше, вправо — назад. Точки внизу тоже нажимаются.
   const swipe=dir=>{if(!active)return;tapAt=Date.now();
     if(dir>0){if(active.i<SL.length-1){hs();next()}}
     else if(active.i>0){hs();go(active.i-1)}};
   const MAXI=SL.length-1;
-  let tsw=null,peek=-1;
+  let tsw=null,peek=-1,shd=null;
   const setPeek=k=>{if(k===peek)return;if(peek>-1&&peek!==active.i)wSls[peek].classList.remove('on');peek=k;if(k>-1&&k!==active.i)wSls[k].classList.add('on')};   // соседний слайд «просыпается» уже при свайпе
-  root.addEventListener('touchstart',e=>{if(e.touches.length!==1||e.target.closest('.tr-btns,.tr-dots')){tsw=null;return}const t=e.touches[0];cancelAnimationFrame(anim);tsw={x:t.clientX,y:t.clientY,t:performance.now(),drag:false,x0:X}},{passive:true});
+  root.addEventListener('touchstart',e=>{if(e.touches.length!==1){tsw=null;shd=null;return}const t=e.touches[0];
+    {const r=wel.getBoundingClientRect();if(t.clientY>=r.top&&t.clientY-r.top<=36){shd={y0:t.clientY,dy:0,h:r.height,vy:0,ly:t.clientY,lt:performance.now(),on:false};tsw=null;return}}
+    shd=null;if(e.target.closest('.tr-f')){tsw=null;return}cancelAnimationFrame(anim);tsw={x:t.clientX,y:t.clientY,t:performance.now(),drag:false,x0:X}},{passive:true});
   root.addEventListener('touchmove',e=>{
+    if(shd&&active&&e.touches.length===1){const y=e.touches[0].clientY,dy=y-shd.y0;
+      if(!shd.on){if(Math.abs(dy)<4)return;shd.on=true;wel.style.transition='none'}
+      const n=performance.now();shd.vy=(y-shd.ly)/Math.max(1,n-shd.lt);shd.ly=y;shd.lt=n;shd.dy=dy;
+      wel.style.transform='translate3d(0,'+Math.round(dy>0?dy:dy*.15)+'px,0)';return}
     if(!tsw||!active||e.touches.length!==1)return;
     const t=e.touches[0],dx=t.clientX-tsw.x,dy=t.clientY-tsw.y,ax=Math.abs(dx),ay=Math.abs(dy);
     if(!tsw.drag){if(ax>=8&&ax>ay*1.2){tsw.drag=true}else if(ay>=16&&ay>ax*1.4){tsw=null;return}else return}
     let x=dx;if((dx<0&&active.i===MAXI)||(dx>0&&active.i===0))x=dx*.25;   // на краях — упругое сопротивление
     setX(tsw.x0+x);
     setPeek(x<0&&active.i<MAXI?active.i+1:x>0&&active.i>0?active.i-1:-1)},{passive:true});
+  const endSheet=()=>{const o=shd;shd=null;if(!o||!o.on)return;
+    const close=o.dy>o.h*.28||(o.vy>.6&&o.dy>24);
+    if(close){wel.style.transition='';wel.style.transform='';finish()}
+    else{wel.style.transition='transform .38s cubic-bezier(.2,.9,.2,1)';wel.style.transform='translate3d(0,0,0)';setTimeout(()=>{wel.style.transition='';wel.style.transform=''},420)}};
   const endDrag=e=>{
+    if(shd){endSheet();return}
     const s0=tsw;tsw=null;if(!s0||!s0.drag||!active)return;
     const t=e.changedTouches&&e.changedTouches[0],dx=t?t.clientX-s0.x:0,fast=performance.now()-s0.t<260;
     tapAt=Date.now();
@@ -5174,7 +5361,7 @@ function build(){
     if(to!==active.i)hs();
     go(to)};
   root.addEventListener('touchend',endDrag,{passive:true});
-  root.addEventListener('touchcancel',e=>{const s0=tsw;tsw=null;if(s0&&s0.drag){peek=-1;go(active.i)}},{passive:true});
+  root.addEventListener('touchcancel',e=>{if(shd){endSheet();return}const s0=tsw;tsw=null;if(s0&&s0.drag){peek=-1;go(active.i)}},{passive:true});
   // мышь (Telegram Desktop): перетаскивание
   let msw=null;
   root.addEventListener('pointerdown',e=>{msw=(e.pointerType==='mouse'&&e.button===0)?{x:e.clientX,y:e.clientY}:null});
@@ -5189,13 +5376,12 @@ function build(){
 
 function show(){
   if(active)return false;
-  try{if(typeof closeSettings==='function')closeSettings()}catch(e){}
   const a=D.activeElement;if(a&&a!==D.body&&a.blur)a.blur();
   build();
   active={i:0};
   // чистое состояние: анимации первого окна проигрываются заново
   wSls.forEach(x=>x.classList.remove('on','prev'));wDots.forEach(d=>d.classList.remove('on'));
-  wSkip.style.visibility='';
+  wDotsBox.classList.remove('mid');wSkip.classList.remove('show');wel.style.transition='';wel.style.transform='';
   root.className='on wel';void root.offsetWidth;
   fit();   // всегда начинаем с первого слайда, без пролистывания назад
   go(0,true);
@@ -5207,7 +5393,7 @@ function go(i,inst){
   wDots.forEach((d,k)=>d.classList.toggle('on',k===i));
   const L=SL.length-1;
   wNext.textContent=i===L?'Готово':'Далее';
-  wSkip.style.visibility=i===L?'hidden':''}
+  wSkip.classList.toggle('show',i>0);wDotsBox.classList.toggle('mid',i>0)}
 function next(){if(!active)return;active.i<SL.length-1?go(active.i+1):finish()}
 function finish(){
   if(!active)return;
@@ -5235,10 +5421,13 @@ if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',boot);else boo
 <script>
 /* подписи полей на рамке: оборачиваем текст label в span (логика и значения полей не меняются) */
 (function(){var IDS=['ed','gd','rc','nc'],raf=0;
-function fix(r){r.querySelectorAll('label.ef').forEach(function(l){for(var n=l.firstChild;n;n=n.nextSibling){if(n.nodeType===3&&n.textContent.trim()){var s=document.createElement('span');s.className='fl';s.textContent=n.textContent.trim();l.replaceChild(s,n);break}}});
+function lk(d){var p=function(n){return(n<10?'0':'')+n};return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())}
+function dtx(v){var T=new Date(),Y=new Date();Y.setDate(Y.getDate()-1);if(v===lk(T))return '\u0421\u0435\u0433\u043e\u0434\u043d\u044f';if(v===lk(Y))return '\u0412\u0447\u0435\u0440\u0430';var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(v||'');return m?m[3]+'.'+m[2]+'.'+m[1].slice(2):'\u0414\u0430\u0442\u0430'}
+function fix(r){var di=r.querySelector('#eda');if(di&&di.parentNode.tagName==='LABEL'&&!di.parentNode.classList.contains('dchip')){var dl=di.parentNode;dl.classList.add('dchip');for(var c=dl.firstChild;c;){var nx=c.nextSibling;if(c.nodeType===3)dl.removeChild(c);c=nx}var b=document.createElement('b');b.className='dtx';b.textContent=dtx(di.value);dl.insertBefore(b,di);var up=function(){b.textContent=dtx(di.value)};di.addEventListener('input',up);di.addEventListener('change',up)}
+ r.querySelectorAll('label.ef:not(.dchip)').forEach(function(l){for(var n=l.firstChild;n;n=n.nextSibling){if(n.nodeType===3&&n.textContent.trim()){var s=document.createElement('span');s.className='fl';s.textContent=n.textContent.trim();l.replaceChild(s,n);break}}});
  [['eam'],['gam']].forEach(function(a){var e=r.querySelector('#'+a[0]);if(e&&!(e.previousElementSibling&&e.previousElementSibling.classList.contains('fl-sum'))){var d=document.createElement('div');d.className='fl-sum';d.innerHTML='<b>\u0421\u0443\u043c\u043c\u0430</b>';e.parentNode.insertBefore(d,e)}})}
 function run(){raf=0;IDS.forEach(function(i){var r=document.getElementById(i);if(r)fix(r)})}
-IDS.forEach(function(i){var r=document.getElementById(i);if(r)new MutationObserver(function(){if(!raf)raf=requestAnimationFrame(run)}).observe(r,{childList:true,subtree:true})});run()})();
+IDS.forEach(function(i){var r=document.getElementById(i);if(r)new MutationObserver(function(){run()}).observe(r,{childList:true,subtree:true})});run()})();
 </script>
 <script>
 /* свайп за «ручку» окна: тянем вниз — окно следует за пальцем; отпустили — закрылось (быстрый свайп или >28% высоты) или вернулось на место */
