@@ -717,16 +717,6 @@ html.ncv .dg{content-visibility:visible}
 :root .dg .sw:not(.sd){border-bottom:.5px solid rgba(var(--wr),.13)}
 :root .dg .sw:not(.sd):last-child{border-bottom:0}
 /* индикатор облачной синхронизации (виден только внутри Telegram) */
-.hd #trb{position:absolute;right:32px;top:50%;margin-top:-19px;width:34px;height:38px;padding:0;justify-content:center;z-index:1;transition:opacity .3s ease,color .2s ease}
-.hd.sr #trb{opacity:0;pointer-events:none}
-#trb[aria-expanded=true]{color:var(--t)}
-#trm{position:fixed;z-index:14;top:calc(var(--sat) + 58px);right:var(--rx);width:min(250px,calc(100vw - 32px));box-sizing:border-box;padding:6px;border:.5px solid var(--l);border-radius:14px;background:var(--s);box-shadow:0 18px 40px rgba(0,0,0,.55);transform-origin:calc(100% - 42px) 0;transform:scale(.6) translate3d(0,-8px,0);opacity:0;visibility:hidden;pointer-events:none;will-change:transform,opacity;transition:transform .4s var(--ease),opacity .22s ease,visibility 0s .4s}
-#trm.on{transform:none;opacity:1;visibility:visible;pointer-events:auto;transition:transform .6s var(--spring),opacity .22s ease-out,visibility 0s}
-#trm button{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;box-sizing:border-box;padding:0 10px;border:0;border-radius:10px;background:none;color:var(--t);font:inherit;font-size:14px;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s ease}
-#trm button svg{flex:none;color:var(--m2)}
-#trm button:active{background:rgba(var(--wr),.09)}
-#trm button:disabled{opacity:.4;pointer-events:none}
-@media (prefers-reduced-motion:reduce){#trm,.hd #trb{transition:none!important}}
 #cs{display:none;position:absolute;right:70px;top:50%;margin-top:-11px;height:22px;z-index:1;align-items:center;gap:5px;padding:0 7px;border-radius:11px;font-size:10.5px;line-height:1;letter-spacing:.01em;color:var(--m);white-space:nowrap;opacity:.9;transition:opacity .3s ease,color .3s ease;-webkit-tap-highlight-color:transparent}
 #cs i{width:6px;height:6px;border-radius:50%;background:var(--g);flex:none;transition:background .3s ease}
 #cs[data-s=sync] i{background:var(--m2);animation:csp 1s ease-in-out infinite}
@@ -779,33 +769,24 @@ html.intro #tabs,html.intro #fab{animation:inUp .9s cubic-bezier(.22,1,.36,1) .4
 #tour{cursor:pointer;--tre:cubic-bezier(.22,1,.36,1);--tdim:rgba(0,0,0,.50);position:fixed;inset:0;z-index:100;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;opacity:0;visibility:hidden;transition:opacity .35s ease,visibility 0s .35s}
 #tour.on{opacity:1;visibility:visible;transition:opacity .35s ease}
 :root[data-theme=light] #tour{--tdim:rgba(0,0,0,.30)}
-#tour .tr-probe{position:absolute;left:0;top:0;width:0;visibility:hidden;pointer-events:none}
-#tour .tr-pt{height:var(--sat)}#tour .tr-pb{height:var(--sab)}
 
 /* размытая подложка знакомства */
 #tour .tr-bd{position:absolute;inset:0;background:rgba(var(--bgr),.46);-webkit-backdrop-filter:blur(22px) saturate(1.25);backdrop-filter:blur(22px) saturate(1.25);opacity:0;transition:opacity .5s ease}
 #tour.wel .tr-bd{opacity:1}
 
-/* «прожектор»: вырез вокруг нужного элемента, всё остальное приглушено */
-#tour .tr-hole{position:absolute;left:0;top:0;width:0;height:0;border-radius:20px;pointer-events:none;opacity:0;
-  box-shadow:0 0 0 1px rgba(var(--wr),.30),0 0 0 9999px var(--tdim);
-  transition:left .55s var(--tre),top .55s var(--tre),width .55s var(--tre),height .55s var(--tre),border-radius .55s var(--tre),opacity .3s ease}
-#tour.spot .tr-hole{opacity:1}
 
 /* карточки */
 #tour .tr-card{position:absolute;left:0;top:0;box-sizing:border-box;width:min(340px,calc(100vw - 24px));padding:16px 16px 12px;border-radius:24px;color:var(--t);
   opacity:0;visibility:hidden;pointer-events:none;transform:translate3d(var(--x,0px),var(--y,0px),0);
   transition:transform .5s var(--tre),opacity .28s ease,visibility 0s .28s}
-#tour.spot .tr-card:not(.tr-w){opacity:1;visibility:visible;pointer-events:auto;transition:transform .5s var(--tre),opacity .28s ease,visibility 0s}
-#tour.spot .tr-card.swap .tr-c{opacity:0;transform:translateY(4px)}
-#tour .tr-c{transition:opacity .14s ease,transform .14s ease}
-#tour .tr-t{font-size:16px;font-weight:600;letter-spacing:-.01em;line-height:1.25;margin-bottom:5px}
-#tour .tr-x{font-size:13.5px;line-height:1.45;color:var(--tx2)}
 #tour .tr-f{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;min-height:36px}
-#tour .tr-dots{display:flex;align-items:center;gap:5px;min-width:0}
+#tour .tr-dots{display:flex;align-items:center;gap:4px;min-width:0}
 #tour .tr-dots[hidden]{display:none}
-#tour .tr-dots i{display:block;width:6px;height:6px;border-radius:3px;background:rgba(var(--wr),.26);transition:width .4s var(--tre),background .3s ease}
-#tour .tr-dots i.on{width:18px;background:var(--t)}
+#tour .tr-dots i{display:block;box-sizing:content-box;padding:8px 0;width:7px;height:7px;background:none;transition:width .45s var(--tre)}
+#tour .tr-dots i::before{content:"";display:block;width:100%;height:100%;border-radius:999px;background:rgba(var(--wr),.30);transition:background .35s ease,box-shadow .5s ease}
+#tour .tr-dots i.on{width:22px}
+#tour .tr-dots i.on::before{background:var(--g);box-shadow:0 0 0 .5px rgba(var(--wr),.18),0 0 9px 1px rgba(143,201,160,.6),0 0 18px 3px rgba(143,201,160,.28)}
+:root[data-theme=light] #tour .tr-dots i.on::before{box-shadow:0 0 9px 1px rgba(46,139,87,.5),0 0 18px 3px rgba(46,139,87,.22)}
 #tour .tr-btns{display:flex;align-items:center;gap:4px;margin-left:auto}
 #tour .tr-skip{padding:9px 12px;border-radius:18px;font-size:13px;color:var(--m2);transition:color .2s ease,background .2s ease}
 #tour .tr-skip[hidden]{display:none}
@@ -818,12 +799,16 @@ html.intro #tabs,html.intro #fab{animation:inUp .9s cubic-bezier(.22,1,.36,1) .4
 #tour .tr-w{will-change:transform,opacity;left:50%;top:50%;width:min(360px,calc(100vw - 32px));max-height:calc(100% - 32px);overflow:hidden;padding:20px 18px 14px;border-radius:30px;
   transform:translate3d(-50%,-47%,0) scale(.95);transition:transform .7s var(--tre),opacity .35s ease,visibility 0s .35s}
 #tour.wel .tr-w{opacity:1;visibility:visible;pointer-events:auto;transform:translate3d(-50%,-50%,0) scale(1);transition:transform .7s var(--tre),opacity .45s ease,visibility 0s}
-#tour .tr-sls{display:grid}
-#tour .tr-sl{grid-area:1/1;text-align:center;opacity:0;visibility:hidden;transform:translate3d(26px,0,0);transition:opacity .3s ease,transform .5s var(--tre),visibility 0s .3s}
-#tour .tr-sl.prev{transform:translate3d(-26px,0,0)}
-#tour .tr-sl.on{opacity:1;visibility:visible;transform:none;transition:opacity .4s ease .08s,transform .6s var(--tre) .04s,visibility 0s}
+/* v87: слайды — одна горизонтальная лента; во время свайпа лента едет за пальцем, и следующий слайд виден сбоку; без наложения */
+#tour .tr-sls{display:flex;gap:40px;will-change:transform;-webkit-backface-visibility:hidden;backface-visibility:hidden}
+#tour .tr-sl{flex:0 0 var(--sw,100%);width:var(--sw,100%);min-width:0;-webkit-backface-visibility:hidden;backface-visibility:hidden;text-align:center;opacity:.3;transition:opacity .45s ease}
+#tour .tr-sl.on{opacity:1}
+/* v88: картинка слайда проявляется только когда слайд становится активным — иначе она была видна готовой, а при включении анимации «схлопывалась» и играла заново (это и было дёрганьем в конце) */
+#tour .tr-vis{opacity:0;transition:opacity .3s ease}
+#tour .tr-sl.on .tr-vis{opacity:1;transition:opacity .25s ease}
 #tour .tr-vis{position:relative;height:150px;margin:0 0 14px;display:flex;align-items:center;justify-content:center}
 #tour .tr-sl h2{font-size:21px;font-weight:600;letter-spacing:-.02em;line-height:1.2;margin-bottom:8px}
+#tour .tr-sl:first-child h2{font-size:25px;line-height:1.15;background:linear-gradient(90deg,var(--t) 30%,var(--g));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 #tour .tr-sl p{max-width:300px;margin:0 auto;font-size:14px;line-height:1.5;color:var(--tx2)}
 #tour .tr-w .tr-f{margin-top:18px}
 
@@ -950,7 +935,8 @@ html.selm #selbar,html.selm #selmore{opacity:1;pointer-events:auto;transform:non
 :root #tabs{right:var(--rx);background:var(--gloss),var(--gbarT)}
 #tabs button[data-t]{flex:1 1 0;min-width:0}
 #fab{right:calc(var(--rx) + min(100vw - 32px,528px)/8 - 28px);bottom:calc(14px + var(--tbh) + var(--fabg) + var(--sab))}
-#w{padding-bottom:calc(210px + var(--sab))}
+/* v91: «+» ушёл наверх — запас снизу под него не нужен; остаётся только место под нижнюю панель вкладок */
+#w{padding-bottom:calc(var(--tbh) + 14px + var(--sab) + 22px)}
 #st .trw{display:flex;gap:6px}
 :root #toast{bottom:calc(160px + var(--sab))}
 
@@ -1103,7 +1089,6 @@ html.plk #lk,#lk.on{display:flex}
 #lk .lkp{display:grid;grid-template-columns:repeat(3,72px);gap:14px 22px;justify-content:center}
 #lk .lkp button{width:72px;height:72px;border-radius:50%;border:.5px solid var(--b1);font-size:26px;display:flex;align-items:center;justify-content:center;background:rgba(var(--wr),.04)}
 #lk .lkp button:active{background:rgba(var(--wr),.16)}
-#lk .lkp button.lkbio{border-color:transparent;background:none;color:var(--t)}#lk .lkp button.lkbio svg{width:34px;height:34px;display:block;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}#lk .lkp button.lkbio:active{background:rgba(var(--wr),.12)}
 #lk .lkf{margin-top:20px;font-size:13px;color:var(--m2);padding:8px 12px}
 #lk .lkb{display:flex;gap:10px;margin-top:18px}
 #lk .lkb .sm{padding:10px 16px;font-size:14px}
@@ -1170,7 +1155,50 @@ html.plk #lk,#lk.on{visibility:visible;opacity:1;transform:none;pointer-events:a
   box-shadow:inset 0 .5px 0 rgba(var(--wr),.16),0 8px 24px rgba(0,0,0,.20)}
 :root[data-theme=light] #top{box-shadow:inset 0 .5px 0 rgba(var(--wr),.14),0 8px 24px rgba(30,30,50,.10)}
 </style>
-
+<style id="v85">
+/* v85: «+» и «Настройки» — в правом верхнем углу, на уровне заголовка, без круглой подложки; уезжают вверх вместе с заголовком */
+#topact{position:absolute;z-index:7;top:calc(var(--sat) + 10px);right:max(6px,calc(50% - 280px + 6px));display:flex;align-items:center;gap:0}
+:root #topact #fab,:root #topact #thlp{position:relative;inset:auto;width:44px;height:44px;margin:0;padding:0;border:0;border-radius:0;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;translate:none;z-index:auto;display:flex;align-items:center;justify-content:center;color:var(--t);-webkit-tap-highlight-color:transparent;transition:opacity .15s ease,transform .45s var(--spring)}
+:root #topact #thlp{color:var(--t)}
+:root #topact #fab:active,:root #topact #thlp:active{transform:scale(.88);opacity:.6}
+:root #topact #fab.has::after{top:8px;right:6px;width:8px;height:8px}
+html.selm #topact{opacity:0;pointer-events:none;transition:opacity .2s ease}
+/* плюс выезжает первым (общее правило .4s), книжка — следом с небольшим опозданием */
+html.intro #thlp{animation:inUp .9s cubic-bezier(.22,1,.36,1) .58s backwards}
+@media (prefers-reduced-motion:reduce){:root #topact #fab,:root #topact #thlp{transition:none!important}:root #topact #fab:active,:root #topact #thlp:active{transform:none}html.intro #thlp{animation:none!important}}
+</style>
+<style id="sheet-ui">
+/* Нижние шторки как на видео: сплошная поверхность, ручка, поля с плавающей подписью, тёмно-синие кнопки; оверлей — простое затемнение без размытия */
+:root{--sb:#1e1e22;--sbd:rgba(255,255,255,.16);--sa:var(--t);--son:var(--on);--stn:rgba(255,255,255,.14);--sov:rgba(0,0,0,.55)}
+:root[data-theme=light]{--sb:#fff;--sbd:rgba(0,0,0,.12);--sa:var(--t);--son:var(--on);--stn:rgba(0,0,0,.07);--sov:rgba(0,0,0,.5)}
+html:root #ov,html:root[data-theme=light] #ov{background:var(--sov)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc,#fp){background:var(--sb)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;border:0!important;box-shadow:0 -4px 40px rgba(0,0,0,.2)!important;border-radius:28px!important}
+html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){top:auto!important;bottom:calc(var(--sab,0px) + 12px)!important;translate:0 var(--ky,0px)!important;transform-origin:50% 100%!important}
+html:root :is(#ed,#gd,#rc,#bq,#nc,#cp){padding:10px 18px 18px!important}
+html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):not(.on){transform:translateY(48px)!important}
+html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc)::before{content:"";display:block;width:36px;height:4px;border-radius:4px;background:var(--m,#888);opacity:.45;margin:0 auto 14px}
+html:root :is(#ed,#gd,#rc,#nc) label.ef,html:root #ed .ef.tgf{position:relative;display:block!important;margin-top:14px;padding:15px 16px 8px;border:1px solid var(--sbd)!important;border-radius:18px}
+html:root :is(#ed,#gd,#rc,#nc) label.ef:focus-within{border-color:var(--sa)!important;box-shadow:0 0 0 1px var(--sa)}
+html:root :is(#ed,#gd,#rc,#nc) .fl,html:root #ed .ef.tgf>span:first-child{position:absolute;top:-9px;left:14px;padding:0 5px;background:var(--sb);font-size:12px;line-height:1.2;color:var(--m2)}
+html:root :is(#ed,#gd,#rc,#nc) label.ef :is(input,select,.cpb){display:block;width:100%!important;max-width:none!important;text-align:left!important;text-align-last:left!important;font-size:16px!important;padding:4px 0 6px;border:0!important;background:none;color:var(--t)}
+html:root :is(#ed,#gd,#rc) label.ef:has(select,.cpb)::after{content:"";position:absolute;right:18px;top:50%;margin-top:-2px;border:5px solid transparent;border-top-color:var(--m2)}
+html:root :is(#ed #eam,#gd #gam){display:block;width:100%;box-sizing:border-box;font-size:18px!important;font-weight:400;letter-spacing:0;text-align:left;color:var(--t)!important;padding:14px 16px 12px!important;border:1px solid var(--sbd);border-radius:18px;margin:0!important}
+html:root :is(#ed #eam,#gd #gam):focus{border-color:var(--sa);box-shadow:0 0 0 1px var(--sa);outline:0}
+.fl-sum{position:relative;height:16px}.fl-sum b{position:absolute;left:14px;top:7px;padding:0 5px;background:var(--sb);font:400 12px/1.2 inherit;color:var(--m2);z-index:1}
+html:root #ed .sgm{display:flex;flex:1;margin-right:10px;padding:0;gap:0;background:none;border:1px solid rgba(128,128,140,.6);border-radius:999px;overflow:hidden}
+html:root #ed .sgm button{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 8px;min-height:46px;border-radius:0;background:none;box-shadow:none;color:var(--t);font-size:14px;font-weight:600}
+html:root #ed .sgm button::before{content:"\2295";font-size:17px}
+html:root #ed .sgm button.on{background:var(--t);color:var(--on)}html:root #ed .sgm button.on::before{content:"\2713"}
+html:root :is(#ed,#gd,#rc,#cp) .shf{display:flex;align-items:center;gap:12px;margin-top:18px}
+html:root :is(#ed,#gd,#rc,#cp,#bq,#nc,#cf) .sm.pr{order:-1;flex:1;height:52px;border-radius:999px;border:0;background:var(--sa);color:var(--son);font-size:15px;font-weight:600}
+html:root :is(#ed,#gd,#rc,#cp) .sm.del{flex:none;width:52px;height:52px;background-color:var(--stn);padding:0;border-radius:50%;border:1px solid rgba(128,128,140,.55);color:transparent;font-size:0;background:transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e5484d' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 7h14M10 7V4.8h4V7M7 7l.8 12h8.4L17 7M10.3 11v5M13.7 11v5'/%3E%3C/svg%3E") no-repeat center/22px}
+html:root :is(#ed #esv,#gd #gsvb.auto,#bq .sm.pr.auto,#ecl,#gcl){display:none!important}
+html:root #bq .bqb:has(>.sm.pr.auto:only-child){display:none}
+html:root #ed .shf{justify-content:flex-end}
+html:root #bq .sm.auto{display:none!important}
+html:root #bq .bqb:has(>.sm.auto:only-child){display:none}
+html:root #vb{left:auto!important;right:12px!important;bottom:calc(3px + var(--sab,0px))!important;z-index:12;opacity:.7}
+</style>
 </head>
 <body><div id="lk" role="dialog" aria-modal="true" aria-label="PIN-код"></div><div id="vb" aria-hidden="true"></div><div id="spl" aria-hidden="true">
 <svg class="spl-logo" viewBox="96 96 320 320" width="132" height="132" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
@@ -1186,6 +1214,7 @@ html.plk #lk,#lk.on{visibility:visible;opacity:1;transform:none;pointer-events:a
 <div id="w">
 <div class="hd"><button class="ic" id="srch" aria-label="Поиск" aria-expanded="false" title="Поиск"><svg class="x1" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><svg class="x2" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button><button type="button" id="cs" data-s="ok" aria-live="polite" aria-label="Синхронизация с облаком Telegram"><i></i><span class="csl">сохранено</span></button></div>
 <h1 class="lt" id="lt0">Операции</h1>
+<div id="tps" aria-hidden="true" style="height:0;overflow:hidden"></div>
 <div class="top" id="top"><div id="tin"><div class="mo"><button id="pv">‹</button><b id="mn"></b><button id="nx">›</button></div>
 <div class="sum" id="sum"></div></div></div>
 <div id="sp" inert><div class="spi"><div class="spc"><div class="fi"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input id="q" type="search" placeholder="Поиск…" autocomplete="off" aria-label="Поиск по заметкам и категориям" enterkeyhint="search"><button class="qf" id="qflt" type="button" aria-label="Фильтры: сумма, период, тег" aria-expanded="false" title="Фильтры"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16l-6 7v6l-4 2v-8z"/></svg></button></div>
@@ -1196,7 +1225,7 @@ html.plk #lk,#lk.on{visibility:visible;opacity:1;transform:none;pointer-events:a
 </div>
 <div id="nb" role="presentation"><i class="nbg"></i><b id="ttl">Операции</b></div>
 <nav id="tabs" class="glass" aria-label="Разделы"></nav>
-<button class="glass" id="fab" aria-label="Добавить операцию" aria-haspopup="dialog"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+<div id="topact"><button type="button" id="thlp" aria-label="Возможности"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5.5A1.5 1.5 0 0 1 6.5 4H19v13H6.5A1.5 1.5 0 0 0 5 18.5z"/><path d="M5 18.5A1.5 1.5 0 0 0 6.5 20H19v-3M9 8h6"/></svg></button><button type="button" id="fab" aria-label="Добавить операцию" aria-haspopup="dialog"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>
 <div id="ov"></div>
 <div id="fp" class="glass" role="dialog" aria-label="Фильтры поиска" inert>
 <div class="fh"><b>Фильтры</b><button type="button" id="fpclr">Сбросить</button></div>
@@ -1352,7 +1381,7 @@ const tomb=ids=>{if(!_obj(cfg.del))cfg.del={};const n=Date.now();[].concat(ids).
 const untomb=ids=>{if(!_obj(cfg.del))return;[].concat(ids).forEach(id=>{delete cfg.del[String(id)]})};
 buildAll();snapTx(false);
 let month=curM(),tab='list',drafts=[],undoIds=null,KD='expense',RG='month';
-const PGY={};let pgCur=null,pgFresh=false,scRaf=0;   // v55: прокрутка каждой страницы (см. pgKey)
+const PGY={};let pgCur=null,pgFresh=false;   // v55: прокрутка каждой страницы (см. pgKey)
 function mk(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
 function ymd(d){return mk(d)+'-'+String(d.getDate()).padStart(2,'0')}
 const save=()=>{snapTx(true);S.set('finapp.tx',tx);S.set('finapp.settings',cfg);S.set('finapp.learn',learn);cloudTouch()};
@@ -1693,7 +1722,7 @@ function run(){
   if(cm.msgs.length){save();render();toast(cm.msgs.join(' · '))}
   if(!r.length){if(!drafts.length&&sh.classList.contains('on')&&typeof closeSheet==='function')closeSheet();return}
   if(needRate.size)needRateFlow();
-  drafts.push(...r);renderRev();if(cfg.auto&&!needRate.size){if(!sh.classList.contains('on'))openSheet();startAuto();syncBtn()}}
+  drafts.push(...r);renderRev();if(cfg.auto&&!needRate.size){if(!sh.classList.contains('on')){if(isModalOpen())return;openSheet()}startAuto();syncBtn()}}
 function commit(list,withUndo){
   tx=[...list,...tx];save();
   const f=mOf(list[list.length-1].date);if(!list.some(x=>mOf(x.date)===month))month=f;
@@ -1725,6 +1754,8 @@ function animNew(ids,delay){
 $('#go').onclick=()=>{if(inp.value.trim())run();else if(drafts.length)commitDrafts();else inp.focus()};inp.onkeydown=e=>{if(e.key==='Enter'){if(inp.value.trim())run();else if(drafts.length)commitDrafts()}};
 const atg=$('#atg');function syncAuto(){atg.classList.toggle('on',!!cfg.auto);atg.classList.toggle('off',!cfg.auto);atg.setAttribute('aria-pressed',!!cfg.auto);atg.innerHTML='Автосохранение: <b>'+(cfg.auto?'ВКЛ':'ВЫКЛ')+'</b>'}
 atg.onclick=()=>{cfg.auto=!cfg.auto;save();if(!cfg.auto)cancelAuto();syncAuto()};syncAuto();
+// 120 Гц: сглаживание скорости жеста зависит от времени между событиями, а не от их числа (на 120 Гц событий вдвое больше)
+function lpf(o,n,dt,tau){return o+(n-o)*(1-Math.exp(-dt/tau))}
 const fab=$('#fab'),ov=$('#ov'),sh=$('#sh');
 // все окна «вырастают» из точки нажатия (если нажатия не было — из центра источника), затем стоят по центру экрана
 window.__tap=null;
@@ -1745,9 +1776,11 @@ function cancelGestures(){
   if(b){b.style.transition='';b.style.transform='';b.style.opacity='';b.style.filter=''}
   if(t){t.style.transition='';t.style.transform='';t.style.opacity=''}
 }
+// v69: единая точка снятия блокировки — оверлей и фон освобождаются только когда не осталось ни одного открытого окна
+function unlockIfIdle(){if(isModalOpen())return false;ov.className='';lockBg(false);return true}
 let lockRaf=0;
 function lockBg(on){
-  const w=$('#w'),tb=$('#tabs'),fb=$('#fab');
+  const w=$('#w'),tb=$('#tabs'),fb=$('#topact');
   document.documentElement.style.overflow=on?'hidden':'';
   document.body.style.overflow=on?'hidden':'';
   document.body.style.touchAction=on?'none':'';
@@ -1758,8 +1791,8 @@ function lockBg(on){
   if(on)lockRaf=requestAnimationFrame(()=>{lockRaf=requestAnimationFrame(apply)});else apply();
 }
 function openSheet(){if(!drafts.length){const el=$('#rev');el.classList.remove('anim','clearing');el.innerHTML=''}syncAuto();cancelGestures();lockBg(true);setOrigin(sh,fab);sh.classList.add('on');ov.className='on';ignore=false;renderTpl()}
-function closeSheet(){cancelAuto();sh.classList.remove('on');if(!isModalOpen()){ov.className='';lockBg(false)}cancelGestures()}
-fab.onclick=()=>{if(!isModalOpen())openSheet()};inp.oninput=()=>{cancelAuto();syncBtn()};
+function closeSheet(){cancelAuto();sh.classList.remove('on');unlockIfIdle();cancelGestures()}
+fab.onclick=()=>{if(!isModalOpen())openSheet()};$('#thlp').onclick=()=>{if(isModalOpen())return;if(window.AppTour)AppTour.show()};inp.oninput=()=>{cancelAuto();syncBtn()};
 sh.addEventListener('pointerdown',e=>{e.stopPropagation();if(autoT&&e.target.closest('.fld,#rev input,#rev select,#rev .sg,#rev .dp,#rev .cpb'))cancelAuto()});
 sh.addEventListener('pointermove',e=>e.stopPropagation());
 sh.addEventListener('pointerup',e=>e.stopPropagation());
@@ -1768,8 +1801,23 @@ sh.addEventListener('touchmove',e=>e.stopPropagation(),{passive:true});
 sh.addEventListener('focusin',e=>{if(autoT&&e.target.matches('input,select'))cancelAuto()});
 ov.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault()});
 ov.addEventListener('touchmove',e=>{e.preventDefault()},{passive:false});
-ov.onclick=()=>{if($('#nc').classList.contains('on'))closeNc(false);else if(rcS)closeRc();else if(bqT)closeBq();else if(cpS)closeCp();else if(cfT)closeCf();else if(gT)closeGoal();else if(eT)closeEdit();else if(sh.classList.contains('on')){inp.value='';closeSheet()}else{ov.className='';lockBg(false)}};
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){if($('#nc').classList.contains('on'))closeNc(false);else if(rcS)closeRc();else if(bqT)closeBq();else if(cpS)closeCp();else if(cfT)closeCf();else if(gT)closeGoal();else if(eT)closeEdit();else if(sh.classList.contains('on')){inp.value='';closeSheet()}}});
+// v69: одно место, которое знает, какое окно сейчас верхнее (nc 50 > bq 45 > rc/cp 44 > cf/gd/ed/sh 40). Раньше оверлей и Escape имели каждый свою цепочку, в которой
+// bq стоял ниже rc/cp, а окно массовых правок (gd._bk) не учитывалось вовсе — клик по затемнению снимал оверлей и блокировку фона, оставляя окно открытым.
+function autoGd(){if(!gT||!$('#gsvb.auto'))return;const f={debt:'#dam',goal:'#gtg',lim:'#lam',bud:'#bam'}[gT.mode],el=f&&$(f);if(el&&pn(el.value)>0)saveGoal()}
+function closeTopModal(){
+  if($('#nc').classList.contains('on'))closeNc(false);
+  else if(bqT||bq.classList.contains('on'))closeBq();
+  else if(rcS||rcEl.classList.contains('on'))closeRc();
+  else if(cpS||cpEl.classList.contains('on'))closeCp();
+  else if(cfT||cf.classList.contains('on'))closeCf();
+  else if(gd._bk&&window.bkClose)window.bkClose();
+  else if(gT||gd.classList.contains('on')){try{autoGd()}catch(e){}if(gd.classList.contains('on'))closeGoal()}
+  else if(eT||$('#ed').classList.contains('on')){try{if(eT&&pn(($('#eam')||{}).value)>0)saveEd()}catch(e){}if($('#ed').classList.contains('on'))closeEdit()}
+  else if(sh.classList.contains('on')){inp.value='';closeSheet()}
+  else return false;
+  return true}
+ov.onclick=()=>{if(!closeTopModal())unlockIfIdle()};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&isModalOpen()){e.preventDefault();closeTopModal()}});
 // перф: блокирующий touchmove на документе заставляет iOS ждать JS перед каждым стартом прокрутки — вешаем его только на жесты, начатые при открытом окне
 {const modalTM=e=>{if(isModalOpen()&&!e.target.closest('#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc,#rev'))e.preventDefault()};let mtOn=false;
  const mtOff=()=>{if(mtOn){mtOn=false;document.removeEventListener('touchmove',modalTM)}};
@@ -1945,9 +1993,9 @@ function renderTpl(){const el=$('#tpl');if(!el)return;tplC=templates();
   el.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;stop();st={x:e.clientX,sl:el.scrollLeft,id:e.pointerId,lx:e.clientX,lt:performance.now()};drag=false;vx=0});
   el.addEventListener('pointermove',e=>{if(!st||e.pointerId!==st.id)return;const dx=e.clientX-st.x;
     if(!drag){if(Math.abs(dx)<6)return;drag=true;try{el.setPointerCapture(e.pointerId)}catch{}}
-    el.scrollLeft=st.sl-dx;const n=performance.now(),dt=n-st.lt;if(dt>0)vx=.6*vx+.4*((st.lx-e.clientX)/dt);st.lx=e.clientX;st.lt=n});
+    el.scrollLeft=st.sl-dx;const n=performance.now(),dt=n-st.lt;if(dt>0)vx=lpf(vx,(st.lx-e.clientX)/dt,dt,33);st.lx=e.clientX;st.lt=n});
   const end=e=>{if(!st||e.pointerId!==st.id)return;const was=drag;st=null;if(!was)return;
-    let v=vx*16;const step=()=>{if(Math.abs(v)<.4){raf=0;return}el.scrollLeft+=v;v*=.94;raf=requestAnimationFrame(step)};raf=requestAnimationFrame(step);
+    let v=vx,lt=performance.now();const step=n=>{const dt=Math.min(34,Math.max(1,n-lt));lt=n;if(Math.abs(v)<.025){raf=0;return}el.scrollLeft+=v*dt;v*=Math.pow(.94,dt/16.667);raf=requestAnimationFrame(step)};raf=requestAnimationFrame(step);
     dragged=true;setTimeout(()=>dragged=false,80)};
   el.addEventListener('pointerup',end);el.addEventListener('pointercancel',end);
   el.addEventListener('click',e=>{if(dragged){e.stopPropagation();e.preventDefault()}},true)})();
@@ -2066,7 +2114,7 @@ function openDebt(d,src){if(isModalOpen())return;cancelGestures();lockBg(true);g
 <label class="ef">Сумма<input id="dam" inputmode="decimal" value="${v.amount||''}" placeholder="500"></label>
 <label class="ef">Уже возвращено<input id="dpd" inputmode="decimal" value="${v.paid||''}" placeholder="0"></label>
 <label class="ef">Вернуть до<input id="ddu" type="date" value="${E(v.due||'')}"></label>
-<div class="shf">${d?'<button class="sm del" id="gdel">Удалить</button>':'<span></span>'}<button class="sm pr" id="gsvb">Сохранить</button></div>`;showGd(src);
+<div class="shf">${d?'<button class="sm del" id="gdel">Удалить</button>':'<span></span>'}<button class="sm pr${d?' auto':''}" id="gsvb">Сохранить</button></div>`;showGd(src);
   if(!d)setTimeout(()=>{const a=$('#dwh');if(a)a.focus({preventScroll:true})},60)}
 function openDpay(d,src){if(isModalOpen())return;cancelGestures();lockBg(true);gT={mode:'dpay',id:d.id};
   gd.innerHTML=`<div class="eh"><b>${d.dir==='in'?'Получено':'Возвращено'}</b><button class="x" id="gcl" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div>
@@ -2134,12 +2182,12 @@ function openLim(id,src){if(isModalOpen())return;const used=cfg.limits||{},cats=
   gd.innerHTML=`<div class="eh"><b>${id?'Лимит':'Новый лимит'}</b><button class="x" id="gcl" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div>
 <label class="ef">Категория<select id="lcat"${id?' disabled':''}>${cats.map(c=>`<option value="${c.id}"${c.id===id?' selected':''}>${E(c.l)}</option>`).join('')}</select></label>
 <label class="ef">Лимит в месяц<input id="lam" inputmode="decimal" value="${id?used[id]:''}" placeholder="3 000" autocomplete="off"></label>
-<div class="shf">${id?'<button class="sm del" id="gdel">Удалить</button>':'<span></span>'}<button class="sm pr" id="gsvb">Сохранить</button></div>`;showGd(src)}
+<div class="shf">${id?'<button class="sm del" id="gdel">Удалить</button>':'<span></span>'}<button class="sm pr${id?' auto':''}" id="gsvb">Сохранить</button></div>`;showGd(src)}
 function openBud(src){if(isModalOpen())return;cancelGestures();lockBg(true);const own=bmOwn(month),eff=budgetOf(month),sc=(own||Number(cfg.budget)>0)?'m':'all';gT={mode:'bud',scope:sc};const mn=MN[+month.slice(5,7)-1];
   gd.innerHTML=`<div class="eh"><span class="sgm" id="bsc"><button data-bs="m" class="${sc==='m'?'on':''}">Только ${E(mn.toLowerCase())}</button><button data-bs="all" class="${sc==='all'?'on':''}">Все месяцы</button></span><button class="x" id="gcl" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div>
 <label class="ef">Сумма, ${E(cfg.cur)}<input id="bam" inputmode="decimal" value="${eff||''}" placeholder="20 000" autocomplete="off"></label>
 <div class="eo" id="bhint"></div>
-<div class="shf">${own||Number(cfg.budget)>0?'<button class="sm del" id="gdel">'+(own&&Number(cfg.budget)>0?'К общему':'Убрать')+'</button>':'<span></span>'}<button class="sm pr" id="gsvb">Сохранить</button></div>`;showGd(src);budHint()}
+<div class="shf">${own||Number(cfg.budget)>0?'<button class="sm del" id="gdel">'+(own&&Number(cfg.budget)>0?'К общему':'Убрать')+'</button>':'<span></span>'}<button class="sm pr${own||Number(cfg.budget)>0?' auto':''}" id="gsvb">Сохранить</button></div>`;showGd(src);budHint()}
 function budHint(){const h=$('#bhint');if(!h||!gT||gT.mode!=='bud')return;const mn=MN[+month.slice(5,7)-1].toLowerCase();
   if(!carryBudOn()&&gT.scope==='m'){h.textContent='Бюджет задаётся только на '+mn+'. Перенос бюджета выключен — на другие месяцы он сам не распространяется.';return}
   h.textContent=gT.scope==='m'?'Бюджет задаётся только на '+mn+'. Остальные месяцы берут общий'+(Number(cfg.budget)>0?' ('+fmt(cfg.budget)+')':' (пока не задан)')+'.':'Общий бюджет действует во всех месяцах, где нет своего.'}
@@ -2158,13 +2206,13 @@ function openGoal(g,src){if(isModalOpen())return;cancelGestures();lockBg(true);g
 <label class="ef">Откладываю в месяц<input id="gpl" inputmode="decimal" value="${v.plan||''}" placeholder="Необязательно"></label>
 <label class="ef">Тег трат<input id="gtn" type="text" list="tgl" value="${E(v.tag||'')}" placeholder="Например: отпуск" autocomplete="off" autocapitalize="none"></label>
 <label class="ef">Накопить к дате<input id="gby" type="date" value="${E(v.by||'')}"></label>
-<div class="shf">${g?'<button class="sm del" id="gdel">Удалить</button>':'<span></span>'}<button class="sm pr" id="gsvb">Сохранить</button></div>`;showGd(src)}
+<div class="shf">${g?'<button class="sm del" id="gdel">Удалить</button>':'<span></span>'}<button class="sm pr${g?' auto':''}" id="gsvb">Сохранить</button></div>`;showGd(src)}
 function openDep(g,src){if(isModalOpen())return;cancelGestures();lockBg(true);gT={mode:'dep',id:g.id,sign:1};
   gd.innerHTML=`<div class="eh"><span class="sgm"><button data-gm="in" class="on">Взнос</button><button data-gm="out">Снять</button></span><button class="x" id="gcl" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div>
 <input id="gam" class="inc" inputmode="decimal" placeholder="0" aria-label="Сумма">
 <div class="eo">${E(g.name)} · ${fmt(g.saved)} из ${fmt(g.target)} ${cfg.cur}</div>
 <div class="shf"><span></span><button class="sm pr" id="gdep">Внести</button></div>`;showGd(src);setTimeout(()=>{const a=$('#gam');if(a)a.focus({preventScroll:true})},60)}
-function closeGoal(){gd.classList.remove('on');gT=null;if(!isModalOpen()){ov.className='';lockBg(false)}cancelGestures()}
+function closeGoal(){gd.classList.remove('on');gT=null;unlockIfIdle();cancelGestures()}
 function saveGoal(){if(!gT)return;if(gT.mode==='debt')return saveDebt();if(gT.mode==='dpay')return saveDpay();if(gT.mode==='lim')return saveLim();if(gT.mode==='bud')return saveBud();const nm=($('#gnm').value||'').trim().slice(0,40)||'Цель',tg=pn($('#gtg').value),sv=Math.max(0,pn($('#gsv').value)),pl=Math.max(0,pn($('#gpl').value)),tag=normTag($('#gtn').value),by=/^\d{4}-\d{2}-\d{2}$/.test(($('#gby')||{}).value||'')?$('#gby').value:'';
   if(!(tg>0)){toast('Укажите сумму цели');return}
   if(gT.id){const g=cfg.goals.find(x=>x.id===gT.id);if(g)Object.assign(g,{name:nm,target:tg,saved:sv,plan:pl,tag,by});if(g){if(g.saved>=g.target){if(!g.closed)g.closed=ymd(new Date())}else delete g.closed}}
@@ -2294,6 +2342,35 @@ function moveInd(){const tb=$('#tabs'),ind=tb.querySelector('.ind'),b=tb.querySe
 addEventListener('resize',moveInd);
 const RM=matchMedia('(prefers-reduced-motion:reduce)').matches;
 // выезд/въезд содержимого в стиле iOS: dir=+1 вперёд (уходит влево), -1 назад
+/* ---- v90: движение целыми пикселями ----
+   Анимации сдвига на CSS/WAAPI идут через дробные доли пикселя: текст чуть размыт, а в последний кадр «щёлкает» в чёткий.
+   Здесь сдвиг считается кадр за кадром и каждый раз округляется до целого пикселя (и по X, и по Y) — размытия и щелчка нет. */
+function cbez(x1,y1,x2,y2){
+  const cx=3*x1,bx=3*(x2-x1)-cx,ax=1-cx-bx,cy=3*y1,by=3*(y2-y1)-cy,ay=1-cy-by;
+  const X=t=>((ax*t+bx)*t+cx)*t,Y=t=>((ay*t+by)*t+cy)*t,dX=t=>(3*ax*t+2*bx)*t+cx;
+  return x=>{if(x<=0)return 0;if(x>=1)return 1;let t=x;
+    for(let i=0;i<8;i++){const e=X(t)-x;if(Math.abs(e)<1e-5)return Y(t);const d=dX(t);if(Math.abs(d)<1e-6)break;t-=e/d}
+    let lo=0,hi=1;t=x;for(let i=0;i<24;i++){const e=X(t);if(Math.abs(e-x)<1e-5)break;if(e<x)lo=t;else hi=t;t=(lo+hi)/2}return Y(t)}}
+const _cbc={};
+const cbezStr=str=>_cbc[str]||(_cbc[str]=(()=>{const m=/cubic-bezier\(([^)]+)\)/.exec(str||'');const p=m?m[1].split(',').map(Number):[.25,.1,.25,1];return cbez(p[0],p[1],p[2],p[3])})());
+const PXA=new Set();let pxRaf=0;
+function pxTick(now){pxRaf=0;[...PXA].forEach(a=>a.step(now));if(PXA.size)pxRaf=requestAnimationFrame(pxTick)}
+// a, b — начало и конец: {x,y,op}; o — {duration,easing,hold}; hold: после конца держать конечное состояние до cancel() (как fill:'forwards')
+function pxAnim(el,a,b,o){
+  const old=el._pxa;if(old){old.sup=true;PXA.delete(old)}
+  const prev=old?old.prev:{t:el.style.transform,o:el.style.opacity};
+  const ease=cbezStr(o.easing),dur=Math.max(1,o.duration),t0=performance.now();
+  const mv=a.x!==undefined||a.y!==undefined||b.x!==undefined||b.y!==undefined,fo=a.op!==undefined;
+  const api={onfinish:null,sup:false,prev,done:false,
+    paint(k){const e=ease(k);
+      if(mv){const x=Math.round((a.x||0)+((b.x||0)-(a.x||0))*e),y=Math.round((a.y||0)+((b.y||0)-(a.y||0))*e);el.style.transform=(x||y)?'translate3d('+x+'px,'+y+'px,0)':'translate3d(0,0,0)'}
+      if(fo)el.style.opacity=(a.op+(b.op-a.op)*e).toFixed(3)},
+    restore(){if(el._pxa===api)el._pxa=null;if(!api.sup){el.style.transform=prev.t;el.style.opacity=prev.o}},
+    step(now){if(api.done||api.sup)return;const k=Math.min(1,(now-t0)/dur);api.paint(k);
+      if(k>=1){api.done=true;PXA.delete(api);if(!o.hold)api.restore();if(api.onfinish)try{api.onfinish()}catch(err){console.error(err)}}},
+    cancel(){if(api.done&&!o.hold&&!api.sup)return;api.done=true;PXA.delete(api);api.restore()},
+    finish(){if(api.done)return;api.paint(1);api.done=true;PXA.delete(api);if(!o.hold)api.restore();if(api.onfinish)try{api.onfinish()}catch(err){}}};
+  el._pxa=api;api.paint(0);PXA.add(api);if(!pxRaf)pxRaf=requestAnimationFrame(pxTick);return api}
 let flight=null;
 const wc=(els,on)=>els.forEach(e=>e&&(e.style.willChange=on?'transform,opacity':''));
 // instantly finish whatever transition is running (so a new gesture never fights an old animation)
@@ -2308,18 +2385,18 @@ function swapAnim(dir,fn,els,from,op,soft){els=els.filter(Boolean);settleAll();
   // soft — переходы с «Настройками»: короче и мягче уход, длиннее и плавнее появление, небольшой сдвиг
   const oD=soft?190:140,oX=soft?22:90,oE=soft?'cubic-bezier(.4,0,.2,1)':'cubic-bezier(.4,0,1,1)',iD=soft?560:360,iX=soft?30:60,iE=soft?'cubic-bezier(.32,.72,0,1)':'cubic-bezier(.16,1,.3,1)';
   wc(els,true);
-  const out=els.map((e,i)=>e.animate([{transform:`translate3d(${i?0:f0}px,0,0)`,opacity:i?1:o0},{transform:`translate3d(${-dir*oX}px,0,0)`,opacity:0}],{duration:oD,easing:oE,fill:'forwards'}));
   els.forEach(e=>{e.style.transform='';e.style.opacity='';e.style.transition=''});
+  const out=els.map((e,i)=>pxAnim(e,{x:i?0:f0,op:i?1:o0},{x:-dir*oX,op:0},{duration:oD,easing:oE,hold:true}));
   const f={stage:1,fn,anims:out,els};flight=f;
   out[0].onfinish=()=>{if(flight!==f)return;f.stage=2;
     try{fn()}catch(err){console.error(err)}
-    const inn=els.map(e=>e.animate([{transform:`translate3d(${dir*iX}px,0,0)`,opacity:0},{transform:'translate3d(0,0,0)',opacity:1}],{duration:iD,easing:iE}));
+    const inn=els.map(e=>pxAnim(e,{x:dir*iX,op:0},{x:0,op:1},{duration:iD,easing:iE}));
     out.forEach(x=>x.cancel());f.anims=inn;
     inn[0].onfinish=()=>{if(flight===f){flight=null;wc(els,false)}}}}
 function setTab(t){settleAll();
   // повторное нажатие на открытую вкладку возвращает наверх — но не во время/сразу после прокрутки: палец, которым гасят инерцию у нижней панели, не должен кидать список в начало
   if(t===tab){let sc=0;try{sc=_scT}catch{}if(Date.now()-sc<900)return;window.scrollTo({top:0,behavior:'smooth'});return}
-  slideTo(t,0,0,null)}
+  slideTo(t)}
 
 // ---------- фильтры поиска: тип, сумма, период, тег ----------
 const FL={type:'',min:'',max:'',from:'',to:'',tag:''};
@@ -2444,18 +2521,19 @@ function flipRun(m){
     const B=document.getElementById('body');if(!B)return;
     const nd=[...B.querySelectorAll('.dg[data-d]')];
     if(!nd.length||nd.length>60)return;
-    const opt={duration:FLIP_MS,easing:FLIP_EASE};
+    const opt={duration:FLIP_MS,easing:FLIP_EASE};let pxN=0;
+    const mvY=(el,dy)=>{if(pxN++<140)pxAnim(el,{y:dy},{y:0},opt);else el.animate([{transform:'translate3d(0,'+dy+'px,0)'},{transform:'none'}],opt)};   // v90: сдвиг строк — целыми пикселями (до 140 элементов, остальные обычной анимацией)
     nd.forEach(d=>{
       const o=m.dg[d.dataset.d],r=d.getBoundingClientRect();
       if(!o){                                                 // новый день — мягко проявляется сверху
         d.animate([{opacity:0,transform:'translate3d(0,-14px,0) scale(.985)'},{opacity:1,transform:'none'}],opt);return}
       const dy=o.t-r.top,dh=o.h-r.height;
-      if(Math.abs(dy)>1)d.animate([{transform:'translate3d(0,'+dy+'px,0)'},{transform:'none'}],opt);
+      if(Math.abs(dy)>1)mvY(d,dy);
       if(Math.abs(dh)>1)d.animate([{height:o.h+'px'},{height:r.height+'px'}],opt);   // плашка дня плавно растёт/сжимается
       d.querySelectorAll('.sw[data-id]:not(.sd)').forEach(w=>{
         const ro=m.row[w.dataset.id];if(ro==null)return;
         const dr=ro-(w.getBoundingClientRect().top-r.top);
-        if(Math.abs(dr)>1)w.animate([{transform:'translate3d(0,'+dr+'px,0)'},{transform:'none'}],opt)})})
+        if(Math.abs(dr)>1)mvY(w,dr)})})
   }catch(e){}}
 function render(){
   pgSettle();openSw=null;sd=null;
@@ -2700,7 +2778,7 @@ function onSwMove(e){if(!sd||e.pointerId!==sd.id)return;const dx=e.clientX-sd.x,
     if(ax>=6&&ax>=ay){sd.on=true;try{sd.c.setPointerCapture(e.pointerId)}catch{}if(sd.w.closest('#rev'))cancelAuto();if(document.activeElement&&document.activeElement.blur&&sd.w.contains(document.activeElement))document.activeElement.blur()}
     else if(ay>=10){sd=null;return}else return}
   let rv=sd.base-dx;if(rv<0)rv*=.25;if(rv>sd.W)rv=sd.W;
-  const n=performance.now(),dt=n-sd.lt;if(dt>0){sd.v=.6*sd.v+.4*((sd.lx-e.clientX)/dt)}sd.lx=e.clientX;sd.lt=n;
+  const n=performance.now(),dt=n-sd.lt;if(dt>0){sd.v=lpf(sd.v,(sd.lx-e.clientX)/dt,dt,33)}sd.lx=e.clientX;sd.lt=n;
   const ar=rv>sd.W*.5;if(ar!==sd.armed){sd.armed=ar;sd.w.classList.toggle('armed',ar);try{hap.sw('light')}catch{}}
   setRv(sd.w,rv,false)}
 function endSw(e,cancel){if(!sd||e.pointerId!==sd.id)return;const d=sd;sd=null;if(!d.on)return;
@@ -2726,8 +2804,8 @@ ed.addEventListener('pointermove',e=>e.stopPropagation());
 ed.addEventListener('pointerup',e=>e.stopPropagation());
 ed.addEventListener('touchstart',e=>e.stopPropagation(),{passive:true});
 ed.addEventListener('touchmove',e=>e.stopPropagation(),{passive:true});
-function openEdit(id){if(sh.classList.contains('on'))return;const t=tx.find(x=>x.id===id);if(!t)return;cancelGestures();lockBg(true);eT={...t,tags:[...(t.tags||[])]};renderEd();const row=document.querySelector('.r2[data-id="'+id+'"]');if(row)setOrigin(ed,row);ed.classList.add('on');ov.className='on'}
-function closeEdit(){ed.classList.remove('on');eT=null;if(!sh.classList.contains('on')){ov.className='';lockBg(false)}cancelGestures()}
+function openEdit(id){if(isModalOpen())return;const t=tx.find(x=>x.id===id);if(!t)return;cancelGestures();lockBg(true);eT={...t,tags:[...(t.tags||[])]};renderEd();const row=document.querySelector('.r2[data-id="'+id+'"]');if(row)setOrigin(ed,row);ed.classList.add('on');ov.className='on'}
+function closeEdit(){ed.classList.remove('on');eT=null;unlockIfIdle();cancelGestures()}
 function readEd(){if(!eT)return;const g=k=>{const el=$(k);return el?el.value:''};
   eT.amount=Math.max(0,pn(g('#eam')));eT.note=g('#eno').trim();{const cv=g('#eca');if(cv&&cv!=='__add')eT.category=cv}
   if(/^\d{4}-\d{2}-\d{2}$/.test(g('#eda')))eT.date=g('#eda');
@@ -2775,12 +2853,12 @@ $('#tabs').onclick=e=>{if(isModalOpen()||tbdBlock)return;const b=e.target.closes
 // The neighbouring page is pre-built next to the current one and both follow the finger,
 // so the next page is actually visible while dragging. Release continues from the finger's position.
 const bodyEl=$('#body'),GAP=16;
-let tp=null,tpBlock=false,tpRaf=0,cur=null;
-const TP_SKIP='#lk,#lt0,#st .lt,.swb,#top,#tabs,#fab,.hd,#sp,#stw,#sh,#ed,#gd,#cf,#bq,#nc,#cp,#ov,#toast,#tour,input,select,textarea';
+let tp=null,tpBlock=false,tpRaf=0;
+const TP_SKIP='#lk,#lt0,#st .lt,.swb,#top,#tabs,#fab,#thlp,#topact,.hd,#sp,#stw,#sh,#ed,#gd,#cf,#bq,#nc,#cp,#ov,#toast,#tour,input,select,textarea';
 const setLt0=t=>{const e=document.getElementById('lt0');if(!e)return;e.style.display=t==='settings'?'none':'';e.textContent=ttlOf(t)};
 const ttlOf=t=>t==='list'?(ftag?'#'+ftag+(fcat?' › '+cd(fcat.id).l:''):fcat?cd(fcat.id).l:fday?dayLbl(fday):'Операции'):t==='stats'?'Аналитика':t==='tags'?'Планы':t==='settings'?'Настройки':'Советы';
 const tabInd=()=>$('#tabs').querySelector('.ind');
-function ltPop(s){const e=document.getElementById('lt0');if(RM||!e||!e.animate)return;e.animate([{opacity:0,transform:`translate3d(${s*28}px,0,0)`},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:380,easing:'cubic-bezier(.22,1,.36,1)'})}
+function ltPop(s){const e=document.getElementById('lt0');if(RM||!e||!e.animate)return;pxAnim(e,{x:s*28,op:0},{x:0,op:1},{duration:380,easing:'cubic-bezier(.22,1,.36,1)'})}
 // ---------- v55: у каждой страницы своя позиция прокрутки ----------
 // Прокручивается всё окно, поэтому позицию каждой страницы (вкладка / раздел / отфильтрованный список) запоминаем сами
 // и возвращаем при возврате. Если у соседних страниц позиция совпадает — переход чисто горизонтальный;
@@ -2792,49 +2870,6 @@ function pgKey(t,sub){t=t||tab;
   return t}
 function pgSave(){if(pgCur==null)pgCur=pgKey();PGY[pgCur]=Math.max(0,window.scrollY||0);pgFresh=true}
 function pgApply(){window.scrollTo(0,PGY[pgKey()]||0)}
-const bez=(x1,y1,x2,y2)=>t=>{if(t<=0)return 0;if(t>=1)return 1;let a=0,b=1,m=t;
-  for(let i=0;i<24;i++){m=(a+b)/2;const x=3*(1-m)*(1-m)*m*x1+3*(1-m)*m*m*x2+m*m*m;if(x<t)a=m;else b=m}
-  return 3*(1-m)*(1-m)*m*y1+3*(1-m)*m*m*y2+m*m*m};
-const easeSc=bez(.22,1,.36,1);
-function pgScrollStop(){if(scRaf){cancelAnimationFrame(scRaf);scRaf=0}}
-function pgScroll(y0,y1,dur){pgScrollStop();if(Math.abs(y1-y0)<1)return;const t0=performance.now();
-  const step=n=>{const p=Math.min(1,(n-t0)/dur);window.scrollTo({top:y0+(y1-y0)*easeSc(p),behavior:'instant'});scRaf=p<1?requestAnimationFrame(step):0};
-  scRaf=requestAnimationFrame(step)}
-// палец коснулся экрана во время доезда — завершаем переход сразу, чтобы жест не боролся с анимацией
-document.addEventListener('touchstart',()=>{if(scRaf)settleAll()},{passive:true,capture:true});
-function mkNb(t,s,key){const el=document.createElement('div');
-  const bt=bodyEl.getBoundingClientRect().top+scrollY;
-  el.style.cssText=`position:absolute;top:0;width:100%;left:${s>0?'calc(100% + '+GAP+'px)':'calc(-100% - '+GAP+'px)'}`;
-  el.inert=true;el.setAttribute('aria-hidden','true');
-  bodyEl.appendChild(el);
-  const S=key?SUBS[t]:null,old=S?S.get():null;if(S)S.set(key);
-  try{buildPage(t,el,true)}finally{if(S)S.set(old)}
-  if(S){const nbb=el.querySelector(':scope > .sbt');if(nbb)nbb.remove()}
-  else{const SS=SUBS[t],bar=el.querySelector(':scope > .sbt');
-    if(bar&&SS){bar.dataset.k=t;bar.insertAdjacentHTML('afterbegin','<i class="ind2"></i>');
-      const g=SS.get(),b=bar.querySelector(`[data-as="${g}"],[data-ps="${g}"]`),ind=bar.querySelector('.ind2');
-      if(b&&ind)sbPlace(ind,b.offsetLeft,b.offsetWidth,false)}}
-  // как в итоговой раскладке (#sbw + #body): плашка и контент — отдельные блоки, поля между ними не схлопываются; иначе при замене страницы контент «садится» на пару пикселей
-  {const bar=el.querySelector(':scope > .sbt');if(bar){const w=document.createElement('div');w.style.display='flow-root';el.insertBefore(w,bar);w.appendChild(bar);
-    const r=document.createElement('div');r.style.display='flow-root';while(w.nextSibling)r.appendChild(w.nextSibling);el.appendChild(r)}}
-  if(t==='stats'&&(S?key:AS)==='all'){try{_pieSeen.add(month)}catch(e){}}
-  // где окажется прокрутка после перехода: своя сохранённая позиция новой страницы (не дальше, чем позволяет её высота)
-  const Y=Math.max(0,scrollY),Hn=Math.max(el.offsetHeight,parseFloat(getComputedStyle(bodyEl).minHeight)||0),
-    below=$('#w').getBoundingClientRect().bottom+scrollY-bt-bodyEl.offsetHeight,
-    padB=parseFloat(getComputedStyle(document.documentElement).paddingBottom)||0,
-    maxY=Math.max(0,bt+Hn+Math.max(0,below)+padB-innerHeight),
-    Ty=Math.min(PGY[pgKey(t,key)]||0,maxY),cc=Math.max(0,Y-bt),ct=Math.max(0,Ty-bt);
-  let off=0,anim=false;
-  if(ct>0&&ct<=cc)off=cc-ct;            // новая страница глубже в тексте не уходит — просто показываем её на своём уровне, без вертикального движения
-  else if(Math.abs(Ty-Y)>1)anim=true;   // уровни разные — окно плавно доедет
-  el.style.top=off+'px';
-  return{el,t:key||t,s,off,bt,fin:Ty,anim}}
-function finishSlide(nb){
-  bodyEl.style.transform='';bodyEl.style.willChange='';
-  pgScrollStop();
-  if(nb&&nb.el.parentNode)nb.el.remove();
-  render();
-  if(nb)window.scrollTo(0,nb.fin)}
 let softA=null;
 function softIn(strong){if(RM||!bodyEl.animate)return;try{if(softA)softA.cancel()}catch{}
   const a=bodyEl.animate(strong?[{opacity:0,transform:'translate3d(0,10px,0)'},{opacity:1,transform:'none'}]:[{opacity:.55},{opacity:1}],{duration:strong?300:200,easing:'cubic-bezier(.16,1,.3,1)'});
@@ -2843,47 +2878,26 @@ function settleAll(){if(softA){try{softA.cancel()}catch{}softA=null}settleFlight
 // instantly complete / abort whatever the carousel is doing, so a new gesture never fights an old animation
 function pgSettle(){
   if(tpRaf){cancelAnimationFrame(tpRaf);tpRaf=0}
-  if(cur){const c=cur;cur=null;try{c.a.cancel()}catch{}
-    if(c.kind==='go')finishSlide(c.nb);
-    else{bodyEl.style.transform='';bodyEl.style.willChange='';if(c.nb)c.nb.el.remove()}
-    return}
-  if(tp&&tp.on){if(tp.nb)tp.nb.el.remove();tp=null;bodyEl.style.transform='';bodyEl.style.willChange='';const i=tabInd();if(i)i.style.transition='';moveInd();sbSync(false)}}
-function slideTo(t,fromX,v,hint){document.documentElement.classList.remove('intro');   // v51: смена вкладки во время заставки — без повторного «появления» (оно и давало мерцание)
+  if(tp&&tp.on){tp=null;bodyEl.style.transform='';bodyEl.style.willChange='';const i=tabInd();if(i)i.style.transition='';moveInd();sbSync(false)}}
+function slideTo(t){document.documentElement.classList.remove('intro');   // v51: смена вкладки во время заставки — без повторного «появления» (оно и давало мерцание)
   pgSave();
 
   const s=TABS.indexOf(t)>TABS.indexOf(tab)?1:-1;
   {const sb=sbwEl().querySelector('.sbt');if(sb){const w=document.createElement('div');w.style.display='flow-root';w.appendChild(sb);bodyEl.insertBefore(w,bodyEl.firstChild)}}
-  let nb=hint&&hint.t===t&&hint.el.isConnected?hint:null;
-  if(!nb){if(hint)hint.el.remove();nb=mkNb(t,s)}
   const stSw=t==='settings'||tab==='settings',clamp=stSw;
   if(tab==='list'){fcat=null;ftag=null;fday=null}
   tab=t;const ind=tabInd();if(ind)ind.style.transition='';moveInd();$('#ttl').textContent=ttlOf(t);
-  if(clamp){nb.el.remove();
-    swapAnim(s,()=>{render();pgApply()},stSw?[bodyEl,$('#top'),$('#lt0'),$('#sbw')]:[bodyEl,$('#lt0')],fromX||0,1-Math.min(.3,Math.abs(fromX||0)/420),stSw);return}
-  setLt0(t);ltPop(s);
-  if(RM||!bodyEl.animate){finishSlide(nb);return}
-  const W=bodyEl.offsetWidth+GAP,x0=fromX||0,target=-s*W,rem=Math.abs(target-x0);
-  const dur=Math.round(Math.max(200,Math.min(380,rem*.9/Math.max(.8,Math.abs(v||0)*1.5))));
-  bodyEl.style.willChange='transform';
-  const a=bodyEl.animate([{transform:`translate3d(${x0}px,0,0)`},{transform:`translate3d(${target}px,0,0)`}],{duration:dur,easing:'cubic-bezier(.22,1,.36,1)',fill:'forwards'});
-  bodyEl.style.transform='';
-  if(nb.anim)pgScroll(Math.max(0,scrollY),nb.fin,dur);
-  const c={a,nb,kind:'go'};cur=c;
-  a.onfinish=()=>{if(cur!==c)return;cur=null;try{a.cancel()}catch{}finishSlide(nb)}}
-function snapBack(x,nb){
+  if(clamp){
+    swapAnim(s,()=>{render();pgApply()},stSw?[bodyEl,$('#top'),$('#lt0'),$('#sbw')]:[bodyEl,$('#lt0')],0,1,stSw);return}
+  // между «Операциями», «Аналитикой» и «Планами» страница меняется сразу, без сдвига; анимируются только заголовок и нижняя плашка
+  setLt0(t);ltPop(s);render();pgApply()}
+function snapBack(){
   const ind=tabInd();if(ind)ind.style.transition='';moveInd();sbSync(true);
-  if(RM||!bodyEl.animate||Math.abs(x)<.5){bodyEl.style.transform='';bodyEl.style.willChange='';if(nb)nb.el.remove();return}
-  const a=bodyEl.animate([{transform:`translate3d(${x}px,0,0)`},{transform:'translate3d(0,0,0)'}],{duration:320,easing:'cubic-bezier(.22,1,.36,1)'});
-  bodyEl.style.transform='';
-  const c={a,nb,kind:'back'};cur=c;
-  a.onfinish=()=>{if(cur!==c)return;cur=null;try{a.cancel()}catch{}bodyEl.style.willChange='';if(nb)nb.el.remove()}}
+  bodyEl.style.transform='';bodyEl.style.willChange=''}
 const rubber=dx=>dx?Math.sign(dx)*36*(1-Math.exp(-Math.abs(dx)/120)):0;
 function paintTp(){tpRaf=0;if(!tp||!tp.on)return;
-  const dx=tp.dx,s=dx<0?1:-1,nt=subNb(s),W=bodyEl.offsetWidth+GAP;let x;
-  if(!dx)x=0;
-  else if(nt){if(!tp.nb||tp.nb.s!==s||!tp.nb.el.isConnected){if(tp.nb)tp.nb.el.remove();tp.nb=mkNb(tab,s,nt)}x=Math.max(-W,Math.min(W,dx))}
-  else{if(tp.nb){tp.nb.el.remove();tp.nb=null}x=rubber(dx)}
-  bodyEl.style.transform=`translate3d(${x}px,0,0)`;sbDrag(x,W,nt)}
+  const dx=tp.dx,nt=subNb(dx<0?1:-1),W=bodyEl.offsetWidth+GAP;
+  sbDrag(nt?Math.max(-W,Math.min(W,dx)):0,W,nt)}
 // свайп работает только ВНУТРИ «Аналитики» и «Планов» — между подразделами; на «Операциях» и между вкладками не работает
 const SUBS={stats:{list:['all','trend','cal','tags'],get:()=>AS,set:v=>{AS=v}},tags:{list:['goals','budget','debts'],get:()=>ps,set:v=>{ps=v}}};
 const subNb=s=>{const S=SUBS[tab];if(!S)return null;return S.list[S.list.indexOf(S.get())+s]||null};
@@ -2908,23 +2922,12 @@ function sbDrag(x,W,nt){const S=SUBS[tab],bar=sbwEl().querySelector('.sbt');if(!
   if(!ind||!b)return;if(!n){sbSync(false);return}
   const p=Math.min(1,Math.abs(x)/W);
   sbPlace(ind,b.offsetLeft+(n.offsetLeft-b.offsetLeft)*p,b.offsetWidth+(n.offsetWidth-b.offsetWidth)*p,false)}
-function slideSub(key,fromX,v,hint){
+function slideSub(key){
   const S=SUBS[tab];if(!S)return;
   pgSave();
-  const s=S.list.indexOf(key)>S.list.indexOf(S.get())?1:-1;
-  let nb=hint&&hint.t===key&&hint.el.isConnected?hint:null;
-  if(!nb){if(hint)hint.el.remove();nb=mkNb(tab,s,key)}
   S.set(key);
   sbwEl().querySelectorAll('.sbt button').forEach(b=>b.classList.toggle('on',b.dataset.as===key||b.dataset.ps===key));sbSync(true);
-  if(RM||!bodyEl.animate){finishSlide(nb);return}
-  const W=bodyEl.offsetWidth+GAP,x0=fromX||0,target=-s*W,rem=Math.abs(target-x0);
-  const dur=Math.round(Math.max(200,Math.min(380,rem*.9/Math.max(.8,Math.abs(v||0)*1.5))));
-  bodyEl.style.willChange='transform';
-  const a=bodyEl.animate([{transform:`translate3d(${x0}px,0,0)`},{transform:`translate3d(${target}px,0,0)`}],{duration:dur,easing:'cubic-bezier(.22,1,.36,1)',fill:'forwards'});
-  bodyEl.style.transform='';
-  if(nb.anim)pgScroll(Math.max(0,scrollY),nb.fin,dur);
-  const c={a,nb,kind:'go'};cur=c;
-  a.onfinish=()=>{if(cur!==c)return;cur=null;try{a.cancel()}catch{}finishSlide(nb)}}
+  bodyEl.style.transform='';bodyEl.style.willChange='';render();pgApply()}
 // фиксация направления жеста: если палец пошёл по горизонтали — вертикальную прокрутку блокируем до конца жеста
 let tl=null,axisLock=null;
 document.addEventListener('touchstart',e=>{
@@ -2948,7 +2951,7 @@ document.addEventListener('pointerdown',e=>{
   if(e.target.closest&&e.target.closest(TP_SKIP))return;
   if(tp)pgSettle();
   settleAll();
-  tp={x:e.clientX,y:e.clientY,id:e.pointerId,on:false,ox:0,lx:0,lt:0,v:0,dx:0,nb:null}});
+  tp={x:e.clientX,y:e.clientY,id:e.pointerId,on:false,ox:0,lx:0,lt:0,v:0,dx:0}});
 document.addEventListener('pointermove',e=>{
   if(!tp||e.pointerId!==tp.id)return;
   if(sd&&sd.on&&!tp.on){tp=null;return}
@@ -2963,18 +2966,17 @@ document.addEventListener('pointermove',e=>{
     if(e.pointerType!=='touch'&&ay>=10&&ay>ax)tp=null;
     return}
   tp.dx=e.clientX-tp.ox;
-  const n=performance.now(),dt=n-tp.lt;if(dt>0)tp.v=.5*tp.v+.5*((tp.lx-e.clientX)/dt);tp.lx=e.clientX;tp.lt=n;
+  const n=performance.now(),dt=n-tp.lt;if(dt>0)tp.v=lpf(tp.v,(tp.lx-e.clientX)/dt,dt,24);tp.lx=e.clientX;tp.lt=n;
   if(!tpRaf)tpRaf=requestAnimationFrame(paintTp)});
 function endTp(e,cancel){
   if(!tp||e.pointerId!==tp.id)return;const p=tp;tp=null;
   if(tpRaf){cancelAnimationFrame(tpRaf);tpRaf=0}
   if(!p.on)return;
   tpBlock=true;setTimeout(()=>tpBlock=false,120);
-  const dx=p.dx,s=dx<0?1:-1,nt=subNb(s),W=bodyEl.offsetWidth+GAP;
-  const x=p.nb&&nt?Math.max(-W,Math.min(W,dx)):rubber(dx);
+  const dx=p.dx,s=dx<0?1:-1,nt=subNb(s);
   // tiniest deliberate swipe is enough: ~18px, or a quick flick; a flick back the other way cancels
   const fwd=s*p.v>0,go=!cancel&&!!nt&&dx!==0&&!(s*p.v<-.35)&&(Math.abs(dx)>=18||(fwd&&Math.abs(p.v)>.25&&Math.abs(dx)>=6));
-  if(go){try{hap.sw('select')}catch(e){}slideSub(nt,x,Math.abs(p.v),p.nb)}else snapBack(x,p.nb)}
+  if(go){try{hap.sw('select')}catch(e){}slideSub(nt)}else snapBack()}
 document.addEventListener('pointerup',e=>endTp(e,false));
 document.addEventListener('pointercancel',e=>endTp(e,true));
 bodyEl.addEventListener('lostpointercapture',e=>{if(e.target!==bodyEl)return;endTp(e,false)});
@@ -3001,7 +3003,7 @@ document.addEventListener('click',e=>{if(tpBlock){e.stopPropagation();e.preventD
       if(Math.abs(dx)>=6&&Math.abs(dx)>Math.abs(dy)*1.1){g.on=true;g.x=e.clientX;try{g.h.setPointerCapture(e.pointerId)}catch{}g.h.style.transition='none';return}
       if(Math.abs(dy)>10)g=null;return}
     const d=e.clientX-g.x,n=performance.now(),dt=n-g.lt;
-    if(dt>0)g.v=.5*g.v+.5*((g.lx-e.clientX)/dt);g.lx=e.clientX;g.lt=n;g.dx=d;
+    if(dt>0)g.v=lpf(g.v,(g.lx-e.clientX)/dt,dt,24);g.lx=e.clientX;g.lt=n;g.dx=d;
     const ok=nbT(d<0?1:-1),x=ok?d*.5:rubber(d);
     g.h.style.transform=`translate3d(${x}px,0,0)`;g.h.style.opacity=ok?String(1-Math.min(.55,Math.abs(d)/240)):''});
   function end(e,cancel){
@@ -3010,7 +3012,7 @@ document.addEventListener('click',e=>{if(tpBlock){e.stopPropagation();e.preventD
     tpBlock=true;setTimeout(()=>tpBlock=false,120);
     const dx=p.dx,s=dx<0?1:-1,t=nbT(s),fwd=s*p.v>0;
     const go=!cancel&&!!t&&!(s*p.v<-.35)&&(Math.abs(dx)>=44||(fwd&&Math.abs(p.v)>.3&&Math.abs(dx)>=16));
-    if(go){reset(p.h,false);try{hap.sw('select')}catch(_){}settleAll();slideTo(t,0,0,null)}
+    if(go){reset(p.h,false);try{hap.sw('select')}catch(_){}settleAll();slideTo(t)}
     else reset(p.h,true)}
   document.addEventListener('pointerup',e=>end(e,false));
   document.addEventListener('pointercancel',e=>end(e,true));
@@ -3093,13 +3095,28 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
   const RC=.55,RH=()=>Math.max(320,innerHeight||640);   // как в UIScrollView: x' = (1 − 1/(x·c/d + 1))·d, c=.55, d=высота экрана
   const rb=d=>{if(!(d>0))return 0;const H=RH();return H*(1-1/(RC*d/H+1))},rbi=y=>{if(!(y>0))return 0;const H=RH();y=Math.min(y,H*.985);return H/RC*(1/(1-y/H)-1)};
   const cv=v=>Math.max(-3000,Math.min(3000,v)),nat=()=>inn.scrollHeight,
-    skip='#lk,#tabs,#fab,.hd,#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc,#ov,#toast,#tour,#cm,#fp,input,select,textarea,.swb';
-  const paint=y=>{W.style.transform=y?'translate3d(0,'+y.toFixed(2)+'px,0)':''};
+    skip='#lk,#tabs,#fab,#thlp,#topact,.hd,#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc,#ov,#toast,#tour,#cm,#fp,input,select,textarea,.swb';
+  // v84: шапка и верхний блок (месяц, остаток) стоят на месте; при упоре в край пружинит и растягивается только список под ними.
+  // Каждый блок списка смещается тем сильнее, чем дальше он от якоря (верхнего блока у начала, нижнего края у конца) — блоки «раздвигаются».
+  const ST={els:[],w:[],side:0};
+  const stClear=()=>{for(let i=0;i<ST.els.length;i++)ST.els[i].style.transform='';ST.els=[];ST.w=[];ST.side=0};
+  function stBuild(side){
+    const vh=Math.max(320,innerHeight||640),bt=bodyEl.getBoundingClientRect().top,els=[],ws=[];
+    let kids=[...bodyEl.children];if(kids.length===1&&kids[0].children.length>1)kids=[...kids[0].children];   // «Настройки» — один контейнер, двигаем его части
+    for(const e of kids){
+      if(e.matches('.sbt')||e.querySelector('.sbt'))continue;
+      const r=e.getBoundingClientRect();if(!r.height||r.bottom<-vh||r.top>vh*2)continue;
+      const c=(r.top+r.bottom)/2,w=side>0?(c-bt)/(.75*vh):(vh-c)/(.75*vh);
+      els.push(e);ws.push(Math.max(0,Math.min(1,w)))}
+    ST.els=els;ST.w=ws;ST.side=side}
+  const paint=y=>{
+    if(!y){if(ST.els.length)stClear();return}
+    const side=y>0?1:-1;if(ST.side!==side){stClear();stBuild(side)}
+    for(let i=0;i<ST.els.length;i++){const d=y*ST.w[i];ST.els[i].style.transform=d?'translate3d(0,'+d.toFixed(2)+'px,0)':''}};
   const stop=()=>{cancelAnimationFrame(OS.raf);OS.raf=0};
   let rcT=0;
   // слой страницы снимаем не сразу после остановки, а когда всё затихло: иначе в момент снятия строки чуть «щёлкают» на долю пикселя
-  const rest=()=>{stop();OS.k=0;OS.y=0;OS.v=0;W.style.transform='translate3d(0,0,0)';clearTimeout(rcT);
-    rcT=setTimeout(()=>{if(!OS.raf&&!OS.y&&!OS.drag&&!MM.raf){W.style.transform='';W.style.willChange=''}},450)};
+  const rest=()=>{stop();OS.k=0;OS.y=0;OS.v=0;clearTimeout(rcT);stClear()};
   function tick(t){
     const dt=Math.min(.034,Math.max(.001,(t-OS.last)/1000));OS.last=t;
     const k=OS.k||169,c=2*Math.sqrt(k),n=Math.max(1,Math.ceil(dt/.004)),d=dt/n;
@@ -3109,7 +3126,7 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
     if(Math.abs(y)<.05&&Math.abs(v)<5){rest();return}
     paint(y);OS.raf=requestAnimationFrame(tick)}
   function release(y,v){stop();OS.k=0;OS.y=y;OS.v=y>0?Math.max(v,-WN*y):Math.min(v,-WN*y);   // скорость не даёт перелететь через ноль
-    OS.last=performance.now();W.style.willChange='transform';OS.raf=requestAnimationFrame(tick)}
+    OS.last=performance.now();0;OS.raf=requestAnimationFrame(tick)}
   const spOpen=()=>sp.classList.contains('open');
   const canCollapse=()=>spOpen()&&!q&&!fOn()&&!fpEl.classList.contains('open');
   // v49: ручная инерция — нужна, когда палец поймал отскок и продолжил листать: страница не должна «застревать» на краю
@@ -3117,13 +3134,14 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
   const momStop=()=>{cancelAnimationFrame(MM.raf);MM.raf=0};
   const maxScroll=()=>Math.max(0,document.documentElement.scrollHeight-innerHeight);
   function momTick(t){
+    if(isModalOpen()){momStop();return}
     const dt=Math.min(34,Math.max(1,t-MM.last));MM.last=t;
     MM.v*=Math.pow(.998,dt);                                       // iOS «normal» deceleration: 0.998 за мс
     const mx=maxScroll(),p=MM.p+MM.v*dt/1000;
     if(p<=0||p>=mx){
       const top=p<=0,v0=Math.min(4200,Math.abs(MM.v));momStop();MM.skip=performance.now()+200;
       window.scrollTo(0,top?0:mx);
-      if(v0>=260){OS.k=121;OS.y=0;OS.v=top?v0:-v0;OS.last=performance.now();W.style.willChange='transform';OS.raf=requestAnimationFrame(tick)}
+      if(v0>=260){OS.k=121;OS.y=0;OS.v=top?v0:-v0;OS.last=performance.now();0;OS.raf=requestAnimationFrame(tick)}
       return}
     MM.p=p;window.scrollTo(0,p);
     if(Math.abs(MM.v)<24){momStop();return}
@@ -3135,9 +3153,9 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
   document.addEventListener('touchstart',e=>{tmOff();g=null;
     if(e.touches.length!==1||isModalOpen())return;
     const el=e.target;if(el.closest&&el.closest(skip))return;
-    const grab=OS.raf?OS.y:0;if(OS.raf){stop();OS.drag=1;W.style.willChange='transform'}   // страница ещё возвращается — можно поймать пальцем
+    const grab=OS.raf?OS.y:0;if(OS.raf){stop();OS.drag=1;0}   // страница ещё возвращается — можно поймать пальцем
     const mom=!!MM.raf;if(mom){momStop();OS.drag=1}                                       // v49: ручная инерция тоже ловится пальцем
-    g={top:!!(el.closest&&el.closest('#top,#lt0,#chip,#st .lt')),mode:mom?'scroll':grab?'stretch':'',on:!!grab||mom,p0:window.scrollY||0,lp:window.scrollY||0,vp:0,vy:0,base:e.touches[0].clientY,bx:e.touches[0].clientX,y0:grab,sgn:grab<0?-1:1,D0:grab?rbi(Math.abs(grab)):0,h0:0,h:0,v:0,lt:performance.now(),ly:grab};
+    g={top:!!(el.closest&&el.closest('#top,#lt0,#chip,#st .lt')),t0:(window.scrollY||0)<=0&&!mom,mode:mom?'scroll':grab?'stretch':'',on:!!grab||mom,p0:window.scrollY||0,lp:window.scrollY||0,vp:0,vy:0,base:e.touches[0].clientY,bx:e.touches[0].clientX,y0:grab,sgn:grab<0?-1:1,D0:grab?rbi(Math.abs(grab)):0,h0:0,h:0,v:0,lt:performance.now(),ly:grab};
     tmArm();   // растяжение у края работает и для жеста, начатого в середине списка
   },{passive:true});
   const onTM=e=>{if(!g)return;
@@ -3148,12 +3166,12 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
       if(Math.abs(dx)>Math.abs(dy)+4){g=null;return}               // горизонтальный жест — не наш (вкладки, свайп строк)
       const top=sy<=0,bot=sy>=maxY-1;
       if(dy>0&&top){if(dy<6)return;
-        g.mode=tab==='list'&&!g.top&&!spOpen()?'search':'stretch';g.sgn=1}
+        g.mode=tab==='list'&&!g.top&&g.t0&&!spOpen()?'search':'stretch';g.sgn=1}   // строка поиска — только жестом, начатым уже на самом верху; резкий свайп из середины списка лишь упирается в край
       else if(dy<0&&top&&tab==='list'&&canCollapse()){if(dy>-6)return;g.mode='collapse'}
       else if(dy<0&&bot&&maxY>0){if(dy>-6)return;g.mode='stretch';g.sgn=-1}
       else{g.base=t.clientY;g.bx=t.clientX;return}                  // обычная прокрутка — ничего не трогаем
       g.on=true;g.base=t.clientY;dy=0;OS.drag=1;g.lt=performance.now();g.v=0;
-      if(g.mode==='stretch'){W.style.willChange='transform';g.ly=0;g.D0=0}
+      if(g.mode==='stretch'){0;g.ly=0;g.D0=0}
       else{if(sp.contains(document.activeElement))document.activeElement.blur();
         spStop();sp.style.transition='none';g.h0=sp.getBoundingClientRect().height;g.h=g.h0;inn.style.willChange='opacity,transform'}}
     if(e.cancelable)e.preventDefault();
@@ -3162,14 +3180,14 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
     if(g.mode==='scroll'){
       const p=g.p0-(t.clientY-g.base),cp=Math.max(0,Math.min(maxY,p)),ex=p-cp,y=ex<0?rb(-ex):ex>0?-rb(ex):0;
       if((window.scrollY||0)!==cp)window.scrollTo(0,cp);
-      if(dt>0){g.vp=.6*g.vp+.4*((p-g.lp)/dt*1000);g.vy=.6*g.vy+.4*((y-g.ly)/dt*1000)}
+      if(dt>0){g.vp=lpf(g.vp,(p-g.lp)/dt*1000,dt,33);g.vy=lpf(g.vy,(y-g.ly)/dt*1000,dt,33)}
       g.lp=p;g.ly=y;g.lt=now;OS.y=y;paint(y);return}
     if(g.mode==='stretch'){
       const y=g.sgn*rb(g.D0+g.sgn*dy);
-      if(dt>0)g.v=.6*g.v+.4*((y-g.ly)/dt*1000);g.ly=y;g.lt=now;OS.y=y;paint(y)}
+      if(dt>0)g.v=lpf(g.v,(y-g.ly)/dt*1000,dt,33);g.ly=y;g.lt=now;OS.y=y;paint(y)}
     else{
       const n=nat(),d=g.mode==='search'?g.h0+Math.max(0,dy)*.85:g.h0+dy,h=d<=n?Math.max(0,d):n+34*(1-Math.exp(-(d-n)/70));
-      if(dt>0){const iv=(h-g.h)/Math.max(dt,8)*1000;g.v=g.sv?.65*g.v+.35*iv:iv;g.sv=1}g.lt=now;g.h=h;spPaint(h)}
+      if(dt>0){const iv=(h-g.h)/Math.max(dt,8)*1000;g.v=g.sv?lpf(g.v,iv,dt,39):iv;g.sv=1}g.lt=now;g.h=h;spPaint(h)}
   };
   // блокирующий touchmove на время жеста (нужен для растяжения у края)
   let tmOn=false;const tmArm=()=>{if(!tmOn){tmOn=true;document.addEventListener('touchmove',onTM,{passive:false})}},tmOff=()=>{if(tmOn){tmOn=false;document.removeEventListener('touchmove',onTM)}};
@@ -3177,7 +3195,7 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
     const v=performance.now()-p.lt>90?0:cv(p.v);
     if(p.mode==='scroll'){const stale=performance.now()-p.lt>90;
       if(OS.y){release(OS.y,stale||!ok?0:cv(p.vy));return}
-      W.style.willChange='';if(ok&&!stale&&Math.abs(p.vp)>80)momStart(p.vp);return}
+      0;if(ok&&!stale&&Math.abs(p.vp)>80)momStart(p.vp);return}
     if(p.mode==='stretch'){release(OS.y,v);return}
     const n=nat();SP.v0=v;
     if(p.mode==='search'){if(ok&&p.h+v*.16>=Math.min(n*.5,60))setSearch(true);else spAnim(false)}
@@ -3198,11 +3216,11 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
   addEventListener('wheel',()=>{lastWh=Date.now()},{passive:true,capture:true});
   addEventListener('scroll',()=>{
     const y=window.scrollY||0,now=performance.now(),dt=Math.max(1,now-pt);
-    const v=(y-py)/dt*1000;if(dt>100){pv=0;run=0}pv=.5*pv+.5*v;run=dt<64&&Math.abs(v)>120?run+1:0;
+    const v=(y-py)/dt*1000;if(dt>100){pv=0;run=0}pv=lpf(pv,v,dt,24);run=dt<64&&Math.abs(v)>120?run+1:0;
     const prev=py;py=y;pt=now;
     // перф: перед краем заранее выносим страницу в отдельный слой — иначе в момент удара о край слой создаётся посреди анимации и кадр «залипает»
     if(!touching&&!OS.raf&&Math.abs(pv)>600){const mx0=document.documentElement.scrollHeight-innerHeight;
-      if(mx0>0&&(y<700||y>mx0-700)){W.style.willChange='transform';clearTimeout(wcT);wcT=setTimeout(()=>{if(!OS.raf&&!OS.y&&!OS.drag&&!MM.raf)W.style.willChange=''},900)}}
+      if(mx0>0&&(y<700||y>mx0-700)){0;clearTimeout(wcT);wcT=setTimeout(()=>{if(!OS.raf&&!OS.y&&!OS.drag&&!MM.raf)0},900)}}
     if(touching||OS.drag||isModalOpen())return;const maxY=Math.max(0,document.documentElement.scrollHeight-innerHeight);if(maxY<=0||y<0||y>maxY)return;
     if(Date.now()-lastTE>3000&&Date.now()-lastWh>250)return;      // не после касания/колеса — значит прокрутка программная
     if(run<3)return;                                              // резкий прыжок (смена вкладки) — не инерция
@@ -3211,7 +3229,7 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
     if(!hitTop&&!hitBot)return;
     if(MM.raf||performance.now()<MM.skip)return;                  // v49: край в ручной инерции обрабатывает она сама
     const v0=Math.min(4200,Math.abs(pv));if(v0<260)return;         // v49: выход за край = скорость/(ω·e): 3000 px/с ≈ 90 px, как на видео
-    stop();OS.k=121;OS.y=0;OS.v=hitTop?v0:-v0;OS.last=performance.now();W.style.willChange='transform';OS.raf=requestAnimationFrame(tick)},{passive:true});
+    stop();OS.k=121;OS.y=0;OS.v=hitTop?v0:-v0;OS.last=performance.now();0;OS.raf=requestAnimationFrame(tick)},{passive:true});
   // v49: касание во время движения (пружина, инерция) только ловит список — строка при этом не нажимается
   let guard=false,gT=0;
   const moving=()=>!!(OS.raf||OS.y||MM.raf||(!touching&&performance.now()-pt<110&&Math.abs(pv)>180));
@@ -3224,20 +3242,70 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
 })();
 $('#chip').onclick=e=>{if(e.target.closest('[data-a="clr"]')){if(fcat)fcat=null;else if(ftag){ftag=null;ftagR=null;if(ftagBk==='stats'){tab='stats';AS='tags'}else{tab='tags';ps='goals'}}else if(fday){fday=null;tab='stats';AS='cal'}render();window.scrollTo(0,0)}};
 const shift=d=>{fcat=null;fday=null;const [y,m]=month.split('-').map(Number);month=mk(new Date(y,m-1+d,1));render()};
-const monthSwap=(d,from,op)=>{const[y,m]=month.split('-').map(Number),still=tab==='stats'&&RG==='year'&&AS!=='trend'&&AS!=='cal'&&new Date(y,m-1+d,1).getFullYear()===y;
-  swapAnim(d,()=>shift(d),still?[$('#tin')]:[$('#tin'),$('#body')],from,op)};
+const monthSwap=d=>{settleAll();shift(d)};
 $('#pv').onclick=()=>{if(!isModalOpen())monthSwap(-1)};$('#nx').onclick=()=>{if(!isModalOpen())monthSwap(1)};
 let ms=null,msBlock=false;const topEl=$('#top');
 topEl.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;if(isModalOpen())return;settleAll();ms={x:e.clientX,y:e.clientY,id:e.pointerId,on:false,lx:e.clientX,lt:performance.now(),v:0,dx:0}});
 topEl.addEventListener('pointermove',e=>{if(!ms||e.pointerId!==ms.id)return;const dx=e.clientX-ms.x,dy=e.clientY-ms.y;
   if(!ms.on){if(Math.abs(dy)>10&&Math.abs(dy)>Math.abs(dx)){ms=null;return}if(Math.abs(dx)>8&&Math.abs(dx)>Math.abs(dy)){ms.on=true;try{topEl.setPointerCapture(e.pointerId)}catch{}}else return}
-  ms.dx=dx;const n=performance.now(),dt=n-ms.lt;if(dt>0)ms.v=.6*ms.v+.4*((ms.lx-e.clientX)/dt);ms.lx=e.clientX;ms.lt=n;
-  const t=$('#tin');t.style.transition='none';t.style.transform=`translateX(${dx*.55}px)`;t.style.opacity=String(1-Math.min(.6,Math.abs(dx)/260))});
+  ms.dx=dx;const n=performance.now(),dt=n-ms.lt;if(dt>0)ms.v=lpf(ms.v,(ms.lx-e.clientX)/dt,dt,33);ms.lx=e.clientX;ms.lt=n});
 function endMs(e,cancel){if(!ms||e.pointerId!==ms.id)return;const m=ms;ms=null;if(!m.on)return;msBlock=true;setTimeout(()=>msBlock=false,60);
-  if(!cancel&&(Math.abs(m.dx)>40||(Math.abs(m.v)>.4&&Math.abs(m.dx)>16))){try{hap.sw('select')}catch(e){}monthSwap(m.dx<0?1:-1,m.dx*.55,1-Math.min(.6,Math.abs(m.dx)/260))}
-  else{const t=$('#tin');t.style.transition='transform .5s cubic-bezier(.22,1,.36,1),opacity .3s';t.style.transform='';t.style.opacity=''}}
+  if(!cancel&&(Math.abs(m.dx)>40||(Math.abs(m.v)>.4&&Math.abs(m.dx)>16))){try{hap.sw('select')}catch(e){}monthSwap(m.dx<0?1:-1)}}
 topEl.addEventListener('pointerup',e=>endMs(e,false));topEl.addEventListener('pointercancel',e=>endMs(e,true));
 topEl.addEventListener('click',e=>{if(msBlock){e.stopPropagation();e.preventDefault()}},true);
+
+// ---------- сжатие главного блока при прокрутке списка ----------
+// Пока блок прилип к верху, по мере прокрутки он сужается до трёх цифр (остаток, доход, расход):
+// строка с месяцем, подпись «Остаток», кольцо бюджета и нижние строки плавно сворачиваются.
+// Место блока в потоке не меняется (margin-bottom), поэтому список не прыгает; путь прокрутки равен
+// высоте сжатия, так что список всё время остаётся на одном расстоянии под блоком.
+(function(){
+  const sw=$('#tps'),sum=$('#sum');if(!sw||!sum)return;
+  const PR=['height','marginTop','marginBottom','paddingTop','paddingBottom'];
+  const SPEC=[['.mo',PR,1],['#sum > .sht',PR,1],['#sum > :not(.bw):not(.sht)',PR,1],['#sum .gg',['width','height'],1],['#sum .bl',['minHeight'],0]];
+  const px=v=>parseFloat(v)||0;
+  let T=[],tot=null,N={},H0=0,R=0,dirty=true,hid=true,lastP=-1,raf=0;
+  const obs=new MutationObserver(()=>{dirty=true;update()});
+  function clear(){
+    T.forEach(t=>{const s=t.e.style;t.pr.forEach(k=>{s[k]=''});s.opacity='';s.overflow='';s.pointerEvents=''});
+    const s=topEl.style;s.paddingTop='';s.paddingBottom='';s.marginBottom='';if(tot)tot.style.marginBottom=''}
+  function apply(p){
+    const k=1-p;
+    T.forEach(t=>{const s=t.e.style;t.pr.forEach((key,i)=>{s[key]=(t.n[i]*k)+'px'});
+      if(t.f){s.opacity=String(Math.max(0,1-p*1.7));s.overflow='hidden';s.pointerEvents=p>.4?'none':''}});
+    const s=topEl.style;s.paddingTop=(N.pt+8*p)+'px';s.paddingBottom=(N.pb-6*p)+'px';
+    if(tot)tot.style.marginBottom=(N.tm-6*p)+'px';
+    s.marginBottom=(N.mb+H0-topEl.offsetHeight)+'px'}
+  function measure(){
+    clear();T=[];tot=null;
+    const h=topEl.offsetHeight;if(!h)return false;
+    const cs=getComputedStyle(topEl);N={pt:px(cs.paddingTop),pb:px(cs.paddingBottom),mb:px(cs.marginBottom),tm:0};
+    SPEC.forEach(([q,pr,f])=>topEl.querySelectorAll(q).forEach(e=>{const c=getComputedStyle(e);T.push({e,pr,f,n:pr.map(k=>px(c[k]))})}));
+    tot=topEl.querySelector('.tot');if(tot)N.tm=px(getComputedStyle(tot).marginBottom);
+    H0=h;apply(1);R=Math.max(30,H0-topEl.offsetHeight);return true}
+  function core(){
+    raf=0;
+    if(!topEl.offsetHeight){hid=true;return}
+    if(dirty||hid){if(!measure())return;dirty=hid=false;lastP=-1}
+    const cs=getComputedStyle(topEl);
+    let p=(px(cs.top)-(sw.getBoundingClientRect().bottom+px(cs.marginTop)))/R;
+    try{if(active)p=0}catch(e){}
+    p=p>0?Math.min(1,Math.round(p*1000)/1000):0;
+    if(RM)p=p>=.5?1:0;   // «уменьшение движения»: без плавного сжатия — блок переключается сразу
+    if(p===lastP)return;lastP=p;
+    if(p===0)clear();else apply(p);
+    topEl.classList.toggle('cz',p>=.5)}
+  function update(){try{core()}finally{obs.takeRecords()}}
+  const kick=()=>{if(!raf)raf=requestAnimationFrame(update)};
+  addEventListener('scroll',kick,{passive:true});
+  addEventListener('resize',()=>{dirty=true;kick()});
+  addEventListener('load',()=>{dirty=true;kick()});
+  // тап по свёрнутому блоку плавно возвращает список наверх (там снова видны месяц и стрелки)
+  topEl.addEventListener('click',e=>{if(!topEl.classList.contains('cz')||msBlock||isModalOpen())return;
+    e.preventDefault();e.stopPropagation();window.scrollTo({top:0,behavior:RM?'auto':'smooth'})},true);
+  obs.observe(topEl,{attributes:true,attributeFilter:['style']});obs.observe(sum,{childList:true});
+  requestAnimationFrame(()=>{dirty=true;update()});
+})();
 
 
 // ---------- настройки ----------
@@ -3682,7 +3750,7 @@ function catDrag(list,type){
       if(JSON.stringify(cfg.ord[type]||[])!==JSON.stringify(ids)){cfg.ord[type]=ids;buildAll();save();render()}};
     h.addEventListener('pointermove',mv);h.addEventListener('pointerup',up);h.addEventListener('pointercancel',up)})}
 function openCf(mode,src){if(isModalOpen())return;cadOpen=false;cancelGestures();setOrigin(cf,src||fab);stCover(true);lockBg(true);cfT=mode;renderCf();cf.scrollTop=0;cf.classList.add('on');ov.className='on'}
-function closeCf(){if(!cfT&&!cf.classList.contains('on'))return;cf.classList.remove('on');cfT=null;if(!isModalOpen()){ov.className='';lockBg(false)}cancelGestures();stCover(false)}
+function closeCf(){if(!cfT&&!cf.classList.contains('on'))return;cf.classList.remove('on');cfT=null;unlockIfIdle();cancelGestures();if(!isModalOpen())stCover(false)}
 cf.addEventListener('click',e=>{if(e.target.closest('#cfx'))closeCf()});
 cf.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'&&e.target.type!=='color'){e.preventDefault();e.target.blur()}});
 // ---- тема: тёмная / светлая ----
@@ -3705,7 +3773,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&cfg.theme
 // ---- всплывающее меню настроек (поверх страницы, ничего не сдвигает) ----
 function stHtml(){
   const ri=()=>'';
-  const CH='<svg class="ch" width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.2 1.2L6.8 7l-5.6 5.8"/></svg>';
+  const CH='';
   const tgRow=(id,label,on,lk)=>`<div class="rw tr"><span class="rl" style="white-space:normal;line-height:1.25">${label}</span><button type="button" class="tg${on?' on':''}" id="${id}"${lk?` data-lk="${lk}"`:''} role="switch" aria-checked="${!!on}" aria-label="${label}" style="flex:none"></button></div>`;
   const ICN={"prv":"<path d='M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z'/><circle cx='12' cy='12' r='2.6'/><path d='M4.5 19.5l15-15'/>","mst":"<rect x=\"4\" y=\"5.5\" width=\"16\" height=\"14\" rx=\"2.5\"/><path d=\"M8 3.5v4M16 3.5v4M4 10h16\"/><circle cx=\"8.5\" cy=\"14.5\" r=\"1.1\"/>","pin":"<rect x=\"5\" y=\"10.5\" width=\"14\" height=\"9.5\" rx=\"2.5\"/><path d=\"M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5M12 14v2.3\"/>","cub": "<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M14.8 9.4c-.5-.9-1.4-1.4-2.8-1.4-1.6 0-2.7.8-2.7 2s1 1.7 2.7 2.1 2.9.9 2.9 2.2-1.2 2.1-2.9 2.1c-1.4 0-2.4-.5-2.9-1.5M12 6.4v1.6M12 16v1.6\"/>", "tpr": "<path d=\"M13 3L5 13.5h6L10 21l8-10.5h-6z\"/>", "thm": "<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M12 3.5a8.5 8.5 0 0 1 0 17z\"/>", "hlp": "<path d=\"M5 5.5A1.5 1.5 0 0 1 6.5 4H19v13H6.5A1.5 1.5 0 0 0 5 18.5z\"/><path d=\"M5 18.5A1.5 1.5 0 0 0 6.5 20H19v-3M9 8h6\"/>", "ctc": "<path d=\"M5 6.5A2.5 2.5 0 0 1 7.5 4h9A2.5 2.5 0 0 1 19 6.5v7a2.5 2.5 0 0 1-2.5 2.5H11l-4 3.5V16a2 2 0 0 1-2-2z\"/>", "cin": "<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M12 8v8M9 13l3 3 3-3\"/>", "cex": "<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M12 16V8M9 11l3-3 3 3\"/>", "lkr": "<path d=\"M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3\"/><path d=\"M4 7.5V17a2 2 0 0 0 2 2h12.5a1.5 1.5 0 0 0 1.5-1.5v-8A1.5 1.5 0 0 0 18.5 8h-12A2.5 2.5 0 0 1 4 7.5z\"/><circle cx=\"16\" cy=\"13.5\" r=\"1\"/>", "crs": "<rect x=\"4\" y=\"5.5\" width=\"16\" height=\"14\" rx=\"2.5\"/><path d=\"M8 3.5v4M16 3.5v4M4 10h16M9.5 14.5h5M12.5 12.5l2 2-2 2\"/>", "bki": "<path d=\"M12 4v10M8 10.2l4 4 4-4M5 19.5h14\"/>", "bke": "<path d=\"M12 15V5M8 8.8l4-4 4 4M5 19.5h14\"/>", "bkr": "<path d=\"M5 7h14M10 7V4.8h4V7M7 7l.8 12h8.4L17 7M10.3 11v5M13.7 11v5\"/>"};
   const IC=id=>ICN[id]?`<span class="rwi"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICN[id]}</svg></span>`:'';
@@ -3718,16 +3786,14 @@ function stHtml(){
   const thm=`<div class="rw tr">${IC('thm')}<span class="rl">Тема</span><div class="thm" id="thm" role="radiogroup" aria-label="Тема" data-v="${v==='light'?'l':v==='auto'?'a':'d'}"><i></i>${[['dark','Тёмная','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg>'],['auto','Авто','Авто'],['light','Светлая','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2.5 12h2M19.5 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>']].map(([k,n,h])=>`<button type="button" role="radio" data-th="${k}" aria-label="${n}" title="${n}" aria-checked="${v===k}" class="${v===k?'on':''}">${h}</button>`).join('')}</div></div>`;
   return `<h1 class="lt">Настройки</h1>
 <div class="sc"><div class="pf"><span class="av${ini?' ini':''}"${ini?` style="background:linear-gradient(160deg,${avc},${avc}cc)"`:''}>${ini?`<i class="avi">${E(ini)}</i>`:person}${ph?`<img src="${E(ph)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">`:''}</span><span class="pn"><b>${E(nm)}</b><small${un?' class="un"':''}>${E(sub)}</small></span></div>
-${row('cub','#2f6df6','<path d="M12 3.5v17M16.2 7.6c0-1.6-1.9-2.8-4.2-2.8s-4.2 1.2-4.2 2.9 1.9 2.5 4.2 3.1 4.2 1.4 4.2 3.2-1.9 3-4.2 3-4.2-1.3-4.2-3"/>','Валюта и курсы',E(cfg.cur))}
+${row('cub','#2f6df6','<path d="M12 3.5v17M16.2 7.6c0-1.6-1.9-2.8-4.2-2.8s-4.2 1.2-4.2 2.9 1.9 2.5 4.2 3.1 4.2 1.4 4.2 3.2-1.9 3-4.2 3-4.2-1.3-4.2-3"/>','Валюта и курсы',E(cfg.cur))}${row('ctc','','','Написать нам')}
 ${cfg.tplHide.length?row('tpr','#f39a1f','<path d="M13 3L5 13.5h6L10 21l8-10.5h-6z"/>','Быстрые шаблоны','Вернуть ('+cfg.tplHide.length+')'):''}</div>
 <div class="sgh">Внешний вид</div>
 <div class="sc">${thm}</div>
 <div class="sgh">Безопасность</div>
 <div class="sc">${row('pin','','','PIN-код',pinOn()?'Вкл':'Выкл')}${row('prv','','','Скрытие сумм',PRV?'Вкл':'Выкл')}</div>
-<div class="sgh">Категория/Активы</div>
+<div class="sgh">Категории и учёт</div>
 <div class="sc">${row('cin','#22a845','<path d="M12 4.5v10M7.8 10.6l4.2 4.2 4.2-4.2M5 19.5h14"/>','Категория доходов')}${row('cex','#f39a1f','<path d="M12 19.5v-10M7.8 13.4l4.2-4.2 4.2 4.2M5 4.5h14"/>','Категория расходов')}${row('lkr','','','Записывать в расходы')}${row('crs','','','Перенос на следующий месяц')}${row('rcs','','','Повторяющиеся операции',(cfg.rec||[]).length?String(cfg.rec.length):'Нет')}${row('mst','','','Начало месяца',mStart()+' число')}</div>
-<div class="sgh">Поддержка и помощь</div>
-<div class="sc">${row('hlp','','','Обучение')}${row('ctc','','','Написать нам')}</div>
 <div class="sgh">Резервная копия</div>
 <div class="sc">${row('bki','#3b8fd4','<path d="M12 4v10M8 10.2l4 4 4-4M5 19.5h14"/>','Импорт')}${row('bke','#2f6df6','<path d="M12 15V5M8 8.8l4-4 4 4M5 19.5h14"/>','Экспорт')}${row('bkr','#e5484d','<path d="M5 7h14M10 7V4.8h4V7M7 7l.8 12h8.4L17 7M10.3 11v5M13.7 11v5"/>','Сброс','','rd')}</div>`}
 function bindSt(){
@@ -3740,7 +3806,7 @@ function bindSt(){
   if($('#crs'))$('#crs').onclick=()=>{cbM=shiftMonth(curM(),1);openBq('carry')};
   if($('#tpr'))$('#tpr').onclick=()=>{cfg.tplHide=[];save();renderSt();toast('Шаблоны возвращены')};
   if($('#hsb'))homeBind();if($('#botu'))$('#botu').onchange=e=>{const v=String(e.target.value||'').trim();cfg.botUrl=v;save();if(ibBase()){window.__ibBusy=false;inboxPull()}}
-  $('#cin').onclick=e=>openCf('catsI',e.currentTarget);$('#cex').onclick=e=>openCf('catsE',e.currentTarget);if($('#rcs'))$('#rcs').onclick=()=>openRcSt();$('#bki').onclick=()=>openBq('import');$('#bke').onclick=()=>openBq('export');$('#bkr').onclick=()=>openBq('reset');$('#hlp').onclick=()=>openBq('help');$('#ctc').onclick=()=>openBq('contact');if($('#tourb'))$('#tourb').onclick=()=>{closeSettings();if(window.AppTour)AppTour.replay()}}
+  $('#cin').onclick=e=>openCf('catsI',e.currentTarget);$('#cex').onclick=e=>openCf('catsE',e.currentTarget);if($('#rcs'))$('#rcs').onclick=()=>openRcSt();$('#bki').onclick=()=>openBq('import');$('#bke').onclick=()=>openBq('export');$('#bkr').onclick=()=>openBq('reset');$('#ctc').onclick=()=>openBq('contact');}
 function renderSt(){const el=$('#st');if(!el||tab!=='settings')return;el.innerHTML=stHtml();bindSt()}
 // ---- маленькое окошко снизу: подтверждение сброса и резервная копия ----
 const bq=$('#bq');let bqT=null,bqCb=null;
@@ -3756,19 +3822,22 @@ function cbHint(){const m=cbM,mn=MN[+m.slice(5,7)-1].toLowerCase(),own=bmOwn(m),
 function saveCb(){const inp=$('#cbam'),v=pn(inp&&inp.value);if(!(v>0)){toast('Укажите сумму бюджета');return}
   if(!_obj(cfg.bm))cfg.bm={};cfg.bm[cbM]=v;save();closeBq();toast('Бюджет · '+MN[+cbM.slice(5,7)-1]+': '+fmt(v)+' '+cfg.cur)}
 function bqHtml(kind){
-  if(kind==='prv')return `<div class="bqt">Скрытие сумм</div>${bqTg('tgprv','Скрывать суммы','Вместо цифр показывается •••',PRV)}${bqTg('tgprf','Включать поворотом экрана','Переворот телефона экраном вниз',FLP.want)}<div class="bqs" style="font-size:11px;line-height:1.45;margin-top:12px;opacity:.8">Положите телефон экраном вниз примерно на секунду — суммы скроются, и вы почувствуете короткую вибрацию. Переверните экраном вниз ещё раз — суммы снова появятся. Телефон должен лежать почти горизонтально: наклон или положение в руке не считаются. Работает, пока приложение открыто.</div><div class="bqb"><button class="sm pr" data-bq="cancel">Готово</button></div>`;
+  if(kind==='prv')return `<div class="bqt">Скрытие сумм</div>${bqTg('tgprv','Скрывать суммы','Вместо цифр показывается •••',PRV)}${bqTg('tgprf','Включать поворотом экрана','Переворот телефона экраном вниз',FLP.want)}<div class="bqs" style="font-size:11px;line-height:1.45;margin-top:12px;opacity:.8">Положите телефон экраном вниз примерно на секунду — суммы скроются, и вы почувствуете короткую вибрацию. Переверните экраном вниз ещё раз — суммы снова появятся. Телефон должен лежать почти горизонтально: наклон или положение в руке не считаются. Работает, пока приложение открыто.</div><div class="bqb"><button class="sm pr auto" data-bq="cancel">Готово</button></div>`;
   if(kind==='mstart')return `<div class="bqt">Начало месяца</div><div class="bqs">С какого числа начинается ваш месяц — например, день зарплаты.</div><div class="bqm"><button type="button" class="sm" data-bq="msm" aria-label="Раньше">−</button><span class="mn" id="msn">${msV} число</span><button type="button" class="sm" data-bq="msp" aria-label="Позже">+</button></div><div class="bqs" id="msh">${E(msHint())}</div><div class="bqb"><button class="sm" data-bq="cancel">Отмена</button><button class="sm pr" data-bq="mssave">Сохранить</button></div>`;
-  if(kind==='pin'){if(!pinOn())return `<div class="bqt">PIN-код</div><div class="bqs">Защитите приложение 4-значным PIN-кодом. Он спрашивается при открытии и после того, как вы сворачиваете приложение. После этого можно включить вход по Face ID или отпечатку.</div><div class="bqb"><button class="sm" data-bq="cancel">Закрыть</button><button class="sm pr" data-bq="pinset">Установить PIN</button></div>`;
-    return `<div class="bqt">PIN-код включён</div><div class="bqs">Спрашивать PIN после сворачивания:</div><div class="bqm bqa">${[[0,'Сразу'],[60,'1 мин'],[300,'5 мин'],[900,'15 мин']].map(([v,l])=>`<button type="button" class="sm${pinAuto()===v?' pr':''}" data-bq="pa" data-v="${v}">${l}</button>`).join('')}</div>${(!BIO.ready||BIO.be)?bqTg('tgbio',bioName(),'Вход без ввода PIN',bioOn()):''}<div class="bqb"><button class="sm" data-bq="pinchg">Сменить PIN</button><button class="sm del" data-bq="pinoff">Отключить</button></div><div class="bqb"><button class="sm" data-bq="cancel">Закрыть</button></div>`}
-  if(kind==='link')return `<div class="bqt">Записывать в расходы</div><div class="bqs">Взносы в цели и долги будут записываться как расходы — их учтут бюджет, лимиты и прогноз.</div>${bqTg('tglg','Цели','',linkGoalOn())}${bqTg('tgld','Долги','',linkDebtOn())}<div class="bqb"><button class="sm pr" data-bq="cancel">Готово</button></div>`;
+  if(kind==='pin'||kind==='pinlen'){
+    const lb=(a,n)=>`<button type="button" class="sm" data-bq="${a}" data-v="${n}">${n} цифры</button>`;
+    if(kind==='pinlen')return `<div class="bqt">Новый PIN-код</div><div class="bqs">Сколько цифр должно быть в PIN-коде?</div><div class="bqm bqa">${[4,6].map(n=>lb('pinchg',n)).join('')}</div><div class="bqb"><button class="sm" data-bq="pinback">Назад</button></div>`;
+    if(!pinOn())return `<div class="bqt">PIN-код выключен</div><div class="bqs">Защитите приложение PIN-кодом. Выберите, сколько в нём будет цифр:</div><div class="bqm bqa">${[2,4,6].map(n=>lb('pinset',n)).join('')}</div><div class="bqb"><button class="sm auto" data-bq="cancel">Закрыть</button></div>`;
+    const n=pinLen();
+    return `<div class="bqt">PIN-код включён</div><div class="bqs">Сейчас: ${n} цифры. Он спрашивается при открытии приложения и после того, как вы его сворачиваете.</div><div class="bqb"><button class="sm" data-bq="pinchm">Сменить PIN</button><button class="sm del" data-bq="pinoff">Отключить</button></div><div class="bqb"><button class="sm auto" data-bq="cancel">Закрыть</button></div>`}
+  if(kind==='link')return `<div class="bqt">Записывать в расходы</div><div class="bqs">Взносы в цели и долги будут записываться как расходы — их учтут бюджет, лимиты и прогноз.</div>${bqTg('tglg','Цели','',linkGoalOn())}${bqTg('tgld','Долги','',linkDebtOn())}<div class="bqb"><button class="sm pr auto" data-bq="cancel">Готово</button></div>`;
   if(kind==='carry'){const own=bmOwn(cbM),eff=budgetOf(cbM);
-    return `<div class="bqt">Перенос на следующий месяц</div>${bqTg('tgcb','Переносить остаток','Остаток прошлых месяцев добавляется к текущему',!!cfg.carry)}${bqTg('tgcr','Переносить бюджет','Бюджет действует и в следующих месяцах',carryBudOn())}<div class="bqm"><button type="button" class="sm" data-bq="cmp" aria-label="Предыдущий месяц">‹</button><span class="mn">${E(MN[+cbM.slice(5,7)-1]+' '+cbM.slice(0,4))}</span><button type="button" class="sm" data-bq="cmn" aria-label="Следующий месяц">›</button></div><label class="bqf"><span>Бюджет, ${E(cfg.cur)}</span><input class="bqi" id="cbam" inputmode="decimal" value="${eff||''}" placeholder="20 000" autocomplete="off"></label><div class="bqs" id="cbh">${E(cbHint())}</div><div class="bqb">${own?'<button class="sm del" data-bq="cbdel">Убрать</button>':''}<button class="sm pr" data-bq="cbsave">Сохранить</button></div><div class="bqb"><button class="sm" data-bq="cancel">Закрыть</button></div>`}
+    return `<div class="bqt">Перенос на следующий месяц</div>${bqTg('tgcb','Переносить остаток','Остаток прошлых месяцев добавляется к текущему',!!cfg.carry)}${bqTg('tgcr','Переносить бюджет','Бюджет действует и в следующих месяцах',carryBudOn())}<div class="bqm"><button type="button" class="sm" data-bq="cmp" aria-label="Предыдущий месяц">‹</button><span class="mn">${E(MN[+cbM.slice(5,7)-1]+' '+cbM.slice(0,4))}</span><button type="button" class="sm" data-bq="cmn" aria-label="Следующий месяц">›</button></div><label class="bqf"><span>Бюджет, ${E(cfg.cur)}</span><input class="bqi" id="cbam" inputmode="decimal" value="${eff||''}" placeholder="20 000" autocomplete="off"></label><div class="bqs" id="cbh">${E(cbHint())}</div><div class="bqb">${own?'<button class="sm del" data-bq="cbdel">Убрать</button>':''}<button class="sm pr" data-bq="cbsave">Сохранить</button></div><div class="bqb"><button class="sm auto" data-bq="cancel">Закрыть</button></div>`}
   return bqHtml0(kind)}
-function bqHtml0(kind){if(kind==='help')return `<div class="bqt">Обучение</div><div class="bqb"><button class="sm pr" data-bq="tourgo">Повторить</button><button class="sm pr" data-bq="tourstop">Завершить</button></div><div class="bqb"><button class="sm" data-bq="cancel">Отмена</button></div>`;
-  if(kind==='contact')return `<div class="bqt">Написать нам</div><div class="bqb"><button class="sm pr" data-bq="cttg">Написать в Telegram</button><a class="sm pr" id="ctem" href="${E(mailUrl())}">Написать на e-mail</a></div>`;
+function bqHtml0(kind){  if(kind==='contact')return `<div class="bqt">Написать нам</div><div class="bqb"><button class="sm pr" data-bq="cttg">Написать в Telegram</button><a class="sm pr" id="ctem" href="${E(mailUrl())}">Написать на e-mail</a></div>`;
   if(kind==='save')return `<div class="bqt">Сохранить данные</div><div class="bqs">Выберите формат. JSON — полная копия для восстановления (операции, цели, долги, настройки). Excel (.xlsx) — таблица с листами по категориям и месяцам.</div><div class="bqb"><button class="sm pr" data-bq="json">Сохранить в JSON</button><button class="sm pr" data-bq="xlsx">Сохранить в Excel</button></div><div class="bqb"><button class="sm" data-bq="cancel">Не сейчас</button></div>`;
-  if(kind==='export')return `<div class="bqt">Экспорт</div><div class="bqs">JSON — полная копия для восстановления (операции, цели, долги, настройки). Excel (.xlsx) — таблица с листами по категориям и месяцам.</div><div class="bqb"><button class="sm pr" data-bq="json">Экспорт JSON</button><button class="sm pr" data-bq="xlsx">Экспорт Excel</button></div><div class="bqb"><button class="sm" data-bq="cancel">Отмена</button></div>`;
-  if(kind==='import')return `<div class="bqt">Импорт</div><div class="bqs">JSON — восстановление из копии: добавится то, чего нет, ничего не затрётся. Excel / CSV — даты, суммы и категории распределятся сами, дубликаты пропускаются.</div><div class="bqb"><button class="sm pr" data-bq="impj">Импорт JSON</button><button class="sm pr" data-bq="imp">Импорт Excel</button></div><div class="bqb"><button class="sm" data-bq="cancel">Отмена</button></div>`;
+  if(kind==='export')return `<div class="bqt">Экспорт</div><div class="bqs">JSON — полная копия для восстановления (операции, цели, долги, настройки). Excel (.xlsx) — таблица с листами по категориям и месяцам.</div><div class="bqb"><button class="sm pr" data-bq="json">Экспорт JSON</button><button class="sm pr" data-bq="xlsx">Экспорт Excel</button></div><div class="bqb"><button class="sm auto" data-bq="cancel">Отмена</button></div>`;
+  if(kind==='import')return `<div class="bqt">Импорт</div><div class="bqs">JSON — восстановление из копии: добавится то, чего нет, ничего не затрётся. Excel / CSV — даты, суммы и категории распределятся сами, дубликаты пропускаются.</div><div class="bqb"><button class="sm pr" data-bq="impj">Импорт JSON</button><button class="sm pr" data-bq="imp">Импорт Excel</button></div><div class="bqb"><button class="sm auto" data-bq="cancel">Отмена</button></div>`;
   return kind==='reset'
    ?`<div class="bqt">Вы точно в этом уверены?</div><div class="bqs">Все операции будут удалены. Это нельзя отменить — сначала можно сохранить резервную копию (Настройки → Экспорт).</div><div class="bqb"><button class="sm" data-bq="cancel">Отмена</button><button class="sm del" data-bq="reset">Сбросить</button></div>`
    :`<div class="bqt">Экспорт, импорт и сброс</div><div class="bqs">JSON — полная копия для восстановления (операции, цели, долги, настройки). Excel (.xlsx) — таблица с листами по категориям и месяцам. При импорте даты, суммы и категории распределятся сами, дубликаты пропускаются.</div><div class="bqb"><button class="sm" data-bq="json">Экспорт JSON</button><button class="sm" data-bq="xlsx">Экспорт Excel</button></div><div class="bqb"><button class="sm pr" data-bq="impj">Импорт JSON</button><button class="sm pr" data-bq="imp">Импорт Excel</button></div><div class="bqb"><button class="sm del" data-bq="toreset">Сбросить все операции</button></div>`}
@@ -3791,15 +3860,13 @@ function bqAsk(title,text,ok,cb){if(bq.classList.contains('on'))closeBq();bqCb=c
   bqShow(`<div class="bqt">${E(title)}</div><div class="bqs pre">${E(text)}</div><div class="bqb"><button class="sm" data-bq="cancel">Отмена</button><button class="sm pr" data-bq="askyes">${E(ok)}</button></div>`,'ask')}
 function bqInfo(title,text){if(bq.classList.contains('on'))closeBq();bqCb=null;
   bqShow(`<div class="bqt">${E(title)}</div><div class="bqs pre">${E(text)}</div><div class="bqb"><button class="sm pr" data-bq="cancel">Понятно</button></div>`,'info')}
-function closeBq(){if(!bqT&&!bq.classList.contains('on'))return;bq.classList.remove('on');bqT=null;if(!isModalOpen()){ov.className='';lockBg(false)}cancelGestures();stCover(false)}
+function closeBq(){if(!bqT&&!bq.classList.contains('on'))return;bq.classList.remove('on');bqT=null;unlockIfIdle();cancelGestures();if(!isModalOpen())stCover(false)}
 bq.addEventListener('click',e=>{
   if(e.target.closest('a[href^="mailto:"]')){setTimeout(closeBq,350);return}   // ссылку не трогаем — её откроет система
   if(bqT==='contact'&&!e.target.closest('button')){closeBq();return}              // «Написать нам»: касание любой другой части окна закрывает его
   const b=e.target.closest('button');if(!b)return;const a=b.dataset.bq;
   if(a==='cancel'){bqCb=null;closeBq()}
   else if(a==='askyes'){const cb=bqCb;bqCb=null;closeBq();if(cb)setTimeout(cb,30)}
-  else if(a==='tourgo'){closeBq();closeSettings();if(window.AppTour)setTimeout(()=>AppTour.replay(),700)}
-  else if(a==='tourstop'){closeBq();if(window.AppTour)AppTour.stop()}
   else if(a==='cttg'){closeBq();supportTg()}
   else if(a==='toreset'){bqT='reset';bq.innerHTML=bqHtml('reset')}
   else if(a==='reset'){const oTx=tx,oLn=learn;tx=[];learn={};tomb(oTx.map(t=>t.id));save();closeBq();render();toast('Все операции удалены','Отмена',()=>{untomb(oTx.map(t=>t.id));tx=oTx;learn=oLn;save();render()},'del')}
@@ -3814,103 +3881,34 @@ bq.addEventListener('click',e=>{
   else if(a==='cmp'||a==='cmn'){cbM=shiftMonth(cbM,a==='cmn'?1:-1);bq.innerHTML=bqHtml('carry')}
   else if(a==='msm'||a==='msp'){msV=a==='msm'?(msV<=1?28:msV-1):(msV>=28?1:msV+1);$('#msn').textContent=msV+' число';$('#msh').textContent=msHint()}
   else if(a==='mssave'){cfg.mStart=msV>=2?msV:1;save();closeBq();month=curM();render();stRows();toast(msV>=2?'Месяц начинается с '+msV+' числа':'Месяц начинается с 1 числа')}
-  else if(a==='pinset'){closeBq();setTimeout(()=>lkShow('set1',()=>{stRows();toast('PIN-код включён')}),250)}
-  else if(a==='pa'){const r=pinRec();if(r){r.a=+b.dataset.v;pinSave(r)}bq.innerHTML=bqHtml('pin')}
-  else if(a==='pinchg'){closeBq();setTimeout(()=>lkShow('verify',()=>setTimeout(()=>lkShow('set1',()=>toast('PIN-код изменён')),60)),250)}
-  else if(a==='pinoff'){closeBq();setTimeout(()=>lkShow('verify',()=>{try{localStorage.removeItem('finapp.pin');localStorage.removeItem('finapp.bio');localStorage.removeItem('finapp.bioc')}catch(e){}stRows();toast('PIN-код отключён')}),250)}
+  else if(a==='pinset'){const n=+b.dataset.v;closeBq();setTimeout(()=>lkShow('set1',()=>{stRows();toast('PIN-код включён')},n),250)}
+  else if(a==='pinchm'){bq.innerHTML=bqHtml('pinlen')}
+  else if(a==='pinback'){bq.innerHTML=bqHtml('pin')}
+  else if(a==='pinchg'){const n=+b.dataset.v;closeBq();setTimeout(()=>lkShow('verify',()=>setTimeout(()=>lkShow('set1',()=>toast('PIN-код изменён'),n),60)),250)}
+  else if(a==='pinoff'){closeBq();setTimeout(()=>lkShow('verify',()=>{try{localStorage.removeItem('finapp.pin')}catch(e){}stRows();toast('PIN-код отключён')}),250)}
   else if(a==='tgprv'){prvSet(!PRV)}
-  else if(a==='tgbio'){bioToggle(b)}
   else if(a==='tgprf'){flToggle(b)}
   else if(a==='cbsave')saveCb()
   else if(a==='cbdel'){if(_obj(cfg.bm))delete cfg.bm[cbM];save();bq.innerHTML=bqHtml('carry');toast('Бюджет месяца убран')}});
 bq.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target&&e.target.id==='cbam'){e.preventDefault();saveCb()}});
 // ================= PIN-код: экран блокировки =================
-const LKE=$('#lk');const LK={mode:'',buf:'',first:'',cb:null,tries:0,busy:false,until:0,msg:'',err:false};
+const LKE=$('#lk');const LK={mode:'',buf:'',first:'',len:4,cb:null,tries:0,busy:false,until:0,msg:'',err:false};
 function pinRec(){try{return JSON.parse(localStorage.getItem('finapp.pin')||'null')}catch(e){return null}}
 function pinSave(r){try{localStorage.setItem('finapp.pin',JSON.stringify(r))}catch(e){}}
-function pinAuto(){const r=pinRec();return r&&Number.isFinite(r.a)?r.a:60}
+function pinLen(){const r=pinRec();return r&&[2,4,6].indexOf(r.n)>=0?r.n:4}
 async function pinHash(p,salt){const t=salt+':'+p;try{const d=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return Array.from(new Uint8Array(d)).map(x=>x.toString(16).padStart(2,'0')).join('')}catch(e){let h=5381;for(let k=0;k<4000;k++)for(let i=0;i<t.length;i++)h=((h<<5)+h+t.charCodeAt(i))|0;return 'f'+h}}
 
-// ================= Биометрия: Face ID / Touch ID / отпечаток пальца =================
-// В Telegram — встроенная биометрия Telegram (BiometricManager, Telegram 7.2+): сам выбирает Face ID на iPhone и отпечаток/лицо на Android.
-// Вне Telegram (PWA, браузер) — системная проверка устройства через WebAuthn. PIN остаётся запасным способом входа.
-const BIO={be:'',type:'',ready:false,busy:false,okAt:0,initP:null};
-const _ios=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
-const BM=(IN_TG&&TGW.BiometricManager&&(!TGW.isVersionAtLeast||TGW.isVersionAtLeast('7.2')))?TGW.BiometricManager:null;
-function bioOn(){try{return localStorage.getItem('finapp.bio')==='1'}catch(e){return false}}
-function bioInit(){
-  if(BIO.initP)return BIO.initP;
-  BIO.initP=new Promise(res=>{
-    if(BM){let done=false;const f=()=>{if(done)return;done=true;BIO.be=BM.isBiometricAvailable?'tg':'';BIO.type=BM.biometricType||'unknown';BIO.ready=true;res()};
-      try{BM.init(f)}catch(e){f()}setTimeout(f,2500)}
-    else if(!IN_TG&&window.PublicKeyCredential&&navigator.credentials&&PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable){
-      PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().then(a=>{BIO.be=a?'wa':'';BIO.ready=true;res()}).catch(()=>{BIO.ready=true;res()})}
-    else{BIO.ready=true;res()}});
-  return BIO.initP}
-function bioKind(){
-  if(BIO.be==='tg')return BIO.type==='face'?'face':BIO.type==='finger'?'finger':'bio';
-  return _ios?(Math.max(screen.width,screen.height)>=812?'face':'finger'):'finger'}
-function bioName(){const k=bioKind();return k==='face'?(_ios?'Face ID':'Вход по лицу'):k==='finger'?(_ios?'Touch ID':'Отпечаток пальца'):'Биометрия'}
-const BIO_ICO={face:"<path d='M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2'/><path d='M9 9.5v1.5M15 9.5v1.5M12 9.5v4h-1M9 16c1.7 1.2 4.3 1.2 6 0'/>",
-  finger:"<path d='M6.5 9a6 6 0 0 1 11 0'/><path d='M5 14c0-1 .1-2 .4-3M19 11c.3 1 .5 2 .5 3 0 2.5-.5 4.5-1.5 6'/><path d='M8.5 20c.7-1.5 1-3.4 1-5.5a2.5 2.5 0 0 1 5 0c0 2 .3 3.8 1 5.2'/><path d='M12 11.5c-1.7 0-3 1.3-3 3 0 1.6-.2 3-.7 4.2'/>"};
-function bioDraw(){
-  if(!LKE)return;const b=LKE.querySelector('.lkbio');if(!b)return;
-  const show=bioOn()&&(LK.mode==='unlock'||LK.mode==='verify')&&(!BIO.ready||!!BIO.be);
-  b.style.visibility=show?'visible':'hidden';
-  if(show){const k=bioKind()==='face'?'face':'finger';if(b.dataset.ic!==k){b.dataset.ic=k;b.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true">'+BIO_ICO[k]+'</svg>'}b.setAttribute('aria-label',bioName())}}
-function b64u(b){let s='';new Uint8Array(b).forEach(x=>s+=String.fromCharCode(x));return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
-function unb64u(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';const r=atob(s),a=new Uint8Array(r.length);for(let i=0;i<r.length;i++)a[i]=r.charCodeAt(i);return a}
-async function bioEnroll(){
-  if(BIO.be==='tg'){
-    if(BM.isAccessGranted)return true;
-    if(BM.isAccessRequested)return 'denied';
-    return new Promise(res=>{try{BM.requestAccess({reason:'Вход в Finance Pro без PIN-кода'},g=>res(g?true:'denied'))}catch(e){res(false)}})}
-  if(BIO.be==='wa'){
-    const c=await navigator.credentials.create({publicKey:{
-      challenge:crypto.getRandomValues(new Uint8Array(32)),
-      rp:{name:'Finance Pro'},
-      user:{id:crypto.getRandomValues(new Uint8Array(16)),name:'finance-pro',displayName:'Finance Pro'},
-      pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
-      authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required',residentKey:'discouraged'},
-      attestation:'none',timeout:60000}});
-    if(!c)return false;
-    localStorage.setItem('finapp.bioc',b64u(c.rawId));return true}
-  return false}
-async function bioCheck(){
-  if(BIO.be==='tg')return new Promise(res=>{try{BM.authenticate({reason:'Разблокировать Finance Pro'},ok=>res(!!ok))}catch(e){res(false)}});
-  if(BIO.be==='wa'){
-    let id='';try{id=localStorage.getItem('finapp.bioc')||''}catch(e){}
-    if(!id)return false;
-    try{const r=await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),allowCredentials:[{type:'public-key',id:unb64u(id),transports:['internal']}],userVerification:'required',timeout:60000}});return !!r}catch(e){return false}}
-  return false}
-async function bioUnlock(manual){
-  if(!bioOn()||BIO.busy||!LKE||!LKE.classList.contains('on'))return;
-  if(LK.mode!=='unlock'&&LK.mode!=='verify')return;
-  await bioInit();
-  if(!BIO.be||BIO.busy||!LKE.classList.contains('on')||(LK.mode!=='unlock'&&LK.mode!=='verify')){bioDraw();return}
-  bioDraw();BIO.busy=true;let ok=false;
-  try{ok=await bioCheck()}catch(e){ok=false}finally{BIO.busy=false;BIO.okAt=Date.now()}
-  if(!LKE.classList.contains('on'))return;
-  if(ok){LK.tries=0;const cb=LK.cb;lkHide();if(cb)cb();return}
-  LK.msg=manual?'Не удалось распознать. Введите PIN':'Нажмите значок или введите PIN';LK.err=!!manual;LK.hint=1;lkDraw()}
-async function bioToggle(btn){
-  if(bioOn()){try{localStorage.removeItem('finapp.bio');localStorage.removeItem('finapp.bioc')}catch(e){}tgSet(btn,false);toast(bioName()+' выключен');return}
-  await bioInit();
-  if(!BIO.be){toast(IN_TG?'Биометрия недоступна в этом Telegram или на устройстве':'Биометрия недоступна на этом устройстве');return}
-  BIO.busy=true;let r=false;
-  try{r=await bioEnroll()}catch(e){r=false}finally{BIO.busy=false;BIO.okAt=Date.now()}
-  if(r===true){try{localStorage.setItem('finapp.bio','1')}catch(e){}tgSet(btn,true);toast(bioName()+' включён')}
-  else if(r==='denied'){toast('Доступ запрещён. Разрешите в настройках Telegram');try{BM.openSettings()}catch(e){}}
-  else toast('Не удалось включить: '+bioName())}
-bioInit();
+// старые ключи биометрии (функция удалена)
+try{localStorage.removeItem('finapp.bio');localStorage.removeItem('finapp.bioc')}catch(e){}
 // облако Telegram включено, ошибок нет и хотя бы одна успешная сверка была — после сброса данные вернутся из облака
 function pinCloudOk(){try{return !!(IN_TG&&CL.on&&!CL.lastErr&&(CL.sb||CL.lastSync))}catch(e){return false}}
-function lkBuild(){if(!LKE)return;LKE.innerHTML=`<button type="button" class="lkx" data-k="x" aria-label="Отмена">×</button><div class="lkc"><div class="lkt"></div><div class="lks"></div><div class="lkd"><i></i><i></i><i></i><i></i></div><div class="lkp">${[1,2,3,4,5,6,7,8,9,'',0,'<'].map(k=>k===''?'<button type="button" class="lkbio" data-k="bio" aria-label="Биометрия" style="visibility:hidden"></button>':`<button type="button" data-k="${k}" aria-label="${k==='<'?'Удалить':k}">${k==='<'?'⌫':k}</button>`).join('')}</div><button type="button" class="lkf" data-k="f">Забыли PIN?</button></div><div class="lkq"><div class="lkt">Сбросить PIN?</div><div class="lks" style="max-width:290px">Чтобы сбросить PIN, нужно удалить все данные приложения на этом устройстве: операции, цели, долги и настройки. Это нельзя отменить.</div><div class="lkb"><button type="button" class="sm" data-k="fn">Отмена</button><button type="button" class="sm del" data-k="fy">Удалить данные</button></div></div>`}
+function lkBuild(){if(!LKE)return;LKE.innerHTML=`<button type="button" class="lkx" data-k="x" aria-label="Отмена">×</button><div class="lkc"><div class="lkt"></div><div class="lks"></div><div class="lkd"></div><div class="lkp">${[1,2,3,4,5,6,7,8,9,'',0,'<'].map(k=>k===''?'<span aria-hidden="true"></span>':`<button type="button" data-k="${k}" aria-label="${k==='<'?'Удалить':k}">${k==='<'?'⌫':k}</button>`).join('')}</div><button type="button" class="lkf" data-k="f">Забыли PIN?</button></div><div class="lkq"><div class="lkt">Сбросить PIN?</div><div class="lks" style="max-width:290px">Чтобы сбросить PIN, нужно удалить все данные приложения на этом устройстве: операции, цели, долги и настройки. Это нельзя отменить.</div><div class="lkb"><button type="button" class="sm" data-k="fn">Отмена</button><button type="button" class="sm del" data-k="fy">Удалить данные</button></div></div>`}
 function lkDraw(){if(!LKE)return;const T={unlock:'Введите PIN',verify:'Введите текущий PIN',set1:'Придумайте PIN',set2:'Повторите PIN'};
-  LKE.querySelector('.lkt').textContent=T[LK.mode]||'';const s=LKE.querySelector('.lks');s.textContent=LK.msg||(LK.mode==='set1'?'4 цифры':'');s.classList.toggle('er',!!LK.err);
-  LKE.querySelectorAll('.lkd i').forEach((d,i)=>d.classList.toggle('on',i<LK.buf.length));
-  LKE.querySelector('.lkx').style.display=LK.mode==='unlock'?'none':'';bioDraw();LKE.querySelector('.lkf').style.display=(LK.mode==='unlock'||LK.mode==='verify')?'':'none'}
-function lkShow(mode,cb){if(!LKE)return;if(!LKE.firstChild)lkBuild();LK.mode=mode;LK.buf='';LK.first='';LK.cb=cb||null;LK.msg='';LK.err=false;LKE.classList.remove('cf');LKE.classList.add('on');lkDraw();if((mode==='unlock'||mode==='verify')&&bioOn())setTimeout(()=>bioUnlock(false),mode==='unlock'?250:450)}
+  LKE.querySelector('.lkt').textContent=T[LK.mode]||'';const s=LKE.querySelector('.lks');s.textContent=LK.msg||(LK.mode==='set1'?LK.len+' цифры':'');s.classList.toggle('er',!!LK.err);
+  const dd=LKE.querySelector('.lkd');if(dd.children.length!==LK.len)dd.innerHTML='<i></i>'.repeat(LK.len);
+  dd.querySelectorAll('i').forEach((d,i)=>d.classList.toggle('on',i<LK.buf.length));
+  LKE.querySelector('.lkx').style.display=LK.mode==='unlock'?'none':'';LKE.querySelector('.lkf').style.display=(LK.mode==='unlock'||LK.mode==='verify')?'':'none'}
+function lkShow(mode,cb,len){if(!LKE)return;if(!LKE.firstChild)lkBuild();LK.len=(mode==='unlock'||mode==='verify')?pinLen():([2,4,6].indexOf(len)>=0?len:4);LK.mode=mode;LK.buf='';LK.first='';LK.cb=cb||null;LK.msg='';LK.err=false;LKE.classList.remove('cf');LKE.classList.add('on');lkDraw();}
 function lkHide(){if(!LKE)return;LKE.classList.remove('on','cf');document.documentElement.classList.remove('plk');LK.mode='';LK.buf=''}
 function lkFail(msg){LK.buf='';LK.msg=msg;LK.err=true;const d=LKE.querySelector('.lkd');d.classList.remove('sh');void d.offsetWidth;d.classList.add('sh');if(navigator.vibrate)try{navigator.vibrate(60)}catch(e){}lkDraw()}
 async function lkDone(){LK.busy=true;const v=LK.buf;
@@ -3918,12 +3916,11 @@ async function lkDone(){LK.busy=true;const v=LK.buf;
     if(LK.mode==='unlock'||LK.mode==='verify'){const r=pinRec();if(r&&await pinHash(v,r.s)===r.h){LK.tries=0;const cb=LK.cb;lkHide();if(cb)cb();return}
       LK.tries++;if(LK.tries>=5){LK.tries=0;LK.until=Date.now()+30000;lkFail('Слишком много попыток. Подождите 30 секунд')}else lkFail('Неверный PIN')}
     else if(LK.mode==='set1'){LK.first=v;LK.mode='set2';LK.buf='';LK.msg='';LK.err=false;lkDraw()}
-    else if(LK.mode==='set2'){if(v===LK.first){const old=pinRec(),s=String(Math.random()).slice(2)+Date.now();pinSave({s,h:await pinHash(v,s),a:old&&Number.isFinite(old.a)?old.a:60});const cb=LK.cb;lkHide();if(cb)cb()}
+    else if(LK.mode==='set2'){if(v===LK.first){const s=String(Math.random()).slice(2)+Date.now();pinSave({s,h:await pinHash(v,s),n:LK.len});const cb=LK.cb;lkHide();if(cb)cb()}
       else{LK.mode='set1';lkFail('PIN-коды не совпали. Попробуйте ещё раз')}}
   }finally{LK.busy=false}}
 if(LKE)LKE.addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;const k=b.dataset.k;
   if(k==='x'){lkHide();return}
-  if(k==='bio'){bioUnlock(true);return}
   if(k==='f'){const cl=pinCloudOk(),t=LKE.querySelector('.lkq .lks'),y=LKE.querySelector('[data-k="fy"]');
     if(t)t.textContent=cl?'PIN будет сброшен, а данные на этом телефоне удалены. Сразу после этого приложение загрузит операции, цели, долги и настройки обратно из облака Telegram — если они там сохранены. Если в облаке пусто, данные пропадут.':'Чтобы сбросить PIN, нужно удалить все данные приложения на этом устройстве: операции, цели, долги и настройки. Это нельзя отменить.';
     if(y)y.textContent=cl?'Сбросить PIN':'Удалить данные';
@@ -3933,12 +3930,12 @@ if(LKE)LKE.addEventListener('click',async e=>{const b=e.target.closest('button')
   if(LK.busy)return;
   if(Date.now()<LK.until){LK.msg='Подождите '+Math.ceil((LK.until-Date.now())/1000)+' сек';LK.err=true;lkDraw();return}
   if(k==='<'){LK.buf=LK.buf.slice(0,-1);lkDraw();return}
-  if(LK.buf.length>=4)return;LK.buf+=k;if(LK.err||LK.hint){LK.err=false;LK.hint=0;LK.msg=''}lkDraw();if(LK.buf.length===4)await lkDone()});
+  if(LK.buf.length>=LK.len)return;LK.buf+=k;if(LK.err||LK.hint){LK.err=false;LK.hint=0;LK.msg=''}lkDraw();if(LK.buf.length===LK.len)await lkDone()});
 document.addEventListener('keydown',e=>{if(!LKE||!LKE.classList.contains('on')||LKE.classList.contains('cf'))return;
   const k=/^\d$/.test(e.key)?e.key:e.key==='Backspace'?'<':e.key==='Escape'&&LK.mode!=='unlock'?'x':'';if(!k)return;const b=LKE.querySelector('[data-k="'+k+'"]');if(b){e.preventDefault();b.click()}});
 let _lkHid=0;
-function lkAway(){if(BIO.busy)return;if(pinOn()&&!_lkHid)_lkHid=Date.now()}
-function lkBack(){if(!_lkHid)return;if(BIO.busy||Date.now()-BIO.okAt<2000){_lkHid=0;return}const away=(Date.now()-_lkHid)/1000;_lkHid=0;if(pinOn()&&away>=pinAuto()&&!(LKE&&LKE.classList.contains('on')))lkShow('unlock')}
+function lkAway(){if(pinOn()&&!_lkHid)_lkHid=Date.now()}
+function lkBack(){if(!_lkHid)return;const away=(Date.now()-_lkHid)/1000;_lkHid=0;if(pinOn()&&away>=60&&!(LKE&&LKE.classList.contains('on')))lkShow('unlock')}
 document.addEventListener('visibilitychange',()=>{if(document.hidden)lkAway();else lkBack()});
 try{TGW.onEvent('deactivated',lkAway);TGW.onEvent('activated',lkBack)}catch(e){}
 if(pinOn()){lkBuild();lkShow('unlock')}
@@ -3989,11 +3986,13 @@ function cpHtml(){const s=cpS,inc=s.type==='income';
 <div class="cpg">${list.map(c=>`<button class="cpi${!s.edit&&c.id===s.cur?' on':''}" data-id="${c.id}"><b>${E(c.e)}</b><span>${E(c.n)}</span>${s.edit?'<i>✎</i>':''}</button>`).join('')}</div>
 <div class="cpf"><button class="sm" data-cp="add">Добавить</button><button class="sm${s.edit?' pr':''}" data-cp="edit">${s.edit?'Готово':'Редактировать'}</button></div>`}
 function cpRender(){const g=cpEl.querySelector('.cpg'),top=g?g.scrollTop:0;cpEl.innerHTML=cpHtml();const g2=cpEl.querySelector('.cpg');if(g2&&cpS.view==='grid')g2.scrollTop=top}
-function openCp(type,cur,cb,chg){if(cpS||isCpBusy())return;cpS={type:type==='income'?'income':'expense',cur,cb,chg,edit:false,view:'grid',id:null};cpRender();
+function openCp(type,cur,cb,chg){if(cpS||isCpBusy())return;const alone=!isModalOpen();if(alone){cancelGestures();lockBg(true)}cpS={type:type==='income'?'income':'expense',cur,cb,chg,edit:false,view:'grid',id:null};cpRender();
   ['sh','ed','gd','cf'].forEach(id=>{const e=$('#'+id);if(e&&e.classList.contains('on'))e.classList.add('sub')});
   try{setOrigin(cpEl)}catch(e){}cpEl.classList.add('on');ov.className='on'}
 const isCpBusy=()=>$('#nc').classList.contains('on')||bq.classList.contains('on');
-function closeCp(){if(!cpS&&!cpEl.classList.contains('on'))return;cpEl.classList.remove('on');cpS=null;document.querySelectorAll('.sub').forEach(e=>e.classList.remove('sub'))}
+function closeCp(){if(!cpS&&!cpEl.classList.contains('on'))return;cpEl.classList.remove('on');cpS=null;syncSub();if(unlockIfIdle())cancelGestures()}
+// родительские окна затемняем, пока поверх них открыто вложенное (категории, новая категория, повторы); снимаем только когда вложенных не осталось
+function syncSub(){const nest=!!cpS||$('#nc').classList.contains('on')||rcEl.classList.contains('on');['sh','ed','gd','cf'].forEach(id=>{const e=$('#'+id);if(e)e.classList.toggle('sub',nest&&e.classList.contains('on'))})}
 function cpSave(){const s=cpS,c=cd(s.id),nm=($('#cpn').value||'').trim();if(!nm){toast('Введите название');return}
   const em=leadEmo($('#cpem').value||''),col=$('#cpc').value,ov=cfg.catOv[s.id]=cfg.catOv[s.id]||{};
   ov.l=(em?em+' ':'')+nm.slice(0,40);
@@ -4031,8 +4030,7 @@ function openNc(type,done,cancel){const el=$('#nc');ncType=type==='income'?'inco
   try{setOrigin(el)}catch(e){}el.classList.add('on');ov.className='on';
   setTimeout(()=>{const n=$('#ncn');if(n)n.focus({preventScroll:true})},140)}
 function closeNc(ok){const el=$('#nc');if(!el.classList.contains('on'))return;el.classList.remove('on');
-  document.querySelectorAll('.sub').forEach(e=>e.classList.remove('sub'));
-  if(cpS)['sh','ed','gd','cf'].forEach(id=>{const e=$('#'+id);if(e&&e.classList.contains('on'))e.classList.add('sub')});
+  syncSub();
   const cancel=ncCancel;ncCb=null;ncCancel=null;if(!ok&&cancel)cancel()}
 function ncAdd(){const l=($('#ncn').value||'').trim();if(!l){toast('Введите название категории');return}
   const id='c_'+uid();cfg.custom.push({id,l:l.slice(0,40),c:$('#ncc').value,t:ncType,k:($('#ncw').value||'').trim()});buildAll();save();
@@ -4067,7 +4065,7 @@ function toastDel(n,undo){const el=$('#toast'),live=!!delB&&el.classList.contain
 // Плашка показывается только для отмены действия (кнопка «Отмена» / «Сохранить»). Подтверждения вроде «Сохранено» не показываем:
 // человек и так видит, что сделал. Остаются только короткие объяснения, почему действие не выполнилось (ошибки и «укажите сумму»).
 function toast(m,lbl,fn,kind,html){
-  if(!lbl&&!(m!=null&&/^(⚠|Введите|Выберите|Укажите|Число месяца|Платежей|Дата окончания|Не удалось|Нет доступа|Датчик|Доступ запрещён|Биометрия недоступна|В таблице нет|Пока нечего|Новых данных|Ничего не изменилось|Облако Telegram недоступно|Контакт|Бот:)/.test(String(m)))){if(!_tb)delB=null;_tb=0;return}
+  if(!lbl&&!(m!=null&&/^(⚠|Введите|Выберите|Укажите|Число месяца|Платежей|Дата окончания|Не удалось|Нет доступа|Датчик|Доступ запрещён|В таблице нет|Пока нечего|Новых данных|Ничего не изменилось|Облако Telegram недоступно|Контакт|Бот:)/.test(String(m)))){if(!_tb)delB=null;_tb=0;return}
   const el=$('#toast');clearTimeout(tt);if(!_tb)delB=null;_tb=0;
   el.dataset.k=kind||'';
   el.innerHTML=(TIC[kind]?`<span class="tic">${TIC[kind]}</span>`:'')+`<span class="ttx">${html!=null?html:E(m)}</span>`+(lbl?`<button type="button" class="tbt">${lbl}</button>`:'');
@@ -4199,8 +4197,8 @@ function openRc(){if(rcS||!sh.classList.contains('on'))return;cancelAuto();
   rcS={view:'list',st:!!(rcS&&rcS.st)};rcRender();rcEl.scrollTop=0;
   ['sh','ed','gd','cf'].forEach(id=>{const e=$('#'+id);if(e&&e.classList.contains('on'))e.classList.add('sub')});
   try{setOrigin(rcEl)}catch(e){}rcEl.classList.add('on');ov.className='on'}
-function closeRc(){if(!rcS&&!rcEl.classList.contains('on'))return;const st=!!(rcS&&rcS.st);rcEl.classList.remove('on');rcS=null;document.querySelectorAll('.sub').forEach(e=>e.classList.remove('sub'));
-  if(st){stCover(false);if(!isModalOpen()){ov.className='';lockBg(false)}cancelGestures();const q=$('#rcs .rv');if(q)q.textContent=(cfg.rec||[]).length?String(cfg.rec.length):'Нет'}}
+function closeRc(){if(!rcS&&!rcEl.classList.contains('on'))return;const st=!!(rcS&&rcS.st);rcEl.classList.remove('on');rcS=null;syncSub();
+  if(st){stCover(false);unlockIfIdle();cancelGestures();const q=$('#rcs .rv');if(q)q.textContent=(cfg.rec||[]).length?String(cfg.rec.length):'Нет'}}
 // список повторяющихся операций из настроек: нажатие на операцию открывает её редактирование (как у категорий)
 function openRcSt(){if(rcS||isModalOpen())return;cancelGestures();stCover(true);lockBg(true);
   rcS={view:'list',st:true};rcRender();rcEl.scrollTop=0;try{setOrigin(rcEl)}catch(e){}rcEl.classList.add('on');ov.className='on'}
@@ -4233,7 +4231,7 @@ function fitScroll(){const de=document.documentElement,B=$('#body'),tb=$('#tabs'
   if(sy>0&&de.classList.contains('ns')===false&&de.scrollHeight>innerHeight+8)return;   // страница явно длиннее экрана и уже прокручена — отдельно проверять нечего
   de.classList.remove('ns');let bot=B.getBoundingClientRect().top+sy;
   for(const c of B.children){const r=c.getBoundingClientRect();if(r.height>0&&r.bottom+sy>bot)bot=r.bottom+sy}
-  const fb=$('#fab'),lim=Math.min(tb.getBoundingClientRect().top,fb?fb.getBoundingClientRect().top:1e9)+sy;
+  const lim=tb.getBoundingClientRect().top+sy;
   if(bot+4<=lim){de.classList.add('ns');if(sy)window.scrollTo(0,0)}}   // содержимое действительно короче экрана
 function fitSoon(){clearTimeout(_fitT);_fitT=setTimeout(fitScroll,120)}
 try{new MutationObserver(fitSoon).observe($('#body'),{childList:true,subtree:true})}catch(e){}   // атрибуты (анимации, свайпы строк) больше не запускают пересчёт
@@ -4528,8 +4526,8 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v68';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
-const APP_VER='1.2';  // версия, которую видит человек (внизу экрана и в письме в поддержку)
+const IB_VER='v95';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const APP_VER='1.3';  // версия, которую видит человек (внизу экрана и в письме в поддержку)
 try{document.getElementById('vb').textContent=APP_VER}catch(e){}
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
 // АДРЕС БОТА ПО УМОЛЧАНИЮ: впишите сюда адрес вашего воркера один раз — тогда всем пользователям (жене и др.) ничего вводить не нужно
@@ -4698,7 +4696,7 @@ async function ibLoop(){
     IDS.forEach(id=>{const el=$i(id);if(!el)return;let ky=0,km=null;
       if(el===tgt){const avail=h-sat-8-14,need=el.scrollHeight,H=Math.min(need,avail);
         if(need>avail)km=avail;
-        const cur=L/2+(sat-sab)/2-H/2;ky=Math.max(Math.min(0,(h-14)-(cur+H)),(sat+8)-cur)}
+        const cur=L-sab-12-H;ky=Math.max(Math.min(0,(h-14)-(cur+H)),(sat+8)-cur)}
       const key=ky+'|'+(km||'');if(kc.get(id)===key)return;kc.set(id,key);
       el.style.setProperty('--ky',ky+'px');
       if(km)el.style.setProperty('--kmax',km+'px');else el.style.removeProperty('--kmax')})}
@@ -4756,7 +4754,7 @@ if('serviceWorker' in navigator&&location.protocol!=='file:'){
       clearInterval(iv);location.reload()};
     const iv=setInterval(go,1200);go()});
   window.addEventListener('load',()=>{
-    sw.register('sw.js',{updateViaCache:'none'}).then(reg=>{
+    sw.register('sw.js?v='+(typeof IB_VER!=='undefined'?IB_VER:'v0'),{updateViaCache:'none'}).then(reg=>{
       const chk=()=>{try{reg.update()}catch(e){}};
       document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});
       window.addEventListener('online',chk);
@@ -5032,7 +5030,7 @@ function bulk(kind){
   const ids=new Set(sel.keys),n=ids.size;if(!n)return;
   if(kind==='cat'){
     const ts=tx.filter(t=>ids.has(t.id)),ty=ts.every(t=>t.type==='income')?'income':'expense',mixed=ts.some(t=>t.type!==ty);
-    const cb=id=>{const cmpl=()=>{if(!isModalOpen()){ov.className='';try{lockBg(false)}catch(e){}}};
+    const cb=id=>{const cmpl=()=>{unlockIfIdle()};
       applyBulk(t=>{if(t.type!==ty)return false;t.category=id},mixed?'Категория сменена (только '+(ty==='income'?'доходам':'расходам')+')':'Категория изменена');cmpl()};
     openCp(ty,null,cb,()=>{});return}
   let h,today=ymd(new Date());
@@ -5044,7 +5042,8 @@ function bulk(kind){
   gd._bk={kind,ids,mode:'add'};lockBg(true);cancelGestures();
   const first=D.querySelector('#body .sw .r2')||fab;showGd(first);
   setTimeout(()=>{const i=$('#bkv');if(i&&kind!=='date')i.focus()},380)}
-function bkClose(){gd._bk=null;gd.classList.remove('on');if(!isModalOpen()){ov.className='';try{lockBg(false)}catch(e){}}try{cancelGestures()}catch(e){}}
+function bkClose(){gd._bk=null;gd.classList.remove('on');unlockIfIdle();try{cancelGestures()}catch(e){}}
+window.bkClose=bkClose;   // v69: нужна общему закрытию верхнего окна (оверлей / Escape)
 gd.addEventListener('click',e=>{const k=gd._bk;if(!k)return;
   const b=e.target.closest('button');if(!b)return;e.stopPropagation();
   if(b.id==='bkx'){bkClose();return}
@@ -5060,393 +5059,178 @@ window.AppSel={exit,enter};
 })();
 </script>
 <script>
-/* ================= Обучение: знакомство при первом входе и подсказки по разделам ================= */
+/* ================= Знакомство с приложением: до 10 окон ================= */
 (function(){
 'use strict';
 if(window.AppTour)return;
-const D=document,RM=matchMedia('(prefers-reduced-motion:reduce)').matches;
+const D=document;
 const KEY='finapp.tour';
-const ALL=['welcome','new16','list','sheet','stats','stats:trend','stats:cal','stats:tags','tags','tags:budget','tags:debts'];
 const q=(s,r)=>(r||D).querySelector(s);
-// первый подходящий элемент, не из «соседних» страниц, которые рисуются на время свайпа
-const qa=s=>[...D.querySelectorAll(s)].find(e=>!e.closest('[aria-hidden="true"]'))||null;
-const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const modalOpen=()=>{try{return typeof isModalOpen==='function'&&isModalOpen()}catch(e){return false}};
 
-/* ---------- что уже показано (локально и в настройках, которые уходят в облако) ---------- */
+/* ---------- показано ли знакомство (локально и в настройках, которые уходят в облако) ---------- */
 function seen(){let a={},b={};
   try{a=JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch(e){}
   try{b=(typeof cfg==='object'&&cfg&&cfg.tour)||{}}catch(e){}
   return Object.assign({},b,a)}
-function mark(ids){const m=seen();[].concat(ids).forEach(k=>{m[k]=1});
+function mark(){const m=seen();m.welcome=1;
   try{localStorage.setItem(KEY,JSON.stringify(m))}catch(e){}
   try{if(typeof cfg==='object'&&cfg){cfg.tour=m;if(typeof save==='function')save()}}catch(e){}}
-function reset(){
-  try{localStorage.removeItem(KEY)}catch(e){}
-  try{if(typeof cfg==='object'&&cfg){cfg.tour={};if(typeof save==='function')save()}}catch(e){}}
 
-/* ---------- сценарии ---------- */
-const sgmOf=a=>{const b=qa('[data-'+a+']');return b?b.closest('.sgm'):null};
-const TOURS={
-  list:{steps:[
-    {t:'#gear',pad:6,title:'Настройки',text:'Валюта и курсы, тема, резервная копия и обучение — на странице «Настройки».'},
-    {t:'.mo',pad:4,title:'Месяцы',text:'Листайте стрелками или свайпом по этой области — суммы и список пересчитаются за выбранный месяц.'},
-    {t:'#sum',pad:8,title:'Остаток',text:'Доходы минус расходы за месяц. Остаток прошлых месяцев добавляется сам; перенос можно выключить в настройках.'},
-    {t:()=>{const g=qa('#body .dg');if(!g)return qa('#body .emp');
-      return g.getBoundingClientRect().height>innerHeight*.4?(g.querySelector('.sw:not(.sd)')||g):g},
-      pad:4,title:'Операции по дням',text:'Нажмите на запись, чтобы изменить её. Смахните справа налево — удалить. Удерживайте запись — появится меню: изменить, удалить, выбрать несколько.'},
-    {t:'#tabs',pad:4,title:'Разделы',text:'Операции — список, Аналитика — графики и сравнения, Планы — цели, бюджет и долги.'},
-    {t:'#fab',pad:6,title:'Добавить операцию',text:'Нажмите «+» и напишите: «кофе 5, такси 12». Несколько записей можно сразу.'}
-  ]},
-  sheet:{steps:[
-    {t:'#inp',pad:8,title:'Или напишите',text:'Сумма, дата и категория определятся сами: «кофе 30 вчера», «такси 100 тег друзья». Так же создаются цели, лимиты, бюджет и долги: «цель отпуск 50000», «одолжил Ивану 500». То же самое можно отправить боту в чате, текстом или голосом — запись придёт сама.'},
-    {t:'#recic',pad:6,title:'Повторяющиеся',text:'Аренда, подписки, зарплата — настройте один раз, и записи будут появляться сами: каждую неделю, месяц или год.'},
-    {t:()=>{const e=qa('#tpl');return e&&e.querySelector('.tq')?e:null},pad:6,title:'Быстрые шаблоны',text:'Частые записи — в одно касание. Нажмите и удерживайте шаблон, чтобы скрыть его.'},
-    {t:'#sh .shf',pad:6,title:'Сохранение',text:'Включите автосохранение — запись добавится сама через 3 секунды. Или нажмите «Добавить».'}
-  ]},
-  stats:{steps:[
-    {t:()=>qa('.sbt'),pad:4,title:'Четыре взгляда',text:'Общая — по категориям, Динамика — по месяцам, Календарь — по дням, Теги — по меткам. Между ними можно листать свайпом.'},
-    {t:()=>qa('#body .ah'),pad:6,title:'Итог за период',text:'Сумма расходов или доходов. В режиме «Мес» под ней появится сравнение с прошлым месяцем.'},
-    {t:()=>{const s=sgmOf('kd');return s&&s.parentElement},pad:6,title:'Что и за какой период',text:'Переключайте расходы и доходы, неделю, месяц или год — диаграмма и список ниже обновятся.'},
-    {t:()=>qa('#body .bulb'),pad:6,title:'Советы',text:'Короткие выводы по вашим тратам и подсказки, как откладывать больше.'},
-    {t:()=>qa('#body .pl[data-cat]'),pad:4,title:'Категории',text:'Нажмите на категорию — откроются все её операции за этот период.'}
-  ]},
-  'stats:trend':{steps:[
-    {t:()=>qa('#body .cd'),pad:6,title:'Динамика по месяцам',text:'Зелёные столбцы — доходы, красные — расходы. Ниже — итоги месяца; период переключается между 6 и 12 месяцами.'}
-  ]},
-  'stats:cal':{steps:[
-    {t:()=>{const c=qa('#body .cal:not(.cw)');return c&&(c.closest('.cd')||c)},pad:4,title:'Календарь',text:'Чем темнее день, тем больше сумма. Нажмите на число — откроются операции этого дня. Точкой отмечены сроки долгов.'}
-  ]},
-  'stats:tags':{steps:[
-    {t:()=>qa('#body .cd')||qa('#body .emp'),pad:6,title:'Теги',text:'Теги группируют траты по поводам: «друзья», «отпуск». Добавьте тег словами: «такси 100 тег друзья». Нажмите на тег — увидите его операции.'}
-  ]},
-  tags:{steps:[
-    {t:()=>qa('.sbt'),pad:4,title:'Три раздела',text:'Цели — накопления. Бюджет и лимиты — сколько можно тратить. Долги — кто кому должен. Между ними можно листать свайпом.'},
-    {t:()=>qa('#body [data-ga="new"]'),pad:8,title:'Новая цель',text:'Нажмите «+», укажите сумму — покажу прогресс и когда накопите. Можно и фразой в строке записи: «цель отпуск 50000».'},
-    {t:()=>qa('#body [data-ga="dep"]'),pad:6,title:'Взнос',text:'«+ Взнос» — добавить отложенную сумму. Прогресс и срок обновятся.'}
-  ]},
-  'tags:budget':{steps:[
-    {t:()=>qa('#body .gsec .cd'),pad:6,title:'Бюджет и лимиты',text:'Задайте сумму на месяц — покажу, сколько осталось. Лимиты по категориям желтеют у 80% и краснеют при превышении.'}
-  ]},
-  'tags:debts':{steps:[
-    {t:()=>qa('#body .gsec .gsh'),pad:6,title:'Долги',text:'Записывайте, кто кому должен: «Игорь одолжил 500, вернёт до 20 числа». Когда подойдёт срок, приложение напомнит.'}
-  ]}
+/* ---------- слайды ---------- */
+const IC={
+  pen:'<path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
+  send:'<path d="M21 3L3 10.5l7 2.5 2.5 7z"/><path d="M21 3L10 13"/>',
+  repeat:'<path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/>',
+  tag:'<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.2"/>',
+  bell:'<path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9"/><path d="M10 20a2 2 0 0 0 4 0"/>',
+  coin:'<circle cx="12" cy="12" r="8.5"/><path d="M12 6.5v11M14.8 9.3c0-1-1.2-1.7-2.8-1.7s-2.8.7-2.8 1.8 1.2 1.5 2.8 1.9 2.8.9 2.8 2-1.2 1.8-2.8 1.8-2.8-.8-2.8-1.8"/>',
+  lock:'<rect x="5" y="11" width="14" height="9" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>'
 };
-
-/* ---------- слайды знакомства ---------- */
+const v2=(ic,rows)=>`<div class="v2" style="display:flex;align-items:center;gap:18px"><div class="v2m"><b></b><b></b><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[ic]}</svg></div><div class="v2r">${rows.map((r,i)=>`<div style="--d:${(.5+i*.5).toFixed(1)}s"><em>${r[0]}</em><span>${r[1]}</span><b${r[3]?` class="${r[3]}"`:''}>${r[2]}</b></div>`).join('')}</div></div>`;
 const SL=[
-  {h:'Добро пожаловать',p:'Личный учёт доходов и расходов. Работает без интернета, данные хранятся у вас.',v:
+{h:'Знайте, куда уходят деньги',p:'Записывайте траты за секунду — просто фразой. Остальное приложение сделает само, а данные останутся только у вас.',v:
    `<div class="v1g"></div><svg class="v1" viewBox="96 96 320 320" width="116" height="116" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><linearGradient id="trg" x1="0" x2="1"><stop offset="0" style="stop-color:var(--g);stop-opacity:.3"/><stop offset=".5" style="stop-color:var(--g)"/><stop offset="1" style="stop-color:var(--g);stop-opacity:.3"/></linearGradient><clipPath id="trc"><rect x="96" y="96" width="320" height="104"/></clipPath></defs><g clip-path="url(#trc)"><rect class="bill" x="172" y="180" width="164" height="40" rx="10" fill="url(#trg)" stroke="none"/></g><path class="d" pathLength="1" d="M146 214 L150 178 C151 160 160 152 175 148 L316 126 C329 124 338 133 338 147 L338 196"/><rect class="d" pathLength="1" x="139" y="196" width="244" height="168" rx="40"/><circle class="dot" cx="335" cy="277" r="15" fill="currentColor" stroke="none"/></svg>`},
-  {h:'Пишите — приложение разберётся',p:'Напишите несколько трат подряд. Сумма, категория и дата определятся сами.',v:
-   `<div class="v2" style="display:flex;align-items:center;gap:18px"><div class="v2m"><b></b><b></b><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg></div><div class="v2r"><div style="--d:.5s"><em>☕</em><span>Кофе</span><b class="exp">−5</b></div><div style="--d:1s"><em>🚕</em><span>Такси</span><b class="exp">−12</b></div><div style="--d:1.5s"><em>💼</em><span>Зарплата</span><b class="inc">+1 500</b></div></div></div>`},
-  {h:'Записывайте через бота',p:'Напишите боту в чате «такси 120» или отправьте голосовое. Запись сама появится в приложении, как только вы его откроете.',v:
-   `<div class="v2" style="display:flex;align-items:center;gap:18px"><div class="v2m"><b></b><b></b><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 3L3 10.5l7 2.5 2.5 7z"/><path d="M21 3L10 13"/></svg></div><div class="v2r"><div style="--d:.5s"><em>🚕</em><span>Такси</span><b class="exp">−200</b></div><div style="--d:1s"><em>☕</em><span>Кофе</span><b class="exp">−50</b></div><div style="--d:1.5s"><em>💼</em><span>Зарплата</span><b class="inc">+500</b></div></div></div>`},
-  {h:'Вся картина за секунды',p:'Остаток, динамика по месяцам, календарь трат и теги. Сравнивайте с прошлым месяцем.',v:
+  {h:'Пишите — приложение разберётся',p:'Напишите несколько трат подряд: «кофе 5, такси 12». Сумма, категория и дата определятся сами.',v:v2('pen',[['☕','Кофе','−5','exp'],['🚕','Такси','−12','exp'],['💼','Зарплата','+1 500','inc']])},
+  {h:'Записывайте через бота',p:'Напишите боту в чате «такси 120» или отправьте голосовое. Запись сама появится в приложении, как только вы его откроете.',v:v2('send',[['🚕','Такси','−200','exp'],['☕','Кофе','−50','exp'],['💼','Зарплата','+500','inc']])},
+  {h:'Повторы и шаблоны',p:'Аренда, подписки, зарплата — настройте один раз, и записи будут появляться сами. Частые траты — в одно касание.',v:v2('repeat',[['🏠','Аренда','−500','exp'],['📺','Подписка','−9','exp'],['💼','Зарплата','+1 500','inc']])},
+{h:'Вся картина за секунды',p:'Остаток, динамика по месяцам, календарь трат и теги. Сравнивайте с прошлым месяцем.',v:
    `<div class="v3p"><b class="inc">−12%</b> к прошлому месяцу</div><div class="v3" style="display:flex">${[[46,62],[58,50],[40,70],[66,54],[52,44],[72,38]].map((p,i)=>`<div><i class="a" style="--h:${p[0]}%;--i:${i}"></i><i class="b" style="--h:${p[1]}%;--i:${i}"></i></div>`).join('')}</div>`},
-  {h:'Планы и цели',p:'Копите на цели, задавайте бюджет и лимиты, записывайте долги — приложение напомнит о сроках.',v:
-   `<div class="v4" style="display:flex">${[['Отпуск','65%','',0],['Лимит: продукты','84%','#f2c14e',1],['Бюджет месяца','40%','',2]].map(r=>`<div style="--w:${r[1]};--i:${r[3]};${r[2]?'--c:'+r[2]:''}"><span>${r[0]}</span><b>${r[1]}</b><s><u></u></s></div>`).join('')}</div>`}
-];
-
-/* ---------- «Что нового»: показывается один раз после обновления ---------- */
-const NEWSL=[
-  {h:'Записи от бота — сразу',p:'Написали боту «такси 120» или отправили голосовое — откройте приложение из чата, и запись уже там. Перезапускать Telegram не нужно.',v:
-   `<div class="v2" style="display:flex;align-items:center;gap:18px"><div class="v2m"><b></b><b></b><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 3L3 10.5l7 2.5 2.5 7z"/><path d="M21 3L10 13"/></svg></div><div class="v2r"><div style="--d:.5s"><em>🚕</em><span>Такси</span><b class="exp">−200</b></div><div style="--d:1s"><em>☕</em><span>Кофе</span><b class="exp">−50</b></div><div style="--d:1.5s"><em>💼</em><span>Зарплата</span><b class="inc">+500</b></div></div></div>`}
+  {h:'Теги для любых поводов',p:'Группируйте траты по поводам: «такси 100 тег друзья». Нажмите на тег — увидите все его операции.',v:v2('tag',[['👥','#друзья','−85','exp'],['✈️','#отпуск','−420','exp'],['🎁','#подарки','−60','exp']])},
+{h:'Планы и цели',p:'Копите на цели, задавайте бюджет и лимиты по категориям. Лимит желтеет у 80% и краснеет при превышении.',v:
+   `<div class="v4" style="display:flex">${[['Отпуск','65%','',0],['Лимит: продукты','84%','#f2c14e',1],['Бюджет месяца','40%','',2]].map(r=>`<div style="--w:${r[1]};--i:${r[3]};${r[2]?'--c:'+r[2]:''}"><span>${r[0]}</span><b>${r[1]}</b><s><u></u></s></div>`).join('')}</div>`},
+  {h:'Долги без забывчивости',p:'Кто кому должен и до какого числа — одной фразой: «одолжил Ивану 500». Когда подойдёт срок, приложение напомнит.',v:v2('bell',[['🤝','Иван','+500','inc'],['🤝','Анна','−200','exp'],['⏰','Напомню','завтра']])},
+  {h:'Любая валюта',p:'Выберите основную валюту в настройках — курсы валют обновляются автоматически.',v:v2('coin',[['💵','Доллар','$'],['💶','Евро','€'],['💱','Курс','авто']])},
+  {h:'Данные под защитой',p:'PIN-код и скрытие сумм защитят данные. Резервную копию можно сохранить в Excel или JSON и вернуть в любой момент.',v:v2('lock',[['🔒','PIN-код','Вкл'],['🙈','Суммы','скрыты'],['💾','Копия','Excel']])}
 ];
 
 /* ---------- интерфейс ---------- */
-let root,hole,card,cT,cX,cDots,cSkip,cNext,wel,wSls,wDots,wSkip,wNext,pT,pB;
-function fillSlides(list){
-  q('.tr-sls',wel).innerHTML=list.map(s=>`<section class="tr-sl"><div class="tr-vis">${s.v}</div><h2>${s.h}</h2><p>${s.p}</p></section>`).join('');
-  q('.tr-dots',wel).innerHTML=list.map(()=>'<i></i>').join('');q('.tr-dots',wel).hidden=list.length<2;
-  wSls=[...wel.querySelectorAll('.tr-sl')];wDots=[...wel.querySelectorAll('.tr-dots i')];
-  wel.setAttribute('aria-label',list===NEWSL?'Что нового':'Знакомство с приложением')}
-let active=null,raf=0,last='',cool=0,gen=0;
+let root,wel,trk,wSls,wDots,wSkip,wNext,active=null,cool=0;
+/* лента слайдов двигается из JS и ВСЕГДА целыми пикселями: дробный сдвиг даёт размытый текст, а в последний кадр он «щёлкал» в чёткий */
+let X=0,STEP=0,anim=0;
+function setX(x){X=x;trk.style.transform='translate3d('+Math.round(x)+'px,0,0)'}
+function fit(){if(!trk)return;const W=Math.floor(trk.offsetWidth);if(!W)return;trk.style.setProperty('--sw',W+'px');STEP=W+40;cancelAnimationFrame(anim);setX(-(active?active.i:0)*STEP)}
+function moveTo(i,inst){
+  cancelAnimationFrame(anim);
+  const from=X,to=-i*STEP;
+  if(inst||Math.round(from)===to){setX(to);return}
+  const t0=performance.now(),D=520;
+  const step=now=>{const k=Math.min(1,(now-t0)/D),e=1-Math.pow(1-k,4);   // плавное торможение, в конце ровно целевая позиция
+    setX(k>=1?to:from+(to-from)*e);if(k<1)anim=requestAnimationFrame(step)};
+  anim=requestAnimationFrame(step)}
+const hs=()=>{try{hap.sw('select')}catch(e){}};   // лёгкая вибрация, как в остальном приложении
 
 function build(){
   if(root)return;
   root=D.createElement('div');root.id='tour';
   root.innerHTML=
-   `<div class="tr-bd"></div><div class="tr-hole"></div><div class="tr-probe tr-pt"></div><div class="tr-probe tr-pb"></div>`+
-   `<div class="tr-card glass" role="dialog" aria-modal="true" aria-live="polite" aria-label="Подсказка"><div class="tr-c"><div class="tr-t"></div><div class="tr-x"></div></div><div class="tr-f"><div class="tr-dots"></div><div class="tr-btns"><button type="button" class="tr-skip">Пропустить</button><button type="button" class="tr-next">Далее</button></div></div></div>`+
-   `<div class="tr-card tr-w glass" role="dialog" aria-modal="true" aria-label="Знакомство с приложением"><div class="tr-sls">${SL.map((s,i)=>`<section class="tr-sl"><div class="tr-vis">${s.v}</div><h2>${s.h}</h2><p>${s.p}</p></section>`).join('')}</div><div class="tr-f"><div class="tr-dots">${SL.map(()=>'<i></i>').join('')}</div><div class="tr-btns"><button type="button" class="tr-skip">Пропустить</button><button type="button" class="tr-next">Далее</button></div></div></div>`;
+   `<div class="tr-bd"></div>`+
+   `<div class="tr-card tr-w glass" role="dialog" aria-modal="true" aria-label="Возможности приложения"><div class="tr-sls">${SL.map(s=>`<section class="tr-sl"><div class="tr-vis">${s.v}</div><h2>${s.h}</h2><p>${s.p}</p></section>`).join('')}</div><div class="tr-f"><div class="tr-dots">${SL.map(()=>'<i></i>').join('')}</div><div class="tr-btns"><button type="button" class="tr-skip">Пропустить</button><button type="button" class="tr-next">Далее</button></div></div></div>`;
   D.body.appendChild(root);
-  void root.offsetWidth; // исходные стили посчитаны до смены класса — иначе при самом первом показе переходов нет и окно «выскакивает»
-  hole=q('.tr-hole',root);pT=q('.tr-pt',root);pB=q('.tr-pb',root);
-  card=q('.tr-card:not(.tr-w)',root);wel=q('.tr-w',root);
-  cT=q('.tr-t',card);cX=q('.tr-x',card);cDots=q('.tr-dots',card);cSkip=q('.tr-skip',card);cNext=q('.tr-next',card);
-  wSls=[...wel.querySelectorAll('.tr-sl')];wDots=[...wel.querySelectorAll('.tr-dots i')];wSkip=q('.tr-skip',wel);wNext=q('.tr-next',wel);
+  void root.offsetWidth; // исходные стили посчитаны до смены класса — иначе при самом первом показе переходов нет
+  wel=q('.tr-w',root);
+  trk=q('.tr-sls',wel);wSls=[...wel.querySelectorAll('.tr-sl')];wDots=[...wel.querySelectorAll('.tr-dots i')];wSkip=q('.tr-skip',wel);wNext=q('.tr-next',wel);
 
-  // пока идёт обучение, приложение под ним не должно реагировать на касания и прокрутку
+  // пока идёт показ, приложение под ним не должно реагировать на касания и прокрутку
   ['touchstart','touchmove','touchend','touchcancel','pointerdown','pointermove','pointerup','mousedown','mouseup','click','wheel','contextmenu'].forEach(ev=>
     root.addEventListener(ev,e=>{e.stopPropagation();if(ev==='touchmove'||ev==='wheel'||ev==='contextmenu')e.preventDefault()},{passive:false}));
-  // касание в любом месте экрана = «Далее»; кнопка «Пропустить» закрывает обучение целиком
+  // касание в любом месте = «Далее»; «Пропустить» закрывает всё
   let tapAt=0;
   root.addEventListener('click',e=>{
-    const a=active;if(!a)return;
+    if(!active)return;
     const n=Date.now();if(n-tapAt<320)return;tapAt=n;
-    if(e.target.closest('.tr-skip')){a.kind==='wel'?finishWelcome('skip'):end('skip');return}
-    a.kind==='wel'?welNext():next()});
-  // свайп: влево — дальше, вправо — назад; работает и в знакомстве, и в подсказках по экрану. Кнопки и касание «Далее» остаются.
-  // На последнем шаге свайп вперёд ничего не закрывает (закрыть можно кнопкой), чтобы обучение не завершалось случайно.
-  const trSwipe=dir=>{const a=active;if(!a)return;tapAt=Date.now();
-    if(a.kind==='wel'){
-      if(dir>0){if(a.i<a.list.length-1){try{hap.sw('select')}catch(e){}welNext()}}
-      else if(a.i>0){try{hap.sw('select')}catch(e){}welGo(a.i-1)}}
-    else if(a.kind==='spot'){
-      if(dir>0){if(a.i<a.steps.length-1){try{hap.sw('select')}catch(e){}next()}}
-      else if(a.i>0){try{hap.sw('select')}catch(e){}prev()}}};
-  let tsw=null;
-  root.addEventListener('touchstart',e=>{if(e.touches.length!==1){tsw=null;return}const t=e.touches[0];tsw={x:t.clientX,y:t.clientY,t:performance.now(),done:false}},{passive:true});
+    if(e.target.closest('.tr-skip')){finish();return}
+    const d=e.target.closest('.tr-dots i');if(d){const k=wDots.indexOf(d);if(k>-1&&k!==active.i){hs();go(k)}return}
+    next()});
+  // листание: окно следует за пальцем; влево — дальше, вправо — назад. Точки внизу тоже нажимаются.
+  const swipe=dir=>{if(!active)return;tapAt=Date.now();
+    if(dir>0){if(active.i<SL.length-1){hs();next()}}
+    else if(active.i>0){hs();go(active.i-1)}};
+  const MAXI=SL.length-1;
+  let tsw=null,peek=-1;
+  const setPeek=k=>{if(k===peek)return;if(peek>-1&&peek!==active.i)wSls[peek].classList.remove('on');peek=k;if(k>-1&&k!==active.i)wSls[k].classList.add('on')};   // соседний слайд «просыпается» уже при свайпе
+  root.addEventListener('touchstart',e=>{if(e.touches.length!==1||e.target.closest('.tr-btns,.tr-dots')){tsw=null;return}const t=e.touches[0];cancelAnimationFrame(anim);tsw={x:t.clientX,y:t.clientY,t:performance.now(),drag:false,x0:X}},{passive:true});
   root.addEventListener('touchmove',e=>{
-    if(!tsw||tsw.done||e.touches.length!==1)return;
+    if(!tsw||!active||e.touches.length!==1)return;
     const t=e.touches[0],dx=t.clientX-tsw.x,dy=t.clientY-tsw.y,ax=Math.abs(dx),ay=Math.abs(dy);
-    if(ax>=44&&ax>ay*1.4){tsw.done=true;trSwipe(dx<0?1:-1)}          // жест засчитан сразу, как палец прошёл порог
-    else if(ay>=16&&ay>ax*1.4)tsw=null},{passive:true});            // явно вертикальное движение — не свайп
-  root.addEventListener('touchend',e=>{
-    const s0=tsw;tsw=null;if(!s0||s0.done)return;
-    const t=e.changedTouches[0],dx=t.clientX-s0.x,dy=t.clientY-s0.y,ax=Math.abs(dx),ay=Math.abs(dy);
-    if(ax>=30&&ax>ay*1.4&&(ax>=44||performance.now()-s0.t<260))trSwipe(dx<0?1:-1)},{passive:true});   // короткий быстрый «щелчок» пальцем тоже считается
-  root.addEventListener('touchcancel',()=>{tsw=null},{passive:true});
+    if(!tsw.drag){if(ax>=8&&ax>ay*1.2){tsw.drag=true}else if(ay>=16&&ay>ax*1.4){tsw=null;return}else return}
+    let x=dx;if((dx<0&&active.i===MAXI)||(dx>0&&active.i===0))x=dx*.25;   // на краях — упругое сопротивление
+    setX(tsw.x0+x);
+    setPeek(x<0&&active.i<MAXI?active.i+1:x>0&&active.i>0?active.i-1:-1)},{passive:true});
+  const endDrag=e=>{
+    const s0=tsw;tsw=null;if(!s0||!s0.drag||!active)return;
+    const t=e.changedTouches&&e.changedTouches[0],dx=t?t.clientX-s0.x:0,fast=performance.now()-s0.t<260;
+    tapAt=Date.now();
+    const dir=(Math.abs(dx)>=56||(fast&&Math.abs(dx)>=24))?(dx<0?1:-1):0;
+    let to=active.i;if(dir>0&&active.i<MAXI)to=active.i+1;else if(dir<0&&active.i>0)to=active.i-1;
+    peek=-1;
+    if(to!==active.i)hs();
+    go(to)};
+  root.addEventListener('touchend',endDrag,{passive:true});
+  root.addEventListener('touchcancel',e=>{const s0=tsw;tsw=null;if(s0&&s0.drag){peek=-1;go(active.i)}},{passive:true});
   // мышь (Telegram Desktop): перетаскивание
   let msw=null;
   root.addEventListener('pointerdown',e=>{msw=(e.pointerType==='mouse'&&e.button===0)?{x:e.clientX,y:e.clientY}:null});
   root.addEventListener('pointerup',e=>{const s0=msw;msw=null;if(!s0||e.pointerType!=='mouse')return;
-    const dx=e.clientX-s0.x,dy=e.clientY-s0.y;if(Math.abs(dx)>=60&&Math.abs(dx)>Math.abs(dy)*1.4)trSwipe(dx<0?1:-1)});
+    const dx=e.clientX-s0.x,dy=e.clientY-s0.y;if(Math.abs(dx)>=60&&Math.abs(dx)>Math.abs(dy)*1.4)swipe(dx<0?1:-1)});
   D.addEventListener('keydown',e=>{if(!active)return;
-    if(e.key==='Escape'){e.preventDefault();e.stopPropagation();active.kind==='wel'?finishWelcome('skip'):end('skip')}
-    else if(e.key==='ArrowRight'){e.preventDefault();e.stopPropagation();active.kind==='wel'?welNext():next()}
-    else if(e.key==='ArrowLeft'&&active.kind==='wel'&&active.i>0){e.preventDefault();e.stopPropagation();welGo(active.i-1)}
-    else if(e.key==='Tab'&&!root.contains(D.activeElement)){e.preventDefault();(active.kind==='wel'?wNext:cNext).focus({preventScroll:true})}},true);
+    if(e.key==='Escape'){e.preventDefault();e.stopPropagation();finish()}
+    else if(e.key==='ArrowRight'){e.preventDefault();e.stopPropagation();next()}
+    else if(e.key==='ArrowLeft'&&active.i>0){e.preventDefault();e.stopPropagation();go(active.i-1)}
+    else if(e.key==='Tab'&&!root.contains(D.activeElement)){e.preventDefault();wNext.focus({preventScroll:true})}},true);
 }
 
-/* ---------- знакомство ---------- */
-function runWelcome(news){
+function show(){
   if(active)return false;
-  build();prep();
-  const list=news?NEWSL:SL;fillSlides(list);
-  active={id:news?'news':'welcome',kind:'wel',i:0,list,news:!!news};
-  // чистое состояние: анимации первого слайда проигрываются заново, как в первый раз
-  wSls.forEach(x=>x.classList.remove('on','prev'));wDots.forEach(d=>d.classList.remove('on'));
-  wSkip.style.visibility='';hole.style.opacity='';
-  wSls[0].style.transform='none';   // первый слайд только проявляется вместе с окном, без бокового сдвига
-  root.className='on wel';void root.offsetWidth;
-  welGo(0);
-  return true}
-function welGo(i){
-  const a=active;if(!a||a.kind!=='wel')return;a.i=i;
-  if(i>0)wSls[0].style.transform='';
-  wSls.forEach((s,k)=>{s.classList.toggle('on',k===i);s.classList.toggle('prev',k<i)});
-  wDots.forEach((d,k)=>d.classList.toggle('on',k===i));
-  const L=a.list.length-1;
-  wNext.textContent=i===L?(a.news?'Понятно':'Начать'):'Далее';
-  wSkip.style.visibility=i===L||(a.news&&L<1)?'hidden':''}
-function welNext(){const a=active;if(!a||a.kind!=='wel')return;a.i<a.list.length-1?welGo(a.i+1):finishWelcome('done')}
-function finishWelcome(kind){
-  if(!active||active.kind!=='wel')return;
-  const news=active.news;active=null;
-  if(news){mark('new16');root.classList.remove('on','wel');cool=Date.now()+900;return}
-  if(kind==='skip'){
-    mark(ALL);root.classList.remove('on','wel');cool=Date.now()+900;
-    return}
-  mark(['welcome','new16']);
-  // знакомство уходит, и сразу начинается разбор главного экрана
-  root.classList.remove('wel');
-  const g=gen;
-  setTimeout(()=>{if(g!==gen||active)return;if(!runTour('list',{first:true})){root.classList.remove('on');cool=Date.now()+900}},420)}
-
-/* ---------- подсказки по экранам ---------- */
-function resolve(s){
-  let el=null;try{el=typeof s.t==='function'?s.t():qa(s.t)}catch(e){}
-  if(!el||!el.getClientRects().length)return null;
-  const r=el.getBoundingClientRect();return r.width>0&&r.height>0?el:null}
-
-function prep(){
   try{if(typeof closeSettings==='function')closeSettings()}catch(e){}
-  const a=D.activeElement;if(a&&a!==D.body&&a.blur&&a!==q('#tour'))a.blur()}
-
-function runTour(id,opts){
-  const def=TOURS[id];if(!def||active)return false;
-  const steps=def.steps.filter(s=>resolve(s));
-  if(!steps.length){mark(id);return false}
-  build();prep();
-  active={id,kind:'spot',steps,i:0,miss:0,opts:opts||{}};
-  const first=!root.classList.contains('on');
-  root.className='on spot';
-  if(first||(opts&&opts.first)){ // вырез «вырастает» из центра экрана
-    hole.style.transition='none';hole.style.left=innerWidth/2+'px';hole.style.top=innerHeight/2+'px';hole.style.width='0px';hole.style.height='0px';
-    void hole.offsetWidth;hole.style.transition=''}
-  last='';showStep(true);
-  cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
+  const a=D.activeElement;if(a&&a!==D.body&&a.blur)a.blur();
+  build();
+  active={i:0};
+  // чистое состояние: анимации первого окна проигрываются заново
+  wSls.forEach(x=>x.classList.remove('on','prev'));wDots.forEach(d=>d.classList.remove('on'));
+  wSkip.style.visibility='';
+  root.className='on wel';void root.offsetWidth;
+  fit();   // всегда начинаем с первого слайда, без пролистывания назад
+  go(0,true);
   return true}
+function go(i,inst){
+  if(!active)return;active.i=i;
+  moveTo(i,inst);
+  wSls.forEach((s,k)=>s.classList.toggle('on',k===i));
+  wDots.forEach((d,k)=>d.classList.toggle('on',k===i));
+  const L=SL.length-1;
+  wNext.textContent=i===L?'Готово':'Далее';
+  wSkip.style.visibility=i===L?'hidden':''}
+function next(){if(!active)return;active.i<SL.length-1?go(active.i+1):finish()}
+function finish(){
+  if(!active)return;
+  active=null;mark();
+  root.classList.remove('on','wel');
+  cool=Date.now()+900}
 
-function showStep(first){
-  const a=active;if(!a||a.kind!=='spot')return;
-  const s=a.steps[a.i],n=a.steps.length,swap=!first&&!RM;
-  card.classList.toggle('swap',swap);
-  clearTimeout(a.sw);
-  a.sw=setTimeout(()=>{
-    if(active!==a)return;
-    cT.textContent=s.title;cX.textContent=s.text;
-    cDots.innerHTML=n>1?Array.from({length:n},(_,k)=>`<i class="${k===a.i?'on':''}"></i>`).join(''):'';
-    cDots.hidden=n<2;cSkip.hidden=n<2;
-    cNext.textContent=n<2?'Понятно':(a.i===n-1?'Готово':'Далее');
-    const el=resolve(s);
-    if(el){const sc=visible(el);last='';a.side=null;a.force=!sc;a.done=false;place(el,first)}
-    card.classList.remove('swap');
-  },swap?140:0)}
-
-function next(){const a=active;if(!a||a.kind!=='spot')return;a.i<a.steps.length-1?(a.i++,a.miss=0,showStep(false)):end('done')}
-function prev(){const a=active;if(!a||a.kind!=='spot'||a.i<=0)return;a.i--;a.miss=0;showStep(false)}
-
-function end(kind,silent){
-  const a=active;if(!a||a.kind!=='spot')return;
-  active=null;cancelAnimationFrame(raf);clearTimeout(a.sw);
-  if(!silent)mark(a.id);
-  cool=Date.now()+1000;
-  root.classList.remove('on');
-  setTimeout(()=>{if(!active)root.className=''},420);
-}
-
-// не прокручиваем крупные цели и закреплённые элементы; остальное подводим к центру
-function visible(el){
-  if(el.closest('#tabs,#fab,#sh,#stw,.hd'))return false;
-  const r=el.getBoundingClientRect(),vh=innerHeight;
-  if(r.height>vh*.55)return false;
-  if(r.top<pT.offsetHeight+10||r.bottom>vh-pB.offsetHeight-110){el.scrollIntoView({block:'center',behavior:RM?'auto':'smooth'});return true}
-  return false}
-
-function place(el,instant){
-  const s=active.steps[active.i],r=el.getBoundingClientRect(),key=[r.left,r.top,r.width,r.height].map(Math.round).join();
-  // пока цель движется (прокрутка, рост графика), карточка стоит на месте; когда цель замерла — один раз плавно встаёт рядом
-  if(!instant&&key===last){const a=active;if(a.rect&&!a.done&&++a.still>=10){a.done=true;placeCard(a.rect,false,true)}return}
-  last=key;active.still=0;active.done=false;
-  const p=s.pad==null?6:s.pad,x=r.left-p,y=r.top-p,w=r.width+p*2,h=r.height+p*2;
-  const br=getComputedStyle(el).borderTopLeftRadius;
-  let rad=br.indexOf('%')>-1?Math.min(w,h)/2:(parseFloat(br)||0)+p;
-  rad=clamp(Math.max(rad,12),0,Math.min(w,h)/2);
-  hole.style.left=x+'px';hole.style.top=y+'px';hole.style.width=w+'px';hole.style.height=h+'px';hole.style.borderRadius=rad+'px';
-  active.rect={l:x,t:y,r:x+w,b:y+h};
-  placeCard(active.rect,instant,false)}
-
-function placeCard(r,instant,settled){
-  // карточка стоит рядом с пунктом: под ним, если там есть место, иначе над ним, а у крупной цели — у верхнего или нижнего края.
-  // Сторона выбирается один раз на шаг и меняется, только если перестала помещаться; двигается карточка лишь когда цель замерла.
-  const A=active;
-  if(!instant&&!settled&&!A.force)return;
-  A.force=false;
-  const vw=innerWidth,vh=innerHeight,m=12,gap=14,top=pT.offsetHeight+m,bot=vh-pB.offsetHeight-m;
-  const cw=card.offsetWidth,ch=card.offsetHeight;
-  const x=Math.round(clamp((r.l+r.r)/2-cw/2,m,vw-cw-m));
-  const below=bot-(r.b+gap),above=(r.t-gap)-top;
-  const fits=k=>k==='below'?below>=ch:k==='above'?above>=ch:true;
-  if(!A.side||!fits(A.side))A.side=below>=ch?'below':above>=ch?'above':'dock';
-  let y=A.side==='below'?r.b+gap:A.side==='above'?r.t-gap-ch:((r.t+r.b)/2>vh/2?top:bot-ch);
-  y=Math.round(clamp(y,top,Math.max(top,bot-ch)));
-  if(instant){   // первое появление: чуть опускается сверху и проявляется
-    card.style.transition='none';
-    card.style.setProperty('--x',x+'px');card.style.setProperty('--y',(y-(RM?0:14))+'px');
-    void card.offsetWidth;card.style.transition=''}
-  else if(A.cy!=null&&Math.abs(A.cy-y)<3&&A.cx===x)return;
-  A.cx=x;A.cy=y;
-  card.style.setProperty('--x',x+'px');card.style.setProperty('--y',y+'px')}
-
-// следим за целью каждый кадр: окно выезжает, страница прокручивается, появляется клавиатура — подсветка не отстаёт
-function loop(){
-  const a=active;if(!a)return;
-  if(a.kind==='spot'){
-    if(a.id==='sheet'?!q('#sh.on'):modalOpen()){end('abort',true);return}
-    const el=resolve(a.steps[a.i]);
-    if(el){a.miss=0;place(el)}
-    else if(++a.miss>90){a.i<a.steps.length-1?(a.i++,a.miss=0,showStep(false)):end('done')}}
-  raf=requestAnimationFrame(loop)}
-
-/* ---------- когда показывать ---------- */
-function ctxKey(){
-  const t=q('#tabs [aria-current="page"]'),tb=t?t.dataset.t:'list';
-  const sb=qa('.sbt button.on'),sub=sb?(sb.dataset.as||sb.dataset.ps||''):'';
-  if(tb==='stats')return sub&&sub!=='all'?'stats:'+sub:'stats';
-  if(tb==='tags')return sub&&sub!=='goals'?'tags:'+sub:'tags';
-  return 'list'}
-const gate=()=>!active&&Date.now()>cool&&!D.hidden&&!q('#spl')&&!modalOpen()&&!q('#gear.on')&&!q('#trm.on')&&!q('#fp.open');
-let pk='',pa=0,na=0,lastMut=Date.now();
-function consider(){
-  if(!gate()){na=0;return}
-  const S=seen();if(!S.welcome)return;
-  // после обновления один раз показываем «Что нового» (экран должен постоять спокойно)
-  if(!S.new16){if(!na)na=Date.now();if(Date.now()-na>=1800){na=0;runWelcome(true)}return}
-  const key=ctxKey();
-  if(S[key]||!TOURS[key]||key==='sheet'){pk='';return}
-  if(key!==pk){pk=key;pa=Date.now();return}      // экран должен простоять спокойно, пока не покажем подсказку
-  if(Date.now()-pa<600||Date.now()-lastMut<750)return;
-  pk='';runTour(key)}
-
-function considerSheet(){
-  const sh=q('#sh');if(!sh||!sh.classList.contains('on'))return;
-  if(!seen().welcome||seen().sheet||active)return;
-  setTimeout(()=>{const sh2=q('#sh');if(sh2&&sh2.classList.contains('on')&&!seen().sheet&&!active&&!q('#spl'))runTour('sheet')},950)}
-
+/* ---------- первый запуск: показываем один раз ---------- */
+const gate=()=>!active&&Date.now()>cool&&!D.hidden&&!q('#spl')&&!modalOpen()&&!q('#gear.on')&&!q('#fp.open');
 function boot(){
   const t0=Date.now();
   (function wait(){
     if(Date.now()-t0>12000)return;
     const tg=!!window.__TG&&typeof CL==='object'&&!CL.ready&&Date.now()-t0<4500;  // в Telegram ждём первую сверку с облаком
     if(q('#spl')||tg||D.readyState==='loading')return void setTimeout(wait,200);
-    setTimeout(function go(){
+    setTimeout(function go2(){
       if(seen().welcome)return;
-      if(gate()){runWelcome()}else if(Date.now()-t0<12000)setTimeout(go,800)},1200)})();
-  // слежение за экранами
-  let tm=0;const kick=()=>{lastMut=Date.now();clearTimeout(tm);tm=setTimeout(consider,300)};
-  const mo=new MutationObserver(kick);
-  [['#body',{childList:true}],['#sbw',{childList:true}],['#tabs',{attributes:true,subtree:true,attributeFilter:['class','aria-current']}]].forEach(([s,o])=>{const e=q(s);if(e)mo.observe(e,o)});
-  const sh=q('#sh');if(sh)new MutationObserver(considerSheet).observe(sh,{attributes:true,attributeFilter:['class']});
-  startIv()}
-let iv=0;
-function startIv(){clearInterval(iv);iv=setInterval(()=>{if(ALL.every(k=>seen()[k])){clearInterval(iv);iv=0;return}consider()},500)}
+      if(gate())show();else if(Date.now()-t0<12000)setTimeout(go2,800)},1200)})()}
 
-/* ---------- пройти заново / завершить (меню «Обучение» в шапке и настройки) ---------- */
-function replay(){
-  if(active)return;
-  const g=++gen;
-  reset();pk='';startIv();   // таймер слежения мог остановиться, когда всё было пройдено, — запускаем снова
-  try{if(typeof tab!=='undefined'&&tab!=='list'&&typeof setTab==='function')setTab('list')}catch(e){}
-  setTimeout(()=>{const go=()=>{if(g!==gen)return;if(gate())runWelcome();else setTimeout(go,500)};go()},650)}
-
-function stop(){
-  gen++;                       // отменяем всё, что ещё ждёт запуска: «пройти заново», переход после знакомства
-  const a=active;
-  if(a){
-    if(a.kind==='spot')end('skip',true);
-    else{active=null;if(root)root.classList.remove('on','wel')}}
-  mark(ALL);pk='';na=0;        // все подсказки считаются показанными — сами больше не появятся
-  cool=Date.now()+900}
-
-window.AppTour={replay,stop,run:runTour,reset,news:()=>{if(active)return;const m=seen();delete m.new16;try{localStorage.setItem(KEY,JSON.stringify(m))}catch(e){}try{if(typeof cfg==='object'&&cfg){cfg.tour=m;if(typeof save==='function')save()}}catch(e){}na=0}};
-
-/* ---------- меню «Обучение» рядом с шестерёнкой ---------- */
-function initMenu(){
-  const b=D.getElementById('trb'),m=D.getElementById('trm');if(!b||!m)return;
-  const isOpen=()=>m.classList.contains('on');
-  const open=()=>{
-    if(modalOpen())return;
-    try{if(typeof closeSettings==='function')closeSettings()}catch(e){}
-    m.querySelector('[data-tr=stop]').disabled=!active&&ALL.every(k=>seen()[k]);   // всё уже завершено — нечего завершать
-    m.inert=false;m.classList.add('on');b.setAttribute('aria-expanded','true')};
-  const close=()=>{if(!isOpen())return;m.classList.remove('on');m.inert=true;b.setAttribute('aria-expanded','false')};
-  b.addEventListener('click',()=>{isOpen()?close():open()});
-  m.addEventListener('click',e=>{
-    const x=e.target.closest('[data-tr]');if(!x||x.disabled)return;
-    const k=x.dataset.tr;close();
-    if(k==='again')setTimeout(replay,180);else stop()});
-  // тап вне меню закрывает его и не доходит до того, что под ним (как у настроек)
-  D.addEventListener('pointerdown',e=>{
-    if(!isOpen()||e.target.closest('#trm,#trb,#toast'))return;
-    close();e.stopPropagation();e.preventDefault();
-    try{if(typeof swallowClick==='function')swallowClick()}catch(err){}},true);
-  D.addEventListener('keydown',e=>{if(e.key==='Escape'&&isOpen()){e.stopPropagation();close()}},true);
-  // открылось другое окно — меню убираем
-  new MutationObserver(()=>{if(isOpen()&&(modalOpen()||q('#gear.on')))close()}).observe(D.body,{attributes:true,subtree:true,attributeFilter:['class']})}
+window.addEventListener('resize',()=>{if(active)fit()});
+window.AppTour={show};
 if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',boot);else boot();
-if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',initMenu);else initMenu();
 })();
+</script>
+<script>
+/* подписи полей на рамке: оборачиваем текст label в span (логика и значения полей не меняются) */
+(function(){var IDS=['ed','gd','rc','nc'],raf=0;
+function fix(r){r.querySelectorAll('label.ef').forEach(function(l){for(var n=l.firstChild;n;n=n.nextSibling){if(n.nodeType===3&&n.textContent.trim()){var s=document.createElement('span');s.className='fl';s.textContent=n.textContent.trim();l.replaceChild(s,n);break}}});
+ [['eam'],['gam']].forEach(function(a){var e=r.querySelector('#'+a[0]);if(e&&!(e.previousElementSibling&&e.previousElementSibling.classList.contains('fl-sum'))){var d=document.createElement('div');d.className='fl-sum';d.innerHTML='<b>\u0421\u0443\u043c\u043c\u0430</b>';e.parentNode.insertBefore(d,e)}})}
+function run(){raf=0;IDS.forEach(function(i){var r=document.getElementById(i);if(r)fix(r)})}
+IDS.forEach(function(i){var r=document.getElementById(i);if(r)new MutationObserver(function(){if(!raf)raf=requestAnimationFrame(run)}).observe(r,{childList:true,subtree:true})});run()})();
 </script>
 </body></html>
