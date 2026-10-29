@@ -1348,6 +1348,32 @@ html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){-webkit-text-size-adjust:100%;tou
 html:root input,html:root select,html:root textarea{-webkit-text-size-adjust:100%}
 html:root #cf :is(input,select),html:root #cf #cats input{font-size:16px}
 </style>
+<style id="sheet-motion">
+/* ===== v112: механика окон по референс-видео (покадровый разбор записи, 60 к/с) =====
+   открытие шторки   0.25с  cubic-bezier(0,0,.2,1)       затемнение 0.25с  cubic-bezier(.215,.61,.355,1)
+   закрытие шторки   0.24с  cubic-bezier(.4,0,1,1)       затемнение 0.19с с задержкой 0.05с — заканчивается вместе с окном
+   клавиатура вверх  0.32с  cubic-bezier(.1,.8,.3,1)     клавиатура вниз   0.42с  cubic-bezier(.3,.2,1,.4)
+   окно сдвигается ровно на высоту клавиатуры (translate), высота окна не меняется, пока окно помещается над клавиатурой */
+:root{--m-in:cubic-bezier(0,0,.2,1);--m-out:cubic-bezier(.4,0,1,1);--m-ov-in:cubic-bezier(.215,.61,.355,1);--m-ov-out:cubic-bezier(.55,.06,.68,.19)}
+html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){
+  --kt:.32s cubic-bezier(.1,.8,.3,1);
+  max-height:var(--kmax,calc(100vh - var(--sat) - var(--sab,0px) - 28px));
+  will-change:transform,translate;
+  transition:transform .24s var(--m-out),visibility 0s .24s,translate var(--kt),max-height var(--kt),padding-bottom var(--kt)}
+html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc).on,
+html:root #sh.on.fxl{transition:transform .25s var(--m-in),visibility 0s,translate var(--kt),max-height var(--kt),padding-bottom var(--kt)}
+html:root #sh.on.fxl{transition:transform .25s var(--m-in),visibility 0s,translate 0s,max-height 0s}
+/* закрытое окно целиком за нижним краем: низ экрана + собственный сдвиг под клавиатуру (его компенсирует закрывающий transform) */
+html:root :is(#sh,#ed):not(.on){transform:translate3d(0,calc(100% + var(--sab,0px) + 12px - var(--ky,0px)),0)!important}
+html:root :is(#gd,#cf,#bq,#nc,#cp,#rc):not(.on){transform:translate3d(0,calc(100% - var(--ky,0px)),0)!important}
+/* нижний край окна держится на экране на месте, даже если iOS сдвинул visual viewport (--pan задаёт скрипт) */
+html:root :is(#sh,#ed){bottom:calc(var(--sab,0px) + 12px - var(--pan,0px))!important}
+html:root :is(#gd,#cf,#bq,#nc,#cp,#rc){bottom:calc(0px - var(--pan,0px))!important}
+/* затемнение: открытие и закрытие — как на видео */
+html:root #ov{transition:opacity .19s var(--m-ov-out) .05s,visibility 0s .24s}
+html:root #ov.on{transition:opacity .25s var(--m-ov-in),visibility 0s}
+@media (prefers-reduced-motion:reduce){html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc),html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc).on,html:root #sh.on.fxl,html:root #ov,html:root #ov.on{transition:none!important}}
+</style>
 </head>
 <body><div id="lk" role="dialog" aria-modal="true" aria-label="PIN-код"></div><div id="vb" aria-hidden="true"></div><div id="spl" aria-hidden="true">
 <svg class="spl-logo" viewBox="96 96 320 320" width="132" height="132" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
@@ -1973,7 +1999,9 @@ function closeTopModal(){
   else if(sh.classList.contains('on')){inp.value='';closeSheet()}
   else return false;
   return true}
-ov.onclick=()=>{if(!closeTopModal())unlockIfIdle()};
+ov.onclick=()=>{const a=document.activeElement;if(a&&a!==document.body&&root_kbo()&&a.closest&&a.closest('#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc')){a.blur();return}   // как в референсе: первое касание затемнения прячет клавиатуру, второе закрывает окно
+  if(!closeTopModal())unlockIfIdle()};
+function root_kbo(){return document.documentElement.classList.contains('kbo')}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&isModalOpen()){e.preventDefault();closeTopModal()}});
 // перф: блокирующий touchmove на документе заставляет iOS ждать JS перед каждым стартом прокрутки — вешаем его только на жесты, начатые при открытом окне
 {const modalTM=e=>{if(isModalOpen()&&!e.target.closest('#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc,#rev'))e.preventDefault()};let mtOn=false;
@@ -2973,7 +3001,7 @@ function renderEd(){const t=eT,inc=t.type==='income';
   ed.innerHTML=`<div class="eh"><span class="sgm"><button data-et="expense" class="${inc?'':'on'}">Расх.</button><button data-et="income" class="${inc?'on':''}">Дох.</button></span><button class="x" id="ecl" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div>
 <input id="eam" class="${inc?'inc':'exp'}" inputmode="decimal" value="${t.amount||''}" placeholder="Сумма" aria-label="Сумма">
 ${t.oc?`<div class="eo">${fmt(t.oa)} ${E(t.oc)}</div>`:''}
-<label class="ef">Заметка<input id="eno" type="text" value="${E(t.note)}" placeholder="Заметка"></label>
+<label class="ef">Заметка<input id="eno" type="text" value="${E(t.note)}" placeholder="Заметка" enterkeyhint="done"></label>
 <label class="ef">Категория<button type="button" class="cpb" id="eca">${E(cd(t.category).l)}</button></label>
 
 <label class="ef">Дата<input id="eda" type="date" value="${t.date}"></label>
@@ -4712,7 +4740,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v111';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v112';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия, которую видит человек (внизу экрана и в письме в поддержку)
 try{document.getElementById('vb').textContent=APP_VER}catch(e){}
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
@@ -4859,35 +4887,50 @@ async function ibLoop(){
 })();
 </script>
 <script>
-// ---- клавиатура: окно не меняет размер рывком, а плавно уезжает вверх ----
+// ---- v112: окна и клавиатура по референс-видео ----
+// Принцип из видео: окно НЕ меняет высоту и не пересчитывает раскладку — оно целиком сдвигается вверх ровно на высоту клавиатуры
+// (translate на композиторе), поэтому и появление, и скрытие, и смена раскладки (цифры → буквы) идут без рывков.
 (function(){
   // безобидное предупреждение ResizeObserver не должно светиться красным
   window.addEventListener('error',e=>{if(e&&/ResizeObserver loop/.test(e.message||'')){e.stopImmediatePropagation();e.preventDefault()}},true);
   const vv=window.visualViewport,root=document.documentElement,$i=id=>document.getElementById(id);
   const IDS=['sh','ed','gd','cf','bq','nc','cp','rc'],SEL='#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc',FLT={sh:1,ed:1};
+  const T_SHOW=[.32,'cubic-bezier(.1,.8,.3,1)'],T_HIDE=[.42,'cubic-bezier(.3,.2,1,.4)'];   // из видео: клавиатура вверх / вниз
   const probe=document.createElement('div');probe.style.cssText='position:fixed;top:0;left:0;width:0;height:var(--sat);visibility:hidden;pointer-events:none';document.body.appendChild(probe);
   const probeB=document.createElement('div');probeB.style.cssText='position:fixed;top:0;left:0;width:0;height:var(--sab);visibility:hidden;pointer-events:none';document.body.appendChild(probeB);
-  let baseH=window.innerHeight,raf=0,lastOut=0,savedY=0,_lay='',_vvt='';const kc=new Map();
+  let baseH=window.innerHeight,raf=0,lastOut=0,savedY=0,_lay='',_vvt='',_pan='',_kbo=false,sat=probe.offsetHeight,sab=probeB.offsetHeight,poll=0,pollEnd=0,blurT=0;
+  const st=new Map(),busy=new Map(),rst=new Map();
   const editable=()=>{const a=document.activeElement;return !!a&&(a.tagName==='TEXTAREA'||a.tagName==='SELECT'||(a.tagName==='INPUT'&&!/^(checkbox|radio|button|color|range|file|submit|reset)$/.test(a.type)))};
   const anyOpen=()=>IDS.some(id=>{const e=$i(id);return e&&e.classList.contains('on')});
   function update(){raf=0;
-    const h=vv?vv.height:window.innerHeight,t=vv?Math.max(0,vv.offsetTop):0,foc=editable();
-    if(!foc&&Date.now()-lastOut>1000)baseH=window.innerHeight;
+    const L=window.innerHeight,h=vv?vv.height:L,t=vv?Math.max(0,vv.offsetTop):0,foc=editable(),a=document.activeElement;
+    if(!foc&&Date.now()-lastOut>1000)baseH=L;
+    const kbOpen=foc&&(baseH-h)>120;
+    if(!kbOpen){sat=probe.offsetHeight;sab=probeB.offsetHeight}
     // если браузер сам уменьшил окно — нижние элементы держим на месте (они уходят под клавиатуру)
-    const shrink=baseH-window.innerHeight;
+    const shrink=baseH-L;
     const lay=(shrink>120?shrink:0)+'px';if(lay!==_lay){_lay=lay;root.style.setProperty('--lay',lay)}
     const vt=t+'px';if(vt!==_vvt){_vvt=vt;root.style.setProperty('--vvt',vt)}
-    const kbOpen=foc&&(baseH-h)>120,sat=probe.offsetHeight,sab=probeB.offsetHeight,L=window.innerHeight;
-    root.classList.toggle('kbo',kbOpen);const tgt=kbOpen?document.activeElement.closest(SEL):null;
-    IDS.forEach(id=>{const el=$i(id);if(!el)return;let ky=0,km=null;
-      if(el===tgt){const gp=FLT[id]?14:0,avail=h-sat-8-gp,need=el.scrollHeight,H=Math.min(need,avail);
-        if(need>avail)km=avail;
-        const cur=FLT[id]?L-sab-12-H:L-H;ky=Math.max(Math.min(0,(t+h-gp)-(cur+H)),(t+sat+8)-cur)}
-      const key=ky+'|'+(km||'');if(kc.get(id)===key)return;kc.set(id,key);
-      el.style.setProperty('--ky',ky+'px');
-      if(km)el.style.setProperty('--kmax',km+'px');else el.style.removeProperty('--kmax')})}
+    // iOS не уменьшает layout viewport, а сдвигает visual viewport: высота клавиатуры = innerHeight − visualViewport.height
+    const kb=kbOpen?Math.max(0,L-h):0;
+    // сдвиг visual viewport (iOS подкручивает страницу к полю) мгновенно компенсируем в bottom — окно не «плывёт» вместе с ним
+    const pan=kb>0?t:0,pv=pan+'px';if(pv!==_pan){_pan=pv;root.style.setProperty('--pan',pv)}
+    if(kbOpen!==_kbo){_kbo=kbOpen;root.classList.toggle('kbo',kbOpen)}
+    IDS.forEach(id=>{const el=$i(id);if(!el||!el.classList.contains('on'))return;   // закрытое окно не трогаем: оно доезжает вниз с прежним сдвигом
+      const isT=kbOpen&&!!a&&el.contains(a),ky=isT?-kb:0,bo=FLT[id]?sab+12:0,
+        avail=Math.max(160,Math.round((isT?h:L)-sat-8-bo)),p=st.get(el),key=ky+'|'+avail;
+      if(p&&p.key===key)return;
+      const tm=(p&&ky===0&&p.ky<0)?T_HIDE:T_SHOW;
+      // окно перестаёт помещаться над клавиатурой (маленький экран): высота плавно уменьшается от текущей, дальше окно прокручивается
+      if(p&&avail<p.km){const h0=el.offsetHeight;if(h0>avail+1){el.style.transition='none';el.style.setProperty('--kmax',h0+'px');void el.offsetHeight;el.style.transition=''}}
+      el.style.setProperty('--kt',tm[0]+'s '+tm[1]);
+      el.style.setProperty('--ky',ky+'px');el.style.setProperty('--kmax',avail+'px');
+      st.set(el,{key,ky,km:avail});busy.set(el,performance.now()+tm[0]*1000+120)})}
   const sched=()=>{if(!raf)raf=requestAnimationFrame(update)};
-  function reveal(){if(!editable())return;const a=document.activeElement,m=a.closest('#rev,#cf,#ed,#gd,#rc');if(!m)return;
+  // iOS иногда не присылает resize при смене раскладки (цифры → буквы): пока поле в фокусе, подстраховываемся лёгким опросом
+  function tick(){if(editable()||Date.now()<pollEnd){sched();poll=setTimeout(tick,120)}else poll=0}
+  const kick=ms=>{pollEnd=Math.max(pollEnd,Date.now()+(ms||0));if(!poll)poll=setTimeout(tick,120)};
+  function reveal(){if(!editable())return;const a=document.activeElement,m=a.closest('#rev,#cf,#ed,#gd,#rc');if(!m||m.scrollHeight<=m.clientHeight+1)return;
     const r=a.getBoundingClientRect(),mr=m.getBoundingClientRect(),pad=14;let d=0;
     if(r.bottom>mr.bottom-pad)d=r.bottom-mr.bottom+pad;else if(r.top<mr.top+pad)d=r.top-mr.top-pad;
     if(d)m.scrollBy({top:d,behavior:'smooth'})}
@@ -4896,27 +4939,31 @@ async function ibLoop(){
   window.addEventListener('orientationchange',()=>setTimeout(sched,300));
   // страница под окном не должна ездить, пока открыто окно
   window.addEventListener('scroll',()=>{if(anyOpen()&&window.scrollY!==savedY)window.scrollTo(0,savedY)},{passive:true});
-  document.addEventListener('focusin',()=>{sched();setTimeout(sched,300);setTimeout(sched,750);setTimeout(reveal,450)});
-  document.addEventListener('focusout',()=>{lastOut=Date.now();setTimeout(sched,140);setTimeout(sched,1100)});
-  // плавное изменение высоты окна (например, когда под строкой ввода появляется разбор)
-  const last=new Map(),busy=new Set();
+  // переход между полями (сумма → заметка): окно остаётся открытым и на месте, клавиатура только меняет раскладку
+  document.addEventListener('focusin',()=>{clearTimeout(blurT);sched();kick(1500);setTimeout(reveal,420)});
+  document.addEventListener('focusout',()=>{lastOut=Date.now();clearTimeout(blurT);blurT=setTimeout(sched,90);kick(1200)});
+  // изменение высоты окна из-за содержимого (например, под строкой ввода появляется разбор) — мягко, но не во время сдвига под клавиатуру
+  const last=new Map(),inBusy=new Set();
   if(window.ResizeObserver){
-    const ro=new ResizeObserver(es=>{if(window._fxLock){if(raf){cancelAnimationFrame(raf);raf=0}update()}else sched();es.forEach(en=>{const el=en.target;if(busy.has(el))return;
-      if(window._fxLock){last.set(el,el.offsetHeight);return}
+    const ro=new ResizeObserver(es=>{if(window._fxLock){if(raf){cancelAnimationFrame(raf);raf=0}update()}else sched();es.forEach(en=>{const el=en.target;if(inBusy.has(el))return;
+      if(window._fxLock||performance.now()<(busy.get(el)||0)){last.set(el,el.offsetHeight);return}
       const nh=el.offsetHeight,oh=last.get(el);last.set(el,nh);
       if(oh==null||!el.classList.contains('on')||Math.abs(nh-oh)<3||Math.abs(nh-oh)>700||!el.animate)return;
-      busy.add(el);
+      inBusy.add(el);
       // запускаем анимацию вне колбэка наблюдателя, чтобы не было ошибки «ResizeObserver loop»
       requestAnimationFrame(()=>{try{const o=el.style.overflow;el.style.overflow='hidden';
         const an=el.animate([{height:oh+'px'},{height:nh+'px'}],{duration:380,easing:'cubic-bezier(.22,1,.36,1)'});
-        const fin=()=>{busy.delete(el);el.style.overflow=o;last.set(el,el.offsetHeight)};an.onfinish=fin;an.oncancel=fin}
-        catch(err){busy.delete(el)}})})});
+        const fin=()=>{inBusy.delete(el);el.style.overflow=o;last.set(el,el.offsetHeight)};an.onfinish=fin;an.oncancel=fin}
+        catch(err){inBusy.delete(el)}})})});
     IDS.forEach(id=>{const el=$i(id);if(el)ro.observe(el)})}
-  // при закрытии окна клавиатура уезжает вместе с ним
-  const mo=new MutationObserver(ms=>{ms.forEach(m=>{const el=m.target;
-      if(el.classList.contains('on')){savedY=window.scrollY;setTimeout(sched,400);setTimeout(sched,800)}
-      else if(el.contains(document.activeElement))document.activeElement.blur()});sched()});
-  IDS.forEach(id=>{const el=$i(id);if(el)mo.observe(el,{attributes:true,attributeFilter:['class']})});
+  // закрытие: клавиатура уезжает вместе с окном; сдвиг закрытого окна сбрасываем, когда оно уже скрыто
+  const mo=new MutationObserver(ms=>{ms.forEach(m=>{const el=m.target,on=el.classList.contains('on'),was=/(^|\s)on(\s|$)/.test(m.oldValue||'');
+      if(on===was)return;
+      if(on){savedY=window.scrollY;clearTimeout(rst.get(el));update()}   // числовой max-height готов ещё до первого кадра
+      else{if(el.contains(document.activeElement))document.activeElement.blur();
+        clearTimeout(rst.get(el));rst.set(el,setTimeout(()=>{if(el.classList.contains('on'))return;
+          el.style.transition='none';el.style.setProperty('--ky','0px');el.style.removeProperty('--kmax');void el.offsetHeight;el.style.transition='';st.delete(el)},480))}});sched()});
+  IDS.forEach(id=>{const el=$i(id);if(el)mo.observe(el,{attributes:true,attributeFilter:['class'],attributeOldValue:true})});
   sched();
 })();
 </script>
@@ -4938,7 +4985,7 @@ async function ibLoop(){
 (function(){
   const root=document.documentElement;let t=0;
   const hold=ms=>{root.classList.add('nocr');clearTimeout(t);t=setTimeout(()=>root.classList.remove('nocr'),ms)};
-  document.addEventListener('focusin',e=>{if(e.target&&e.target.matches&&e.target.matches('input,textarea'))hold(1000)},true);
+  document.addEventListener('focusin',e=>{if(e.target&&e.target.matches&&e.target.matches('input,textarea')&&!e.target.closest('#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc'))hold(1000)},true);   // в окнах курсор виден сразу, как в референсе
 })();
 </script>
 <script>
