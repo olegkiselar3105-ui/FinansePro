@@ -1175,8 +1175,8 @@ html:root #ov,html:root[data-theme=light] #ov{background:var(--sov)!important;-w
 html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc,#fp){background:var(--sb)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;border:0!important;box-shadow:0 -4px 40px rgba(0,0,0,.2)!important;border-radius:28px!important}
 html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){top:auto!important;bottom:calc(var(--sab,0px) + 12px)!important;translate:0 var(--ky,0px)!important;transform-origin:50% 100%!important}
 html:root :is(#ed,#gd,#rc,#bq,#nc,#cp){padding:10px 18px 18px!important}
-html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):not(.on){transform:translateY(48px)!important}
-html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc)::before{content:"";display:block;width:36px;height:4px;border-radius:4px;background:var(--m,#888);opacity:.45;margin:0 auto 14px}
+html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):not(.on){transform:translateY(calc(100% + var(--sab,0px) + 40px - var(--ky,0px)))!important}
+html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc)::before{content:"";display:block;width:40px;height:5px;border-radius:4px;background:var(--m,#888);opacity:.45;margin:0 auto 14px}
 html:root :is(#ed,#gd,#rc,#nc) label.ef,html:root #ed .ef.tgf{position:relative;display:block!important;margin-top:14px;padding:15px 16px 8px;border:1px solid var(--sbd)!important;border-radius:18px}
 html:root :is(#ed,#gd,#rc,#nc) label.ef:focus-within{border-color:var(--sa)!important;box-shadow:0 0 0 1px var(--sa)}
 html:root :is(#ed,#gd,#rc,#nc) .fl,html:root #ed .ef.tgf>span:first-child{position:absolute;top:-9px;left:14px;padding:0 5px;background:var(--sb);font-size:12px;line-height:1.2;color:var(--m2)}
@@ -1198,6 +1198,13 @@ html:root #ed .shf{justify-content:flex-end}
 html:root #bq .sm.auto{display:none!important}
 html:root #bq .bqb:has(>.sm.auto:only-child){display:none}
 html:root #vb{left:auto!important;right:12px!important;bottom:calc(3px + var(--sab,0px))!important;z-index:12;opacity:.7}
+/* как на видео: шторка целиком выезжает снизу вверх (замедляясь) и уходит вниз за экран (ускоряясь), без масштаба и прозрачности */
+html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){opacity:1;transition:transform .24s cubic-bezier(.4,0,1,1),visibility 0s .24s,translate .45s cubic-bezier(.32,.72,0,1)}
+html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc).on{transition:transform .42s cubic-bezier(.12,.9,.1,1),visibility 0s,translate .45s cubic-bezier(.32,.72,0,1)}
+html:root #sh.on.fxl{transition:transform .42s cubic-bezier(.12,.9,.1,1),visibility 0s,translate 0s}
+html:root #sh :is(.fld,#tpl,#rev,.shf){opacity:1!important;transform:none!important;transition:none!important}
+html:root #ov{transition:opacity .28s ease,visibility 0s .28s}
+html:root #ov.on{transition:opacity .28s ease}
 </style>
 </head>
 <body><div id="lk" role="dialog" aria-modal="true" aria-label="PIN-код"></div><div id="vb" aria-hidden="true"></div><div id="spl" aria-hidden="true">
@@ -4526,7 +4533,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v95';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v97';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия, которую видит человек (внизу экрана и в письме в поддержку)
 try{document.getElementById('vb').textContent=APP_VER}catch(e){}
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
@@ -5232,5 +5239,33 @@ function fix(r){r.querySelectorAll('label.ef').forEach(function(l){for(var n=l.f
  [['eam'],['gam']].forEach(function(a){var e=r.querySelector('#'+a[0]);if(e&&!(e.previousElementSibling&&e.previousElementSibling.classList.contains('fl-sum'))){var d=document.createElement('div');d.className='fl-sum';d.innerHTML='<b>\u0421\u0443\u043c\u043c\u0430</b>';e.parentNode.insertBefore(d,e)}})}
 function run(){raf=0;IDS.forEach(function(i){var r=document.getElementById(i);if(r)fix(r)})}
 IDS.forEach(function(i){var r=document.getElementById(i);if(r)new MutationObserver(function(){if(!raf)raf=requestAnimationFrame(run)}).observe(r,{childList:true,subtree:true})});run()})();
+</script>
+<script>
+/* свайп за «ручку» окна: тянем вниз — окно следует за пальцем; отпустили — закрылось (быстрый свайп или >28% высоты) или вернулось на место */
+(function(){var IDS=['sh','ed','gd','cf','bq','nc','cp','rc'],ZONE=32,g=null;
+function OV(){return document.getElementById('ov')}
+function start(el,y){if(!el.classList.contains('on')||el.classList.contains('sub'))return false;
+ var r=el.getBoundingClientRect();if(y<r.top||y-r.top>ZONE)return false;
+ g={el:el,y0:y,dy:0,h:r.height,vy:0,ly:y,lt:performance.now(),on:false};return true}
+function move(y,e){if(!g)return;if(e&&e.cancelable)e.preventDefault();
+ var dy=y-g.y0;
+ if(!g.on){if(Math.abs(dy)<4)return;g.on=true;g.el.style.transition='none';OV().style.transition='none';
+  var a=document.activeElement;if(a&&a.blur&&g.el.contains(a))a.blur()}
+ var t=performance.now();g.vy=(y-g.ly)/Math.max(1,t-g.lt);g.ly=y;g.lt=t;g.dy=dy;
+ g.el.style.transform='translateY('+(dy>0?dy:dy*.15)+'px)';
+ OV().style.opacity=String(Math.max(.15,1-Math.max(0,dy)/(g.h+60)))}
+function end(){if(!g)return;var o=g,el=o.el,O=OV();g=null;if(!o.on)return;
+ var close=o.dy>o.h*.28||(o.vy>.6&&o.dy>24);
+ O.style.transition='';O.style.opacity='';
+ if(close){el.style.transition='';el.style.transform='';if(O.onclick)O.onclick()}
+ else{el.style.transition='transform .38s cubic-bezier(.2,.9,.2,1)';el.style.transform='translateY(0px)';
+  setTimeout(function(){el.style.transition='';el.style.transform=''},420)}}
+IDS.forEach(function(id){var el=document.getElementById(id);if(!el)return;
+ el.addEventListener('touchstart',function(e){if(e.touches.length!==1){g=null;return}start(el,e.touches[0].clientY)},{passive:true});
+ el.addEventListener('touchmove',function(e){if(g)move(e.touches[0].clientY,e)},{passive:false});
+ el.addEventListener('touchend',end);el.addEventListener('touchcancel',end);
+ el.addEventListener('pointerdown',function(e){if(e.pointerType!=='mouse'||e.button)return;if(start(el,e.clientY)){try{el.setPointerCapture(e.pointerId)}catch(x){}}});
+ el.addEventListener('pointermove',function(e){if(e.pointerType==='mouse'&&g)move(e.clientY,e)});
+ el.addEventListener('pointerup',function(e){if(e.pointerType==='mouse')end()})})})();
 </script>
 </body></html>
