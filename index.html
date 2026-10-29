@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#111111" id="tc">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="apple-mobile-web-app-title" content="Финансы">
 <link rel="manifest" href="manifest.webmanifest">
@@ -1249,12 +1249,12 @@ html:root #ed #eam:focus{border-bottom:2px solid var(--t)!important;box-shadow:n
 html:root #ed label.ef{display:flex!important;align-items:center;justify-content:space-between;gap:12px;margin:0!important;padding:9px 0!important;border:0!important;border-bottom:1px solid var(--sep)!important;border-radius:0!important;box-shadow:none!important}
 html:root #ed label.ef:focus-within{border-bottom:1px solid var(--t)!important;box-shadow:none!important}
 html:root #ed label.ef .fl{position:static;flex:none;padding:0;background:none;font-size:13px;color:var(--m2)}
-html:root #ed label.ef :is(input,.cpb){flex:1;min-width:0;width:auto!important;text-align:right!important;text-align-last:right!important;font-size:15px!important;padding:2px 0!important}
+html:root #ed label.ef :is(input,.cpb){flex:1;min-width:0;width:auto!important;text-align:right!important;text-align-last:right!important;font-size:16px!important;padding:2px 0!important}
 html:root #ed label.ef:has(.cpb){padding-right:0!important}
 html:root #ed label.ef:has(.cpb)::after{right:0;margin-top:-2px;display:none}
 html:root #ed .ef.tgf{display:block!important;margin:0!important;padding:9px 0!important;border:0!important;border-bottom:1px solid var(--sep)!important;border-radius:0!important}
 html:root #ed .tgf .tgw{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;justify-content:flex-start}
-html:root #ed .tgf input{flex:1 1 120px;width:auto;min-width:100px;font-size:15px!important;text-align:left!important;padding:2px 0;border:0!important;background:none}
+html:root #ed .tgf input{flex:1 1 120px;width:auto;min-width:100px;font-size:16px!important;text-align:left!important;padding:2px 0;border:0!important;background:none}
 html:root #ed .tgc{padding:0;border:0;border-radius:0;background:none;font-size:14px;color:var(--t)}
 html:root #ed .shf{margin-top:12px}
 html:root #ed :is(.sm.pr,.sm.del){height:44px}
@@ -1266,8 +1266,9 @@ html:root #tour.wel .tr-w{transform:translate3d(0,0,0);transition:transform .45s
 @media(min-width:640px){html:root #tour .tr-w{max-width:560px}}
 html:root #tour .tr-w::before{content:"";display:block;width:40px;height:5px;border-radius:4px;background:var(--m,#888);opacity:.45;margin:10px auto 18px}
 html:root #tour .tr-w .tr-f{position:relative;display:block;height:44px;min-height:0;margin-top:18px}
-html:root #tour .tr-dots{position:absolute;left:0;top:50%;transform:translate(0,-50%);transition:left .55s var(--tre),transform .55s var(--tre)}
-html:root #tour .tr-dots.mid{left:50%;transform:translate(-50%,-50%)}
+html:root #tour .tr-w .tr-f{container-type:inline-size}
+html:root #tour .tr-dots{position:absolute;left:50%;top:50%;transform:translate(-50cqw,-50%);transition:transform .55s var(--tre);will-change:transform}
+html:root #tour .tr-dots.mid{transform:translate(-50%,-50%)}
 html:root #tour .tr-back,html:root #tour .tr-next{position:absolute;top:0;height:44px;display:flex;align-items:center}
 html:root #tour .tr-back{left:0;padding:0 14px 0 0;font-size:14px;color:var(--m2);opacity:0;pointer-events:none;transition:opacity .35s ease,color .2s ease}
 html:root #tour .tr-back.show{opacity:1;pointer-events:auto}
@@ -1290,7 +1291,7 @@ html:root #gd .fl-sum{display:none}
 html:root :is(#gd,#rc,#nc) label.ef{display:flex!important;align-items:center;justify-content:space-between;gap:12px;margin:0!important;padding:9px 0!important;border:0!important;border-bottom:1px solid var(--sep)!important;border-radius:0!important;box-shadow:none!important}
 html:root :is(#gd,#rc,#nc) label.ef:focus-within{border-bottom:1px solid var(--t)!important;box-shadow:none!important}
 html:root :is(#gd,#rc,#nc) label.ef .fl{position:static;flex:none;padding:0;background:none;font-size:13px;color:var(--m2)}
-html:root :is(#gd,#rc,#nc) label.ef :is(input,select,.cpb){flex:1;min-width:0;width:auto!important;text-align:right!important;text-align-last:right!important;font-size:15px!important;padding:2px 0!important;background:none}
+html:root :is(#gd,#rc,#nc) label.ef :is(input,select,.cpb){flex:1;min-width:0;width:auto!important;text-align:right!important;text-align-last:right!important;font-size:16px!important;padding:2px 0!important;background:none}
 html:root :is(#gd,#rc,#nc) label.ef:has(select)::after{right:0;margin-top:-2px}
 html:root :is(#gd,#rc,#nc) label.ef select{padding-right:16px!important}
 html:root :is(#gd,#rc,#nc) label.ef:has(.cpb)::after{display:none}
@@ -1328,17 +1329,24 @@ html:root #sh .r.tgo .tgi{display:block}
 html:root #sh .r.tgo .tgp{display:none}
 
 /* ===== v109: фиксированные места в строке записи: заметка | категория | +Тег | сумма | дата; сумма никогда не режется ===== */
-html:root #sh .r{grid-template-columns:14px minmax(0,1fr) 72px 48px 62px 28px;grid-template-areas:"s n c g m z";column-gap:4px}
+html:root #sh .r{grid-template-columns:14px minmax(0,1fr) 72px 48px 70px 28px;grid-template-areas:"s n c g m z";column-gap:4px}
 html:root #sh .r .cpb{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;min-width:0}
 html:root #sh .r .tgp{grid-area:g;min-width:0;padding:2px 0;font-size:12px;color:var(--m2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left}
-html:root #sh .r .tgi{grid-area:g;display:none;justify-self:end;position:relative;z-index:2;width:96px;min-width:0;font-size:14px;padding:3px 6px;background:var(--sb);border-bottom:.5px solid var(--b2);text-overflow:ellipsis}
-html:root #sh .r .am{min-width:0;width:100%;text-align:right;padding-left:0;padding-right:0;font-size:14px}
+html:root #sh .r .tgi{grid-area:g;display:none;justify-self:end;position:relative;z-index:2;width:96px;min-width:0;font-size:16px;padding:3px 6px;background:var(--sb);border-bottom:.5px solid var(--b2);text-overflow:ellipsis}
+html:root #sh .r .am{min-width:0;width:100%;text-align:right;padding-left:0;padding-right:0;font-size:16px}
 html:root #sh .r .ac{width:28px;justify-content:center}
 html:root #sh .dp{position:relative;min-width:28px;width:28px;padding:0;justify-content:center}
 html:root #sh .dp span{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:-5px;font-size:9px;line-height:1;color:var(--m2);white-space:nowrap}
 
 /* ===== v110: между записями в окне добавления — одна линия (оставляем нижнюю у строки тегов) ===== */
 html:root #sh #rev .sw,html:root #sh #rev .sw .r{border-bottom:0!important}
+
+/* ===== v111: плавность для 120 Гц, без размытия под анимацией обучения; аватар без вспышки ===== */
+html:root #tour .tr-bd{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(var(--bgr),.72)}
+html:root #tour .tr-w{will-change:transform}
+html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){-webkit-text-size-adjust:100%;touch-action:manipulation}
+html:root input,html:root select,html:root textarea{-webkit-text-size-adjust:100%}
+html:root #cf :is(input,select),html:root #cf #cats input{font-size:16px}
 </style>
 </head>
 <body><div id="lk" role="dialog" aria-modal="true" aria-label="PIN-код"></div><div id="vb" aria-hidden="true"></div><div id="spl" aria-hidden="true">
@@ -3963,7 +3971,7 @@ function stHtml(){
   const v=cfg.theme==='light'||cfg.theme==='auto'?cfg.theme:'dark';
   const thm=`<div class="rw tr">${IC('thm')}<span class="rl">Тема</span><div class="thm" id="thm" role="radiogroup" aria-label="Тема" data-v="${v==='light'?'l':v==='auto'?'a':'d'}"><i></i>${[['dark','Тёмная','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg>'],['auto','Авто','Авто'],['light','Светлая','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2.5 12h2M19.5 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>']].map(([k,n,h])=>`<button type="button" role="radio" data-th="${k}" aria-label="${n}" title="${n}" aria-checked="${v===k}" class="${v===k?'on':''}">${h}</button>`).join('')}</div></div>`;
   return `<h1 class="lt">Настройки</h1>
-<div class="sc"><div class="pf"><span class="av${ini?' ini':''}"${ini?` style="background:linear-gradient(160deg,${avc},${avc}cc)"`:''}>${ini?`<i class="avi">${E(ini)}</i>`:person}${ph?`<img src="${E(ph)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">`:''}</span><span class="pn"><b>${E(nm)}</b><small${un?' class="un"':''}>${E(sub)}</small></span></div>
+<div class="sc"><div class="pf"><span class="av${ini?' ini':''}"${ini?` style="background:linear-gradient(160deg,${avc},${avc}cc)"`:''}>${ini?`<i class="avi">${E(ini)}</i>`:person}${ph?`<img src="${E(ph)}" alt="" decoding="async" referrerpolicy="no-referrer" style="opacity:${(window._AV&&window._AV.url===ph&&window._AV.ok)?1:0}" onload="this.style.transition='opacity .25s';this.style.opacity=1" onerror="this.remove()">`:''}</span><span class="pn"><b>${E(nm)}</b><small${un?' class="un"':''}>${E(sub)}</small></span></div>
 ${row('cub','#2f6df6','<path d="M12 3.5v17M16.2 7.6c0-1.6-1.9-2.8-4.2-2.8s-4.2 1.2-4.2 2.9 1.9 2.5 4.2 3.1 4.2 1.4 4.2 3.2-1.9 3-4.2 3-4.2-1.3-4.2-3"/>','Валюта и курсы',E(cfg.cur))}${row('ctc','','','Написать нам')}
 ${cfg.tplHide.length?row('tpr','#f39a1f','<path d="M13 3L5 13.5h6L10 21l8-10.5h-6z"/>','Быстрые шаблоны','Вернуть ('+cfg.tplHide.length+')'):''}</div>
 <div class="sgh">Внешний вид</div>
@@ -4704,7 +4712,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v110';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v111';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия, которую видит человек (внизу экрана и в письме в поддержку)
 try{document.getElementById('vb').textContent=APP_VER}catch(e){}
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
@@ -4910,6 +4918,19 @@ async function ibLoop(){
       else if(el.contains(document.activeElement))document.activeElement.blur()});sched()});
   IDS.forEach(id=>{const el=$i(id);if(el)mo.observe(el,{attributes:true,attributeFilter:['class']})});
   sched();
+})();
+</script>
+<script>
+// аватар Telegram грузим сразу при запуске — к открытию настроек он уже в кэше и не мигает пустой иконкой
+(function(){
+  try{
+    const u=typeof IN_TG!=='undefined'&&IN_TG&&TGW.initDataUnsafe&&TGW.initDataUnsafe.user;
+    const url=u&&u.photo_url;if(!url||!/^https:\/\//.test(url))return;
+    const im=new Image();im.referrerPolicy='no-referrer';im.decoding='async';
+    const A=window._AV={url,ok:false,img:im};
+    im.onload=()=>{A.ok=true;if(im.decode)im.decode().catch(()=>{})};
+    im.src=url;
+  }catch(e){}
 })();
 </script>
 <script>
