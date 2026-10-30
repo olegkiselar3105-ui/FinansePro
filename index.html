@@ -1174,9 +1174,9 @@ html.intro #thlp{animation:inUp .9s cubic-bezier(.22,1,.36,1) .58s backwards}
 :root[data-theme=light]{--sb:#fff;--sbd:rgba(0,0,0,.12);--sa:var(--t);--son:var(--on);--stn:rgba(0,0,0,.07);--sov:rgba(0,0,0,.5)}
 html:root #ov,html:root[data-theme=light] #ov{background:var(--sov)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc,#fp){background:var(--sb)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;border:0!important;box-shadow:0 -4px 40px rgba(0,0,0,.2)!important;border-radius:28px!important}
-html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){top:auto!important;bottom:calc(var(--sab,0px) + 12px)!important;translate:0 calc(var(--ky,0px) + var(--fx,0px))!important;transform-origin:50% 100%!important}
+html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){top:auto!important;bottom:calc(var(--sab,0px) + 12px)!important;margin-bottom:var(--mb,0px)!important;translate:0 calc(var(--ky,0px) + var(--fx,0px))!important;transform-origin:50% 100%!important}
 html:root :is(#ed,#gd,#rc,#bq,#nc,#cp){padding:10px 18px 18px!important}
-html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):not(.on){transform:translateY(calc(100% + var(--sab,0px) + 40px - var(--ky,0px)))!important}
+html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):not(.on){transform:translateY(calc(100% + var(--sab,0px) + 40px + var(--mb,0px)))!important}
 html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc)::before{content:"";display:block;width:40px;height:5px;border-radius:4px;background:var(--m,#888);opacity:.45;margin:0 auto 14px}
 html:root :is(#ed,#gd,#rc,#nc) label.ef,html:root #ed .ef.tgf{position:relative;display:block!important;margin-top:14px;padding:15px 16px 8px;border:1px solid var(--sbd)!important;border-radius:18px}
 html:root :is(#ed,#gd,#rc,#nc) label.ef:focus-within{border-color:var(--sa)!important;box-shadow:0 0 0 1px var(--sa)}
@@ -1210,10 +1210,10 @@ html:root #ov.on{transition:opacity .45s ease}
 /* полноширинные шторки от самого низа экрана (все окна, кроме окна операции) */
 html:root :is(#gd,#cf,#bq,#nc,#cp,#rc){left:0!important;right:0!important;bottom:0!important;max-width:none!important;margin:0!important;border-radius:28px 28px 0 0!important;padding-bottom:calc(18px + var(--sab,0px))!important}
 html:root.kbo :is(#gd,#cf,#bq,#nc,#cp,#rc){padding-bottom:18px!important}
-html:root :is(#gd,#cf,#bq,#nc,#cp,#rc):not(.on){transform:translateY(calc(100% - var(--ky,0px)))!important}
+html:root :is(#gd,#cf,#bq,#nc,#cp,#rc):not(.on){transform:translateY(calc(100% + var(--mb,0px)))!important}
 /* окно операции — карточка с полями по бокам, как в первом видео */
 html:root :is(#sh,#ed){left:12px!important;right:12px!important;max-width:none!important;margin:0!important;bottom:calc(var(--sab,0px) + 12px)!important}
-html:root :is(#sh,#ed):not(.on){transform:translateY(calc(100% + var(--sab,0px) + 12px - var(--ky,0px)))!important}
+html:root :is(#sh,#ed):not(.on){transform:translateY(calc(100% + var(--sab,0px) + 12px + var(--mb,0px)))!important}
 @media(min-width:640px){html:root :is(#gd,#cf,#bq,#nc,#cp,#rc){max-width:560px!important;margin:0 auto!important}html:root :is(#sh,#ed){max-width:520px!important;margin:0 auto!important}}
 /* открытие 450мс (плавное замедление), закрытие 340мс (разгон вниз за экран); сдвиг под клавиатуру 300мс */
 html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){transition:transform .34s cubic-bezier(.55,.06,.68,.19),visibility 0s .34s,translate .3s cubic-bezier(.25,.8,.25,1)}
@@ -1399,6 +1399,22 @@ html.pfp #nbp{display:flex}
 #nbp .av .avi{font-style:normal;font-size:13px;font-weight:600;line-height:1;letter-spacing:0}
 #nbp b{min-width:0;font-size:15px;font-weight:600;line-height:1;letter-spacing:-.01em;color:var(--t);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 </style>
+<style>
+#tour .v6{position:relative;display:flex;flex-direction:column;gap:7px;width:236px;margin:0 auto}
+#tour .v6 div{display:flex;align-items:center;gap:9px;height:38px;padding:0 13px;border-radius:13px;font-size:13.5px;background:rgba(var(--wr),.08);border:.5px solid var(--gbd);text-align:left}
+#tour .v6 em{font-style:normal;font-size:16px}#tour .v6 span{flex:1}#tour .v6 b{font-weight:600;color:var(--m2);font-size:12.5px}
+#tour .v6 .hl{position:relative;background:rgba(var(--wr),.16);border-color:rgba(var(--wr),.5)}#tour .v6 .hl b{color:var(--t)}
+#tour .tr-sl.on .v6 div{animation:trRow .55s var(--d,.4s) var(--tre) both}
+#tour .tr-sl.on .v6 .hl::after{content:'';position:absolute;inset:-3px;border-radius:16px;border:1.5px solid rgba(var(--wr),.6);opacity:0;animation:v6p 1.8s 1.6s ease-out infinite}
+@keyframes v6p{0%{opacity:.9;transform:scale(.97)}100%{opacity:0;transform:scale(1.08)}}
+#tour .v6 .hd6{position:absolute;right:16px;top:46px;font-size:26px;font-style:normal;opacity:0;pointer-events:none}
+#tour .tr-sl.on .v6 .hd6{animation:v6h 2.6s 1.7s ease-in-out infinite}
+@keyframes v6h{0%{opacity:0;transform:translate(16px,22px)}25%{opacity:1;transform:translate(0,0)}42%{transform:scale(.84)}58%{transform:scale(1)}85%{opacity:1}100%{opacity:0}}
+</style>
+<style>/* v123: подъём окна над клавиатурой — отступ снизу из --mb (перебивает margin:0!important выше) */
+html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){margin-bottom:var(--mb,0px)!important}
+html{overscroll-behavior:none}
+</style>
 </head>
 <body><div id="lk" role="dialog" aria-modal="true" aria-label="PIN-код"></div><div id="vb" aria-hidden="true"></div><div id="spl" aria-hidden="true">
 <svg class="spl-logo" viewBox="96 96 320 320" width="132" height="132" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
@@ -1425,7 +1441,7 @@ html.pfp #nbp{display:flex}
 </div>
 <div id="nb" role="presentation"><i class="nbg"></i><b id="ttl">Операции</b><div id="nbp" aria-hidden="true"></div></div>
 <nav id="tabs" class="glass" aria-label="Разделы"></nav>
-<div id="topact"><button type="button" id="thlp" aria-label="Возможности"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5.5A1.5 1.5 0 0 1 6.5 4H19v13H6.5A1.5 1.5 0 0 0 5 18.5z"/><path d="M5 18.5A1.5 1.5 0 0 0 6.5 20H19v-3M9 8h6"/></svg></button><button type="button" id="fab" aria-label="Добавить операцию" aria-haspopup="dialog"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>
+<div id="topact"><button type="button" id="thlp" aria-label="Советы"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg></button><button type="button" id="fab" aria-label="Добавить операцию" aria-haspopup="dialog"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>
 <div id="ov"></div>
 <div id="fp" class="glass" role="dialog" aria-label="Фильтры поиска" inert>
 <div class="fh"><b>Фильтры</b><button type="button" id="fpclr">Сбросить</button></div>
@@ -1997,7 +2013,7 @@ function lockBg(on){
 
 function openSheet(){if(!drafts.length){const el=$('#rev');el.classList.remove('anim','clearing');el.innerHTML=''}syncAuto();cancelGestures();lockBg(true);setOrigin(sh,fab);sh.classList.add('on');ov.className='on';ignore=false;renderTpl()}
 function closeSheet(){cancelAuto();sh.classList.remove('on');unlockIfIdle();cancelGestures()}
-fab.onclick=()=>{if(!isModalOpen())openSheet()};$('#thlp').onclick=()=>{if(isModalOpen())return;if(window.AppTour)AppTour.show()};inp.oninput=()=>{cancelAuto();syncBtn()};
+fab.onclick=()=>{if(!isModalOpen())openSheet()};$('#thlp').onclick=()=>{if(isModalOpen())return;if(window.openTips)openTips()};inp.oninput=()=>{cancelAuto();syncBtn()};
 sh.addEventListener('pointerdown',e=>{e.stopPropagation();if(autoT&&e.target.closest('.fld,#rev input,#rev select,#rev .sg,#rev .dp,#rev .cpb,#rev .tgp'))cancelAuto()});
 sh.addEventListener('pointermove',e=>e.stopPropagation());
 {const rv=$('#rev');
@@ -2812,7 +2828,7 @@ function buildPage(pg,B,peek){
     const cc=RG==='month'?cmpCat(KD):null,dl=cc&&cc.prev>0&&cc.cur>0?`<div style="font-size:12px;color:var(--m);margin-top:2px">${sgn((cc.cur-cc.prev)/cc.prev*100)} к прошлому месяцу${cc.partial?' (за те же дни)':''}</div>`:'';
     const navH=nav?`<div class="nv"><button data-nv="-1" aria-label="Назад"${RG==='week'&&WO<=0?' disabled':''}>‹</button><span>${label}</span><button data-nv="1" aria-label="Вперёд"${(RG==='week'?WO>=wkN-1:y>=now.getFullYear())?' disabled':''}>›</button></div>`:`<div style="font-size:12px;color:var(--m)">${label}</div>`;
     const bulb=`<button class="bulb${tipsOpen?' on':''}" data-tips="1" aria-label="Советы" aria-expanded="${tipsOpen}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg></button>`;
-    const head=subAn()+`<div class="ah"><div>${navH}<div style="font-size:22px;font-weight:500">${fmt(tot)} ${cfg.cur}</div>${dl}</div>${bulb}</div>`+(tipsOpen?`<div class="cd tps${_tipsF?' fresh':''}">${tips(month).map((t,i)=>`<div class="tip" style="--i:${i}"><b>${E(t.h)}</b><span>${E(t.b)}</span>${t.s?`<small>${E(t.s)}</small>`:''}</div>`).join('')}</div>`:'')+`<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin:10px 0 8px">${seg('kd',[['expense','Расх.'],['income','Дох.']],KD)}${seg('rg',[['week','Нед'],['month','Мес'],['year','Год']],RG)}</div>`;
+    const head=subAn()+`<div class="ah"><div>${navH}${dl}</div></div>`+`<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin:10px 0 8px">${seg('kd',[['expense','Расх.'],['income','Дох.']],KD)}${seg('rg',[['week','Нед'],['month','Мес'],['year','Год']],RG)}</div>`;
     if(!L.length){B.innerHTML=head+'<div class="emp">Нет данных за этот период.</div>';return}
     if(AS==='tags'){B.innerHTML=head+tagsAnalytics(L,tot);return}
     const by={};L.forEach(t=>by[t.category]=(by[t.category]||0)+t.amount);
@@ -4043,7 +4059,7 @@ function stHtml(){
   const ri=()=>'';
   const CH='';
   const tgRow=(id,label,on,lk)=>`<div class="rw tr"><span class="rl" style="white-space:normal;line-height:1.25">${label}</span><button type="button" class="tg${on?' on':''}" id="${id}"${lk?` data-lk="${lk}"`:''} role="switch" aria-checked="${!!on}" aria-label="${label}" style="flex:none"></button></div>`;
-  const ICN={"prv":"<path d='M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z'/><circle cx='12' cy='12' r='2.6'/><path d='M4.5 19.5l15-15'/>","mst":"<rect x=\"4\" y=\"5.5\" width=\"16\" height=\"14\" rx=\"2.5\"/><path d=\"M8 3.5v4M16 3.5v4M4 10h16\"/><circle cx=\"8.5\" cy=\"14.5\" r=\"1.1\"/>","pin":"<rect x=\"5\" y=\"10.5\" width=\"14\" height=\"9.5\" rx=\"2.5\"/><path d=\"M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5M12 14v2.3\"/>","cub": "<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M14.8 9.4c-.5-.9-1.4-1.4-2.8-1.4-1.6 0-2.7.8-2.7 2s1 1.7 2.7 2.1 2.9.9 2.9 2.2-1.2 2.1-2.9 2.1c-1.4 0-2.4-.5-2.9-1.5M12 6.4v1.6M12 16v1.6\"/>", "tpr": "<path d=\"M13 3L5 13.5h6L10 21l8-10.5h-6z\"/>", "thm": "<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M12 3.5a8.5 8.5 0 0 1 0 17z\"/>", "hlp": "<path d=\"M5 5.5A1.5 1.5 0 0 1 6.5 4H19v13H6.5A1.5 1.5 0 0 0 5 18.5z\"/><path d=\"M5 18.5A1.5 1.5 0 0 0 6.5 20H19v-3M9 8h6\"/>", "ctc": "<path d=\"M5 6.5A2.5 2.5 0 0 1 7.5 4h9A2.5 2.5 0 0 1 19 6.5v7a2.5 2.5 0 0 1-2.5 2.5H11l-4 3.5V16a2 2 0 0 1-2-2z\"/>", "cin": "<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M12 8v8M9 13l3 3 3-3\"/>", "cex": "<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M12 16V8M9 11l3-3 3 3\"/>", "lkr": "<path d=\"M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3\"/><path d=\"M4 7.5V17a2 2 0 0 0 2 2h12.5a1.5 1.5 0 0 0 1.5-1.5v-8A1.5 1.5 0 0 0 18.5 8h-12A2.5 2.5 0 0 1 4 7.5z\"/><circle cx=\"16\" cy=\"13.5\" r=\"1\"/>", "crs": "<rect x=\"4\" y=\"5.5\" width=\"16\" height=\"14\" rx=\"2.5\"/><path d=\"M8 3.5v4M16 3.5v4M4 10h16M9.5 14.5h5M12.5 12.5l2 2-2 2\"/>", "bki": "<path d=\"M12 4v10M8 10.2l4 4 4-4M5 19.5h14\"/>", "bke": "<path d=\"M12 15V5M8 8.8l4-4 4 4M5 19.5h14\"/>", "bkr": "<path d=\"M5 7h14M10 7V4.8h4V7M7 7l.8 12h8.4L17 7M10.3 11v5M13.7 11v5\"/>"};
+  const ICN={"tou":"<path d='M5 5.5A1.5 1.5 0 0 1 6.5 4H19v13H6.5A1.5 1.5 0 0 0 5 18.5z'/><path d='M5 18.5A1.5 1.5 0 0 0 6.5 20H19v-3M9 8h6'/>","prv":"<path d='M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z'/><circle cx='12' cy='12' r='2.6'/><path d='M4.5 19.5l15-15'/>","mst":"<rect x=\"4\" y=\"5.5\" width=\"16\" height=\"14\" rx=\"2.5\"/><path d=\"M8 3.5v4M16 3.5v4M4 10h16\"/><circle cx=\"8.5\" cy=\"14.5\" r=\"1.1\"/>","pin":"<rect x=\"5\" y=\"10.5\" width=\"14\" height=\"9.5\" rx=\"2.5\"/><path d=\"M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5M12 14v2.3\"/>","cub": "<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M14.8 9.4c-.5-.9-1.4-1.4-2.8-1.4-1.6 0-2.7.8-2.7 2s1 1.7 2.7 2.1 2.9.9 2.9 2.2-1.2 2.1-2.9 2.1c-1.4 0-2.4-.5-2.9-1.5M12 6.4v1.6M12 16v1.6\"/>", "tpr": "<path d=\"M13 3L5 13.5h6L10 21l8-10.5h-6z\"/>", "thm": "<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M12 3.5a8.5 8.5 0 0 1 0 17z\"/>", "hlp": "<path d=\"M5 5.5A1.5 1.5 0 0 1 6.5 4H19v13H6.5A1.5 1.5 0 0 0 5 18.5z\"/><path d=\"M5 18.5A1.5 1.5 0 0 0 6.5 20H19v-3M9 8h6\"/>", "ctc": "<path d=\"M5 6.5A2.5 2.5 0 0 1 7.5 4h9A2.5 2.5 0 0 1 19 6.5v7a2.5 2.5 0 0 1-2.5 2.5H11l-4 3.5V16a2 2 0 0 1-2-2z\"/>", "cin": "<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M12 8v8M9 13l3 3 3-3\"/>", "cex": "<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M12 16V8M9 11l3-3 3 3\"/>", "lkr": "<path d=\"M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3\"/><path d=\"M4 7.5V17a2 2 0 0 0 2 2h12.5a1.5 1.5 0 0 0 1.5-1.5v-8A1.5 1.5 0 0 0 18.5 8h-12A2.5 2.5 0 0 1 4 7.5z\"/><circle cx=\"16\" cy=\"13.5\" r=\"1\"/>", "crs": "<rect x=\"4\" y=\"5.5\" width=\"16\" height=\"14\" rx=\"2.5\"/><path d=\"M8 3.5v4M16 3.5v4M4 10h16M9.5 14.5h5M12.5 12.5l2 2-2 2\"/>", "bki": "<path d=\"M12 4v10M8 10.2l4 4 4-4M5 19.5h14\"/>", "bke": "<path d=\"M12 15V5M8 8.8l4-4 4 4M5 19.5h14\"/>", "bkr": "<path d=\"M5 7h14M10 7V4.8h4V7M7 7l.8 12h8.4L17 7M10.3 11v5M13.7 11v5\"/>"};
   const IC=id=>ICN[id]?`<span class="rwi"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICN[id]}</svg></span>`:'';
   const row=(id,col,g,label,val,cls)=>`<button type="button" class="rw${cls?' '+cls:''}" id="${id}">${IC(id)}<span class="rl">${label}</span>${val!=null?`<span class="rv">${val}</span>`:''}${CH}</button>`;
   let nm='Гость',sub='Данные хранятся на этом устройстве',ph='',ini='',un=false,avc='';
@@ -4055,7 +4071,7 @@ function stHtml(){
   return `<h1 class="lt">Настройки</h1>
 <div class="pf0"><span class="av${ini?' ini':''}"${ini?` style="background:linear-gradient(160deg,${avc},${avc}cc)"`:''}>${ini?`<i class="avi">${E(ini)}</i>`:person}${ph?`<img src="${E(ph)}" alt="" decoding="async" referrerpolicy="no-referrer" style="opacity:${(window._AV&&window._AV.url===ph&&window._AV.ok)?1:0}" onload="this.style.transition='opacity .25s';this.style.opacity=1" onerror="this.remove()">`:''}</span><span class="pn"><b>${E(nm)}</b><small${un?' class="un"':''}>${E(sub)}</small></span></div>
 <div class="sc">
-${row('cub','#2f6df6','<path d="M12 3.5v17M16.2 7.6c0-1.6-1.9-2.8-4.2-2.8s-4.2 1.2-4.2 2.9 1.9 2.5 4.2 3.1 4.2 1.4 4.2 3.2-1.9 3-4.2 3-4.2-1.3-4.2-3"/>','Валюта и курсы',E(cfg.cur))}${row('ctc','','','Написать нам')}
+${row('cub','#2f6df6','<path d="M12 3.5v17M16.2 7.6c0-1.6-1.9-2.8-4.2-2.8s-4.2 1.2-4.2 2.9 1.9 2.5 4.2 3.1 4.2 1.4 4.2 3.2-1.9 3-4.2 3-4.2-1.3-4.2-3"/>','Валюта и курсы',E(cfg.cur))}${row('ctc','','','Написать нам')}${row('tou','','','Обучение','Пройти заново')}
 ${cfg.tplHide.length?row('tpr','#f39a1f','<path d="M13 3L5 13.5h6L10 21l8-10.5h-6z"/>','Быстрые шаблоны','Вернуть ('+cfg.tplHide.length+')'):''}</div>
 <div class="sgh">Внешний вид</div>
 <div class="sc">${thm}</div>
@@ -4075,7 +4091,7 @@ function bindSt(){
   if($('#crs'))$('#crs').onclick=()=>{cbM=shiftMonth(curM(),1);openBq('carry')};
   if($('#tpr'))$('#tpr').onclick=()=>{cfg.tplHide=[];save();renderSt();toast('Шаблоны возвращены')};
   if($('#hsb'))homeBind();if($('#botu'))$('#botu').onchange=e=>{const v=String(e.target.value||'').trim();cfg.botUrl=v;save();if(ibBase()){window.__ibBusy=false;inboxPull()}}
-  $('#cin').onclick=e=>openCf('catsI',e.currentTarget);$('#cex').onclick=e=>openCf('catsE',e.currentTarget);if($('#rcs'))$('#rcs').onclick=()=>openRcSt();$('#bki').onclick=()=>openBq('import');$('#bke').onclick=()=>openBq('export');$('#bkr').onclick=()=>openBq('reset');$('#ctc').onclick=()=>openBq('contact');}
+  if($('#tou'))$('#tou').onclick=()=>{if(window.AppTour)AppTour.show()};$('#cin').onclick=e=>openCf('catsI',e.currentTarget);$('#cex').onclick=e=>openCf('catsE',e.currentTarget);if($('#rcs'))$('#rcs').onclick=()=>openRcSt();$('#bki').onclick=()=>openBq('import');$('#bke').onclick=()=>openBq('export');$('#bkr').onclick=()=>openBq('reset');$('#ctc').onclick=()=>openBq('contact');}
 function renderSt(){const el=$('#st');if(!el||tab!=='settings')return;el.innerHTML=stHtml();bindSt();if(window.pfSync)window.pfSync()}
 // ---- маленькое окошко снизу: подтверждение сброса и резервная копия ----
 const bq=$('#bq');let bqT=null,bqCb=null;
@@ -4795,7 +4811,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v121';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v123';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия, которую видит человек (внизу экрана и в письме в поддержку)
 try{document.getElementById('vb').textContent=APP_VER}catch(e){}
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
@@ -4961,89 +4977,79 @@ async function ibLoop(){
 (function(){
   // безобидное предупреждение ResizeObserver не должно светиться красным
   window.addEventListener('error',e=>{if(e&&/ResizeObserver loop/.test(e.message||'')){e.stopImmediatePropagation();e.preventDefault()}},true);
+  /* ================= v123: клавиатура и окна — переписано с нуля =================
+     Принцип: положение окна на ЭКРАНЕ ведёт одна пружина (плавное приближение к цели), а не CSS-переходы за меняющейся раскладкой.
+     • цель = «над клавиатурой» (если в окне поле в фокусе) или «обычное место» (если нет);
+     • высоту клавиатуры берём из измерений (visualViewport / размер окна) и из памяти — окно начинает ехать в момент касания поля;
+     • любые мгновенные скачки раскладки (Telegram меняет высоту webview, iOS подкручивает страницу) гасятся сами:
+       мы каждый кадр пересчитываем отступ так, чтобы окно на экране двигалось только по пружине;
+     • короткие «мигания» клавиатуры (цифры → буквы) не считаются закрытием — окно не прыгает. */
   const vv=window.visualViewport,root=document.documentElement,$i=id=>document.getElementById(id);
   const IDS=['sh','ed','gd','cf','bq','nc','cp','rc'],SEL='#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc',FLT={sh:1,ed:1};
-  const T_SHOW=[.32,'cubic-bezier(.1,.8,.3,1)'],T_HIDE=[.42,'cubic-bezier(.3,.2,1,.4)'];   // из видео: клавиатура вверх / вниз
+  const GAP=10,TAU=78;   // зазор над клавиатурой; постоянная времени пружины (мс): ~0.3 с до покоя, без перелёта
   const probe=document.createElement('div');probe.style.cssText='position:fixed;top:0;left:0;width:0;height:var(--sat);visibility:hidden;pointer-events:none';document.body.appendChild(probe);
   const probeB=document.createElement('div');probeB.style.cssText='position:fixed;top:0;left:0;width:0;height:var(--sab);visibility:hidden;pointer-events:none';document.body.appendChild(probeB);
-  let baseH=window.innerHeight,raf=0,lastOut=0,savedY=0,_lay='',_vvt='',_pan='',_kbo=false,sat=probe.offsetHeight,sab=probeB.offsetHeight,poll=0,pollEnd=0,blurT=0;
-  const st=new Map(),busy=new Map(),rst=new Map();
-  // v115: окно стартует сдвиг В МОМЕНТ касания поля, не дожидаясь, пока iOS сообщит новую высоту: высоту клавиатуры берём из прошлого раза
-  // (запоминается), поэтому окно и клавиатура едут одновременно и с одной длительностью; когда придёт настоящая высота — тихо уточняем.
-  let pred=null,kbSeen=0,kbSaveT=0;const coarse=matchMedia('(pointer:coarse)').matches;
-  // v117: два режима клавиатуры. «overlay» (Safari/PWA): раскладка не меняется, сдвигается visual viewport — окно можно двигать заранее (предсказание).
-  // «resize» (Telegram): webview сам становится ниже на высоту клавиатуры, нижний край окна уезжает вместе с ним — предсказание тут давало двойной сдвиг («вверх-вниз»).
-  // В resize-режиме предсказание выключено, а мгновенный скачок раскладки гасится плавным доездом (FLIP через --fx).
-  let rz=(typeof IN_TG!=='undefined'&&!!IN_TG),lastL=window.innerHeight;
-  try{const m=localStorage.getItem('finapp.kbm');if(m==='r')rz=true;else if(m==='o')rz=false}catch(e){}
-  const closedAt=new Map();
-  function flip(d){const now=performance.now();
-    IDS.forEach(id=>{const el=$i(id);if(!el)return;
-      if(!(el.classList.contains('on')||now<(closedAt.get(el)||0)))return;
-      let cur=0;try{const cs=getComputedStyle(el).translate;if(cs&&cs!=='none'){const q=cs.split(' ');cur=parseFloat(q[1])||0}}catch(e){}
-      const kyv=parseFloat(el.style.getPropertyValue('--ky'))||0,tm=d<0?T_HIDE:T_SHOW;
-      el.style.transition='none';el.style.setProperty('--fx',(cur+d-kyv)+'px');void el.offsetHeight;el.style.transition='';
-      el.style.setProperty('--kt',tm[0]+'s '+tm[1]);el.style.setProperty('--fx','0px');
-      busy.set(el,now+tm[0]*1000+120)})}
+  const coarse=matchMedia('(pointer:coarse)').matches;
+  let baseH=window.innerHeight,lastOut=0,savedY=0,_lay='',_vvt='',_kbo=false,sat=probe.offsetHeight,sab=probeB.offsetHeight;
+  let kbOpen=false,visHold=0,lastRaw=0,holdEl=null,intent=null,kbSeen=0,kbSaveT=0,raf=0,tPrev=0;
+  const S=new Map(),busy=new Map(),rst=new Map();
   try{const v=+localStorage.getItem('finapp.kbh');if(v>150&&v<600)kbSeen=v}catch(e){}
   const editable=()=>{const a=document.activeElement;return !!a&&(a.tagName==='TEXTAREA'||a.tagName==='SELECT'||(a.tagName==='INPUT'&&!/^(checkbox|radio|button|color|range|file|submit|reset)$/.test(a.type)))};
   const anyOpen=()=>IDS.some(id=>{const e=$i(id);return e&&e.classList.contains('on')});
-  function update(){raf=0;
-    const L=window.innerHeight,h=vv?vv.height:L,t=vv?Math.max(0,vv.offsetTop):0,foc=editable(),a=document.activeElement;
-    if(Math.abs(L-lastL)>=2){const d=lastL-L;lastL=L;if(rz&&Math.abs(d)<700)flip(d)}
-    if(!foc&&Date.now()-lastOut>1000)baseH=L;
-    const kbOpen=foc&&(baseH-h)>120;
+  const winOf=n=>(n&&n.closest)?n.closest(SEL):null;
+  const start=()=>{if(!raf){tPrev=0;raf=requestAnimationFrame(frame)}};
+  function frame(now){raf=0;
+    const dt=Math.min(50,tPrev?now-tPrev:16);tPrev=now;
+    const L=window.innerHeight,h=vv?vv.height:L,vt=vv?Math.max(0,vv.offsetTop):0,a=document.activeElement,foc=editable(),T=Date.now();
+    if(!foc&&!kbOpen&&T-lastOut>1000)baseH=L;
+    // --- есть ли клавиатура (с «гистерезисом»: короткие мигания при смене раскладки не считаются закрытием)
+    const raw=foc&&(baseH-h)>120;
+    if(raw){kbOpen=true;visHold=h;lastRaw=T;holdEl=winOf(a)||holdEl}
+    else if(kbOpen&&!((foc&&T-lastRaw<450)||(!foc&&T-lastOut<90)))kbOpen=false;
     if(!kbOpen){sat=probe.offsetHeight;sab=probeB.offsetHeight}
-    // если браузер сам уменьшил окно — нижние элементы держим на месте (они уходят под клавиатуру)
-    const shrink=baseH-L;
-    const lay=(shrink>120?shrink:0)+'px';if(lay!==_lay){_lay=lay;root.style.setProperty('--lay',lay)}
-    const vt=t+'px';if(vt!==_vvt){_vvt=vt;root.style.setProperty('--vvt',vt)}
-    // iOS не уменьшает layout viewport, а сдвигает visual viewport: высота клавиатуры = innerHeight − visualViewport.height
-    const kb=kbOpen?Math.max(0,L-h):0;
-    if(kbOpen&&baseH-L>120&&!rz){rz=true;try{localStorage.setItem('finapp.kbm','r')}catch(e){}}
-    else if(kbOpen&&kb>150&&baseH-L<=120&&rz){rz=false;try{localStorage.setItem('finapp.kbm','o')}catch(e){}}
-    let pk=0;   // предсказанная высота клавиатуры: пока iOS ещё не прислал resize, окно уже едет
-    if(pred){if(kbOpen||Date.now()>=pred.until||!foc||!pred.el.contains(a))pred=null;else pk=pred.kb}
+    const kb=kbOpen?Math.max(0,baseH-visHold):0;
     if(kbOpen&&kb>150&&Math.abs(kb-kbSeen)>2){kbSeen=kb;clearTimeout(kbSaveT);kbSaveT=setTimeout(()=>{try{localStorage.setItem('finapp.kbh',String(Math.round(kbSeen)))}catch(e){}},800)}
-    // сдвиг visual viewport (iOS подкручивает страницу к полю) мгновенно компенсируем в bottom — окно не «плывёт» вместе с ним
-    const pan=kb>0?t:0,pv=pan+'px';if(pv!==_pan){_pan=pv;root.style.setProperty('--pan',pv)}
+    if(intent&&(kbOpen||T>=intent.until||(!foc&&T-intent.t>350)))intent=null;
+    const pk=intent?intent.kb:0;
+    // нижние панели страницы (вкладки, «+») держим на месте, пока webview уменьшен клавиатурой
+    const shrink=baseH-L,lay=(shrink>120?shrink:0)+'px';if(lay!==_lay){_lay=lay;root.style.setProperty('--lay',lay)}
+    const vtp=vt+'px';if(vtp!==_vvt){_vvt=vtp;root.style.setProperty('--vvt',vtp)}
     if(kbOpen!==_kbo){_kbo=kbOpen;root.classList.toggle('kbo',kbOpen)}
-    IDS.forEach(id=>{const el=$i(id);if(!el||!el.classList.contains('on'))return;   // закрытое окно не трогаем: оно доезжает вниз с прежним сдвигом
-      const isT=(kbOpen||pk>0)&&!!a&&el.contains(a),kbe=kbOpen?kb:pk,ky=isT?-kbe:0,bo=FLT[id]?sab+12:0,
-        avail=Math.max(160,Math.round((isT?(kbOpen?h:L-pk):L)-sat-8-bo)),p=st.get(el),key=ky+'|'+avail;
-      if(p&&p.key===key)return;
-      const tm=(p&&ky===0&&p.ky<0)?T_HIDE:T_SHOW;
-      // окно перестаёт помещаться над клавиатурой (маленький экран): высота плавно уменьшается от текущей, дальше окно прокручивается
-      if(p&&avail<p.km){const h0=el.offsetHeight;if(h0>avail+1){el.style.transition='none';el.style.setProperty('--kmax',h0+'px');void el.offsetHeight;el.style.transition=''}}
-      el.style.setProperty('--kt',tm[0]+'s '+tm[1]);
-      el.style.setProperty('--ky',ky+'px');el.style.setProperty('--kmax',avail+'px');
-      st.set(el,{key,ky,km:avail});busy.set(el,performance.now()+tm[0]*1000+120)})}
-  const sched=()=>{if(!raf)raf=requestAnimationFrame(update)};
-  // iOS иногда не присылает resize при смене раскладки (цифры → буквы): пока поле в фокусе, подстраховываемся лёгким опросом
-  function tick(){if(editable()||Date.now()<pollEnd){sched();poll=setTimeout(tick,120)}else poll=0}
-  const kick=ms=>{pollEnd=Math.max(pollEnd,Date.now()+(ms||0));if(!poll)poll=setTimeout(tick,120)};
+    // --- окна
+    let any=false;
+    IDS.forEach(id=>{const el=$i(id);if(!el||!el.classList.contains('on'))return;any=true;
+      const bp=parseFloat(getComputedStyle(el).bottom)||0,nat=L-bp,R0=baseH-bp;   // нижний край окна «по раскладке» и в покое (координаты layout viewport)
+      const isT=(kbOpen||pk>0)&&(el.contains(a)||el===holdEl||(intent&&el===intent.el));
+      const vis=kbOpen?visHold:baseH-pk,tgt=isT?Math.min(R0,vis-GAP):R0;
+      let s=S.get(el);if(!s){s={v:nat-vt,mb:0,km:0};S.set(el,s)}
+      const d=tgt-s.v;if(Math.abs(d)<.4)s.v=tgt;else s.v+=d*(1-Math.exp(-dt/TAU));
+      const mb=Math.round((nat-vt-s.v)*10)/10;   // на сколько поднять окно, чтобы на экране его нижний край был в s.v
+      if(mb!==s.mb){s.mb=mb;el.style.setProperty('--mb',mb+'px')}
+      const bo=FLT[id]?sab+12:0,avail=Math.max(160,Math.round((isT?vis:L)-sat-8-bo));
+      if(Math.abs(avail-s.km)>=1){s.km=avail;el.style.setProperty('--kmax',avail+'px');busy.set(el,performance.now()+700)}});
+    if(any||kbOpen||pk>0)raf=requestAnimationFrame(frame)}
   function reveal(){if(!editable())return;const a=document.activeElement,m=a.closest('#rev,#cf,#ed,#gd,#rc');if(!m||m.scrollHeight<=m.clientHeight+1)return;
     const r=a.getBoundingClientRect(),mr=m.getBoundingClientRect(),pad=14;let d=0;
     if(r.bottom>mr.bottom-pad)d=r.bottom-mr.bottom+pad;else if(r.top<mr.top+pad)d=r.top-mr.top-pad;
     if(d)m.scrollBy({top:d,behavior:'smooth'})}
-  if(vv){vv.addEventListener('resize',sched);vv.addEventListener('scroll',sched)}
-  window.addEventListener('resize',sched);
-  window.addEventListener('orientationchange',()=>setTimeout(sched,300));
+  if(vv){vv.addEventListener('resize',start);vv.addEventListener('scroll',start)}
+  window.addEventListener('resize',start);
+  window.addEventListener('orientationchange',()=>setTimeout(start,300));
   // страница под окном не должна ездить, пока открыто окно
   window.addEventListener('scroll',()=>{if(anyOpen()&&window.scrollY!==savedY)window.scrollTo(0,savedY)},{passive:true});
-  // переход между полями (сумма → заметка): окно остаётся открытым и на месте, клавиатура только меняет раскладку
-  function predict(f){
-    if(rz||_kbo||!coarse||!f||f.readOnly||f.inputMode==='none')return;
+  // намерение: окно начинает ехать вверх в момент касания поля (iOS ещё не прислал высоту), потом цель уточняется по измерению
+  function setIntent(f){
+    if(kbOpen||!coarse||!f||f.readOnly||f.inputMode==='none')return;
     if(!(f.tagName==='TEXTAREA'||(f.tagName==='INPUT'&&/^(text|search|number|tel|email|url|password|)$/.test(f.type))))return;
-    const m=f.closest&&f.closest(SEL);if(!m||!m.classList.contains('on'))return;
-    pred={el:m,kb:kbSeen||Math.round(window.innerHeight*.36),until:Date.now()+900};
-    if(raf){cancelAnimationFrame(raf);raf=0}update();setTimeout(sched,950)}
-  document.addEventListener('focusin',e=>{clearTimeout(blurT);predict(e.target);sched();kick(1500);setTimeout(reveal,420)});
-  document.addEventListener('focusout',()=>{lastOut=Date.now();clearTimeout(blurT);blurT=setTimeout(sched,90);kick(1200)});
+    const m=winOf(f);if(!m||!m.classList.contains('on'))return;
+    intent={el:m,kb:kbSeen||Math.round(window.innerHeight*.36),until:Date.now()+900,t:Date.now()};start()}
+  document.addEventListener('pointerdown',e=>{const f=e.target&&e.target.closest?e.target.closest('input,textarea'):null;if(f)setIntent(f)},true);
+  document.addEventListener('focusin',e=>{if(!intent)setIntent(e.target);start();setTimeout(reveal,420)});
+  document.addEventListener('focusout',()=>{lastOut=Date.now();start();setTimeout(start,120)});
   // изменение высоты окна из-за содержимого (например, под строкой ввода появляется разбор) — мягко, но не во время сдвига под клавиатуру
   const last=new Map(),inBusy=new Set();
   if(window.ResizeObserver){
-    const ro=new ResizeObserver(es=>{if(window._fxLock){if(raf){cancelAnimationFrame(raf);raf=0}update()}else sched();es.forEach(en=>{const el=en.target;if(inBusy.has(el))return;
+    const ro=new ResizeObserver(es=>{start();es.forEach(en=>{const el=en.target;if(inBusy.has(el))return;
       if(window._fxLock||performance.now()<(busy.get(el)||0)){last.set(el,el.offsetHeight);return}
       const nh=el.offsetHeight,oh=last.get(el);last.set(el,nh);
       if(oh==null||!el.classList.contains('on')||Math.abs(nh-oh)<3||Math.abs(nh-oh)>700||!el.animate)return;
@@ -5054,15 +5060,15 @@ async function ibLoop(){
         const fin=()=>{inBusy.delete(el);el.style.overflow=o;last.set(el,el.offsetHeight)};an.onfinish=fin;an.oncancel=fin}
         catch(err){inBusy.delete(el)}})})});
     IDS.forEach(id=>{const el=$i(id);if(el)ro.observe(el)})}
-  // закрытие: клавиатура уезжает вместе с окном; сдвиг закрытого окна сбрасываем, когда оно уже скрыто
+  // открытие/закрытие окна: закрытое окно доезжает вниз с прежним отступом, потом отступ сбрасываем, когда оно уже скрыто
   const mo=new MutationObserver(ms=>{ms.forEach(m=>{const el=m.target,on=el.classList.contains('on'),was=/(^|\s)on(\s|$)/.test(m.oldValue||'');
       if(on===was)return;
-      if(on){savedY=window.scrollY;clearTimeout(rst.get(el));update()}   // числовой max-height готов ещё до первого кадра
-      else{closedAt.set(el,performance.now()+560);if(el.contains(document.activeElement))document.activeElement.blur();
+      if(on){savedY=window.scrollY;clearTimeout(rst.get(el));S.delete(el);el.style.setProperty('--mb','0px')}
+      else{if(el.contains(document.activeElement))document.activeElement.blur();
         clearTimeout(rst.get(el));rst.set(el,setTimeout(()=>{if(el.classList.contains('on'))return;
-          el.style.transition='none';el.style.setProperty('--ky','0px');el.style.setProperty('--fx','0px');el.style.removeProperty('--kmax');void el.offsetHeight;el.style.transition='';st.delete(el)},480))}});sched()});
+          el.style.transition='none';el.style.setProperty('--mb','0px');el.style.removeProperty('--kmax');void el.offsetHeight;el.style.transition='';S.delete(el)},520))}});start()});
   IDS.forEach(id=>{const el=$i(id);if(el)mo.observe(el,{attributes:true,attributeFilter:['class'],attributeOldValue:true})});
-  sched();
+  start();
 })();
 </script>
 <script>
@@ -5445,7 +5451,8 @@ const SL=[
    `<div class="v4" style="display:flex">${[['Отпуск','65%','',0],['Лимит: продукты','84%','#f2c14e',1],['Бюджет месяца','40%','',2]].map(r=>`<div style="--w:${r[1]};--i:${r[3]};${r[2]?'--c:'+r[2]:''}"><span>${r[0]}</span><b>${r[1]}</b><s><u></u></s></div>`).join('')}</div>`},
   {h:'Долги без забывчивости',p:'Кто кому должен и до какого числа — одной фразой: «одолжил Ивану 500». Когда подойдёт срок, приложение напомнит.',v:v2('bell',[['🤝','Иван','+500','inc'],['🤝','Анна','−200','exp'],['⏰','Напомню','завтра']])},
   {h:'Любая валюта',p:'Выберите основную валюту в настройках — курсы валют обновляются автоматически.',v:v2('coin',[['💵','Доллар','$'],['💶','Евро','€'],['💱','Курс','авто']])},
-  {h:'Данные под защитой',p:'PIN-код и скрытие сумм защитят данные. Резервную копию можно сохранить в Excel или JSON и вернуть в любой момент.',v:v2('lock',[['🔒','PIN-код','Вкл'],['🙈','Суммы','скрыты'],['💾','Копия','Excel']])}
+  {h:'Данные под защитой',p:'PIN-код и скрытие сумм защитят данные. Резервную копию можно сохранить в Excel или JSON и вернуть в любой момент.',v:v2('lock',[['🔒','PIN-код','Вкл'],['🙈','Суммы','скрыты'],['💾','Копия','Excel']])},
+{h:'Обучение всегда под рукой',p:'Захотите вспомнить, как всё устроено, — откройте «Настройки» и нажмите «Обучение». Пройти его можно в любой момент.',v:`<div class="v6"><div style="--d:.4s"><em>💱</em><span>Валюта и курсы</span><b>MDL</b></div><div class="hl" style="--d:.9s"><em>📖</em><span>Обучение</span><b>Пройти заново</b></div><div style="--d:1.4s"><em>🔒</em><span>PIN-код</span><b>Вкл</b></div><i class="hd6">👆</i></div>`}
 ];
 
 /* ---------- интерфейс ---------- */
@@ -5655,9 +5662,9 @@ const css=`#wr{position:fixed;inset:0;z-index:200;color:#fff;background:#0b0b10;
 #wr .wcols>div{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px;font-size:10px;opacity:.9}
 #wr .wcols u{display:block;width:100%;height:var(--h);min-height:3px;border-radius:4px 4px 2px 2px;background:#fff;opacity:.88;transform-origin:50% 100%;transform:scaleY(0);animation:wcol .8s .2s cubic-bezier(.2,.8,.2,1) forwards}
 @keyframes wcol{to{transform:scaleY(1)}}
-.wrb{display:flex;gap:8px;margin:8px 0 2px}.wrb button{flex:1;border:0;border-radius:14px;padding:11px 8px;background:rgba(127,127,127,.14);color:inherit;font:600 13px/1.1 inherit;font-family:inherit}`;
+.wrb{display:flex;align-items:center;gap:8px;margin:8px 0 2px}.wrb span{font-weight:600;font-size:14px;margin-right:2px}.wrb button{flex:none;border:0;border-radius:999px;padding:9px 18px;background:rgba(127,127,127,.14);color:inherit;font:600 13px/1.1 inherit;font-family:inherit}.wrb button:active{opacity:.6}`;
 const stl=document.createElement('style');stl.textContent=css;document.head.appendChild(stl);
-window.wrapBtn=()=>'<div class="wrb"><button data-wrap="m">✨ Итоги месяца</button><button data-wrap="y">Итоги года</button></div>';
+window.wrapBtn=()=>'<div class="wrb"><span>✨ Итоги:</span><button data-wrap="y">Год</button><button data-wrap="m">Месяц</button></div>';
 
 const sum=a=>a.reduce((s,t)=>s+t.amount,0),C=()=>cfg.cur,M=v=>fmt(Math.round(v))+' '+C();
 const wd=ds=>new Date(+ds.slice(0,4),+ds.slice(5,7)-1,+ds.slice(8,10),12).getDay();
@@ -5741,6 +5748,52 @@ function open(kind){if(el)return;let d;try{d=build(kind)}catch(e){console.error(
   el.querySelector('.wx').onclick=close;el.querySelector('.wsh').onclick=share;document.addEventListener('keydown',key);
   last=performance.now();show(0);raf=requestAnimationFrame(tick)}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-wrap]');if(!b)return;e.preventDefault();e.stopPropagation();open(b.dataset.wrap)},true);
+})();
+</script>
+<script>
+// ===== v122: лист «Советы» (кнопка рядом с плюсом) =====
+(function(){'use strict';
+const css=`#tpv{position:fixed;inset:0;z-index:150}
+#tpv .tvb{position:absolute;inset:0;background:rgba(0,0,0,.42);opacity:0;transition:opacity .3s ease}#tpv.on .tvb{opacity:1}
+#tpv .tvs{position:absolute;left:0;right:0;bottom:0;max-height:84%;display:flex;flex-direction:column;border-radius:26px 26px 0 0;background:var(--bg);color:var(--t);border:.5px solid var(--l);border-bottom:0;box-shadow:0 -12px 40px rgba(0,0,0,.35);transform:translateY(105%);transition:transform .45s cubic-bezier(.32,.72,0,1);padding-bottom:max(env(safe-area-inset-bottom,0px),var(--sab,0px),14px)}
+#tpv.on .tvs{transform:none}#tpv .tvs.drag{transition:none}
+#tpv .tvh{display:block;width:38px;height:5px;border-radius:3px;background:rgba(127,127,127,.4);margin:8px auto 4px}
+#tpv .tvt{display:flex;align-items:baseline;gap:8px;padding:6px 18px 10px;touch-action:none}#tpv .tvt b{font-size:20px;font-weight:700}#tpv .tvt span{font-size:13px;color:var(--m)}
+#tpv .tvx{margin-left:auto;align-self:center;width:30px;height:30px;border-radius:50%;border:0;background:rgba(127,127,127,.18);color:var(--t);font-size:13px}
+#tpv .tvc{overflow:auto;padding:4px 16px 18px;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+#tpv .tvk{display:flex;gap:12px;padding:14px;border-radius:18px;background:rgba(127,127,127,.1);border:.5px solid var(--l);margin-bottom:10px;opacity:0;transform:translateY(14px);animation:tvu .5s calc(.12s + var(--i)*.08s) cubic-bezier(.2,.8,.2,1) forwards}
+#tpv .tvn{flex:none;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#f2c14e;background:rgba(242,193,78,.16)}
+#tpv .tvk b{display:block;font-size:15px;margin-bottom:3px}#tpv .tvk span{display:block;font-size:14px;line-height:1.4;opacity:.85}#tpv .tvk small{display:block;font-size:12px;color:var(--m);margin-top:6px}
+@keyframes tvu{to{opacity:1;transform:none}}
+#tpv .tve{display:flex;flex-direction:column;align-items:center;text-align:center;padding:14px 8px 6px}
+#tpv .tvo{width:88px;height:88px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#f2c14e;background:radial-gradient(circle,rgba(242,193,78,.3),rgba(242,193,78,.06) 70%);animation:tvg 2.6s ease-in-out infinite}
+#tpv .tvo svg{animation:tvf 2.6s ease-in-out infinite}
+@keyframes tvg{0%,100%{box-shadow:0 0 0 0 rgba(242,193,78,.38)}50%{box-shadow:0 0 0 20px rgba(242,193,78,0)}}
+@keyframes tvf{0%,100%{opacity:.75;transform:scale(1)}50%{opacity:1;transform:scale(1.08)}}
+#tpv .tve h3{font-size:21px;margin:16px 0 6px}#tpv .tve p{font-size:14.5px;line-height:1.45;color:var(--m);max-width:300px;margin:0}
+#tpv .tvch{display:flex;flex-direction:column;gap:8px;margin:18px 0 4px;width:100%;max-width:300px}
+#tpv .tvch span{padding:11px 14px;border-radius:14px;font-size:14px;text-align:left;background:rgba(127,127,127,.1);border:.5px solid var(--l);opacity:0;transform:translateY(12px);animation:tvu .5s calc(.35s + var(--i)*.12s) cubic-bezier(.2,.8,.2,1) forwards}
+#tpv .tva{margin-top:16px;border:0;border-radius:16px;padding:13px 26px;font:600 15px/1 inherit;font-family:inherit;background:var(--t);color:var(--bg)}`;
+const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
+const BULB='<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>';
+let el=null;const hp=s=>{try{hap(s)}catch(e){}};
+function close(){if(!el)return;const e=el;el=null;e.classList.remove('on');setTimeout(()=>e.remove(),480);document.removeEventListener('keydown',key)}
+const key=e=>{if(e.key==='Escape')close()};
+window.openTips=function(){
+  if(el)return;const m=month,has=tx.some(t=>t.type==='expense'&&mOf(t.date)===m);let list=[];
+  if(has){try{list=tips(m)||[]}catch(e){list=[]}}
+  const body=list.length?list.map((t,i)=>`<div class="tvk" style="--i:${i}"><i class="tvn">${i+1}</i><div><b>${E(t.h)}</b><span>${E(t.b)}</span>${t.s?`<small>${E(t.s)}</small>`:''}</div></div>`).join('')
+   :`<div class="tve"><div class="tvo">${BULB}</div><h3>Здесь появятся советы</h3><p>Добавьте первые траты — и я подскажу, куда уходят деньги, где можно сэкономить и как уложиться в бюджет.</p><div class="tvch"><span style="--i:0">🔍 Куда уходят деньги</span><span style="--i:1">✂️ Где можно сэкономить</span><span style="--i:2">🎯 Как дойти до цели</span></div><button type="button" class="tva">Добавить трату</button></div>`;
+  el=document.createElement('div');el.id='tpv';
+  el.innerHTML=`<div class="tvb"></div><div class="tvs" role="dialog" aria-label="Советы"><i class="tvh"></i><div class="tvt"><b>Советы</b><span>${MN[+m.slice(5,7)-1]}</span><button type="button" class="tvx" aria-label="Закрыть">✕</button></div><div class="tvc">${body}</div></div>`;
+  document.body.appendChild(el);requestAnimationFrame(()=>requestAnimationFrame(()=>el&&el.classList.add('on')));hp('light');
+  const sh=el.querySelector('.tvs');el.querySelector('.tvb').onclick=close;el.querySelector('.tvx').onclick=close;
+  const add=el.querySelector('.tva');if(add)add.onclick=()=>{close();setTimeout(()=>{const f=document.getElementById('fab');if(f)f.click()},300)};
+  let y0=0,dy=0,dr=false;const hd=el.querySelector('.tvt'),hl=el.querySelector('.tvh');
+  [hd,hl].forEach(h=>{h.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;dr=true;y0=e.clientY;dy=0;sh.classList.add('drag');h.setPointerCapture&&h.setPointerCapture(e.pointerId)});
+    h.addEventListener('pointermove',e=>{if(!dr)return;dy=Math.max(0,e.clientY-y0);sh.style.transform='translateY('+dy+'px)'});
+    const end=()=>{if(!dr)return;dr=false;sh.classList.remove('drag');sh.style.transform='';if(dy>90)close()};h.addEventListener('pointerup',end);h.addEventListener('pointercancel',end)});
+  document.addEventListener('keydown',key)}
 })();
 </script>
 </body></html>
