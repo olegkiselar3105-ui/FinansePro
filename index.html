@@ -1150,7 +1150,7 @@ html.plk #lk,#lk.on{visibility:visible;opacity:1;transform:none;pointer-events:a
 </style>
 <style id="v68">
 /* v68: главный блок (месяц + остаток/доход/расход) неподвижный, список заезжает под него; блок полупрозрачный, сквозь него виден размытый список */
-#top{position:sticky;top:calc(8px + var(--topgap,40px));z-index:8;   /* v120: при прокрутке основной блок держится на две строки ниже верха (--topgap) */
+#top{position:sticky;top:max(calc(8px + var(--topgap,40px)),calc(var(--sat) + 8px));z-index:8;   /* v120: при прокрутке основной блок держится на две строки ниже верха (--topgap) */
   background:linear-gradient(180deg,color-mix(in srgb,var(--tp1) 62%,transparent),color-mix(in srgb,var(--tp2) 54%,transparent));
   -webkit-backdrop-filter:blur(22px) saturate(1.7);backdrop-filter:blur(22px) saturate(1.7);
   box-shadow:inset 0 .5px 0 rgba(var(--wr),.16),0 8px 24px rgba(0,0,0,.20)}
@@ -1983,7 +1983,7 @@ function setOrigin(el,src){
   else{const r=(src||fab).getBoundingClientRect();x=r.left+r.width/2;y=r.top+r.height/2}
   const ky=parseFloat(el.style.getPropertyValue('--ky'))||0,ty=ky-el.offsetHeight/2;
   el.style.setProperty('--o',(x-el.offsetLeft)+'px '+(y-(el.offsetTop+ty))+'px')}
-const isModalOpen=()=>sh.classList.contains('on')||($('#ed')&&$('#ed').classList.contains('on'))||($('#gd')&&$('#gd').classList.contains('on'))||($('#cf')&&$('#cf').classList.contains('on'))||($('#bq')&&$('#bq').classList.contains('on'))||($('#nc')&&$('#nc').classList.contains('on'))||($('#cp')&&$('#cp').classList.contains('on'))||($('#rc')&&$('#rc').classList.contains('on'));
+const isModalOpen=()=>sh.classList.contains('on')||($('#ed')&&$('#ed').classList.contains('on'))||($('#gd')&&$('#gd').classList.contains('on'))||($('#cf')&&$('#cf').classList.contains('on'))||($('#bq')&&$('#bq').classList.contains('on'))||($('#nc')&&$('#nc').classList.contains('on'))||($('#cp')&&$('#cp').classList.contains('on'))||($('#rc')&&$('#rc').classList.contains('on'))||!!document.querySelector('#tpv:not(.cl),#wr:not(.cl)');
 function cancelGestures(){
   try{if(typeof openSw!=='undefined'&&openSw)closeSw(openSw)}catch{}
   try{sd=null}catch{}
@@ -2049,11 +2049,11 @@ ov.onclick=()=>{const a=document.activeElement;
 function root_kbo(){return document.documentElement.classList.contains('kbo')}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&isModalOpen()){e.preventDefault();closeTopModal()}});
 // перф: блокирующий touchmove на документе заставляет iOS ждать JS перед каждым стартом прокрутки — вешаем его только на жесты, начатые при открытом окне
-{const modalTM=e=>{if(isModalOpen()&&!e.target.closest('#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc,#rev'))e.preventDefault()};let mtOn=false;
+{const modalTM=e=>{if(isModalOpen()&&!e.target.closest('#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc,#rev,#tpv,#wr'))e.preventDefault()};let mtOn=false;
  const mtOff=()=>{if(mtOn){mtOn=false;document.removeEventListener('touchmove',modalTM)}};
  document.addEventListener('touchstart',()=>{mtOff();if(isModalOpen()){mtOn=true;document.addEventListener('touchmove',modalTM,{passive:false})}},{passive:true,capture:true});
  document.addEventListener('touchend',mtOff,{passive:true,capture:true});document.addEventListener('touchcancel',mtOff,{passive:true,capture:true})}
-document.addEventListener('pointerdown',e=>{if(isModalOpen()&&!e.target.closest('#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc,#ov,#toast,#tour')){e.stopPropagation();e.preventDefault()}},true);
+document.addEventListener('pointerdown',e=>{if(isModalOpen()&&!e.target.closest('#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc,#ov,#toast,#tour,#tpv,#wr')){e.stopPropagation();e.preventDefault()}},true);
 
 
 // ---------- строки ----------
@@ -3044,7 +3044,7 @@ function readEd(){if(!eT)return;const g=k=>{const el=$(k);return el?el.value:''}
   const en=$('#etn');if(en&&en.value.trim()){addTags(eT,en.value);en.value=''}}
 function renderEd(){const t=eT,inc=t.type==='income';
   ed.innerHTML=`<div class="eh"><span class="sgm"><button data-et="expense" class="${inc?'':'on'}">Расх.</button><button data-et="income" class="${inc?'on':''}">Дох.</button></span><button class="x" id="ecl" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div>
-<input id="eam" class="${inc?'inc':'exp'}" inputmode="decimal" value="${t.amount||''}" placeholder="Сумма" aria-label="Сумма">
+<input id="eam" class="${inc?'inc':'exp'}" inputmode="decimal" enterkeyhint="done" value="${t.amount||''}" placeholder="Сумма" aria-label="Сумма">
 ${t.oc?`<div class="eo">${fmt(t.oa)} ${E(t.oc)}</div>`:''}
 <label class="ef">Заметка<input id="eno" type="text" value="${E(t.note)}" placeholder="Заметка" enterkeyhint="done"></label>
 <label class="ef">Категория<button type="button" class="cpb" id="eca">${E(cd(t.category).l)}</button></label>
@@ -3167,11 +3167,27 @@ document.addEventListener('touchstart',e=>{
   if(e.target.closest&&e.target.closest(TP_SKIP))return;
   tl={x:e.touches[0].clientX,y:e.touches[0].clientY}},{passive:true});
 document.addEventListener('touchmove',e=>{
+  /* v127: если touchstart не пришёл (касание во время инерции прокрутки), начинаем отслеживание с первого движения */
+  if(!tl&&e.touches.length===1&&SUBS[tab]&&!isModalOpen()&&!(sd&&sd.on)&&!(e.target.closest&&e.target.closest(TP_SKIP))){tl={x:e.touches[0].clientX,y:e.touches[0].clientY};axisLock=null}
   if(!tl)return;
   if(e.touches.length!==1||isModalOpen()||(sd&&sd.on)){tl=null;axisLock=null;return}
   const t=e.touches[0],ax=Math.abs(t.clientX-tl.x),ay=Math.abs(t.clientY-tl.y);
   if(!axisLock){if(Math.max(ax,ay)<5)return;axisLock=ax>=ay*.85?'h':'v'}
   },{passive:true});   // перф: пассивный — горизонталь и так не прокручивается (touch-action:pan-y)
+/* v127: запасной путь свайпа на touch-событиях. Во время инерции прокрутки iOS отменяет pointer-события (pointercancel) и свайп не срабатывал,
+   пока прокрутка не остановится. Touch-события при этом продолжают приходить -- ведём жест по ним. */
+let tpT=false;
+document.addEventListener('touchmove',e=>{
+  if(!SUBS[tab]||!tl||axisLock!=='h'||e.touches.length!==1||isModalOpen()||ms||tbd)return;
+  if(tp&&!tpT&&tp.on)return;   // pointer-путь уже ведёт жест
+  const t=e.touches[0],n=performance.now();
+  if(!tpT){settleAll();tp={x:tl.x,y:tl.y,id:'t',on:false,ox:0,lx:0,lt:0,v:0,dx:0};tpT=true}
+  if(!tp.on){tp.on=true;tp.ox=t.clientX;tp.lx=t.clientX;tp.lt=n;bodyEl.style.willChange='transform';const i=tabInd();if(i)i.style.transition='none';return}
+  tp.dx=t.clientX-tp.ox;
+  const dt=n-tp.lt;if(dt>0)tp.v=lpf(tp.v,(tp.lx-t.clientX)/dt,dt,24);tp.lx=t.clientX;tp.lt=n;
+  if(!tpRaf)tpRaf=requestAnimationFrame(paintTp)},{passive:true});
+const tpTEnd=e=>{if(!tpT)return;tpT=false;if(tp&&tp.id==='t')endTp({pointerId:'t'},e.type==='touchcancel')};
+document.addEventListener('touchend',tpTEnd,{passive:true});document.addEventListener('touchcancel',tpTEnd,{passive:true});
 const tlEnd=()=>{tl=null;axisLock=null};
 document.addEventListener('touchend',tlEnd,{passive:true});
 document.addEventListener('touchcancel',tlEnd,{passive:true});
@@ -4811,7 +4827,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v123';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v127';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия, которую видит человек (внизу экрана и в письме в поддержку)
 try{document.getElementById('vb').textContent=APP_VER}catch(e){}
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
@@ -5034,6 +5050,7 @@ async function ibLoop(){
     if(d)m.scrollBy({top:d,behavior:'smooth'})}
   if(vv){vv.addEventListener('resize',start);vv.addEventListener('scroll',start)}
   window.addEventListener('resize',start);
+  try{if(window.__TG)window.__TG.onEvent('viewportChanged',start)}catch(e){}
   window.addEventListener('orientationchange',()=>setTimeout(start,300));
   // страница под окном не должна ездить, пока открыто окно
   window.addEventListener('scroll',()=>{if(anyOpen()&&window.scrollY!==savedY)window.scrollTo(0,savedY)},{passive:true});
@@ -5043,7 +5060,7 @@ async function ibLoop(){
     if(!(f.tagName==='TEXTAREA'||(f.tagName==='INPUT'&&/^(text|search|number|tel|email|url|password|)$/.test(f.type))))return;
     const m=winOf(f);if(!m||!m.classList.contains('on'))return;
     intent={el:m,kb:kbSeen||Math.round(window.innerHeight*.36),until:Date.now()+900,t:Date.now()};start()}
-  document.addEventListener('pointerdown',e=>{const f=e.target&&e.target.closest?e.target.closest('input,textarea'):null;if(f)setIntent(f)},true);
+  /* v126: окно НЕ двигаем на pointerdown -- оно уезжало из-под пальца до отпускания, и тап не попадал в поле (клавиатура не открывалась). Сдвиг начинается на focusin, когда тап уже состоялся. */
   document.addEventListener('focusin',e=>{if(!intent)setIntent(e.target);start();setTimeout(reveal,420)});
   document.addEventListener('focusout',()=>{lastOut=Date.now();start();setTimeout(start,120)});
   // изменение высоты окна из-за содержимого (например, под строкой ввода появляется разбор) — мягко, но не во время сдвига под клавиатуру
@@ -5634,37 +5651,50 @@ IDS.forEach(function(id){var el=document.getElementById(id);if(!el)return;
 // ===== v121: «Итоги» — карточки-истории за месяц и за год =====
 (function(){'use strict';
 const SH=['Я','Ф','М','А','М','И','И','А','С','О','Н','Д'],WD=['воскресеньям','понедельникам','вторникам','средам','четвергам','пятницам','субботам'];
-const css=`#wr{position:fixed;inset:0;z-index:200;color:#fff;background:#0b0b10;opacity:0;transform:scale(.97);transition:opacity .3s ease,transform .4s cubic-bezier(.32,.72,0,1);touch-action:none;user-select:none;-webkit-user-select:none;overflow:hidden}
+const css=`#wr{--wf:255,255,255;--wb:#0b0b10;position:fixed;inset:0;z-index:200;color:rgb(var(--wf));background:var(--wb);opacity:0;transform:scale(.97);transition:opacity .3s ease,transform .4s cubic-bezier(.32,.72,0,1);touch-action:none;user-select:none;-webkit-user-select:none;overflow:hidden}
+#wr.lt{--wf:20,21,26;--wb:#f4f5f9}
 #wr.on{opacity:1;transform:none}
-#wr .wbg{position:absolute;inset:0;background:radial-gradient(120% 72% at 50% 0%,var(--wg,#5b8cff) 0%,transparent 72%);opacity:.85}
+#wr .wbg{position:absolute;inset:0;background:radial-gradient(120% 72% at 50% 0%,var(--wg,#5b8cff) 0%,transparent 72%);opacity:.85}#wr.lt .wbg{opacity:.4}
 #wr .wpb{position:absolute;left:14px;right:14px;top:calc(max(env(safe-area-inset-top,0px),var(--sat,0px)) + 10px);display:flex;gap:4px;z-index:3}
-#wr .wpb i{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.28);overflow:hidden}
-#wr .wpb u{display:block;height:100%;background:#fff;transform-origin:0 50%;transform:scaleX(0)}
-#wr .wx,#wr .wsh{position:absolute;top:calc(max(env(safe-area-inset-top,0px),var(--sat,0px)) + 22px);z-index:3;width:36px;height:36px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;font-size:16px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
-#wr .wx{right:14px}#wr .wsh{right:58px}
-#wr .wc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:96px 28px 64px;gap:12px}
+#wr .wpb i{flex:1;height:3px;border-radius:2px;background:rgba(var(--wf),.24);overflow:hidden}
+#wr .wpb u{display:block;height:100%;background:rgb(var(--wf));transform-origin:0 50%;transform:scaleX(0)}
+#wr .wx,#wr .wsh{position:absolute;top:calc(max(env(safe-area-inset-top,0px),var(--sat,0px)) + 22px);z-index:3;width:38px;height:38px;border-radius:50%;border:0;padding:0;display:flex;align-items:center;justify-content:center;background:rgba(var(--wf),.14);color:rgb(var(--wf));backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+#wr .wx svg,#wr .wsh svg{display:block}
+#wr .wx{right:14px}#wr .wsh{right:60px}
+#wr .wx:active,#wr .wsh:active{opacity:.6}
+#wr .wc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:space-evenly;text-align:center;padding:calc(max(env(safe-area-inset-top,0px),var(--sat,0px)) + 78px) 22px calc(max(env(safe-area-inset-bottom,0px),var(--sab,0px)) + 76px);gap:clamp(18px,3.8vh,40px);overflow:hidden}
 #wr .wc>*{opacity:0;transform:translateY(18px)}
 #wr .wc.in>*{animation:wup .6s cubic-bezier(.2,.8,.2,1) forwards}
 #wr .wc.in>*:nth-child(2){animation-delay:.07s}#wr .wc.in>*:nth-child(3){animation-delay:.14s}#wr .wc.in>*:nth-child(4){animation-delay:.21s}#wr .wc.in>*:nth-child(5){animation-delay:.28s}
+#wr .wc.frz>*{animation:none!important;opacity:1!important;transform:none!important}
+#wr .wc.frz .wbars u{animation:none!important;transform:scaleX(var(--p))!important}
+#wr .wc.frz .wcols u{animation:none!important;transform:none!important}
 @keyframes wup{to{opacity:1;transform:none}}
-#wr .wk{font-size:13px;letter-spacing:.12em;text-transform:uppercase;opacity:.7;font-weight:600}
-#wr .wem{font-size:92px;line-height:1.1}
-#wr .wt{font-size:30px;font-weight:700;letter-spacing:-.01em}
-#wr .wbig{font-size:58px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}#wr .wbig small{font-size:22px;font-weight:600;opacity:.7;margin-left:6px}
-#wr .ws{font-size:17px;opacity:.8;line-height:1.4;max-width:310px}
-#wr .wrows,#wr .wbars{width:100%;max-width:340px;display:flex;flex-direction:column;gap:10px;margin-top:6px;text-align:left}
-#wr .wrows>div{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.12);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
-#wr .wrows span{font-size:22px}#wr .wrows i{font-style:normal;flex:1;font-size:14px;opacity:.8}#wr .wrows b{font-size:16px;font-variant-numeric:tabular-nums}
-#wr .wbars>div{font-size:14px;display:flex;justify-content:space-between;flex-wrap:wrap}#wr .wbars em{display:block;width:100%;height:10px;border-radius:5px;background:rgba(255,255,255,.14);margin-top:6px;overflow:hidden}
-#wr .wbars em u{display:block;height:100%;border-radius:5px;background:var(--c,#fff);transform-origin:0 50%;transform:scaleX(0);animation:wbar .9s .25s cubic-bezier(.2,.8,.2,1) forwards}
+#wr .wk{font-size:clamp(14px,2.1vh,18px);letter-spacing:.12em;text-transform:uppercase;opacity:.7;font-weight:600}
+#wr .wem{font-size:clamp(120px,22vh,220px);line-height:1.1}
+#wr .wt{font-size:clamp(36px,6vh,58px);font-weight:700;letter-spacing:-.01em;line-height:1.15}
+#wr .wbig{font-size:clamp(60px,13vh,124px);white-space:nowrap;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}#wr .wbig small{font-size:.38em;font-weight:600;opacity:.7;margin-left:.2em}
+#wr .ws{font-size:clamp(19px,2.9vh,27px);opacity:.8;line-height:1.4;max-width:min(100%,420px)}
+#wr .wrows,#wr .wbars{width:100%;max-width:min(100%,440px);display:flex;flex-direction:column;gap:clamp(12px,2.2vh,22px);margin-top:6px;text-align:left}
+#wr .wrows>div{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:clamp(18px,3.2vh,30px) 18px;border-radius:20px;background:rgba(var(--wf),.12);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+#wr.lt .wrows>div{background:rgba(var(--wf),.07)}
+#wr .wrows span{font-size:clamp(28px,4.2vh,40px)}#wr .wrows i{font-style:normal;flex:1 1 0;min-width:6em;font-size:clamp(15px,2.2vh,20px);opacity:.8}#wr .wrows b{flex:none;margin-left:auto;white-space:nowrap;font-size:clamp(17px,2.5vh,22px);font-variant-numeric:tabular-nums}
+#wr .wbars>div{font-size:clamp(16px,2.4vh,21px);display:flex;justify-content:space-between;flex-wrap:wrap}#wr .wbars em{display:block;width:100%;height:clamp(14px,2.2vh,20px);border-radius:10px;background:rgba(var(--wf),.14);margin-top:10px;overflow:hidden}
+#wr .wbars em u{display:block;height:100%;border-radius:10px;background:var(--c,#fff);transform-origin:0 50%;transform:scaleX(0);animation:wbar .9s .25s cubic-bezier(.2,.8,.2,1) forwards}
 @keyframes wbar{to{transform:scaleX(var(--p))}}
-#wr .wcols{display:flex;align-items:flex-end;gap:5px;height:130px;width:100%;max-width:340px;margin-top:8px}
-#wr .wcols>div{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px;font-size:10px;opacity:.9}
-#wr .wcols u{display:block;width:100%;height:var(--h);min-height:3px;border-radius:4px 4px 2px 2px;background:#fff;opacity:.88;transform-origin:50% 100%;transform:scaleY(0);animation:wcol .8s .2s cubic-bezier(.2,.8,.2,1) forwards}
+#wr .wcols{display:flex;align-items:flex-end;gap:clamp(5px,1.6vw,8px);height:clamp(200px,40vh,400px);width:100%;max-width:min(100%,440px);margin-top:8px}
+#wr .wcols>div{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;font-size:clamp(11px,1.8vh,15px);opacity:.9}
+#wr .wcols u{display:block;width:100%;height:var(--h);min-height:3px;border-radius:5px 5px 2px 2px;background:rgb(var(--wf));opacity:.88;transform-origin:50% 100%;transform:scaleY(0);animation:wcol .8s .2s cubic-bezier(.2,.8,.2,1) forwards}
 @keyframes wcol{to{transform:scaleY(1)}}
+#wr .wft{position:absolute;left:24px;right:24px;bottom:calc(max(env(safe-area-inset-bottom,0px),var(--sab,0px)) + 20px);z-index:2;display:flex;align-items:center;justify-content:space-between;opacity:.6;pointer-events:none}
+#wr .wic{width:30px;height:30px;display:block}#wr .wnk{font-size:16px;font-weight:600;letter-spacing:.01em}
+#wr .wpv{position:absolute;inset:0;z-index:6;background:rgba(0,0,0,.88);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center}
+#wr .wpv img{max-width:100%;max-height:72%;border-radius:16px;-webkit-touch-callout:default;-webkit-user-select:auto;user-select:auto;pointer-events:auto}
+#wr .wpv p{margin:0;font-size:14px;opacity:.8;max-width:300px;line-height:1.4}
+#wr .wpv button{border:0;border-radius:999px;padding:12px 26px;background:#fff;color:#111;font:600 15px/1 inherit;font-family:inherit}
 .wrb{display:flex;align-items:center;gap:8px;margin:8px 0 2px}.wrb span{font-weight:600;font-size:14px;margin-right:2px}.wrb button{flex:none;border:0;border-radius:999px;padding:9px 18px;background:rgba(127,127,127,.14);color:inherit;font:600 13px/1.1 inherit;font-family:inherit}.wrb button:active{opacity:.6}`;
 const stl=document.createElement('style');stl.textContent=css;document.head.appendChild(stl);
-window.wrapBtn=()=>'<div class="wrb"><span>✨ Итоги:</span><button data-wrap="y">Год</button><button data-wrap="m">Месяц</button></div>';
+window.wrapBtn=()=>'<div class="wrb"><span>Итоги:</span><button data-wrap="m">Месяц</button><button data-wrap="y">Год</button></div>';
 
 const sum=a=>a.reduce((s,t)=>s+t.amount,0),C=()=>cfg.cur,M=v=>fmt(Math.round(v))+' '+C();
 const wd=ds=>new Date(+ds.slice(0,4),+ds.slice(5,7)-1,+ds.slice(8,10),12).getDay();
@@ -5708,37 +5738,83 @@ function build(kind){
 const bigTxt=(b,v)=>b.f==='p'?(b.s||'')+Math.round(v)+'%':(b.s||'')+fmt(Math.round(v));
 const card=c=>`<div class="wk">${E(c.k)}</div>${c.em?`<div class="wem">${c.em}</div>`:''}${c.t?`<div class="wt">${E(c.t)}</div>`:''}${c.big?`<div class="wbig"><b class="wn" data-v="${c.big.v}">${bigTxt(c.big,0)}</b>${c.big.f==='m'?`<small>${E(c.big.u||'')}</small>`:''}</div>`:''}${c.sub?`<div class="ws">${E(c.sub)}</div>`:''}${c.rows?`<div class="wrows">${c.rows.map(r=>`<div><span>${r.e}</span><i>${E(r.l)}</i><b>${E(r.v)}</b></div>`).join('')}</div>`:''}${c.bars?`<div class="wbars">${c.bars.map(b=>`<div><span>${E(b.l)}</span><b>${E(b.v)}</b><em><u style="--p:${b.p};--c:${b.c}"></u></em></div>`).join('')}</div>`:''}${c.cols?`<div class="wcols">${c.cols.map(o=>`<div><u style="--h:${o.h}%"></u>${o.l}</div>`).join('')}</div>`:''}`;
 
-let el=null,cards=[],idx=0,T=0,paused=false,raf=0,last=0,label='';const DUR=5200,hp=s=>{try{hap(s)}catch(e){}};
+let el=null,cards=[],idx=0,T=0,paused=false,hold=false,raf=0,last=0,label='';const DUR=5200,hp=s=>{try{hap(s)}catch(e){}};
 const bar=i=>el&&el.querySelectorAll('.wpb u')[i];
 function count(){el.querySelectorAll('.wn').forEach(n=>{const c=cards[idx],v=+n.dataset.v,t0=performance.now();const f=t=>{if(!el||cards[idx]!==c)return;const p=Math.min(1,(t-t0)/900),e=1-Math.pow(1-p,3);n.textContent=bigTxt(c.big,v*e);if(p<1)requestAnimationFrame(f)};requestAnimationFrame(f)})}
+function fit(){const b=el.querySelector('.wbig');if(!b)return;b.style.fontSize='';const n=b.querySelector('.wn'),old=n.textContent,c=cards[idx];n.textContent=bigTxt(c.big,c.big.v);
+  const max=el.querySelector('.wc').clientWidth-44;let fs=parseFloat(getComputedStyle(b).fontSize),k=0;while(b.scrollWidth>max&&fs>30&&k++<60){fs*=.95;b.style.fontSize=fs+'px'}n.textContent=old}
 function show(i){idx=i;T=0;el.querySelectorAll('.wpb u').forEach((u,j)=>u.style.transform='scaleX('+(j<i?1:0)+')');
-  const wc=el.querySelector('.wc');wc.className='wc';wc.innerHTML=card(cards[i]);void wc.offsetWidth;wc.classList.add('in');el.style.setProperty('--wg',cards[i].g||'#5b8cff');count();hp('light')}
-function tick(t){if(!el)return;const dt=Math.min(64,t-last);last=t;if(!paused){T+=dt;const p=Math.min(1,T/DUR);bar(idx).style.transform='scaleX('+p+')';if(p>=1&&idx<cards.length-1)show(idx+1)}raf=requestAnimationFrame(tick)}
-function close(){if(!el)return;const e=el;el=null;cancelAnimationFrame(raf);e.classList.remove('on');setTimeout(()=>e.remove(),340);document.removeEventListener('keydown',key)}
+  const wc=el.querySelector('.wc');wc.className='wc';wc.innerHTML=card(cards[i]);void wc.offsetWidth;wc.classList.add('in');fit();el.style.setProperty('--wg',cards[i].g||'#5b8cff');count();hp('light')}
+function tick(t){if(!el)return;const dt=Math.min(64,t-last);last=t;if(!paused&&!hold){T+=dt;const p=Math.min(1,T/DUR);bar(idx).style.transform='scaleX('+p+')';if(p>=1&&idx<cards.length-1)show(idx+1)}raf=requestAnimationFrame(tick)}
+function close(){if(!el)return;const e=el;el=null;hold=false;cancelAnimationFrame(raf);e.classList.add('cl');e.classList.remove('on');const pv=e.querySelector('.wpv');if(pv&&pv._u)URL.revokeObjectURL(pv._u);setTimeout(()=>e.remove(),340);document.removeEventListener('keydown',key)}
 const key=e=>{if(e.key==='Escape')close();else if(e.key==='ArrowRight')go(1);else if(e.key==='ArrowLeft')go(-1)};
 function go(d){const n=idx+d;if(n<0){show(0)}else if(n>=cards.length)close();else show(n)}
-function draw(c){const W=1080,H=1920,cv=document.createElement('canvas');cv.width=W;cv.height=H;const x=cv.getContext('2d');x.fillStyle='#0b0b10';x.fillRect(0,0,W,H);
-  const g=x.createRadialGradient(W/2,0,0,W/2,0,H*.62);g.addColorStop(0,c.g||'#5b8cff');g.addColorStop(1,'rgba(11,11,16,0)');x.globalAlpha=.85;x.fillStyle=g;x.fillRect(0,0,W,H);x.globalAlpha=1;
-  x.textAlign='center';x.fillStyle='#fff';const F='-apple-system,system-ui,Helvetica,Arial,sans-serif';let y=330;
-  const wrap=(s,w)=>{const o=[];let l='';String(s).split(' ').forEach(wd=>{if(x.measureText(l+' '+wd).width>w&&l){o.push(l);l=wd}else l=l?l+' '+wd:wd});if(l)o.push(l);return o};
-  x.globalAlpha=.7;x.font='600 34px '+F;x.fillText(c.k.toUpperCase(),W/2,y);x.globalAlpha=1;y+=40;
-  if(c.em){x.font='230px '+F;y+=230;x.fillText(c.em,W/2,y);y+=40}
-  if(c.t){x.font='700 78px '+F;y+=100;x.fillText(c.t,W/2,y)}
-  if(c.big){x.font='800 150px '+F;y+=190;x.fillText(bigTxt(c.big,c.big.v)+(c.big.f==='m'&&c.big.u?' '+c.big.u:''),W/2,y)}
-  if(c.sub){x.font='500 46px '+F;x.globalAlpha=.8;wrap(c.sub,820).forEach(s=>{y+=64;x.fillText(s,W/2,y)});x.globalAlpha=1}
-  (c.rows||[]).forEach(r=>{y+=110;x.fillStyle='rgba(255,255,255,.12)';x.fillRect(110,y-62,860,92);x.fillStyle='#fff';x.textAlign='left';x.font='44px '+F;x.fillText(r.e,140,y);x.font='500 36px '+F;x.fillText(r.l.slice(0,26),215,y);x.textAlign='right';x.font='700 40px '+F;x.fillText(r.v,940,y);x.textAlign='center'});
-  (c.bars||[]).forEach(b=>{y+=110;x.textAlign='left';x.font='500 38px '+F;x.fillStyle='#fff';x.fillText(b.l.slice(0,22),110,y);x.textAlign='right';x.fillText(b.v,970,y);x.fillStyle='rgba(255,255,255,.14)';x.fillRect(110,y+18,860,18);x.fillStyle=b.c;x.fillRect(110,y+18,860*b.p,18);x.textAlign='center'});
-  x.fillStyle='#fff';x.globalAlpha=.5;x.font='500 32px '+F;x.fillText('Финансы · итоги '+label,W/2,H-110);return cv}
-function share(){if(!el)return;paused=true;draw(cards[idx]).toBlob(async b=>{paused=false;if(!b)return;const f=new File([b],'itogi.png',{type:'image/png'});
-  try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return}}catch(e){if(e&&e.name==='AbortError')return}
-  const u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='itogi.png';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);toast('Картинка сохранена')},'image/png')}
+const WAL={flap:'M146 214 L150 178 C151 160 160 152 175 148 L316 126 C329 124 338 133 338 147 L338 196',body:'M179 196 H343 A40 40 0 0 1 383 236 V324 A40 40 0 0 1 343 364 H179 A40 40 0 0 1 139 324 V236 A40 40 0 0 1 179 196 Z'};
+const WSVG='<svg class="wic" viewBox="96 96 320 320" fill="none" stroke="currentColor" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+WAL.flap+'"/><path d="'+WAL.body+'"/><circle cx="335" cy="277" r="15" fill="currentColor" stroke="none"/></svg>';
+const SHI='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3.5M8.2 7.3 12 3.5l3.8 3.8M8 10.5H7a2 2 0 0 0-2 2V18a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5.5a2 2 0 0 0-2-2h-1"/></svg>';
+const XI='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+const nick=()=>{try{const u=typeof IN_TG!=='undefined'&&IN_TG&&TGW.initDataUnsafe&&TGW.initDataUnsafe.user;if(u)return u.username?'@'+u.username:[u.first_name,u.last_name].filter(Boolean).join(' ')}catch(e){}return ''};
+const hexA=(h,a)=>{const n=parseInt(String(h).slice(1),16)||0;return 'rgba('+(n>>16&255)+','+(n>>8&255)+','+(n&255)+','+a+')'};
+function rrect(x,X,y,w,h,r){r=Math.max(0,Math.min(r,w/2,h/2));x.beginPath();x.moveTo(X+r,y);x.arcTo(X+w,y,X+w,y+h,r);x.arcTo(X+w,y+h,X,y+h,r);x.arcTo(X,y+h,X,y,r);x.arcTo(X,y,X+w,y,r);x.closePath()}
+function wallet(x,L,T0,sz,col){x.save();x.translate(L,T0);const k=sz/320;x.scale(k,k);x.translate(-96,-96);x.strokeStyle=col;x.fillStyle=col;x.lineWidth=20;x.lineCap='round';x.lineJoin='round';x.stroke(new Path2D(WAL.flap));x.stroke(new Path2D(WAL.body));x.beginPath();x.arc(335,277,15,0,Math.PI*2);x.fill();x.restore()}
+// картинка собирается из того, что сейчас на экране: берём реальные положения и размеры элементов карточки (в финальном состоянии анимаций),
+// поэтому в «Поделиться» уходит ровно та карточка, которую видит человек, в его теме и с теми же пропорциями экрана
+function draw(c){
+  const wc=el.querySelector('.wc'),light=el.classList.contains('lt'),W=1080,S=W/innerWidth,H=Math.round(innerHeight*S),fam=getComputedStyle(wc).fontFamily;
+  const FG=light?'20,21,26':'255,255,255',A=a=>'rgba('+FG+','+a+')';
+  const q=s=>[].slice.call(wc.querySelectorAll(s)),wns=q('.wn'),old=wns.map(n=>n.textContent),ops=[];
+  const R=r=>({x:r.left*S,y:r.top*S,w:r.width*S,h:r.height*S});
+  const text=(n,al,rect,op)=>{if(!n)return;const cs=getComputedStyle(n);let s=n.textContent;if(!s||!s.trim())return;if(cs.textTransform==='uppercase')s=s.toUpperCase();
+    const fs=parseFloat(cs.fontSize)*S;ops.push(Object.assign({k:'t',s,al,fs,fw:cs.fontWeight,fst:cs.fontStyle,ls:(parseFloat(cs.letterSpacing)||0)*S,op:op==null?(parseFloat(cs.opacity)||1):op,lh:(parseFloat(cs.lineHeight)*S)||fs*1.25},R(rect||n.getBoundingClientRect())))};
+  wc.classList.add('frz');
+  try{
+    wns.forEach(n=>n.textContent=bigTxt(c.big,c.big.v));
+    q('.wk,.wem,.wt,.ws').forEach(n=>text(n,'center'));
+    q('.wbig b,.wbig small').forEach(n=>text(n,'center'));
+    q('.wrows>div').forEach(d=>{ops.push(Object.assign({k:'bg',rad:parseFloat(getComputedStyle(d).borderRadius)*S,f:A(light?.07:.12)},R(d.getBoundingClientRect())));
+      text(d.querySelector('span'),'center');text(d.querySelector('i'),'left');text(d.querySelector('b'),'center')});
+    q('.wbars>div').forEach(d=>{text(d.querySelector('span'),'left');text(d.querySelector('b'),'center');
+      const em=d.querySelector('em'),u=em.firstElementChild;ops.push(Object.assign({k:'bg',rad:1e5,f:A(.14)},R(em.getBoundingClientRect())));
+      ops.push(Object.assign({k:'bg',rad:1e5,f:u.style.getPropertyValue('--c')||'#fff'},R(u.getBoundingClientRect())))});
+    q('.wcols>div').forEach(d=>{const u=d.querySelector('u');ops.push(Object.assign({k:'bg',rad:5*S,f:A(.88)},R(u.getBoundingClientRect())));
+      const tn=[].slice.call(d.childNodes).find(n=>n.nodeType===3&&n.textContent.trim());
+      if(tn){const rg=document.createRange();rg.selectNode(tn);const cs=getComputedStyle(d),fs=parseFloat(cs.fontSize)*S;
+        ops.push(Object.assign({k:'t',s:tn.textContent.trim(),al:'center',fs,fw:cs.fontWeight,fst:'normal',ls:0,op:parseFloat(cs.opacity)||1,lh:fs*1.25},R(rg.getBoundingClientRect())))}});
+    const ic=el.querySelector('.wic'),ft=el.querySelector('.wft');
+    if(ic&&ft){ops.push(Object.assign({k:'w',op:parseFloat(getComputedStyle(ft).opacity)||1},R(ic.getBoundingClientRect())));text(el.querySelector('.wnk'),'center',null,parseFloat(getComputedStyle(ft).opacity)||1)}
+  }finally{wc.classList.remove('frz');wns.forEach((n,i)=>n.textContent=old[i])}
+  const cv=document.createElement('canvas');cv.width=W;cv.height=H;const x=cv.getContext('2d');
+  x.fillStyle=light?'#f4f5f9':'#0b0b10';x.fillRect(0,0,W,H);
+  const g=c.g||'#5b8cff';x.save();x.translate(W/2,0);x.scale(1.2*W,.72*H);const gr=x.createRadialGradient(0,0,0,0,0,1);gr.addColorStop(0,g);gr.addColorStop(.72,hexA(g,0));gr.addColorStop(1,hexA(g,0));
+  x.globalAlpha=light?.4:.85;x.fillStyle=gr;x.fillRect(-1,0,2,1/.72+.01);x.restore();
+  ops.forEach(o=>{
+    if(o.k==='bg'){x.fillStyle=o.f;rrect(x,o.x,o.y,o.w,o.h,o.rad);x.fill();return}
+    if(o.k==='w'){x.save();x.globalAlpha=o.op;wallet(x,o.x,o.y,Math.min(o.w,o.h),'rgb('+FG+')');x.restore();return}
+    x.save();x.globalAlpha=o.op;x.fillStyle=A(1);x.font=(o.fst==='italic'?'italic ':'')+o.fw+' '+o.fs+'px '+fam;x.textBaseline='middle';x.textAlign=o.al;
+    try{x.letterSpacing=o.ls+'px'}catch(e){}
+    const ax=o.al==='left'?o.x:o.al==='right'?o.x+o.w:o.x+o.w/2;let lines=[o.s];
+    if(o.h>o.lh*1.5){lines=[];let l='';o.s.split(' ').forEach(wd=>{if(l&&x.measureText(l+' '+wd).width>o.w*1.02){lines.push(l);l=wd}else l=l?l+' '+wd:wd});if(l)lines.push(l)}
+    const lh=o.h/lines.length;lines.forEach((s,i)=>x.fillText(s,ax,o.y+(i+.5)*lh));x.restore()});
+  return cv}
+function preview(b){if(!el)return;hold=true;const u=URL.createObjectURL(b),v=document.createElement('div');v.className='wpv';v._u=u;
+  v.innerHTML='<img alt="Итоги"><p>Нажмите и удерживайте картинку, чтобы сохранить или отправить</p><button type="button">Готово</button>';v.querySelector('img').src=u;
+  v.querySelector('button').onclick=()=>{hold=false;URL.revokeObjectURL(u);v.remove()};el.appendChild(v)}
+function share(){if(!el||hold)return;hold=true;let cv;
+  try{cv=draw(cards[idx])}catch(e){console.error(e);hold=false;toast('Не удалось собрать картинку');return}
+  cv.toBlob(async b=>{if(!b){hold=false;return}
+    const f=new File([b],'itogi.png',{type:'image/png'});let ok=false;
+    try{if(navigator.share&&(!navigator.canShare||navigator.canShare({files:[f]}))){await navigator.share({files:[f]});ok=true}}
+    catch(e){if(e&&e.name==='AbortError'){hold=false;return}}
+    hold=false;if(!ok)preview(b)},'image/png')}
 function open(kind){if(el)return;let d;try{d=build(kind)}catch(e){console.error(e);toast('Не удалось собрать итоги');return}
   if(!d){toast('Пока нет данных для итогов');return}
   cards=d.cards;label=d.label;el=document.createElement('div');el.id='wr';
-  el.innerHTML='<div class="wbg"></div><div class="wpb">'+cards.map(()=>'<i><u></u></i>').join('')+'</div><button class="wsh" aria-label="Поделиться">⬆︎</button><button class="wx" aria-label="Закрыть">✕</button><div class="wc"></div>';
+  el.innerHTML='<div class="wbg"></div><div class="wpb">'+cards.map(()=>'<i><u></u></i>').join('')+'</div><button class="wsh" aria-label="Поделиться">'+SHI+'</button><button class="wx" aria-label="Закрыть">'+XI+'</button><div class="wc"></div><div class="wft">'+WSVG+'<span class="wnk"></span></div>';
+  if(document.documentElement.getAttribute('data-theme')==='light')el.classList.add('lt');
+  el.querySelector('.wnk').textContent=nick();
   document.body.appendChild(el);requestAnimationFrame(()=>el&&el.classList.add('on'));
   let sx=0,sy=0,st=0,mv=0;
-  el.addEventListener('pointerdown',e=>{e.stopPropagation();if(e.target.closest('button'))return;sx=e.clientX;sy=e.clientY;st=performance.now();mv=0;paused=true});
+  el.addEventListener('pointerdown',e=>{e.stopPropagation();if(e.target.closest('button,.wpv'))return;sx=e.clientX;sy=e.clientY;st=performance.now();mv=0;paused=true});
   el.addEventListener('pointermove',e=>{if(paused)mv=Math.max(mv,Math.abs(e.clientX-sx),Math.abs(e.clientY-sy))});
   const up=e=>{e.stopPropagation();if(!paused)return;paused=false;const dy=e.clientY-sy,dx=e.clientX-sx;
     if(e.type==='pointercancel')return;if(dy>90&&dy>Math.abs(dx)){close();return}
@@ -5760,7 +5836,7 @@ const css=`#tpv{position:fixed;inset:0;z-index:150}
 #tpv .tvh{display:block;width:38px;height:5px;border-radius:3px;background:rgba(127,127,127,.4);margin:8px auto 4px}
 #tpv .tvt{display:flex;align-items:baseline;gap:8px;padding:6px 18px 10px;touch-action:none}#tpv .tvt b{font-size:20px;font-weight:700}#tpv .tvt span{font-size:13px;color:var(--m)}
 #tpv .tvx{margin-left:auto;align-self:center;width:30px;height:30px;border-radius:50%;border:0;background:rgba(127,127,127,.18);color:var(--t);font-size:13px}
-#tpv .tvc{overflow:auto;padding:4px 16px 18px;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+#tpv .tvc{flex:1 1 auto;min-height:0;overflow-x:hidden;overflow-y:auto;padding:4px 16px 18px;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
 #tpv .tvk{display:flex;gap:12px;padding:14px;border-radius:18px;background:rgba(127,127,127,.1);border:.5px solid var(--l);margin-bottom:10px;opacity:0;transform:translateY(14px);animation:tvu .5s calc(.12s + var(--i)*.08s) cubic-bezier(.2,.8,.2,1) forwards}
 #tpv .tvn{flex:none;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#f2c14e;background:rgba(242,193,78,.16)}
 #tpv .tvk b{display:block;font-size:15px;margin-bottom:3px}#tpv .tvk span{display:block;font-size:14px;line-height:1.4;opacity:.85}#tpv .tvk small{display:block;font-size:12px;color:var(--m);margin-top:6px}
@@ -5777,7 +5853,7 @@ const css=`#tpv{position:fixed;inset:0;z-index:150}
 const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
 const BULB='<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>';
 let el=null;const hp=s=>{try{hap(s)}catch(e){}};
-function close(){if(!el)return;const e=el;el=null;e.classList.remove('on');setTimeout(()=>e.remove(),480);document.removeEventListener('keydown',key)}
+function close(){if(!el)return;const e=el;el=null;e.classList.add('cl');e.classList.remove('on');setTimeout(()=>e.remove(),480);document.removeEventListener('keydown',key)}
 const key=e=>{if(e.key==='Escape')close()};
 window.openTips=function(){
   if(el)return;const m=month,has=tx.some(t=>t.type==='expense'&&mOf(t.date)===m);let list=[];
@@ -5789,10 +5865,33 @@ window.openTips=function(){
   document.body.appendChild(el);requestAnimationFrame(()=>requestAnimationFrame(()=>el&&el.classList.add('on')));hp('light');
   const sh=el.querySelector('.tvs');el.querySelector('.tvb').onclick=close;el.querySelector('.tvx').onclick=close;
   const add=el.querySelector('.tva');if(add)add.onclick=()=>{close();setTimeout(()=>{const f=document.getElementById('fab');if(f)f.click()},300)};
-  let y0=0,dy=0,dr=false;const hd=el.querySelector('.tvt'),hl=el.querySelector('.tvh');
-  [hd,hl].forEach(h=>{h.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;dr=true;y0=e.clientY;dy=0;sh.classList.add('drag');h.setPointerCapture&&h.setPointerCapture(e.pointerId)});
-    h.addEventListener('pointermove',e=>{if(!dr)return;dy=Math.max(0,e.clientY-y0);sh.style.transform='translateY('+dy+'px)'});
-    const end=()=>{if(!dr)return;dr=false;sh.classList.remove('drag');sh.style.transform='';if(dy>90)close()};h.addEventListener('pointerup',end);h.addEventListener('pointercancel',end)});
+  const sc=el.querySelector('.tvc'),bd=el.querySelector('.tvb');let g=null;
+  // лист живёт сам по себе: жесты внутри него не доходят до обработчиков страницы (растяжение, строка поиска, свайп вкладок)
+  ['touchstart','touchmove','touchend','touchcancel','pointerdown','pointermove','pointerup','pointercancel','wheel'].forEach(n=>el.addEventListener(n,e=>e.stopPropagation(),{passive:true}));
+  bd.addEventListener('touchmove',e=>{if(e.cancelable)e.preventDefault()},{passive:false});
+  const hh=()=>sh.getBoundingClientRect().height;
+  const begin=(y,x,t)=>{const n=performance.now();g={y0:y,x0:x,py:y,lt:n,v:0,acc:0,d:0,on:false,head:!!(t&&t.closest&&t.closest('.tvt,.tvh'))}};
+  const move=(y,x,e)=>{if(!g)return;const n=performance.now(),st=y-g.py,dt=n-g.lt;
+    if(dt>0){g.v=.6*(st/dt)+.4*g.v}g.py=y;g.lt=n;
+    if(!g.on){
+      const hz=Math.abs(x-g.x0)>Math.abs(y-g.y0)+4;
+      // лист тянется вниз только с шапки/ручки или когда список уже в самом верху и палец идёт вниз; иначе — обычная прокрутка в обе стороны
+      if(g.head){if(y-g.y0>4&&!hz){g.on=true;g.y0=y}}
+      else if(sc.scrollTop<=0&&st>0&&!hz){g.acc+=st;if(g.acc>8){g.on=true;g.y0=y}}
+      else if(st<0||sc.scrollTop>0)g.acc=0;
+      if(!g.on){if(e&&e.cancelable&&!g.head&&sc.scrollHeight<=sc.clientHeight+1)e.preventDefault();return}   // список короче окна — страницу за листом не двигаем
+      sh.classList.add('drag')}
+    if(e&&e.cancelable)e.preventDefault();
+    const d=Math.max(0,y-g.y0);g.d=d;sh.style.transform='translate3d(0,'+d+'px,0)';bd.style.opacity=String(Math.max(.1,1-d/(hh()+40)))};
+  const end=()=>{const o=g;g=null;if(!o||!o.on)return;sh.classList.remove('drag');bd.style.opacity='';
+    const shut=o.d>hh()*.28||(o.v>.55&&o.d>24);sh.style.transform='';if(shut)close()};
+  sh.addEventListener('touchstart',e=>{if(e.touches.length!==1){g=null;return}begin(e.touches[0].clientY,e.touches[0].clientX,e.target)},{passive:true});
+  sh.addEventListener('touchmove',e=>{if(!g||e.touches.length!==1)return;move(e.touches[0].clientY,e.touches[0].clientX,e)},{passive:false});
+  sh.addEventListener('touchend',end);sh.addEventListener('touchcancel',end);
+  [el.querySelector('.tvt'),el.querySelector('.tvh')].forEach(h=>{   // мышь (компьютер): за ручку и шапку
+    h.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse'||e.target.closest('button'))return;begin(e.clientY,e.clientX,h);try{h.setPointerCapture(e.pointerId)}catch(x){}});
+    h.addEventListener('pointermove',e=>{if(e.pointerType==='mouse'&&g)move(e.clientY,e.clientX,e)});
+    h.addEventListener('pointerup',e=>{if(e.pointerType==='mouse')end()})});
   document.addEventListener('keydown',key)}
 })();
 </script>
