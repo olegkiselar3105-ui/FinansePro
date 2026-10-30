@@ -1374,6 +1374,30 @@ html:root #ov{transition:opacity .19s var(--m-ov-out) .05s,visibility 0s .24s}
 html:root #ov.on{transition:opacity .25s var(--m-ov-in),visibility 0s}
 @media (prefers-reduced-motion:reduce){html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc),html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc).on,html:root #sh.on.fxl,html:root #ov,html:root #ov.on{transition:none!important}}
 </style>
+<style id="v113">
+/* v113: страница «Профиль» — прокрутка и блок профиля по референсному видео (покадровый разбор записи, iPhone 428 pt):
+   аватар 96 pt строго по центру, сверху 44 pt; под ним имя 24 pt (отступ 24) и подпись 15 pt (отступ 6); дальше 24 pt до первой группы строк.
+   При прокрутке блок едет вместе со страницей, верхняя полоса становится матовой, в ней проявляются компактные аватар 30 pt + имя 15 pt. */
+#st .pf0{display:flex;flex-direction:column;align-items:center;text-align:center;padding:12px 16px 0;margin:0 0 24px;touch-action:pan-y;-webkit-user-select:none;user-select:none}
+#st .pf0 .av{width:96px;height:96px;margin:0}
+#st .pf0 .av svg{width:44px;height:44px}
+#st .pf0 .av .avi{font-size:40px}
+#st .pf0 .pn{align-items:center;gap:0;max-width:100%;min-width:0;margin-top:24px}
+#st .pf0 .pn b{display:block;max-width:100%;font-size:24px;line-height:29px;font-weight:700;letter-spacing:-.012em}
+#st .pf0 .pn small{display:block;max-width:100%;margin-top:6px;font-size:15px;line-height:20px;color:var(--m2)}
+#st .pf0 .pn small.un{color:#4a9be8}
+:root[data-theme=light] #st .pf0 .pn small.un{color:#2a7bd0}
+html.pfp #nb{display:block!important;height:calc(var(--sat) + 44px);--pq:0}
+html.pfp #nb #ttl{display:none}
+#nbp{position:absolute;left:56px;right:56px;top:var(--sat);height:44px;display:none;align-items:center;justify-content:center;gap:10px;min-width:0;opacity:var(--pq,0);transform:translate3d(0,calc((1 - var(--pq,0))*6px),0);pointer-events:none}
+html.pfp #nbp{display:flex}
+#nbp .av{position:relative;flex:none;width:30px;height:30px;border-radius:50%;background:rgba(var(--wr),.1);color:var(--m2);display:flex;align-items:center;justify-content:center;overflow:hidden}
+#nbp .av.ini{color:#fff}
+#nbp .av svg{width:16px;height:16px;display:block}
+#nbp .av img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;display:block}
+#nbp .av .avi{font-style:normal;font-size:13px;font-weight:600;line-height:1;letter-spacing:0}
+#nbp b{min-width:0;font-size:15px;font-weight:600;line-height:1;letter-spacing:-.01em;color:var(--t);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+</style>
 </head>
 <body><div id="lk" role="dialog" aria-modal="true" aria-label="PIN-код"></div><div id="vb" aria-hidden="true"></div><div id="spl" aria-hidden="true">
 <svg class="spl-logo" viewBox="96 96 320 320" width="132" height="132" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
@@ -1398,7 +1422,7 @@ html:root #ov.on{transition:opacity .25s var(--m-ov-in),visibility 0s}
 <div id="sbw"></div>
 <div id="body"></div>
 </div>
-<div id="nb" role="presentation"><i class="nbg"></i><b id="ttl">Операции</b></div>
+<div id="nb" role="presentation"><i class="nbg"></i><b id="ttl">Операции</b><div id="nbp" aria-hidden="true"></div></div>
 <nav id="tabs" class="glass" aria-label="Разделы"></nav>
 <div id="topact"><button type="button" id="thlp" aria-label="Возможности"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5.5A1.5 1.5 0 0 1 6.5 4H19v13H6.5A1.5 1.5 0 0 0 5 18.5z"/><path d="M5 18.5A1.5 1.5 0 0 0 6.5 20H19v-3M9 8h6"/></svg></button><button type="button" id="fab" aria-label="Добавить операцию" aria-haspopup="dialog"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>
 <div id="ov"></div>
@@ -2793,7 +2817,7 @@ function buildPage(pg,B,peek){
     (!inc&&RG==='month'?extraCards(it):'')+
     (!inc&&RG==='month'&&bdg>0?`<div class="cd"><h4>Бюджет · ${fmt(tot)} / ${fmt(bdg)}</h4><div class="bb"><s><u style="width:${pct}%;color:${pct>=100?'#ff6b6b':'var(--t)'};background:currentColor"></u></s></div></div>`:'')}
   else if(pg==='tags'){B.innerHTML=subPl()+(ps==='budget'?budgetHtml():ps==='debts'?debtsHtml():goalsHtml())}
-  else if(pg==='settings'){B.innerHTML=`<div id="st">${stHtml()}</div>`;if(!peek)bindSt()}
+  else if(pg==='settings'){B.innerHTML=`<div id="st">${stHtml()}</div>`;if(!peek)bindSt();if(window.pfSync)window.pfSync()}
   else B.innerHTML=tips(month).map(t=>`<div class="tip">${E(t)}</div>`).join('')}
 // короткие итоги недели / года: сколько потратили, на что больше всего, что изменилось к прошлому периоду
 function yearReview(y){const rows=tx.filter(t=>String(t.date).slice(0,4)===y);if(!rows.length)return'';
@@ -3040,7 +3064,7 @@ $('#tabs').onclick=e=>{if(isModalOpen()||tbdBlock)return;const b=e.target.closes
 // so the next page is actually visible while dragging. Release continues from the finger's position.
 const bodyEl=$('#body'),GAP=16;
 let tp=null,tpBlock=false,tpRaf=0;
-const TP_SKIP='#lk,#lt0,#st .lt,.swb,#top,#tabs,#fab,#thlp,#topact,.hd,#sp,#stw,#sh,#ed,#gd,#cf,#bq,#nc,#cp,#ov,#toast,#tour,input,select,textarea';
+const TP_SKIP='#lk,#lt0,#st .lt,#st .pf0,.swb,#top,#tabs,#fab,#thlp,#topact,.hd,#sp,#stw,#sh,#ed,#gd,#cf,#bq,#nc,#cp,#ov,#toast,#tour,input,select,textarea';
 const setLt0=t=>{const e=document.getElementById('lt0');if(!e)return;e.style.display=t==='settings'?'none':'';e.textContent=ttlOf(t)};
 const ttlOf=t=>t==='list'?(ftag?'#'+ftag+(fcat?' › '+cd(fcat.id).l:''):fcat?cd(fcat.id).l:fday?dayLbl(fday):'Операции'):t==='stats'?'Аналитика':t==='tags'?'Планы':t==='settings'?'Настройки':'Советы';
 const tabInd=()=>$('#tabs').querySelector('.ind');
@@ -3173,7 +3197,7 @@ document.addEventListener('click',e=>{if(tpBlock){e.stopPropagation();e.preventD
 
 // ---------- v46: свайп по крупному заголовку листает вкладки ----------
 (function(){
-  const SEL='#lt0,#st .lt';let g=null;
+  const SEL='#lt0,#st .lt,#st .pf0';let g=null;
   const nbT=s=>TABS[TABS.indexOf(tab)+s]||null;
   function reset(h,anim){if(!h)return;if(anim&&!RM){h.style.transition='transform .34s cubic-bezier(.22,1,.36,1),opacity .34s ease';setTimeout(()=>{h.style.transition=''},380)}h.style.transform='';h.style.opacity=''}
   document.addEventListener('pointerdown',e=>{
@@ -3341,7 +3365,7 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
     const el=e.target;if(el.closest&&el.closest(skip))return;
     const grab=OS.raf?OS.y:0;if(OS.raf){stop();OS.drag=1;0}   // страница ещё возвращается — можно поймать пальцем
     const mom=!!MM.raf;if(mom){momStop();OS.drag=1}                                       // v49: ручная инерция тоже ловится пальцем
-    g={top:!!(el.closest&&el.closest('#top,#lt0,#chip,#st .lt')),t0:(window.scrollY||0)<=0&&!mom,mode:mom?'scroll':grab?'stretch':'',on:!!grab||mom,p0:window.scrollY||0,lp:window.scrollY||0,vp:0,vy:0,base:e.touches[0].clientY,bx:e.touches[0].clientX,y0:grab,sgn:grab<0?-1:1,D0:grab?rbi(Math.abs(grab)):0,h0:0,h:0,v:0,lt:performance.now(),ly:grab};
+    g={top:!!(el.closest&&el.closest('#top,#lt0,#chip,#st .lt,#st .pf0')),t0:(window.scrollY||0)<=0&&!mom,mode:mom?'scroll':grab?'stretch':'',on:!!grab||mom,p0:window.scrollY||0,lp:window.scrollY||0,vp:0,vy:0,base:e.touches[0].clientY,bx:e.touches[0].clientX,y0:grab,sgn:grab<0?-1:1,D0:grab?rbi(Math.abs(grab)):0,h0:0,h:0,v:0,lt:performance.now(),ly:grab};
     tmArm();   // растяжение у края работает и для жеста, начатого в середине списка
   },{passive:true});
   const onTM=e=>{if(!g)return;
@@ -3999,7 +4023,8 @@ function stHtml(){
   const v=cfg.theme==='light'||cfg.theme==='auto'?cfg.theme:'dark';
   const thm=`<div class="rw tr">${IC('thm')}<span class="rl">Тема</span><div class="thm" id="thm" role="radiogroup" aria-label="Тема" data-v="${v==='light'?'l':v==='auto'?'a':'d'}"><i></i>${[['dark','Тёмная','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg>'],['auto','Авто','Авто'],['light','Светлая','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2.5 12h2M19.5 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>']].map(([k,n,h])=>`<button type="button" role="radio" data-th="${k}" aria-label="${n}" title="${n}" aria-checked="${v===k}" class="${v===k?'on':''}">${h}</button>`).join('')}</div></div>`;
   return `<h1 class="lt">Настройки</h1>
-<div class="sc"><div class="pf"><span class="av${ini?' ini':''}"${ini?` style="background:linear-gradient(160deg,${avc},${avc}cc)"`:''}>${ini?`<i class="avi">${E(ini)}</i>`:person}${ph?`<img src="${E(ph)}" alt="" decoding="async" referrerpolicy="no-referrer" style="opacity:${(window._AV&&window._AV.url===ph&&window._AV.ok)?1:0}" onload="this.style.transition='opacity .25s';this.style.opacity=1" onerror="this.remove()">`:''}</span><span class="pn"><b>${E(nm)}</b><small${un?' class="un"':''}>${E(sub)}</small></span></div>
+<div class="pf0"><span class="av${ini?' ini':''}"${ini?` style="background:linear-gradient(160deg,${avc},${avc}cc)"`:''}>${ini?`<i class="avi">${E(ini)}</i>`:person}${ph?`<img src="${E(ph)}" alt="" decoding="async" referrerpolicy="no-referrer" style="opacity:${(window._AV&&window._AV.url===ph&&window._AV.ok)?1:0}" onload="this.style.transition='opacity .25s';this.style.opacity=1" onerror="this.remove()">`:''}</span><span class="pn"><b>${E(nm)}</b><small${un?' class="un"':''}>${E(sub)}</small></span></div>
+<div class="sc">
 ${row('cub','#2f6df6','<path d="M12 3.5v17M16.2 7.6c0-1.6-1.9-2.8-4.2-2.8s-4.2 1.2-4.2 2.9 1.9 2.5 4.2 3.1 4.2 1.4 4.2 3.2-1.9 3-4.2 3-4.2-1.3-4.2-3"/>','Валюта и курсы',E(cfg.cur))}${row('ctc','','','Написать нам')}
 ${cfg.tplHide.length?row('tpr','#f39a1f','<path d="M13 3L5 13.5h6L10 21l8-10.5h-6z"/>','Быстрые шаблоны','Вернуть ('+cfg.tplHide.length+')'):''}</div>
 <div class="sgh">Внешний вид</div>
@@ -4021,7 +4046,7 @@ function bindSt(){
   if($('#tpr'))$('#tpr').onclick=()=>{cfg.tplHide=[];save();renderSt();toast('Шаблоны возвращены')};
   if($('#hsb'))homeBind();if($('#botu'))$('#botu').onchange=e=>{const v=String(e.target.value||'').trim();cfg.botUrl=v;save();if(ibBase()){window.__ibBusy=false;inboxPull()}}
   $('#cin').onclick=e=>openCf('catsI',e.currentTarget);$('#cex').onclick=e=>openCf('catsE',e.currentTarget);if($('#rcs'))$('#rcs').onclick=()=>openRcSt();$('#bki').onclick=()=>openBq('import');$('#bke').onclick=()=>openBq('export');$('#bkr').onclick=()=>openBq('reset');$('#ctc').onclick=()=>openBq('contact');}
-function renderSt(){const el=$('#st');if(!el||tab!=='settings')return;el.innerHTML=stHtml();bindSt()}
+function renderSt(){const el=$('#st');if(!el||tab!=='settings')return;el.innerHTML=stHtml();bindSt();if(window.pfSync)window.pfSync()}
 // ---- маленькое окошко снизу: подтверждение сброса и резервная копия ----
 const bq=$('#bq');let bqT=null,bqCb=null;
 let cbM='',msV=1;
@@ -4740,7 +4765,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v112';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v114';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия, которую видит человек (внизу экрана и в письме в поддержку)
 try{document.getElementById('vb').textContent=APP_VER}catch(e){}
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
@@ -4869,16 +4894,29 @@ async function ibLoop(){
     else if(IB.n%2===0)inboxPull(IB.n%13!==0)},3000)})();
 
 
-// ---------- v38: верхняя полоса — название появляется при прокрутке ----------
+// ---------- v38 / v113: верхняя полоса. На странице «Профиль» (как в референсном видео): полоса матовая, как только содержимое заходит под неё,
+// а компактные аватар + имя проявляются в ней в тот момент, когда подпись под большим аватаром уже ушла за её нижнюю границу ----------
 (function(){
   const nb=document.getElementById('nb');if(!nb)return;
-  const c01=v=>v<0?0:v>1?1:v;let raf=0,lp=-1,lb=-1;
-  const bigTitle=()=>[...document.querySelectorAll('#st .lt')].find(e=>!e.closest('[aria-hidden="true"]'))||null;
+  const root=document.documentElement,nbp=document.getElementById('nbp');
+  const c01=v=>v<0?0:v>1?1:v;let raf=0,lp=-1,lb=-1,lq=-1,lon=false,lpf=null,sig='';
+  const bigPf=()=>{const e=document.querySelector('#st .pf0');return e&&!e.closest('[aria-hidden="true"]')?e:null};
+  function pfSync(){
+    const pf=bigPf();if(!nbp)return;
+    if(!pf){if(sig){sig='';nbp.innerHTML=''}return}
+    const av=pf.querySelector('.av'),b=pf.querySelector('.pn b');if(!av||!b)return;
+    const h='<span class="'+av.className+'"'+(av.getAttribute('style')?' style="'+av.getAttribute('style').replace(/"/g,'&quot;')+'"':'')+'>'+av.innerHTML+'</span><b>'+b.innerHTML+'</b>';
+    if(h===sig)return;sig=h;nbp.innerHTML=h}
+  window.pfSync=pfSync;
   function upd(){raf=0;
-    const y=Math.max(0,window.scrollY||0);let p,pb;
+    const pf=bigPf(),on=!!pf;
+    lon=on;
+    if(pf!==lpf){lpf=pf;pfSync()}
+    const y=Math.max(0,window.scrollY||0);let p,pb,pq=0;
     p=c01((y-6)/22);pb=c01((y-2)/12);
-    p=Math.round(p*100)/100;pb=Math.round(pb*100)/100;
+        p=Math.round(p*100)/100;pb=Math.round(pb*100)/100;pq=Math.round(pq*100)/100;
     if(p!==lp){lp=p;nb.style.setProperty('--p',p)}
+    if(pq!==lq){lq=pq;nb.style.setProperty('--pq',pq)}
     if(pb!==lb){lb=pb;nb.style.setProperty('--pb',pb);nb.classList.toggle('on',pb>0)}}
   const q=()=>{if(!raf)raf=requestAnimationFrame(upd)};
   window.addEventListener('scroll',q,{passive:true});window.addEventListener('resize',q);
