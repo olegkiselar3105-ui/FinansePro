@@ -3359,13 +3359,15 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
   function momStart(v){momStop();MM.p=window.scrollY||0;MM.v=Math.max(-8000,Math.min(8000,v));MM.last=performance.now();MM.raf=requestAnimationFrame(momTick)}
   function toScroll(t){const sy=window.scrollY||0;OS.y=0;OS.v=0;paint(0);
     g.mode='scroll';g.on=true;g.p0=sy;g.base=t.clientY;g.lp=sy;g.vp=0;g.vy=0;g.ly=0;g.lt=performance.now()}
-  let g=null;
+  let g=null,lastSc=0;
+  addEventListener('scroll',()=>{lastSc=performance.now()},{passive:true});   // v115: по недавним событиям прокрутки видно, что страница ещё «доезжает» (в том числе родная инерция)
   document.addEventListener('touchstart',e=>{tmOff();g=null;
     if(e.touches.length!==1||isModalOpen())return;
     const el=e.target;if(el.closest&&el.closest(skip))return;
     const grab=OS.raf?OS.y:0;if(OS.raf){stop();OS.drag=1;0}   // страница ещё возвращается — можно поймать пальцем
     const mom=!!MM.raf;if(mom){momStop();OS.drag=1}                                       // v49: ручная инерция тоже ловится пальцем
-    g={top:!!(el.closest&&el.closest('#top,#lt0,#chip,#st .lt,#st .pf0')),t0:(window.scrollY||0)<=0&&!mom,mode:mom?'scroll':grab?'stretch':'',on:!!grab||mom,p0:window.scrollY||0,lp:window.scrollY||0,vp:0,vy:0,base:e.touches[0].clientY,bx:e.touches[0].clientX,y0:grab,sgn:grab<0?-1:1,D0:grab?rbi(Math.abs(grab)):0,h0:0,h:0,v:0,lt:performance.now(),ly:grab};
+    const sy0=window.scrollY||0,anim=mom||grab!==0||performance.now()-lastSc<140,tz=!!(el.closest&&el.closest('#top,#lt0,#chip,#st .lt,#st .pf0')),canS=tab==='list'&&!tz&&!spOpen();
+    g={top:tz,cvs:canS&&grab>0,cvm:canS&&mom&&sy0<=48,t0:(sy0<=0&&!mom)||(anim&&sy0<=48),mode:mom?'scroll':grab?'stretch':'',on:!!grab||mom,p0:window.scrollY||0,lp:window.scrollY||0,vp:0,vy:0,base:e.touches[0].clientY,bx:e.touches[0].clientX,y0:grab,sgn:grab<0?-1:1,D0:grab?rbi(Math.abs(grab)):0,h0:0,h:0,v:0,lt:performance.now(),ly:grab};
     tmArm();   // растяжение у края работает и для жеста, начатого в середине списка
   },{passive:true});
   const onTM=e=>{if(!g)return;
@@ -3385,6 +3387,16 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
       else{if(sp.contains(document.activeElement))document.activeElement.blur();
         spStop();sp.style.transition='none';g.h0=sp.getBoundingClientRect().height;g.h=g.h0;inn.style.willChange='opacity,transform'}}
     if(e.cancelable)e.preventDefault();
+    if(g.cvs&&g.mode==='stretch'&&dy>6){      // v115: страницу поймали во время пружины и тянут вниз — поиск выезжает с достигнутой высоты, без скачка
+      const h0=Math.max(0,OS.y);g.cvs=false;OS.y=0;OS.v=0;paint(0);g.mode='search';
+      if(sp.contains(document.activeElement))document.activeElement.blur();
+      spStop();sp.style.transition='none';inn.style.willChange='opacity,transform';
+      g.h0=h0;g.h=h0;g.base=t.clientY;g.lt=performance.now();g.v=0;g.sv=0;dy=0;spPaint(h0)}
+    if(g.cvm&&g.mode==='scroll'&&g.p0-(t.clientY-g.base)<0){   // v115: поймали инерцию у самого верха и тянут дальше вниз — вместо растяжения выезжает поиск
+      const ex=g.p0-(t.clientY-g.base);g.cvm=false;OS.y=0;OS.v=0;paint(0);if((window.scrollY||0)!==0)window.scrollTo(0,0);g.mode='search';
+      if(sp.contains(document.activeElement))document.activeElement.blur();
+      spStop();sp.style.transition='none';inn.style.willChange='opacity,transform';
+      g.h0=0;g.h=0;g.base=t.clientY+ex/.85;g.lt=performance.now();g.v=0;g.sv=0;dy=t.clientY-g.base}
     if(g.mode==='stretch'&&maxY>0&&g.D0+g.sgn*dy<=0)toScroll(t);   // v49: палец вернулся за край — дальше обычная прокрутка, без «залипания»
     const now=performance.now(),dt=now-g.lt;
     if(g.mode==='scroll'){
@@ -4765,7 +4777,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v114';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v116';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия, которую видит человек (внизу экрана и в письме в поддержку)
 try{document.getElementById('vb').textContent=APP_VER}catch(e){}
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
@@ -4938,6 +4950,10 @@ async function ibLoop(){
   const probeB=document.createElement('div');probeB.style.cssText='position:fixed;top:0;left:0;width:0;height:var(--sab);visibility:hidden;pointer-events:none';document.body.appendChild(probeB);
   let baseH=window.innerHeight,raf=0,lastOut=0,savedY=0,_lay='',_vvt='',_pan='',_kbo=false,sat=probe.offsetHeight,sab=probeB.offsetHeight,poll=0,pollEnd=0,blurT=0;
   const st=new Map(),busy=new Map(),rst=new Map();
+  // v115: окно стартует сдвиг В МОМЕНТ касания поля, не дожидаясь, пока iOS сообщит новую высоту: высоту клавиатуры берём из прошлого раза
+  // (запоминается), поэтому окно и клавиатура едут одновременно и с одной длительностью; когда придёт настоящая высота — тихо уточняем.
+  let pred=null,kbSeen=0,kbSaveT=0;const coarse=matchMedia('(pointer:coarse)').matches;
+  try{const v=+localStorage.getItem('finapp.kbh');if(v>150&&v<600)kbSeen=v}catch(e){}
   const editable=()=>{const a=document.activeElement;return !!a&&(a.tagName==='TEXTAREA'||a.tagName==='SELECT'||(a.tagName==='INPUT'&&!/^(checkbox|radio|button|color|range|file|submit|reset)$/.test(a.type)))};
   const anyOpen=()=>IDS.some(id=>{const e=$i(id);return e&&e.classList.contains('on')});
   function update(){raf=0;
@@ -4951,12 +4967,15 @@ async function ibLoop(){
     const vt=t+'px';if(vt!==_vvt){_vvt=vt;root.style.setProperty('--vvt',vt)}
     // iOS не уменьшает layout viewport, а сдвигает visual viewport: высота клавиатуры = innerHeight − visualViewport.height
     const kb=kbOpen?Math.max(0,L-h):0;
+    let pk=0;   // предсказанная высота клавиатуры: пока iOS ещё не прислал resize, окно уже едет
+    if(pred){if(kbOpen||Date.now()>=pred.until||!foc||!pred.el.contains(a))pred=null;else pk=pred.kb}
+    if(kbOpen&&kb>150&&Math.abs(kb-kbSeen)>2){kbSeen=kb;clearTimeout(kbSaveT);kbSaveT=setTimeout(()=>{try{localStorage.setItem('finapp.kbh',String(Math.round(kbSeen)))}catch(e){}},800)}
     // сдвиг visual viewport (iOS подкручивает страницу к полю) мгновенно компенсируем в bottom — окно не «плывёт» вместе с ним
     const pan=kb>0?t:0,pv=pan+'px';if(pv!==_pan){_pan=pv;root.style.setProperty('--pan',pv)}
     if(kbOpen!==_kbo){_kbo=kbOpen;root.classList.toggle('kbo',kbOpen)}
     IDS.forEach(id=>{const el=$i(id);if(!el||!el.classList.contains('on'))return;   // закрытое окно не трогаем: оно доезжает вниз с прежним сдвигом
-      const isT=kbOpen&&!!a&&el.contains(a),ky=isT?-kb:0,bo=FLT[id]?sab+12:0,
-        avail=Math.max(160,Math.round((isT?h:L)-sat-8-bo)),p=st.get(el),key=ky+'|'+avail;
+      const isT=(kbOpen||pk>0)&&!!a&&el.contains(a),kbe=kbOpen?kb:pk,ky=isT?-kbe:0,bo=FLT[id]?sab+12:0,
+        avail=Math.max(160,Math.round((isT?(kbOpen?h:L-pk):L)-sat-8-bo)),p=st.get(el),key=ky+'|'+avail;
       if(p&&p.key===key)return;
       const tm=(p&&ky===0&&p.ky<0)?T_HIDE:T_SHOW;
       // окно перестаёт помещаться над клавиатурой (маленький экран): высота плавно уменьшается от текущей, дальше окно прокручивается
@@ -4978,7 +4997,13 @@ async function ibLoop(){
   // страница под окном не должна ездить, пока открыто окно
   window.addEventListener('scroll',()=>{if(anyOpen()&&window.scrollY!==savedY)window.scrollTo(0,savedY)},{passive:true});
   // переход между полями (сумма → заметка): окно остаётся открытым и на месте, клавиатура только меняет раскладку
-  document.addEventListener('focusin',()=>{clearTimeout(blurT);sched();kick(1500);setTimeout(reveal,420)});
+  function predict(f){
+    if(_kbo||!coarse||!f||f.readOnly||f.inputMode==='none')return;
+    if(!(f.tagName==='TEXTAREA'||(f.tagName==='INPUT'&&/^(text|search|number|tel|email|url|password|)$/.test(f.type))))return;
+    const m=f.closest&&f.closest(SEL);if(!m||!m.classList.contains('on'))return;
+    pred={el:m,kb:kbSeen||Math.round(window.innerHeight*.36),until:Date.now()+900};
+    if(raf){cancelAnimationFrame(raf);raf=0}update();setTimeout(sched,950)}
+  document.addEventListener('focusin',e=>{clearTimeout(blurT);predict(e.target);sched();kick(1500);setTimeout(reveal,420)});
   document.addEventListener('focusout',()=>{lastOut=Date.now();clearTimeout(blurT);blurT=setTimeout(sched,90);kick(1200)});
   // изменение высоты окна из-за содержимого (например, под строкой ввода появляется разбор) — мягко, но не во время сдвига под клавиатуру
   const last=new Map(),inBusy=new Set();
