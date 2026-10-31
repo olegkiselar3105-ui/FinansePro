@@ -1415,6 +1415,12 @@ html.pfp #nbp{display:flex}
 html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){margin-bottom:var(--mb,0px)!important}
 html{overscroll-behavior:none}
 </style>
+<style id="v131">
+/* v131: окно операции: при смене поля подчёркивание не перекрашивается/не утолщается (давало белые мерцания), без переходов */
+html:root #ed #eam:focus{border-bottom:1px solid var(--sep)!important;box-shadow:none!important}
+html:root #ed label.ef:focus-within,html:root #ed .ef.tgf:focus-within{border-bottom:1px solid var(--sep)!important;box-shadow:none!important}
+html:root #ed #eam,html:root #ed label.ef,html:root #ed .ef.tgf,html:root #ed input{transition:none!important;-webkit-tap-highlight-color:transparent}
+</style>
 </head>
 <body><div id="lk" role="dialog" aria-modal="true" aria-label="PIN-код"></div><div id="vb" aria-hidden="true"></div><div id="spl" aria-hidden="true">
 <svg class="spl-logo" viewBox="96 96 320 320" width="132" height="132" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
@@ -2003,7 +2009,8 @@ function lockBg(on){
   cancelAnimationFrame(lockRaf);
   const apply=()=>{lockRaf=0;
     document.documentElement.style.overflow=on?'hidden':'';
-    document.body.style.overflow=on?'hidden':'';
+    /* v131: overflow:hidden на body ломал position:sticky у главного блока -- при открытии окна он прыгал на место в списке; фон держат html-overflow, блокировка touchmove и возврат scrollY */
+    document.body.style.overflow='';
     document.body.style.touchAction='';   // жесты под окном гасит сам оверлей (touch-action:none), а не весь body — смена touch-action у body пересчитывала всю страницу
     if(w){w.style.pointerEvents='';if(on)w.setAttribute('inert','');else w.removeAttribute('inert')}   // inert уже отключает касания
     if(tb)tb.style.pointerEvents=on?'none':'';
@@ -4827,7 +4834,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v130';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v131';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия, которую видит человек (внизу экрана и в письме в поддержку)
 try{document.getElementById('vb').textContent=APP_VER}catch(e){}
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
@@ -5019,13 +5026,14 @@ async function ibLoop(){
     const L=window.innerHeight,h=vv?vv.height:L,vt=vv?Math.max(0,vv.offsetTop):0,a=document.activeElement,foc=editable(),T=Date.now();
     if(!foc&&!kbOpen&&T-lastOut>1000)baseH=L;
     // --- есть ли клавиатура (с «гистерезисом»: короткие мигания при смене раскладки не считаются закрытием)
-    const raw=foc&&(baseH-h)>120;
+    const raw=(foc||T-lastOut<600)&&(baseH-h)>120;   // v131: при смене поля фокус на миг пропадает -- клавиатура остаётся, окно не опускается
     if(raw){kbOpen=true;visHold=h;lastRaw=T;holdEl=winOf(a)||holdEl}
     else if(kbOpen&&!((foc&&T-lastRaw<450)||(!foc&&T-lastOut<90)))kbOpen=false;
     if(!kbOpen){sat=probe.offsetHeight;sab=probeB.offsetHeight}
     const kb=kbOpen?Math.max(0,baseH-visHold):0;
     if(kbOpen&&kb>150&&Math.abs(kb-kbSeen)>2){kbSeen=kb;clearTimeout(kbSaveT);kbSaveT=setTimeout(()=>{try{localStorage.setItem('finapp.kbh',String(Math.round(kbSeen)))}catch(e){}},800)}
-    if(intent&&(kbOpen||(T>=intent.until&&!(foc&&winOf(a)===intent.el&&T-intent.t<20000))||(!foc&&T-intent.t>350)))intent=null;
+    const keep=intent&&T-intent.t<20000&&((foc&&winOf(a)===intent.el)||(!foc&&T-lastOut<600));   // окно остаётся поднятым, пока поле в фокусе и в короткой паузе при смене поля
+    if(intent&&(kbOpen||(T>=intent.until&&!keep)||(!foc&&T-intent.t>350&&T-lastOut>=600)))intent=null;
     const pk=intent?intent.kb:0;
     // нижние панели страницы (вкладки, «+») держим на месте, пока webview уменьшен клавиатурой
     const shrink=baseH-L,lay=(shrink>120?shrink:0)+'px';if(lay!==_lay){_lay=lay;root.style.setProperty('--lay',lay)}
