@@ -4862,7 +4862,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v132';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v133';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия, которую видит человек (внизу экрана и в письме в поддержку)
 try{document.getElementById('vb').textContent=APP_VER}catch(e){}
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
@@ -5122,6 +5122,33 @@ async function ibLoop(){
           el.style.transition='none';el.style.setProperty('--mb','0px');el.style.removeProperty('--kmax');void el.offsetHeight;el.style.transition='';S.delete(el)},520))}});start()});
   IDS.forEach(id=>{const el=$i(id);if(el)mo.observe(el,{attributes:true,attributeFilter:['class'],attributeOldValue:true})});
   start();
+})();
+</script>
+<script>
+// v133: самописец прыжков при клавиатуре. Выключен и ничего не делает, пока его не включат касанием ТРЕМЯ пальцами по экрану.
+// После включения при каждом фокусе/потере фокуса в поле (и при открытии категорий) ~1 с пишет по кадрам: прокрутку страницы, visual viewport,
+// высоту окна, положение якорного блока и нижний край открытого окна, и показывает итог сверху экрана — достаточно сделать скриншот.
+(function(){
+  const vv=window.visualViewport;let on=false,panel=null,busy=false;
+  const winEl=()=>['sh','ed','gd','cf'].map(i=>document.getElementById(i)).find(e=>e&&e.classList.contains('on'))||null;
+  const anc=()=>{const e=document.getElementById('top')||document.getElementById('body');return e?e.getBoundingClientRect().top:0};
+  function ensure(){if(panel)return;panel=document.createElement('pre');
+    panel.style.cssText='position:fixed;left:4px;right:4px;top:calc(env(safe-area-inset-top,0px) + 52px);z-index:2147483000;margin:0;padding:6px 8px;border-radius:8px;background:rgba(0,0,0,.85);color:#9f9;font:9px/1.25 ui-monospace,Menlo,monospace;white-space:pre-wrap;pointer-events:none;max-height:46vh;overflow:hidden';
+    document.body.appendChild(panel)}
+  const r1=v=>Math.round(v*10)/10;
+  function report(tag,S){const col=i=>S.map(x=>x[i]),mm=i=>{const c=col(i);return r1(Math.min(...c))+'..'+r1(Math.max(...c))};
+    let o='['+tag+'] кадров '+S.length+'\nscrollY '+mm(1)+'\nvv.offsetTop '+mm(2)+'  vv.pageTop '+mm(3)+'\nvv.height '+mm(4)+'  innerH '+mm(5)+'\nякорь(top) '+mm(6)+'\nнизокна '+mm(7)+'\n t   sy  vvT  vvH  inH  anc  winB\n';
+    for(let i=0;i<S.length;i+=Math.max(1,Math.floor(S.length/16))){const x=S[i];o+=String(Math.round(x[0])).padStart(4)+' '+String(r1(x[1])).padStart(4)+' '+String(r1(x[2])).padStart(4)+' '+String(r1(x[4])).padStart(4)+' '+String(r1(x[5])).padStart(4)+' '+String(r1(x[6])).padStart(5)+' '+String(r1(x[7])).padStart(5)+'\n'}
+    ensure();panel.textContent=o;window.__dbgLast=o}
+  function capture(tag){if(!on||busy)return;busy=true;const t0=performance.now(),S=[];
+    (function f(t){const w=winEl();S.push([t-t0,window.scrollY||0,vv?vv.offsetTop:0,vv?vv.pageTop:0,vv?vv.height:innerHeight,innerHeight,anc(),w?w.getBoundingClientRect().bottom:0]);
+      if(t-t0<1100)requestAnimationFrame(f);else{busy=false;report(tag,S)}})(t0)}
+  function toggle(){on=!on;ensure();panel.textContent=on?'самописец включён: нажмите на поле суммы, затем на категорию':'самописец выключен';if(!on)setTimeout(()=>{if(panel&&!on)panel.textContent=''},1200)}
+  window.__dbgToggle=toggle;window.__dbgCapture=capture;
+  document.addEventListener('touchstart',e=>{if(e.touches.length===3)toggle()},{passive:true,capture:true});
+  document.addEventListener('focusin',()=>capture('focusin'),true);
+  document.addEventListener('focusout',()=>capture('focusout'),true);
+  document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('#eca,.cpb'))capture('категория')},true);
 })();
 </script>
 <script>
