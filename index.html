@@ -1415,6 +1415,23 @@ html.pfp #nbp{display:flex}
 html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){margin-bottom:var(--mb,0px)!important}
 html{overscroll-behavior:none}
 </style>
+<style id="v132">
+/* v132: окна — один механизм движения и никаких скачков.
+   • сдвиг над клавиатурой: только translate (композитор) от JS-пружины; margin-bottom больше не меняется каждый кадр (это была перекладка страницы на каждом кадре),
+     CSS-переход translate убран — иначе он боролся с пружиной;
+   • закрытие с открытой клавиатурой: закрывающий transform включает текущий сдвиг, окно уходит за экран целиком (раньше пропадало на лету, не доехав);
+   • вложенное окно (категории, новая категория, повторы): родитель не масштабируется и не меняет прозрачность — он спокойно остаётся на месте, затемняется только opacity слоя ::after (раньше opacity прыгала 1→.55→1 без перехода). */
+html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){margin-bottom:0!important;translate:0 calc(var(--ky,0px) + var(--fx,0px) - var(--mb,0px))!important}
+html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){transition:transform .24s var(--m-out),visibility 0s .24s,translate 0s,max-height var(--kt),padding-bottom var(--kt)}
+html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc).on{transition:transform .25s var(--m-in),visibility 0s,translate 0s,max-height var(--kt),padding-bottom var(--kt)}
+html:root #sh.on.fxl{transition:transform .25s var(--m-in),visibility 0s,translate 0s,max-height 0s}
+html:root :is(#sh,#ed):not(.on){transform:translate3d(0,calc(100% + var(--sab,0px) + 12px + var(--mb,0px) - var(--ky,0px)),0)!important}
+html:root :is(#gd,#cf,#bq,#nc,#cp,#rc):not(.on){transform:translate3d(0,calc(100% + var(--mb,0px) - var(--ky,0px)),0)!important}
+html:root :is(#sh,#ed,#gd,#cf,#cp).on.sub{transform:none!important;opacity:1!important}
+html:root :is(#sh,#ed,#gd,#cf,#cp)::after{content:"";position:absolute;inset:0;border-radius:inherit;background:#000;opacity:0;pointer-events:none;transition:opacity .25s var(--m-ov-in)}
+html:root :is(#sh,#ed,#gd,#cf,#cp).sub::after{opacity:.42}
+@media (prefers-reduced-motion:reduce){html:root :is(#sh,#ed,#gd,#cf,#cp)::after{transition:none}}
+</style>
 <style id="v131">
 /* v131: окно операции: при смене поля подчёркивание не перекрашивается/не утолщается (давало белые мерцания), без переходов */
 html:root #ed #eam:focus{border-bottom:1px solid var(--sep)!important;box-shadow:none!important}
@@ -3059,6 +3076,17 @@ ${t.oc?`<div class="eo">${fmt(t.oa)} ${E(t.oc)}</div>`:''}
 <label class="ef">Дата<input id="eda" type="date" value="${t.date}"></label>
 <div class="ef tgf"><div class="tgw">${(t.tags||[]).map(g=>`<button class="tgc" data-er="${E(g)}">#${E(g)} ×</button>`).join('')}<input id="etn" type="text" list="tgl" placeholder="например: #друзья" aria-label="Теги" autocomplete="off" autocapitalize="none" enterkeyhint="done"></div></div>
 <div class="shf"><button class="sm pr" id="esv">Сохранить</button></div>`}
+/* v132: окно операции монтируется один раз (renderEd в openEdit); дальше обновляются только изменившиеся узлы.
+   Раньше смена типа/категории/тега пересоздавала innerHTML: поля терялись, фокус и клавиатура сбрасывались, окно мигало. */
+function patchEdTags(){const w=ed.querySelector('.tgw'),i=$('#etn');if(!w||!i||!eT){if(eT)renderEd();return}
+  w.querySelectorAll('.tgc').forEach(x=>x.remove());
+  (eT.tags||[]).forEach(g=>{const b=document.createElement('button');b.className='tgc';b.dataset.er=g;b.textContent='#'+g+' ×';w.insertBefore(b,i)})}
+function patchEd(){const t=eT;if(!t)return;const am=$('#eam');if(!am){renderEd();return}
+  const inc=t.type==='income';
+  ed.querySelectorAll('[data-et]').forEach(b=>b.classList.toggle('on',(b.dataset.et==='income')===inc));
+  am.classList.toggle('inc',inc);am.classList.toggle('exp',!inc);
+  const c=$('#eca');if(c)c.textContent=cd(t.category).l;
+  patchEdTags()}
 function saveEd(){if(!eT)return;readEd();if(!(eT.amount>0)){toast('Укажите сумму');return}
   const o=tx.find(x=>x.id===eT.id);if(!o){closeEdit();return}
   if(eT.category!==o.category&&eT.note)learn[norm(eT.note)]=eT.category;
@@ -3073,12 +3101,12 @@ function delEd(){if(!eT)return;const i=tx.findIndex(x=>x.id===eT.id);if(i<0){clo
   closeEdit();if(!tg||RM){render();return}
   setTimeout(()=>{if(st.undone)return;fxCollapse(tg).then(()=>{if(!st.undone)render()})},170)}
 ed.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!eT)return;
-  if(b.dataset.er){readEd();eT.tags=eT.tags.filter(g=>g!==b.dataset.er);renderEd();return}
-  if(b.dataset.es){readEd();addTags(eT,b.dataset.es);renderEd();return}
-  if(b.dataset.et){readEd();if(eT.type!==b.dataset.et){eT.type=b.dataset.et;eT.category=detect(eT.note,eT.note,eT.type)}eT.addCat=false;renderEd();return}
+  if(b.dataset.er){readEd();eT.tags=eT.tags.filter(g=>g!==b.dataset.er);patchEdTags();return}
+  if(b.dataset.es){readEd();addTags(eT,b.dataset.es);patchEdTags();return}
+  if(b.dataset.et){readEd();if(eT.type!==b.dataset.et){eT.type=b.dataset.et;eT.category=detect(eT.note,eT.note,eT.type)}eT.addCat=false;patchEd();return}
   if(b.id==='esv')saveEd();else if(b.id==='edel')delEd();else if(b.id==='ecl')closeEdit()});
-ed.addEventListener('click',e=>{const b=e.target.closest('#eca');if(!b||!eT)return;e.preventDefault();readEd();openCp(eT.type,eT.category,id=>{if(eT){eT.category=id;renderEd()}},()=>{if(eT)renderEd()})});
-ed.addEventListener('keydown',e=>{if(eT&&e.key==='Enter'&&(e.target.id==='eam'||e.target.id==='eno')){e.preventDefault();e.target.blur();return}if(!eT)return;if(e.target.id==='etn'&&(e.key==='Enter'||e.key===',')){e.preventDefault();readEd();renderEd();const i=$('#etn');if(i)i.focus();return}
+ed.addEventListener('click',e=>{const b=e.target.closest('#eca');if(!b||!eT)return;e.preventDefault();readEd();openCp(eT.type,eT.category,id=>{if(eT){eT.category=id;patchEd()}},()=>{if(eT)patchEd()})});
+ed.addEventListener('keydown',e=>{if(eT&&e.key==='Enter'&&(e.target.id==='eam'||e.target.id==='eno')){e.preventDefault();e.target.blur();return}if(!eT)return;if(e.target.id==='etn'&&(e.key==='Enter'||e.key===',')){e.preventDefault();readEd();patchEdTags();return}
   if(e.key==='Enter'&&e.target.tagName==='INPUT'&&e.target.type!=='date'){e.preventDefault();saveEd()}});
 $('#body').addEventListener('click',e=>{if(isModalOpen())return;const d=e.target.dataset;const r2=e.target.closest('.r2[data-id]');if(r2){openEdit(r2.dataset.id);return}const go=e.target.closest('[data-go]');if(go){if(go.dataset.go==='rec'){fab.click();setTimeout(()=>{try{openRc()}catch(x){}},600)}else goDebts();return}const dy=e.target.closest('.cc[data-day]');if(dy){openDay(dy.dataset.day);return}const lkb=e.target.closest('[data-lk]');if(lkb){linkToggle(lkb);return}const da=e.target.closest('[data-da]');if(da){debtAct(da);return}const mo2=e.target.closest('[data-mo]');if(mo2){TSEL=mo2.dataset.mo;render();return}if(d.tn){TN=+d.tn;render();softIn(false);return}const la=e.target.closest('[data-la]');if(la){limAct(la);return}const ga=e.target.closest('[data-ga]');if(ga){goalAct(ga);return}if(d.ps){ps=d.ps;render();softIn(true);return}const nv=e.target.closest('[data-nv]');if(nv){navStats(+nv.dataset.nv);return}if(e.target.closest('[data-tips]')){tipsOpen=!tipsOpen;_tipsF=tipsOpen;render();_tipsF=false;return}if(d.kd){KD=d.kd;render();softIn(false);return}if(d.rg){RG=d.rg;WO=woFor(month);render();softIn(false);return}if(d.tr){TR=d.tr;ftagR=null;render();softIn(false);return}if(d.as){AS=d.as;render();softIn(true);return}const tg=e.target.closest('.pl[data-tag]');if(tg){if(tab==='stats')openTag(tg.dataset.tag,{...lastRange},'stats');else openTag(tg.dataset.tag);return}openCat(e.target.closest('.pl[data-cat],.lr[data-cat]'))});
 $('#body').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const r2=e.target.closest&&e.target.closest('.r2[data-id]');if(r2){e.preventDefault();openEdit(r2.dataset.id);return}const tg=e.target.closest&&e.target.closest('.pl[data-tag]');if(tg){e.preventDefault();openTag(tg.dataset.tag);return}const p=e.target.closest&&e.target.closest('.pl[data-cat]');if(p){e.preventDefault();openCat(p)}}});
@@ -4294,7 +4322,7 @@ function cpHtml(){const s=cpS,inc=s.type==='income';
 <div class="cpg">${list.map(c=>`<button class="cpi${!s.edit&&c.id===s.cur?' on':''}" data-id="${c.id}"><b>${E(c.e)}</b><span>${E(c.n)}</span>${s.edit?'<i>✎</i>':''}</button>`).join('')}</div>
 <div class="cpf"><button class="sm" data-cp="add">Добавить</button><button class="sm${s.edit?' pr':''}" data-cp="edit">${s.edit?'Готово':'Редактировать'}</button></div>`}
 function cpRender(){const g=cpEl.querySelector('.cpg'),top=g?g.scrollTop:0;cpEl.innerHTML=cpHtml();const g2=cpEl.querySelector('.cpg');if(g2&&cpS.view==='grid')g2.scrollTop=top}
-function openCp(type,cur,cb,chg){if(cpS||isCpBusy())return;const alone=!isModalOpen();if(alone){cancelGestures();lockBg(true)}cpS={type:type==='income'?'income':'expense',cur,cb,chg,edit:false,view:'grid',id:null};cpRender();
+function openCp(type,cur,cb,chg){if(cpS||isCpBusy())return;{const a=document.activeElement;if(a&&a!==document.body&&a.closest&&a.closest('#sh,#ed,#gd,#cf,#rc')&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))a.blur()}const alone=!isModalOpen();if(alone){cancelGestures();lockBg(true)}cpS={type:type==='income'?'income':'expense',cur,cb,chg,edit:false,view:'grid',id:null};cpRender();
   ['sh','ed','gd','cf'].forEach(id=>{const e=$('#'+id);if(e&&e.classList.contains('on'))e.classList.add('sub')});
   try{setOrigin(cpEl)}catch(e){}cpEl.classList.add('on');ov.className='on'}
 const isCpBusy=()=>$('#nc').classList.contains('on')||bq.classList.contains('on');
@@ -4834,7 +4862,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v131';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v132';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия, которую видит человек (внизу экрана и в письме в поддержку)
 try{document.getElementById('vb').textContent=APP_VER}catch(e){}
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
