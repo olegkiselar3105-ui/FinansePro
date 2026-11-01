@@ -1456,11 +1456,10 @@ html:root #rc .shf .sm.del{order:1}html:root #rc .shf .sm:not(.pr):not(.del){ord
 #tpls{margin-top:14px}
 #tpls .tph{font-size:12.5px;color:var(--m);letter-spacing:.02em;margin:0 4px 8px}
 #tpls .tph::after{content:":"}
-#tpls .tpl-l{max-height:min(236px,32vh);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;border-radius:18px;border:1px solid var(--sbd);scrollbar-width:none}
+#tpls .tpl-l{max-height:min(236px,32vh);overflow-y:auto;overscroll-behavior:none;-webkit-overflow-scrolling:touch;border-radius:18px;border:1px solid var(--sbd);scrollbar-width:none}
 #tpls .tpl-l::-webkit-scrollbar{display:none}
 #tpls .tpr{display:flex;align-items:center;gap:12px;padding:11px 6px 11px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background-color .15s ease}
 #tpls .tpr+.tpr{border-top:1px solid var(--sep)}
-#tpls .tpr:active{background:rgba(var(--wr,255,255,255),.06)}
 #tpls .tpe{flex:none;width:26px;text-align:center;font-size:19px;line-height:1}
 #tpls .tpt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 #tpls .tpt b{font-weight:500;font-size:15px;color:var(--t);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1468,7 +1467,6 @@ html:root #rc .shf .sm.del{order:1}html:root #rc .shf .sm:not(.pr):not(.del){ord
 #tpls .tpa{flex:none;font-size:15px;font-variant-numeric:tabular-nums;color:var(--t)}
 #tpls .tpa.inc{color:var(--g)}
 #tpls .tpx{flex:none;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border:0;background:none;color:var(--m2);border-radius:50%;-webkit-tap-highlight-color:transparent}
-#tpls .tpx:active{background:rgba(var(--wr,255,255,255),.08)}
 #tpls .tp0{font-size:13.5px;line-height:1.4;color:var(--m);padding:12px 14px;border:1px dashed var(--sbd);border-radius:18px}
 #sh:has(#rev:not(:empty)) #tpls{display:none}
 #sh #tpls{opacity:0;transform:translate3d(0,10px,0);transition:opacity 0s .52s,transform 0s .52s}
@@ -1485,14 +1483,14 @@ html:root #rc .shf .sm.del{order:1}html:root #rc .shf .sm:not(.pr):not(.del){ord
 #pkr .pkh{flex:none;display:flex;align-items:center;justify-content:space-between;padding:12px 10px 6px 18px}
 #pkr .pkh b{font-size:15px;font-weight:600}
 #pkr .pkh button{width:36px;height:36px;border:0;background:none;color:var(--m2);font-size:22px;border-radius:50%;-webkit-tap-highlight-color:transparent}
-#pkr .pkl{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding:0 8px 8px;scrollbar-width:none}
+/* v148: при листании под пальцем ничего не подсвечивается и список не отскакивает у краёв (серая плашка ездила вместе со списком) */
+#pkr .pkl{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding:0 8px 8px;scrollbar-width:none}
 #pkr .pkl::-webkit-scrollbar{display:none}
 #pkr .pkl button{display:flex;align-items:center;gap:12px;width:100%;min-height:46px;padding:0 12px;border:0;border-radius:14px;background:none;color:var(--t);font:inherit;font-size:16px;text-align:left;-webkit-tap-highlight-color:transparent}
 #pkr .pkl button i{font-style:normal;width:24px;text-align:center;font-size:19px}
 #pkr .pkl button span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #pkr .pkl button.on{background:rgba(var(--wr,255,255,255),.08);font-weight:600}
 #pkr .pkl button.on::after{content:"";width:8px;height:14px;margin-right:4px;border:solid var(--t);border-width:0 2px 2px 0;transform:rotate(45deg) translate(-2px,-2px)}
-#pkr .pkl button:active{background:rgba(var(--wr,255,255,255),.12)}
 @media (prefers-reduced-motion:reduce){#pkr,#pkr.on{transition:none}}
 /* v146: свой календарь (не забирает фокус — клавиатура остаётся); нативные поля даты в окнах не принимают касания, их берёт подпись */
 :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc) input[type=date]{pointer-events:none}
@@ -5006,7 +5004,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v147';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v148';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}   // номер сборки виден внизу экрана: по нему понятно, обновился ли Telegram до новой версии
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
