@@ -1439,6 +1439,45 @@ html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#r
 html:root :is(#sh,#ed,#gd,#cf):is(#sh,#ed,#gd,#cf):is(#sh,#ed,#gd,#cf).sub{pointer-events:none!important}
 html:root :is(#sh,#ed,#gd,#cf,#cp)::after{content:"";position:absolute;inset:0;border-radius:inherit;background:#000;opacity:0;pointer-events:none;transition:opacity .25s cubic-bezier(.26,.24,.25,1)}
 html:root :is(#sh,#ed,#gd,#cf,#cp).sub::after{opacity:.42}
+/* v143: окно операции — внизу две кнопки: «Удалить» слева (мягкий красный, как «Удалить» в других окнах) и «Сохранить» справа (основная, как выбранная «Расх.») */
+html:root #ed .shf.shf{display:flex!important;align-items:center;justify-content:space-between;gap:10px;margin-top:18px;order:9}
+html:root #ed #esv.sm,html:root #ed #edel.sm{display:flex!important;align-items:center;justify-content:center;flex:1 1 0;width:auto;height:48px;padding:0 16px;border-radius:999px;font-size:15px;font-weight:600;letter-spacing:.01em;background-image:none;-webkit-tap-highlight-color:transparent;transition:transform .12s ease,opacity .12s ease}
+html:root #ed #esv.sm{order:2;border:0;background:var(--sa);color:var(--son)}
+html:root #ed #edel.sm{order:1;border:1px solid rgba(227,144,144,.22);background:rgba(227,144,144,.10);color:var(--rd)}
+html:root[data-theme=light] #ed #edel.sm{border-color:rgba(201,74,74,.18);background:rgba(201,74,74,.07)}
+html:root #ed :is(#esv,#edel).sm:active{transform:scale(.97);opacity:.85}
+/* v144: окно операции — строка «В шаблоны» (слева, у края) / «Повторять» (справа) */
+html:root #ed .eac{order:8;display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding:0 2px}
+html:root #ed .eab{display:flex;align-items:center;gap:7px;padding:6px 0;border:0;background:none;color:var(--t);font-size:14px;font-weight:600;letter-spacing:.01em;-webkit-tap-highlight-color:transparent;transition:opacity .12s ease}
+html:root #ed .eab svg{flex:none;opacity:.9}
+html:root #ed .eab:active{opacity:.55}
+html:root #ed .eab.on{color:var(--g)}
+/* окно повтора и шаблона: «Удалить» слева, «Отменить», «Сохранить» справа */
+html:root #rc label.ef[hidden]{display:none!important}
+html:root #rc#rc label.ef select{padding-right:28px!important}
+html:root #rc .shf .sm.del{order:1}html:root #rc .shf .sm:not(.pr):not(.del){order:2}html:root #rc .shf .sm.pr{order:3}
+/* окно добавления: список шаблонов под строкой ввода */
+#tpls{margin-top:14px}
+#tpls .tph{font-size:12.5px;color:var(--m);letter-spacing:.02em;margin:0 4px 8px}
+#tpls .tph::after{content:":"}
+#tpls .tpl-l{max-height:min(236px,32vh);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;border-radius:18px;border:1px solid var(--sbd);scrollbar-width:none}
+#tpls .tpl-l::-webkit-scrollbar{display:none}
+#tpls .tpr{display:flex;align-items:center;gap:12px;padding:11px 6px 11px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background-color .15s ease}
+#tpls .tpr+.tpr{border-top:1px solid var(--sep)}
+#tpls .tpr:active{background:rgba(var(--wr,255,255,255),.06)}
+#tpls .tpe{flex:none;width:26px;text-align:center;font-size:19px;line-height:1}
+#tpls .tpt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+#tpls .tpt b{font-weight:500;font-size:15px;color:var(--t);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#tpls .tpt small{font-size:12px;color:var(--m);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#tpls .tpa{flex:none;font-size:15px;font-variant-numeric:tabular-nums;color:var(--t)}
+#tpls .tpa.inc{color:var(--g)}
+#tpls .tpx{flex:none;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border:0;background:none;color:var(--m2);border-radius:50%;-webkit-tap-highlight-color:transparent}
+#tpls .tpx:active{background:rgba(var(--wr,255,255,255),.08)}
+#tpls .tp0{font-size:13.5px;line-height:1.4;color:var(--m);padding:12px 14px;border:1px dashed var(--sbd);border-radius:18px}
+#sh:has(#rev:not(:empty)) #tpls{display:none}
+#sh #tpls{opacity:0;transform:translate3d(0,10px,0);transition:opacity 0s .52s,transform 0s .52s}
+#sh.on #tpls{opacity:1;transform:none;transition:opacity .45s ease-out .14s,transform .65s cubic-bezier(.22,1,.36,1) .14s}
+@media (prefers-reduced-motion:reduce){#sh #tpls,#sh.on #tpls{transition:none}}
 /* v141: затемнение снова полупрозрачное (список за окном виден затемнённым); страница под окном только не принимает касаний (lockBg) */
 /* затемнение фона: размер постоянный (--baseh), кривые из эталона */
 html:root #ov{transition:opacity .198s cubic-bezier(.75,.09,.67,1),visibility 0s .198s!important}
@@ -1490,6 +1529,7 @@ html:root #ed #eam,html:root #ed label.ef,html:root #ed .ef.tgf,html:root #ed in
 <div id="sh" class="glass" role="dialog" aria-label="Новая операция">
 <div class="fld"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input id="inp" placeholder="Заметки, бюджет, лимиты, цели" autocomplete="off" enterkeyhint="done"><button type="button" class="rcic" id="recic" aria-label="Повторяющиеся операции" aria-haspopup="dialog"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg></button></div>
 <div id="tpl"></div>
+<div id="tpls"></div>
 <div id="rev"></div>
 <div class="shf"><button class="sm atg" id="atg" type="button"></button><button class="sm pr" id="go">Добавить</button></div>
 </div>
@@ -1623,7 +1663,7 @@ tx.forEach(t=>{t.amount=Number.isFinite(+t.amount)?Math.abs(+t.amount):0;if(type
   if(typeof t.category!=='string'||!t.category)t.category=t.type==='income'?'in_other':'other';
   if(typeof t.note!=='string')t.note=t.note==null?'':String(t.note);
   if(Array.isArray(t.tags))t.tags=t.tags.filter(g=>typeof g==='string'&&g);else delete t.tags});
-if(!cfg.rates)cfg.rates={};if(!Array.isArray(cfg.cc))cfg.cc=[];if(!Array.isArray(cfg.curList))cfg.curList=[];if(!cfg.custom)cfg.custom=[];if(!cfg.catOv)cfg.catOv={};if(!cfg.limits||typeof cfg.limits!=='object')cfg.limits={};if(!Array.isArray(cfg.goals))cfg.goals=[];if(!Array.isArray(cfg.debts))cfg.debts=[];if(!Array.isArray(cfg.tplHide))cfg.tplHide=[];if(!Array.isArray(cfg.hide))cfg.hide=[];if(typeof cfg.carry!=='boolean')cfg.carry=true;if(typeof cfg.carryBud!=='boolean')cfg.carryBud=true;if(!/^\d{4}-\d{2}$/.test(cfg.budOffFrom||''))cfg.budOffFrom=shiftMonth(curM(),1);if(!/^\d{4}-\d{2}$/.test(cfg.carryFrom||''))cfg.carryFrom=curM();delete cfg.openBal;tx=tx.filter(t=>!t.goal);tx.forEach(t=>{if(t.category==='savings')t.category='other';else if(t.category==='savout')t.category='in_other'});
+if(!cfg.rates)cfg.rates={};if(!Array.isArray(cfg.cc))cfg.cc=[];if(!Array.isArray(cfg.curList))cfg.curList=[];if(!cfg.custom)cfg.custom=[];if(!cfg.catOv)cfg.catOv={};if(!cfg.limits||typeof cfg.limits!=='object')cfg.limits={};if(!Array.isArray(cfg.goals))cfg.goals=[];if(!Array.isArray(cfg.debts))cfg.debts=[];if(!Array.isArray(cfg.tplHide))cfg.tplHide=[];if(!Array.isArray(cfg.tpls))cfg.tpls=[];if(!Array.isArray(cfg.hide))cfg.hide=[];if(typeof cfg.carry!=='boolean')cfg.carry=true;if(typeof cfg.carryBud!=='boolean')cfg.carryBud=true;if(!/^\d{4}-\d{2}$/.test(cfg.budOffFrom||''))cfg.budOffFrom=shiftMonth(curM(),1);if(!/^\d{4}-\d{2}$/.test(cfg.carryFrom||''))cfg.carryFrom=curM();delete cfg.openBal;tx=tx.filter(t=>!t.goal);tx.forEach(t=>{if(t.category==='savings')t.category='other';else if(t.category==='savout')t.category='in_other'});
 // u — время последней правки операции (ставится в save() автоматически); нужен, чтобы при слиянии выиграла более свежая правка
 let _sn=new Map();
 function snapTx(stamp){const now=Date.now(),keep=new Map();
@@ -1680,7 +1720,7 @@ if(cfg.catV!==2){
   const mp=id=>cm[id]||M[id]||id;
   tx.forEach(t=>{t.category=mp(t.category)});
   const nl={};Object.entries(cfg.limits||{}).forEach(([id,v])=>{const k=mp(id);nl[k]=Math.max(nl[k]||0,v)});cfg.limits=nl;
-  (cfg.rec||[]).forEach(r=>{if(r&&r.category)r.category=mp(r.category)});
+  (cfg.rec||[]).forEach(r=>{if(r&&r.category)r.category=mp(r.category)});(cfg.tpls||[]).forEach(r=>{if(r&&r.category)r.category=mp(r.category)});
   Object.keys(learn).forEach(k=>{learn[k]=mp(learn[k])});
   cfg.custom=[];cfg.catOv={};cfg.hide=['other','in_other'];cfg.catV=2;save();buildAll();
 }
@@ -2074,7 +2114,7 @@ function closeTopModal(){
   else if(cfT||cf.classList.contains('on'))closeCf();
   else if(gd._bk&&window.bkClose)window.bkClose();
   else if(gT||gd.classList.contains('on')){try{autoGd()}catch(e){}if(gd.classList.contains('on'))closeGoal()}
-  else if(eT||$('#ed').classList.contains('on')){try{if(eT&&pn(($('#eam')||{}).value)>0)saveEd()}catch(e){}if($('#ed').classList.contains('on'))closeEdit()}
+  else if(eT||$('#ed').classList.contains('on')){if($('#ed').classList.contains('on'))closeEdit()}   // v143: окно операции закрывается БЕЗ сохранения — сохраняет только кнопка «Сохранить» или Enter
   else if(sh.classList.contains('on')){inp.value='';closeSheet()}
   else return false;
   return true}
@@ -2247,7 +2287,7 @@ function templates(){const lim=ymd(new Date(Date.now()-120*864e5)),map={};
   tx.forEach(t=>{if(t.date<lim||!(t.amount>0)||t.oc)return;const k=t.type+'|'+t.category+'|'+norm(t.note||'')+'|'+t.amount;
     const o=map[k]||(map[k]={k,type:t.type,category:t.category,note:t.note||'',amount:t.amount,tags:t.tags||[],n:0,last:''});o.n++;if(t.date>=o.last){o.last=t.date;o.tags=t.tags||[]}});
   return Object.values(map).filter(o=>o.n>=3&&!cfg.tplHide.includes(o.k)).sort((a,b)=>b.n-a.n||b.last.localeCompare(a.last)).slice(0,8)}
-function renderTpl(){const el=$('#tpl');if(!el)return;tplC=templates();
+function renderTpl(){const el=$('#tpl');if(!el)return;tplC=templates();try{renderTpls()}catch(e){}
   el.scrollLeft=0;el.innerHTML=(tplC.length?'<span class="tqh">Возможно:</span>':'')+tplC.map((o,i)=>`<button class="tq" data-i="${i}">${E(cd(o.category).e)} ${E(o.note||cd(o.category).n)} ${o.type==='income'?'+':''}${fmt(o.amount)}</button>`).join('')}
 (()=>{const el=$('#tpl');let lp=null,hit=false;
   const hide=i=>{const o=tplC[i];if(!o)return;cfg.tplHide.push(o.k);save();renderTpl();toast('Шаблон скрыт','Отмена',()=>{cfg.tplHide=cfg.tplHide.filter(k=>k!==o.k);save();renderTpl()})};
@@ -3076,6 +3116,7 @@ ed.addEventListener('touchstart',e=>e.stopPropagation(),{passive:true});
 ed.addEventListener('touchmove',e=>e.stopPropagation(),{passive:true});
 function openEdit(id){if(isModalOpen())return;const t=tx.find(x=>x.id===id);if(!t)return;cancelGestures();lockBg(true);eT={...t,tags:[...(t.tags||[])]};renderEd();const row=document.querySelector('.r2[data-id="'+id+'"]');if(row)setOrigin(ed,row);ed.classList.add('on');ov.className='on'}
 function closeEdit(){ed.classList.remove('on');eT=null;unlockIfIdle();cancelGestures()}
+const _renderEd0=renderEd;
 function readEd(){if(!eT)return;const g=k=>{const el=$(k);return el?el.value:''};
   eT.amount=Math.max(0,pn(g('#eam')));eT.note=g('#eno').trim();{const cv=g('#eca');if(cv&&cv!=='__add')eT.category=cv}
   if(/^\d{4}-\d{2}-\d{2}$/.test(g('#eda')))eT.date=g('#eda');
@@ -3089,7 +3130,8 @@ ${t.oc?`<div class="eo">${fmt(t.oa)} ${E(t.oc)}</div>`:''}
 
 <label class="ef">Дата<input id="eda" type="date" value="${t.date}"></label>
 <div class="ef tgf"><div class="tgw">${(t.tags||[]).map(g=>`<button class="tgc" data-er="${E(g)}">#${E(g)} ×</button>`).join('')}<input id="etn" type="text" list="tgl" placeholder="например: #друзья" aria-label="Теги" autocomplete="off" autocorrect="off" spellcheck="false" autocapitalize="none" enterkeyhint="done"></div></div>
-<div class="shf"><button class="sm pr" id="esv">Сохранить</button></div>`}
+<div class="eac"><button type="button" class="eab" id="etp"></button><button type="button" class="eab" id="erp"></button></div>
+<div class="shf"><button type="button" class="sm del" id="edel">Удалить</button><button type="button" class="sm pr" id="esv">Сохранить</button></div>`}
 /* v132: окно операции монтируется один раз (renderEd в openEdit); дальше обновляются только изменившиеся узлы.
    Раньше смена типа/категории/тега пересоздавала innerHTML: поля терялись, фокус и клавиатура сбрасывались, окно мигало. */
 function patchEdTags(){const w=ed.querySelector('.tgw'),i=$('#etn');if(!w||!i||!eT){if(eT)renderEd();return}
@@ -3118,9 +3160,11 @@ ed.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!eT)re
   if(b.dataset.er){readEd();eT.tags=eT.tags.filter(g=>g!==b.dataset.er);patchEdTags();return}
   if(b.dataset.es){readEd();addTags(eT,b.dataset.es);patchEdTags();return}
   if(b.dataset.et){readEd();if(eT.type!==b.dataset.et){eT.type=b.dataset.et;eT.category=detect(eT.note,eT.note,eT.type)}eT.addCat=false;patchEd();return}
+  if(b.id==='etp'){edTpl();return}if(b.id==='erp'){edRepeat();return}
   if(b.id==='esv')saveEd();else if(b.id==='edel')delEd();else if(b.id==='ecl')closeEdit()});
 ed.addEventListener('click',e=>{const b=e.target.closest('#eca');if(!b||!eT)return;e.preventDefault();readEd();openCp(eT.type,eT.category,id=>{if(eT){eT.category=id;patchEd()}},()=>{if(eT)patchEd()})});
-ed.addEventListener('keydown',e=>{if(eT&&e.key==='Enter'&&(e.target.id==='eam'||e.target.id==='eno')){e.preventDefault();e.target.blur();return}if(!eT)return;if(e.target.id==='etn'&&(e.key==='Enter'||e.key===',')){e.preventDefault();readEd();patchEdTags();return}
+ed.addEventListener('keydown',e=>{if(!eT)return;   // v143: Enter в сумме и заметке сохраняет; в тегах Enter добавляет набранный тег, а в пустом поле тегов — сохраняет
+  if(e.target.id==='etn'&&(e.key===','||(e.key==='Enter'&&e.target.value.trim()))){e.preventDefault();readEd();patchEdTags();return}
   if(e.key==='Enter'&&e.target.tagName==='INPUT'&&e.target.type!=='date'){e.preventDefault();saveEd()}});
 $('#body').addEventListener('click',e=>{if(isModalOpen())return;const d=e.target.dataset;const r2=e.target.closest('.r2[data-id]');if(r2){openEdit(r2.dataset.id);return}const go=e.target.closest('[data-go]');if(go){if(go.dataset.go==='rec'){fab.click();setTimeout(()=>{try{openRc()}catch(x){}},600)}else goDebts();return}const dy=e.target.closest('.cc[data-day]');if(dy){openDay(dy.dataset.day);return}const lkb=e.target.closest('[data-lk]');if(lkb){linkToggle(lkb);return}const da=e.target.closest('[data-da]');if(da){debtAct(da);return}const mo2=e.target.closest('[data-mo]');if(mo2){TSEL=mo2.dataset.mo;render();return}if(d.tn){TN=+d.tn;render();softIn(false);return}const la=e.target.closest('[data-la]');if(la){limAct(la);return}const ga=e.target.closest('[data-ga]');if(ga){goalAct(ga);return}if(d.ps){ps=d.ps;render();softIn(true);return}const nv=e.target.closest('[data-nv]');if(nv){navStats(+nv.dataset.nv);return}if(e.target.closest('[data-tips]')){tipsOpen=!tipsOpen;_tipsF=tipsOpen;render();_tipsF=false;return}if(d.kd){KD=d.kd;render();softIn(false);return}if(d.rg){RG=d.rg;WO=woFor(month);render();softIn(false);return}if(d.tr){TR=d.tr;ftagR=null;render();softIn(false);return}if(d.as){AS=d.as;render();softIn(true);return}const tg=e.target.closest('.pl[data-tag]');if(tg){if(tab==='stats')openTag(tg.dataset.tag,{...lastRange},'stats');else openTag(tg.dataset.tag);return}openCat(e.target.closest('.pl[data-cat],.lr[data-cat]'))});
 $('#body').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const r2=e.target.closest&&e.target.closest('.r2[data-id]');if(r2){e.preventDefault();openEdit(r2.dataset.id);return}const tg=e.target.closest&&e.target.closest('.pl[data-tag]');if(tg){e.preventDefault();openTag(tg.dataset.tag);return}const p=e.target.closest&&e.target.closest('.pl[data-cat]');if(p){e.preventDefault();openCat(p)}}});
@@ -3938,6 +3982,7 @@ function applyMerge(d,o){const {add,sid,isHex,hadTx}=o;
     if(d.cfg&&Array.isArray(d.cfg.debts))d.cfg.debts.forEach(x=>{const id=x&&sid(x.id);if(!id||cfg.debts.some(y=>y.id===id))return;const am=Number(x.amount);if(!(am>0))return;
       cfg.debts.push({id,who:String(x.who||'Без имени').slice(0,40),dir:x.dir==='out'?'out':'in',amount:am,paid:Math.max(0,Math.min(am,Number(x.paid)||0)),due:/^\d{4}-\d{2}-\d{2}$/.test(String(x.due))?String(x.due):'',closed:/^\d{4}-\d{2}-\d{2}$/.test(String(x.closed))?String(x.closed):'',created:/^\d{4}-\d{2}-\d{2}$/.test(String(x.created))?String(x.created):ymd(new Date()),log:[]})});
     if(d.cfg&&Array.isArray(d.cfg.rec))d.cfg.rec.forEach(x=>{const id=x&&sid(x.id);if(!id||cfg.rec.some(y=>y.id===id))return;const r=recClean(x,id);if(r)cfg.rec.push(r)});
+    if(d.cfg&&Array.isArray(d.cfg.tpls))d.cfg.tpls.forEach(x=>{const r=tplClean(x);if(r&&!cfg.tpls.some(y=>y.id===r.id))cfg.tpls.push(r)});
     if(d.cfg){const c=d.cfg;if(Array.isArray(c.cc))c.cc.forEach(k=>{if(/^[A-Z]{3}$/.test(k)&&!codes().includes(k))cfg.cc.push(k)});const CS=codes();
       if(!hadTx&&CS.includes(c.cur)&&c.cur!==cfg.cur){cfg.cur=c.cur;cfg.rates={}}
       if(c.cur===cfg.cur&&c.rates&&typeof c.rates==='object')CS.forEach(k=>{const v=Number(c.rates[k]);if(k!==cfg.cur&&v>0&&!(parseFloat(cfg.rates[k])>0))cfg.rates[k]=v});
@@ -3961,7 +4006,7 @@ tx.forEach(t=>{t.amount=Number.isFinite(+t.amount)?Math.abs(+t.amount):0;if(type
   if(typeof t.category!=='string'||!t.category)t.category=t.type==='income'?'in_other':'other';
   if(typeof t.note!=='string')t.note=t.note==null?'':String(t.note);
   if(Array.isArray(t.tags))t.tags=t.tags.filter(g=>typeof g==='string'&&g);else delete t.tags});
-if(!cfg.rates)cfg.rates={};if(!Array.isArray(cfg.cc))cfg.cc=[];if(!Array.isArray(cfg.curList))cfg.curList=[];if(!cfg.custom)cfg.custom=[];if(!cfg.catOv)cfg.catOv={};if(!cfg.limits||typeof cfg.limits!=='object')cfg.limits={};if(!Array.isArray(cfg.goals))cfg.goals=[];if(!Array.isArray(cfg.debts))cfg.debts=[];if(!Array.isArray(cfg.tplHide))cfg.tplHide=[];if(!Array.isArray(cfg.hide))cfg.hide=[];if(typeof cfg.carry!=='boolean')cfg.carry=true;if(typeof cfg.carryBud!=='boolean')cfg.carryBud=true;if(!/^\d{4}-\d{2}$/.test(cfg.budOffFrom||''))cfg.budOffFrom=shiftMonth(curM(),1);if(!/^\d{4}-\d{2}$/.test(cfg.carryFrom||''))cfg.carryFrom=curM();delete cfg.openBal;tx=tx.filter(t=>!t.goal);tx.forEach(t=>{if(t.category==='savings')t.category='other';else if(t.category==='savout')t.category='in_other'});
+if(!cfg.rates)cfg.rates={};if(!Array.isArray(cfg.cc))cfg.cc=[];if(!Array.isArray(cfg.curList))cfg.curList=[];if(!cfg.custom)cfg.custom=[];if(!cfg.catOv)cfg.catOv={};if(!cfg.limits||typeof cfg.limits!=='object')cfg.limits={};if(!Array.isArray(cfg.goals))cfg.goals=[];if(!Array.isArray(cfg.debts))cfg.debts=[];if(!Array.isArray(cfg.tplHide))cfg.tplHide=[];if(!Array.isArray(cfg.tpls))cfg.tpls=[];if(!Array.isArray(cfg.hide))cfg.hide=[];if(typeof cfg.carry!=='boolean')cfg.carry=true;if(typeof cfg.carryBud!=='boolean')cfg.carryBud=true;if(!/^\d{4}-\d{2}$/.test(cfg.budOffFrom||''))cfg.budOffFrom=shiftMonth(curM(),1);if(!/^\d{4}-\d{2}$/.test(cfg.carryFrom||''))cfg.carryFrom=curM();delete cfg.openBal;tx=tx.filter(t=>!t.goal);tx.forEach(t=>{if(t.category==='savings')t.category='other';else if(t.category==='savout')t.category='in_other'});
 }
 // полная замена данных (облако Telegram): состояние становится таким, как в облаке
 function applyReplace(d){
@@ -4036,7 +4081,7 @@ function delCat(id){const c=cd(id);if(CPROT.includes(id))return;
     const fb=INC.has(id)?'in_other':'other';
     tx.forEach(t=>{if(t.category===id)t.category=fb});drafts.forEach(t=>{if(t.category===id)t.category=fb});
     if(eT&&eT.category===id)eT.category=fb;
-    Object.keys(learn).forEach(k=>{if(learn[k]===id)delete learn[k]});(cfg.rec||[]).forEach(r=>{if(r.category===id)r.category=fb});
+    Object.keys(learn).forEach(k=>{if(learn[k]===id)delete learn[k]});(cfg.rec||[]).forEach(r=>{if(r.category===id)r.category=fb});(cfg.tpls||[]).forEach(r=>{if(r.category===id)r.category=fb});
     if(c.custom){cfg.custom=cfg.custom.filter(x=>x.id!==id);tomb(id)}else cfg.hide=(cfg.hide||[]).filter(h=>h!==id).concat(id);
     delete cfg.catOv[id];delete cfg.limits[id];
     if(cfg.ord)['expense','income'].forEach(k=>{if(Array.isArray(cfg.ord[k]))cfg.ord[k]=cfg.ord[k].filter(x=>x!==id)});
@@ -4366,7 +4411,7 @@ function cpDel(){const s=cpS,c=cd(s.id);if(CPROT.includes(c.id))return;
     const id=c.id,fb=INC.has(id)?'in_other':'other';
     tx.forEach(t=>{if(t.category===id)t.category=fb});drafts.forEach(t=>{if(t.category===id)t.category=fb});
     if(eT&&eT.category===id)eT.category=fb;
-    Object.keys(learn).forEach(k=>{if(learn[k]===id)delete learn[k]});(cfg.rec||[]).forEach(r=>{if(r.category===id)r.category=fb});
+    Object.keys(learn).forEach(k=>{if(learn[k]===id)delete learn[k]});(cfg.rec||[]).forEach(r=>{if(r.category===id)r.category=fb});(cfg.tpls||[]).forEach(r=>{if(r.category===id)r.category=fb});
     if(c.custom){cfg.custom=cfg.custom.filter(x=>x.id!==id);tomb(id)}else cfg.hide=(cfg.hide||[]).filter(h=>h!==id).concat(id);
     delete cfg.catOv[id];delete cfg.limits[id];
     if(cfg.ord)['expense','income'].forEach(k=>{if(Array.isArray(cfg.ord[k]))cfg.ord[k]=cfg.ord[k].filter(x=>x!==id)});
@@ -4489,7 +4534,7 @@ function applyRec(){const td=ymd(new Date()),add=[];
   return add.length}
 const rcDef=type=>type==='income'?'in_other':'other';
 const RSEL=(id,arr,v)=>`<select id="${id}">${arr.map(([k,l])=>`<option value="${k}"${String(v)===String(k)?' selected':''}>${l}</option>`).join('')}</select>`;
-function rcFormHtml(){const f=rcS.f,inc=f.type==='income',ed=!!rcS.id,fr=f.freq,r0=ed&&cfg.rec.find(x=>x.id===rcS.id),ps=!!(r0&&r0.paused),vis=on=>on?'':' style="display:none"';
+function rcFormHtml(){const f=rcS.f,inc=f.type==='income',ed=!!rcS.id,fr=f.freq,r0=ed&&cfg.rec.find(x=>x.id===rcS.id),ps=!!(r0&&r0.paused),vis=on=>on?'':' hidden';   // v144: hidden, а не style — общее правило полей окна (display:block!important) перебивало inline-стиль, и лишние поля были видны
   return `<div class="rct"><span>${ed?'Повторяющаяся операция':'Новая повторяющаяся'}</span><button class="x" data-rc="back" aria-label="Назад" style="font-size:20px;padding:4px 6px">×</button></div>
 <div class="rce"><span class="sgm"><button data-rt="expense" class="${inc?'':'on'}">Расход</button><button data-rt="income" class="${inc?'on':''}">Доход</button></span></div>
 <label class="ef">Сумма, ${E(cfg.cur)}<input id="rca" inputmode="decimal" value="${E(f.amount)}" placeholder="0" autocomplete="off"></label>
@@ -4503,9 +4548,10 @@ function rcFormHtml(){const f=rcS.f,inc=f.type==='income',ed=!!rcS.id,fr=f.freq,
 <label class="ef">Платежей всего<input id="rcq" inputmode="numeric" value="${E(f.cnt)}" placeholder="без конца" autocomplete="off"></label>
 <label class="ef">Закончить<input id="rce" type="date" value="${E(f.end)}"></label>
 <div class="rch">Запись создаётся сама в нужный день. Для рассрочки укажите число платежей (например, 6) или дату окончания — после неё записи появляться не будут. Если в месяце нет такого числа (например, 31-го), запись появится в последний день месяца.${ps?' Сейчас повтор на паузе.':''}</div>
-<div class="shf">${ed?`<button class="sm del" data-rc="del">Удалить</button><button class="sm" data-rc="pause">${ps?'Возобновить':'Пауза'}</button>`:'<button class="sm" data-rc="back">Назад</button>'}<button class="sm pr" data-rc="save">Сохранить</button></div>`}
+<div class="shf">${ed&&rcS.from!=='ed'?`<button class="sm del" data-rc="del">Удалить</button><button class="sm" data-rc="pause">${ps?'Возобновить':'Пауза'}</button>`:'<button class="sm" data-rc="back">Отменить</button>'}<button class="sm pr" data-rc="save">Сохранить</button></div>`}
 function rcRender(){if(!rcS)return;
   if(rcS.view==='form'){rcEl.innerHTML=rcFormHtml();return}
+  if(rcS.view==='tpl'){rcEl.innerHTML=tplFormHtml();return}
   const L=cfg.rec;
   rcEl.innerHTML=`<div class="rct"><span>Повторяющиеся операции</span><button class="x" data-rc="close" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div>`+
     (L.length?`<div class="rch" style="padding:0 0 6px">Нажмите на операцию, чтобы изменить её. Кнопка справа — пауза.</div><div class="rcl">${L.map(r=>{const c=cd(r.category),inc=r.type==='income',nx=recNext(r),left=recLeft(r),parts=[cap(recText(r))];
@@ -4516,7 +4562,7 @@ function rcRender(){if(!rcS)return;
     `<div class="rcf"><button class="sm pr" data-rc="new">+ Добавить</button></div>`}
 function rcCollect(){if(!rcS||rcS.view!=='form'||!$('#rca'))return;const f=rcS.f;
   f.amount=$('#rca').value;f.note=$('#rcn').value;f.category=$('#rcc').value;f.freq=$('#rcf').value;f.mode=$('#rcm').value;f.wd=$('#rcw').value;f.mon=$('#rcy').value;f.day=$('#rcd').value;f.cnt=$('#rcq').value;f.end=$('#rce').value}
-function rcVis(){if(!rcS||rcS.view!=='form')return;const f=rcS.f,fr=f.freq,show=(id,on)=>{const e=$('#'+id);if(e)e.style.display=on?'':'none'};
+function rcVis(){if(!rcS||rcS.view!=='form')return;const f=rcS.f,fr=f.freq,show=(id,on)=>{const e=$('#'+id);if(e)e.hidden=!on};
   show('rcmw',fr==='month');show('rcww',fr==='week');show('rcyw',fr==='year');show('rcdw',(fr==='month'&&f.mode==='day')||fr==='year')}
 function rcForm(id){const r=id&&cfg.rec.find(x=>x.id===id),now=new Date();let f;
   if(r)f={type:r.type,amount:String(r.amount),note:r.note,category:r.category,freq:r.freq||'month',mode:r.mode,day:String(r.day||1),wd:String(r.wd|0),mon:String(r.mon|0),cnt:'',end:r.end||''};
@@ -4537,11 +4583,16 @@ function rcSave(){rcCollect();const f=rcS.f,am=pn(f.amount),td=ymd(new Date());
   if(cnt>0){const tmp={...(r||{}),...base},st=r?r.start:td,from=st>td?st:td;
     end=recGen(tmp,from,(new Date().getFullYear()+60)+'-12-31').filter(d=>d>((r&&r.done)||''))[cnt-1]||''}
   if(r)Object.assign(r,base);
-  else{r={id:uid(),...base,start:td,end:'',done:'',paused:false};cfg.rec.push(r)}
+  else{r={id:uid(),...base,start:td,end:'',done:'',paused:false};
+    // v144: повтор, созданный из операции, начинается с её даты, и сама операция считается первой записью (без дубля)
+    const sd=rcS.seed;if(sd&&/^\d{4}-\d{2}-\d{2}$/.test(sd.date||'')&&sd.date<=td){r.start=sd.date;r.done=sd.date}
+    cfg.rec.push(r);if(sd){const o=tx.find(x=>x.id===sd.txid);if(o)o.rid=r.id;if(eT&&eT.id===sd.txid)eT.rid=r.id}}
   r.end=end;
   const n=applyRec();save();if(n)render();
+  const nx=recNext(r),msg=n?'Повтор сохранён · запись на сегодня добавлена':nx?'Повтор сохранён · следующая: '+recDate(nx):'Повтор сохранён';
+  if(rcS.from==='ed'){closeRc();edActs();toast(msg);return}   // v144: из окна операции — сохранили и вернулись в него
   rcS={view:'list',st:!!(rcS&&rcS.st)};rcRender();rcEl.scrollTop=0;
-  const nx=recNext(r);toast(n?'Сохранено · запись на сегодня добавлена':nx?'Сохранено · следующая: '+recDate(nx):'Сохранено')}
+  toast(msg.replace('Повтор сохранён','Сохранено'))}
 function rcDel(){const i=cfg.rec.findIndex(x=>x.id===rcS.id);if(i<0){rcS={view:'list',st:!!(rcS&&rcS.st)};rcRender();return}
   const it=cfg.rec[i];cfg.rec.splice(i,1);tomb(it.id);save();rcS={view:'list',st:!!(rcS&&rcS.st)};rcRender();
   toast('Повтор удалён','Отмена',()=>{untomb(it.id);cfg.rec.splice(Math.min(i,cfg.rec.length),0,it);save();if(rcS&&rcS.view==='list')rcRender()},'del')}
@@ -4566,16 +4617,79 @@ rcEl.addEventListener('click',e=>{const b=e.target.closest('button')||e.target.c
   if(a==='close')closeRc();
   else if(a==='new')rcForm(null);
   else if(a==='edit')rcForm(b.dataset.id);
-  else if(a==='back'){rcS={view:'list',st:!!(rcS&&rcS.st)};rcRender()}
+  else if(a==='back'){if(rcS.from==='ed'||rcS.from==='sh'){closeRc();return}rcS={view:'list',st:!!(rcS&&rcS.st)};rcRender()}
+  else if(a==='tsave')tplSave();
+  else if(a==='tdel')tplDel();
+  else if(b.dataset.tt&&rcS.view==='tpl'){tplCollect();const f=rcS.f;f.type=b.dataset.tt;if(!ALL.some(c=>c.id===f.category&&c.inc===(f.type==='income')))f.category=rcDef(f.type);rcRender()}
   else if(a==='save')rcSave();
   else if(a==='del')rcDel();
   else if(a==='pause')rcPause(b.dataset.id||rcS.id);
   else if(b.dataset.rt&&rcS.view==='form'){rcCollect();const f=rcS.f;f.type=b.dataset.rt;
     if(!ALL.some(c=>c.id===f.category&&c.inc===(f.type==='income')))f.category=rcDef(f.type);rcRender()}});
 rcEl.addEventListener('change',e=>{if(!rcS||rcS.view!=='form')return;if(e.target.id==='rcf'||e.target.id==='rcm'){rcCollect();rcVis()}});
-rcEl.addEventListener('keydown',e=>{if(rcS&&rcS.view==='list'&&(e.key==='Enter'||e.key===' ')&&e.target.classList&&e.target.classList.contains('rcr')){e.preventDefault();e.target.click();return}if(rcS&&rcS.view==='form'&&e.key==='Enter'&&e.target.tagName==='INPUT'){e.preventDefault();rcSave()}});
+rcEl.addEventListener('keydown',e=>{if(rcS&&rcS.view==='list'&&(e.key==='Enter'||e.key===' ')&&e.target.classList&&e.target.classList.contains('rcr')){e.preventDefault();e.target.click();return}if(rcS&&rcS.view==='form'&&e.key==='Enter'&&e.target.tagName==='INPUT'){e.preventDefault();rcSave()}if(rcS&&rcS.view==='tpl'&&e.key==='Enter'&&e.target.tagName==='INPUT'){e.preventDefault();tplSave()}});
 ['pointerdown','pointermove','pointerup'].forEach(ev=>rcEl.addEventListener(ev,e=>e.stopPropagation()));
 ['touchstart','touchmove'].forEach(ev=>rcEl.addEventListener(ev,e=>e.stopPropagation(),{passive:true}));
+// ================= v144: шаблоны и повтор из окна операции =================
+// Шаблон — заготовка операции (тип, сумма, название, категория, теги). Хранится в cfg.tpls и уходит в облако вместе с настройками.
+// В окне добавления (кнопка «+») шаблоны показаны списком под строкой ввода: нажатие кладёт операцию на проверку, «Добавить» записывает.
+const IC_BM='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5h11a1 1 0 0 1 1 1v16l-6.5-4-6.5 4v-16a1 1 0 0 1 1-1z"/></svg>';
+const IC_BMF='<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5h11a1 1 0 0 1 1 1v16l-6.5-4-6.5 4v-16a1 1 0 0 1 1-1z"/></svg>';
+const IC_RP='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg>';
+const IC_PEN='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>';
+function tplClean(x){if(!x||typeof x!=='object')return null;const am=Math.round((+x.amount||0)*100)/100,type=x.type==='income'?'income':'expense';
+  return{id:String(x.id||uid()).replace(/[^\w-]/g,'').slice(0,40)||uid(),type,amount:am>0?am:0,category:String(x.category||'').replace(/[^\w-]/g,'').slice(0,40)||rcDef(type),
+    note:String(x.note||'').slice(0,60),tags:Array.isArray(x.tags)?x.tags.map(t=>String(t).slice(0,30)).filter(Boolean).slice(0,10):[],...(x.src?{src:String(x.src).replace(/[^\w-]/g,'').slice(0,40)}:{})}}
+// шаблон этой операции: созданный из неё (src) или совпадающий по содержимому
+const tplOf=t=>t&&(cfg.tpls.find(x=>x.src&&x.src===t.id)||cfg.tpls.find(x=>x.type===t.type&&x.category===t.category&&norm(x.note||'')===norm(t.note||'')&&x.amount===t.amount));
+// подписи «В шаблоны / Повторять» в окне операции: если операция уже в шаблонах или повторяется — так и пишем
+function edActs(){if(!eT)return;const a=$('#etp'),b=$('#erp');if(!a||!b)return;
+  const inT=!!tplOf(eT),rr=eT.rid&&cfg.rec.find(x=>x.id===eT.rid);
+  a.innerHTML=(inT?IC_BMF:IC_BM)+'<span>'+(inT?'В шаблонах':'В шаблоны')+'</span>';a.classList.toggle('on',inT);
+  b.innerHTML=IC_RP+'<span>'+(rr?'Повторяется':'Повторять')+'</span>';b.classList.toggle('on',!!rr)}
+renderEd=function(){_renderEd0();edActs()};
+const _patchEd0=patchEd;patchEd=function(){_patchEd0();edActs()};
+// открыть окно шаблона/повтора поверх текущего окна (операции или добавления)
+function rcOver(st){if(rcS)return;if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+  rcS=st;rcRender();rcEl.scrollTop=0;
+  ['sh','ed','gd','cf'].forEach(id=>{const e=$('#'+id);if(e&&e.classList.contains('on'))e.classList.add('sub')});
+  try{setOrigin(rcEl)}catch(e){}rcEl.classList.add('on');ov.className='on';syncSub()}
+function edTpl(){if(!eT)return;readEd();if(!(eT.amount>0)){toast('Сначала укажите сумму');return}const t0=tplOf(eT);
+  rcOver({view:'tpl',from:'ed',id:t0?t0.id:null,f:t0?{...t0,amount:String(t0.amount)}:{type:eT.type,amount:String(eT.amount),note:eT.note||cd(eT.category).n,category:eT.category,tags:[...(eT.tags||[])]}})}
+function edRepeat(){if(!eT)return;readEd();if(!(eT.amount>0)){toast('Сначала укажите сумму');return}
+  const r=eT.rid&&cfg.rec.find(x=>x.id===eT.rid);
+  if(r){rcForm(r.id);const st={...rcS,from:'ed'};rcS=null;rcOver(st);return}   // уже повторяется — открываем это правило
+  const d=eT.date||ymd(new Date()),dd=rcPd(d);
+  rcOver({view:'form',from:'ed',id:null,seed:{date:d,txid:eT.id},f:{type:eT.type,amount:String(eT.amount),note:eT.note||cd(eT.category).n,category:eT.category,freq:'month',mode:'day',day:String(+d.slice(8)),wd:String((dd.getDay()+6)%7),mon:String(+d.slice(5,7)-1),cnt:'',end:''}})}
+function tplFormHtml(){const f=rcS.f,inc=f.type==='income',ed=!!rcS.id;
+  return `<div class="rct"><span>${ed?'Шаблон':'Новый шаблон'}</span><button class="x" data-rc="back" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div>
+<div class="rce"><span class="sgm"><button data-tt="expense" class="${inc?'':'on'}">Расход</button><button data-tt="income" class="${inc?'on':''}">Доход</button></span></div>
+<label class="ef">Название<input id="tpn" type="text" value="${E(f.note)}" placeholder="Например: Кофе" maxlength="60" autocomplete="off"></label>
+<label class="ef">Сумма, ${E(cfg.cur)}<input id="tpa" inputmode="decimal" value="${E(f.amount)}" placeholder="0" autocomplete="off"></label>
+<label class="ef">Категория<select id="tpc">${opts(f.type,f.category)}</select></label>
+${f.tags&&f.tags.length?`<div class="rch">Теги: ${f.tags.map(t=>'#'+E(t)).join(' ')}</div>`:''}
+<div class="rch">Шаблон появится в окне добавления (кнопка «+» вверху справа) — одно нажатие, и операция готова к записи.</div>
+<div class="shf">${ed?'<button class="sm del" data-rc="tdel">Удалить</button>':''}<button class="sm" data-rc="back">Отменить</button><button class="sm pr" data-rc="tsave">Сохранить</button></div>`}
+function tplCollect(){if(!rcS||rcS.view!=='tpl'||!$('#tpa'))return;const f=rcS.f;f.note=$('#tpn').value;f.amount=$('#tpa').value;f.category=$('#tpc').value}
+function tplSave(){tplCollect();const f=rcS.f,am=pn(f.amount);if(!(am>0)){toast('Укажите сумму');return}
+  const cat=f.category||rcDef(f.type),note=(f.note||'').trim().slice(0,60)||cd(cat).n;
+  let t=rcS.id&&cfg.tpls.find(x=>x.id===rcS.id);const base={type:f.type,amount:am,category:cat,note,tags:Array.isArray(f.tags)?f.tags.slice(0,10):[]};
+  if(t)Object.assign(t,base);else{t={id:uid(),...base,...(rcS.from==='ed'&&eT?{src:eT.id}:{})};cfg.tpls.push(t)}
+  save();const from=rcS.from;closeRc();if(from==='ed')edActs();renderTpls();toast('Шаблон сохранён')}
+function tplDel(){const i=cfg.tpls.findIndex(x=>x.id===rcS.id);if(i<0){closeRc();return}const it=cfg.tpls[i],from=rcS.from;
+  cfg.tpls.splice(i,1);save();closeRc();if(from==='ed')edActs();renderTpls();
+  toast('Шаблон удалён','Отмена',()=>{cfg.tpls.splice(Math.min(i,cfg.tpls.length),0,it);save();renderTpls();if(eT)edActs()},'del')}
+// список шаблонов в окне добавления
+function renderTpls(){const el=$('#tpls');if(!el)return;const L=cfg.tpls||[];
+  el.innerHTML='<div class="tph">Шаблоны</div>'+(L.length?'<div class="tpl-l">'+L.map(t=>{const c=cd(t.category),inc=t.type==='income';
+    return `<div class="tpr" data-id="${E(t.id)}" role="button" tabindex="0"><span class="tpe">${E(c.e)}</span><span class="tpt"><b>${E(t.note||c.n)}</b><small>${E(c.n)}</small></span><span class="tpa ${inc?'inc':'exp'}">${inc?'+':'−'}${fmt(t.amount)}</span><button type="button" class="tpx" data-te="${E(t.id)}" aria-label="Изменить шаблон">${IC_PEN}</button></div>`}).join('')+'</div>'
+    :'<div class="tp0">Здесь появятся операции, которые вы сохраните как шаблон. Откройте любую операцию и нажмите «В шаблоны».</div>')}
+(()=>{const el=$('#tpls');if(!el)return;
+  const use=id=>{const t=cfg.tpls.find(x=>x.id===id);if(!t)return;
+    drafts.push({id:uid(),type:t.type,amount:t.amount,category:t.category,note:t.note||cd(t.category).n,date:ymd(new Date()),...(t.tags&&t.tags.length?{tags:[...t.tags]}:{})});renderRev()};
+  el.addEventListener('click',e=>{const x=e.target.closest('.tpx');if(x){const t=cfg.tpls.find(y=>y.id===x.dataset.te);if(t)rcOver({view:'tpl',from:'sh',id:t.id,f:{...t,amount:String(t.amount),tags:[...(t.tags||[])]}});return}
+    const r=e.target.closest('.tpr');if(r)use(r.dataset.id)});
+  el.addEventListener('keydown',e=>{const r=e.target.closest&&e.target.closest('.tpr');if(r&&(e.key==='Enter'||e.key===' ')){e.preventDefault();use(r.dataset.id)}})})();
 // при запуске и когда возвращаетесь в приложение — создаём наступившие записи
 const _recN=applyRec();
 function recTick(){if(isModalOpen())return;if(applyRec()){render();toast('Добавлена повторяющаяся операция')}}
@@ -4888,7 +5002,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v142';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v144';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}   // номер сборки виден внизу экрана: по нему понятно, обновился ли Telegram до новой версии
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
