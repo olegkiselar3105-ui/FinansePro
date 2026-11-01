@@ -1150,7 +1150,7 @@ html.plk #lk,#lk.on{visibility:visible;opacity:1;transform:none;pointer-events:a
 </style>
 <style id="v68">
 /* v68: главный блок (месяц + остаток/доход/расход) неподвижный, список заезжает под него; блок полупрозрачный, сквозь него виден размытый список */
-#top{position:sticky;top:max(calc(8px + var(--topgap,40px)),calc(var(--sat) + 8px));z-index:8;   /* v120: при прокрутке основной блок держится на две строки ниже верха (--topgap) */
+#top{position:relative;z-index:8;   /* v151: блок не прилипает к верху — уезжает вместе со списком (см. кнопку «наверх», #totop) */
   background:linear-gradient(180deg,color-mix(in srgb,var(--tp1) 62%,transparent),color-mix(in srgb,var(--tp2) 54%,transparent));
   -webkit-backdrop-filter:blur(22px) saturate(1.7);backdrop-filter:blur(22px) saturate(1.7);
   box-shadow:inset 0 .5px 0 rgba(var(--wr),.16),0 8px 24px rgba(0,0,0,.20)}
@@ -1498,6 +1498,15 @@ html:root #rc .shf .sm.del{order:1}html:root #rc .shf .sm:not(.pr):not(.del){ord
 #pkr[data-s=a]{transform:translate3d(0,8px,0) scale(.97);transform-origin:50% 100%}
 #pkr.on,#pkr.on[data-s]{transform:none}
 @media (prefers-reduced-motion:reduce){#pkr,#pkr.on{transition:none}}
+/* v151: кнопка «наверх» — над вкладкой «Настройки», появляется, когда главный блок ушёл из вида */
+#totop{position:fixed;z-index:9;right:calc(var(--rx,16px) + 8px);bottom:calc(14px + var(--sab) + var(--tbh,63px) + 12px);width:48px;height:48px;padding:0;border:0;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;color:var(--t);background:var(--gloss,none),var(--gbarT,rgba(34,34,38,.6));
+  -webkit-backdrop-filter:blur(20px) saturate(1.6);backdrop-filter:blur(20px) saturate(1.6);box-shadow:inset 0 .5px 0 rgba(var(--wr),.18),0 6px 20px rgba(0,0,0,.28);
+  visibility:hidden;opacity:0;transform:translate3d(0,16px,0) scale(.5);pointer-events:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;
+  transition:opacity .16s ease,transform .2s cubic-bezier(.4,0,1,1),visibility 0s .2s}
+#totop.on{visibility:visible;opacity:1;transform:none;pointer-events:auto;transition:opacity .2s ease,transform .44s cubic-bezier(.34,1.56,.64,1),visibility 0s}
+#totop.on:active{transform:scale(.88);transition:transform .12s ease}
+@media (prefers-reduced-motion:reduce){#totop,#totop.on{transition:none}}
 /* v146: свой календарь (не забирает фокус — клавиатура остаётся); нативные поля даты в окнах не принимают касания, их берёт подпись */
 :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc,#fp) input[type=date]{pointer-events:none}
 #dpk{position:fixed;z-index:70;width:min(304px,calc(100vw - 16px));padding:12px 12px 10px;border-radius:22px;background:var(--sb,#1e1e22);color:var(--t);box-shadow:0 12px 40px rgba(0,0,0,.35),0 0 0 .5px var(--sbd,rgba(255,255,255,.12));
@@ -3191,7 +3200,7 @@ $('#tabs').onclick=e=>{if(isModalOpen()||tbdBlock)return;const b=e.target.closes
 // so the next page is actually visible while dragging. Release continues from the finger's position.
 const bodyEl=$('#body'),GAP=16;
 let tp=null,tpBlock=false,tpRaf=0;
-const TP_SKIP='#lk,#lt0,#st .lt,#st .pf0,.swb,#top,#tabs,#fab,#thlp,#topact,.hd,#sp,#stw,#sh,#ed,#gd,#cf,#bq,#nc,#cp,#ov,#toast,#tour,input,select,textarea';
+const TP_SKIP='#totop,#lk,#lt0,#st .lt,#st .pf0,.swb,#top,#tabs,#fab,#thlp,#topact,.hd,#sp,#stw,#sh,#ed,#gd,#cf,#bq,#nc,#cp,#ov,#toast,#tour,input,select,textarea';
 const setLt0=t=>{const e=document.getElementById('lt0');if(!e)return;e.style.display=t==='settings'?'none':'';e.textContent=ttlOf(t)};
 const ttlOf=t=>t==='list'?(ftag?'#'+ftag+(fcat?' › '+cd(fcat.id).l:''):fcat?cd(fcat.id).l:fday?dayLbl(fday):'Операции'):t==='stats'?'Аналитика':t==='tags'?'Планы':t==='settings'?'Настройки':'Советы';
 const tabInd=()=>$('#tabs').querySelector('.ind');
@@ -3619,58 +3628,28 @@ function endMs(e,cancel){if(!ms||e.pointerId!==ms.id)return;const m=ms;ms=null;i
 topEl.addEventListener('pointerup',e=>endMs(e,false));topEl.addEventListener('pointercancel',e=>endMs(e,true));
 topEl.addEventListener('click',e=>{if(msBlock){e.stopPropagation();e.preventDefault()}},true);
 
-// ---------- сжатие главного блока при прокрутке списка ----------
-// Пока блок прилип к верху, по мере прокрутки он сужается до трёх цифр (остаток, доход, расход):
-// строка с месяцем, подпись «Остаток», кольцо бюджета и нижние строки плавно сворачиваются.
-// Место блока в потоке не меняется (margin-bottom), поэтому список не прыгает; путь прокрутки равен
-// высоте сжатия, так что список всё время остаётся на одном расстоянии под блоком.
+// v151: главный блок больше не прилипает к верху и не сжимается при прокрутке — уезжает вместе со списком.
+// Когда он ушёл из вида, справа внизу (над вкладкой «Настройки») появляется кнопка «наверх».
 (function(){
-  const sw=$('#tps'),sum=$('#sum');if(!sw||!sum)return;
-  const PR=['height','marginTop','marginBottom','paddingTop','paddingBottom'];
-  const SPEC=[['.mo',PR,1],['#sum > .sht',PR,1],['#sum > :not(.bw):not(.sht)',PR,1],['#sum .gg',['width','height'],1],['#sum .bl',['minHeight'],0]];
-  const px=v=>parseFloat(v)||0;
-  let T=[],tot=null,N={},H0=0,R=0,dirty=true,hid=true,lastP=-1,raf=0;
-  const obs=new MutationObserver(()=>{dirty=true;update()});
-  function clear(){
-    T.forEach(t=>{const s=t.e.style;t.pr.forEach(k=>{s[k]=''});s.opacity='';s.overflow='';s.pointerEvents=''});
-    const s=topEl.style;s.paddingTop='';s.paddingBottom='';s.marginBottom='';if(tot)tot.style.marginBottom=''}
-  function apply(p){
-    const k=1-p;
-    T.forEach(t=>{const s=t.e.style;t.pr.forEach((key,i)=>{s[key]=(t.n[i]*k)+'px'});
-      if(t.f){s.opacity=String(Math.max(0,1-p*1.7));s.overflow='hidden';s.pointerEvents=p>.4?'none':''}});
-    const s=topEl.style;s.paddingTop=(N.pt+8*p)+'px';s.paddingBottom=(N.pb-6*p)+'px';
-    if(tot)tot.style.marginBottom=(N.tm-6*p)+'px';
-    s.marginBottom=(N.mb+H0-topEl.offsetHeight)+'px'}
-  function measure(){
-    clear();T=[];tot=null;
-    const h=topEl.offsetHeight;if(!h)return false;
-    const cs=getComputedStyle(topEl);N={pt:px(cs.paddingTop),pb:px(cs.paddingBottom),mb:px(cs.marginBottom),tm:0};
-    SPEC.forEach(([q,pr,f])=>topEl.querySelectorAll(q).forEach(e=>{const c=getComputedStyle(e);T.push({e,pr,f,n:pr.map(k=>px(c[k]))})}));
-    tot=topEl.querySelector('.tot');if(tot)N.tm=px(getComputedStyle(tot).marginBottom);
-    H0=h;apply(1);R=Math.max(30,H0-topEl.offsetHeight);return true}
-  function core(){
-    raf=0;
-    if(!topEl.offsetHeight){hid=true;return}
-    if(dirty||hid){if(!measure())return;dirty=hid=false;lastP=-1}
-    const cs=getComputedStyle(topEl);
-    let p=(px(cs.top)-(sw.getBoundingClientRect().bottom+px(cs.marginTop)))/R;
-    try{if(active)p=0}catch(e){}
-    p=p>0?Math.min(1,Math.round(p*1000)/1000):0;
-    if(RM)p=p>=.5?1:0;   // «уменьшение движения»: без плавного сжатия — блок переключается сразу
-    if(p===lastP)return;lastP=p;
-    if(p===0)clear();else apply(p);
-    topEl.classList.toggle('cz',p>=.5)}
-  function update(){try{core()}finally{obs.takeRecords()}}
-  const kick=()=>{if(!raf)raf=requestAnimationFrame(update)};
+  const b=document.createElement('button');b.id='totop';b.type='button';b.tabIndex=-1;b.setAttribute('aria-label','Наверх');
+  b.innerHTML='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5.5"/><path d="M5.5 12L12 5.5 18.5 12"/></svg>';
+  document.body.appendChild(b);
+  let raf=0,shown=false,sat=0;
+  const satM=()=>{const d=document.createElement('div');d.style.cssText='position:fixed;height:var(--sat,0px)';document.body.appendChild(d);sat=d.offsetHeight;d.remove()};
+  const pos=()=>{const t=document.querySelector('#tabs [data-t="settings"]');if(!t)return;const r=t.getBoundingClientRect();if(r.width)b.style.right=Math.max(8,Math.round(window.innerWidth-(r.left+r.width/2)-24))+'px'};
+  function check(){raf=0;let gone;
+    if(isModalOpen())gone=false;
+    else if(topEl.offsetHeight)gone=topEl.getBoundingClientRect().bottom<sat+4;   // блок целиком ушёл за верх
+    else gone=(window.scrollY||0)>Math.max(240,window.innerHeight*.5);           // экраны без блока (настройки, поиск)
+    if(gone===shown)return;shown=gone;if(gone)pos();b.classList.toggle('on',gone)}
+  const kick=()=>{if(!raf)raf=requestAnimationFrame(check)};
   addEventListener('scroll',kick,{passive:true});
-  addEventListener('resize',()=>{dirty=true;kick()});
-  addEventListener('load',()=>{dirty=true;kick()});
-  try{['safeAreaChanged','contentSafeAreaChanged','fullscreenChanged'].forEach(ev=>TGW.onEvent(ev,()=>{dirty=true;kick()}))}catch(e){}   // вход/выход из полноэкранного режима меняет --sat — блок пересчитывает сжатие
-  // тап по свёрнутому блоку плавно возвращает список наверх (там снова видны месяц и стрелки)
-  topEl.addEventListener('click',e=>{if(!topEl.classList.contains('cz')||msBlock||isModalOpen())return;
-    e.preventDefault();e.stopPropagation();window.scrollTo({top:0,behavior:RM?'auto':'smooth'})},true);
-  obs.observe(topEl,{attributes:true,attributeFilter:['style']});obs.observe(sum,{childList:true});
-  requestAnimationFrame(()=>{dirty=true;update()});
+  addEventListener('resize',()=>{satM();if(shown)pos();kick()});
+  try{['safeAreaChanged','contentSafeAreaChanged','fullscreenChanged'].forEach(ev=>TGW.onEvent(ev,()=>{satM();kick()}))}catch(e){}
+  new MutationObserver(kick).observe(ov,{attributes:true,attributeFilter:['class']});   // открылось/закрылось окно
+  new MutationObserver(kick).observe(topEl,{attributes:true,attributeFilter:['style']});   // вкладка без блока
+  b.addEventListener('click',e=>{e.preventDefault();if(isModalOpen())return;try{settleAll()}catch(err){}window.scrollTo({top:0,behavior:RM?'auto':'smooth'})});
+  satM();kick();
 })();
 
 
@@ -5019,7 +4998,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v150';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v151';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}   // номер сборки виден внизу экрана: по нему понятно, обновился ли Telegram до новой версии
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
