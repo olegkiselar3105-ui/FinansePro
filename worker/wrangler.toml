@@ -1,20 +1,30 @@
-# Настройки воркера для деплоя через Wrangler (командная строка Cloudflare).
-# Пока воркер обновляется вставкой кода в панели Cloudflare, этот файл ни на что не влияет.
-# Перед первым деплоем через Wrangler впишите id из панели Cloudflare (Workers → finansepro → Settings → Bindings).
-# Секреты (BOT_TOKEN, GROQ_KEY, WEBHOOK_SECRET) сюда НЕ пишутся: только командой `npx wrangler secret put ИМЯ`.
+# Настройки воркера finansepro. Деплой — автоматически через Cloudflare Workers Builds
+# при слиянии в main (корневая папка сборки в настройках Builds: `worker`).
+#
+# Что берётся из этого файла при каждом деплое: код, имя, compatibility_date, привязки KV и D1.
+# Привязки в панели, которых нет здесь, будут УДАЛЕНЫ при деплое (данные в KV/D1 при этом не стираются).
+# Что остаётся из панели: секреты (BOT_TOKEN, GROQ_KEY, WEBHOOK_SECRET) — деплой их не трогает;
+# переменные (ALLOWED_IDS, DAILY_LIMIT, APP_URL) — сохраняются благодаря keep_vars = true.
+# Секреты сюда НЕ пишутся никогда: только в панели или командой `npx wrangler secret put ИМЯ`.
+# id привязок ниже — не секреты: без токена Cloudflare по ним ничего нельзя прочитать.
 
 name = "finansepro"
 main = "worker.js"
-compatibility_date = "2026-11-01"
+compatibility_date = "2026-10-01"
+
+# Адрес finansepro.<аккаунт>.workers.dev прописан в index.html (BOT_URL) и в webhook Telegram — не отключать
+workers_dev = true
 
 # Не стирать переменные, заданные в панели Cloudflare (ALLOWED_IDS, DAILY_LIMIT, APP_URL)
 keep_vars = true
 
+# Очередь сообщений (запасной вариант, если D1 не привязана). Код ищет env.INBOX || env.FIN.
 [[kv_namespaces]]
 binding = "FIN"
-id = "ВПИСАТЬ_ID_KV_ИЗ_ПАНЕЛИ"
+id = "36a1f124d42d43f08f0e2a562be85eca"
 
+# Основная очередь сообщений, счётчики дневного лимита, квитанции «✅ Записано»
 [[d1_databases]]
 binding = "DB"
-database_name = "ВПИСАТЬ_ИМЯ_БАЗЫ_ИЗ_ПАНЕЛИ"
-database_id = "ВПИСАТЬ_ID_БАЗЫ_ИЗ_ПАНЕЛИ"
+database_name = "finanse_inbox"
+database_id = "86448de3-bd97-4f7b-9128-5b091074a69d"
