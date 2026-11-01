@@ -376,7 +376,7 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:calc(110px 
 #nc #ncn,#nc #ncw{width:100%;text-align:left;color:var(--t);font-size:16px;border-bottom:.5px solid var(--l);padding:4px 0}
 #nc .ncb{display:flex;gap:8px;margin-top:18px}
 #nc .ncb .sm{flex:1;padding:10px 12px;font-size:14px;text-align:center}
-#sh.on.sub,#ed.on.sub,#gd.on.sub,#cf.on.sub,#cp.on.sub{transform:scale(.96);opacity:.5}
+#sh.on.sub,#ed.on.sub,#gd.on.sub,#cf.on.sub,#cp.on.sub,#rc.on.sub{transform:scale(.96);opacity:.5}
 #cp{position:fixed;left:16px;right:16px;max-width:420px;margin:0 auto;top:calc(var(--sat) + 72px + var(--vvt,0px));translate:0 calc(var(--ky,0px) + var(--fx,0px));z-index:44;border-radius:24px;padding:16px 14px 14px;display:block;visibility:hidden;opacity:0;pointer-events:none;transform:translateY(40px) scale(.95);transition:transform .3s cubic-bezier(.4,0,.2,1),opacity .2s ease,visibility 0s .3s,translate .45s cubic-bezier(.22,1,.36,1)}
 #cp.on{visibility:visible;opacity:1;pointer-events:auto;transform:none;transition:transform .5s cubic-bezier(.2,.95,.25,1.06),opacity .2s ease,visibility 0s,translate .45s cubic-bezier(.22,1,.36,1)}
 #cp .cpt0{font-size:15px;font-weight:500;margin:0 2px 12px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
@@ -589,7 +589,7 @@ html.ncv .dg{content-visibility:visible}
 :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc).on{transition:transform .8s var(--spring),opacity .28s ease-out,visibility 0s,translate .5s var(--ease)}
 #sh.on.fxl{transition:transform .8s var(--spring),opacity .28s ease-out,visibility 0s,translate 0s}
 /* окно под вторым окном (например, категория поверх операции) */
-#sh.on.sub,#ed.on.sub,#gd.on.sub,#cf.on.sub,#cp.on.sub{transform:scale(.95);opacity:.55}
+#sh.on.sub,#ed.on.sub,#gd.on.sub,#cf.on.sub,#cp.on.sub,#rc.on.sub{transform:scale(.95);opacity:.55}
 /* панель фильтров */
 #fp{transition:transform .4s var(--ease),opacity .26s ease .02s,visibility 0s .4s}
 #fp.open{transition:transform .8s var(--spring),opacity .26s ease-out,visibility 0s}
@@ -1432,9 +1432,10 @@ html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#r
   transition:transform .246s cubic-bezier(0,0,.17,1),visibility 0s,padding-bottom var(--kt)!important}
 html:root :is(#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#ed,#gd,#cf,#bq,#nc,#cp,#rc){touch-action:pan-y}
 /* вложенное окно сверху: нижнее не принимает касания и затемняется слоем ::after (касание уходит в затемнение и закрывает верхнее окно) */
-html:root :is(#sh,#ed,#gd,#cf):is(#sh,#ed,#gd,#cf):is(#sh,#ed,#gd,#cf).sub{pointer-events:none!important}
-html:root :is(#sh,#ed,#gd,#cf,#cp)::after{content:"";position:absolute;inset:0;border-radius:inherit;background:#000;opacity:0;pointer-events:none;transition:opacity .25s cubic-bezier(.26,.24,.25,1)}
-html:root :is(#sh,#ed,#gd,#cf,#cp).sub::after{opacity:.42}
+html:root :is(#sh,#ed,#gd,#cf,#rc):is(#sh,#ed,#gd,#cf,#rc):is(#sh,#ed,#gd,#cf,#rc).sub{pointer-events:none!important}
+html:root :is(#sh,#ed,#gd,#cf,#cp,#rc)::after{content:"";position:absolute;inset:0;border-radius:inherit;background:#000;opacity:0;pointer-events:none;transition:opacity .25s cubic-bezier(.26,.24,.25,1)}
+html:root :is(#sh,#ed,#gd,#cf,#cp,#rc).sub::after{opacity:.42}
+html:root #cp{z-index:46}   /* v150: плитки категорий открываются и поверх окна повтора/шаблона */
 /* v143: окно операции — внизу две кнопки: «Удалить» слева (мягкий красный, как «Удалить» в других окнах) и «Сохранить» справа (основная, как выбранная «Расх.») */
 html:root #ed .shf.shf{display:flex!important;align-items:center;justify-content:space-between;gap:10px;margin-top:18px;order:9}
 html:root #ed #esv.sm,html:root #ed #edel.sm{display:flex!important;align-items:center;justify-content:center;flex:1 1 0;width:auto;height:48px;padding:0 16px;border-radius:999px;font-size:15px;font-weight:600;letter-spacing:.01em;background-image:none;-webkit-tap-highlight-color:transparent;transition:transform .12s ease,opacity .12s ease}
@@ -1473,7 +1474,7 @@ html:root #rc .shf .sm.del{order:1}html:root #rc .shf .sm:not(.pr):not(.del){ord
 #sh.on #tpls{opacity:1;transform:none;transition:opacity .45s ease-out .14s,transform .65s cubic-bezier(.22,1,.36,1) .14s}
 @media (prefers-reduced-motion:reduce){#sh #tpls,#sh.on #tpls{transition:none}}
 /* v147: своё меню выбора; системные списки в окнах не принимают касания (их берёт строка), обводки фокуса нет */
-:is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc) select{pointer-events:none}
+:is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc,#fp) select{pointer-events:none}
 :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc) :is(input,select,textarea,button):focus{outline:none!important}
 :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc) label{-webkit-tap-highlight-color:transparent}
 #pkr{position:fixed;z-index:72;left:max(8px,calc(50% - 260px));right:max(8px,calc(50% - 260px));display:flex;flex-direction:column;border-radius:24px;background:var(--sb,#1e1e22);color:var(--t);
@@ -1498,7 +1499,7 @@ html:root #rc .shf .sm.del{order:1}html:root #rc .shf .sm:not(.pr):not(.del){ord
 #pkr.on,#pkr.on[data-s]{transform:none}
 @media (prefers-reduced-motion:reduce){#pkr,#pkr.on{transition:none}}
 /* v146: свой календарь (не забирает фокус — клавиатура остаётся); нативные поля даты в окнах не принимают касания, их берёт подпись */
-:is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc) input[type=date]{pointer-events:none}
+:is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc,#fp) input[type=date]{pointer-events:none}
 #dpk{position:fixed;z-index:70;width:min(304px,calc(100vw - 16px));padding:12px 12px 10px;border-radius:22px;background:var(--sb,#1e1e22);color:var(--t);box-shadow:0 12px 40px rgba(0,0,0,.35),0 0 0 .5px var(--sbd,rgba(255,255,255,.12));
   visibility:hidden;opacity:0;transform:scale(.96);transform-origin:50% 0;transition:opacity .16s ease,transform .2s cubic-bezier(0,0,.17,1),visibility 0s .2s;-webkit-user-select:none;user-select:none;touch-action:none;overflow:hidden}
 #dpk.on{visibility:visible;opacity:1;transform:none;transition:opacity .16s ease,transform .2s cubic-bezier(0,0,.17,1),visibility 0s}
@@ -2150,8 +2151,8 @@ function autoGd(){if(!gT||!$('#gsvb.auto'))return;const f={debt:'#dam',goal:'#gt
 function closeTopModal(){
   if($('#nc').classList.contains('on'))closeNc(false);
   else if(bqT||bq.classList.contains('on'))closeBq();
+  else if(cpS||cpEl.classList.contains('on'))closeCp();   // v150: плитки бывают поверх окна повтора/шаблона, но не под ним
   else if(rcS||rcEl.classList.contains('on'))closeRc();
-  else if(cpS||cpEl.classList.contains('on'))closeCp();
   else if(cfT||cf.classList.contains('on'))closeCf();
   else if(gd._bk&&window.bkClose)window.bkClose();
   else if(gT||gd.classList.contains('on')){try{autoGd()}catch(e){}if(gd.classList.contains('on'))closeGoal()}
@@ -3422,7 +3423,7 @@ function spAnim(on,instant){const sp=$('#sp'),inn=sp.firstElementChild,run=!!SP.
   {const w=Math.sqrt(SP.on?300:280),cap=w*Math.abs(SP.tg-cur)*.95+60;SP.v=Math.max(-cap,Math.min(cap,SP.v))}   // v60: скорость жеста не должна быть больше, чем нужно, чтобы дойти до цели — иначе перелёт
   sp.style.transition='none';inn.style.willChange='opacity,transform';
   SP.last=performance.now();SP.raf=requestAnimationFrame(spTick)}
-document.addEventListener('pointerdown',e=>{if(fpEl.classList.contains('open')&&!e.target.closest('#fp,#qflt,#toast')){fpSet(false);e.stopPropagation();e.preventDefault();swallowClick()}},true);
+document.addEventListener('pointerdown',e=>{if(fpEl.classList.contains('open')&&!e.target.closest('#fp,#qflt,#toast,#dpk,#pkr')){fpSet(false);e.stopPropagation();e.preventDefault();swallowClick()}},true);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&fpEl.classList.contains('open'))fpSet(false)});
 function setSearch(on,instant){const sp=$('#sp'),b=$('#srch');on=!!on;
   sp.classList.toggle('open',on);sp.inert=!on;b.classList.toggle('on',on);b.setAttribute('aria-expanded',on);
@@ -4395,18 +4396,19 @@ function cpRender(){const g=cpEl.querySelector('.cpg'),top=g?g.scrollTop:0;cpEl.
 function openCp(type,cur,cb,chg){if(cpS||isCpBusy())return;
   const alone=!isModalOpen();if(alone){cancelGestures();lockBg(true)}
   cpS={type:type==='income'?'income':'expense',cur,cb,chg,edit:false,view:'grid',id:null};cpRender();
-  ['sh','ed','gd','cf'].forEach(id=>{const e=$('#'+id);if(e&&e.classList.contains('on'))e.classList.add('sub')});syncSub();
+  ['sh','ed','gd','cf','rc'].forEach(id=>{const e=$('#'+id);if(e&&e.classList.contains('on'))e.classList.add('sub')});syncSub();
   // v139: как в эталоне — клавиатура и окно под панелью опускаются вместе (232 мс), панель категорий выезжает чуть позже (через 90 мс), когда движение вниз уже идёт
   const kbWas=!!(window.Sheets&&Sheets.kbUp());if(window.Sheets)Sheets.hideKb();
   {const a=document.activeElement;if(a&&a!==document.body&&a.closest&&a.closest('#sh,#ed,#gd,#cf,#rc')&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))a.blur()}
   const mine=cpS,show=()=>{if(cpS!==mine)return;
-    if(!alone&&!['sh','ed','gd','cf'].some(id=>{const e=$('#'+id);return e&&e.classList.contains('on')})){cpS=null;syncSub();return}   // родительское окно закрыли, пока ждали
+    if(!alone&&!['sh','ed','gd','cf','rc'].some(id=>{const e=$('#'+id);return e&&e.classList.contains('on')})){cpS=null;syncSub();return}   // родительское окно закрыли, пока ждали
     try{setOrigin(cpEl)}catch(e){}cpEl.classList.add('on');ov.className='on'};
   if(kbWas)setTimeout(show,90);else show()}
 const isCpBusy=()=>$('#nc').classList.contains('on')||bq.classList.contains('on');
 function closeCp(){if(!cpS&&!cpEl.classList.contains('on'))return;cpEl.classList.remove('on');cpS=null;syncSub();if(unlockIfIdle())cancelGestures()}
 // родительские окна затемняем, пока поверх них открыто вложенное (категории, новая категория, повторы); снимаем только когда вложенных не осталось
-function syncSub(){const nest=!!cpS||$('#nc').classList.contains('on')||rcEl.classList.contains('on');['sh','ed','gd','cf'].forEach(id=>{const e=$('#'+id);if(!e)return;const sb=nest&&e.classList.contains('on');e.classList.toggle('sub',sb);e.inert=sb})}   // v137: окно под вложенным не принимает ни касаний, ни фокуса
+function syncSub(){const ncOn=$('#nc').classList.contains('on'),nest=!!cpS||ncOn||rcEl.classList.contains('on');{const sb=(!!cpS||ncOn)&&rcEl.classList.contains('on');rcEl.classList.toggle('sub',sb);rcEl.inert=sb}   // v150: плитки категорий могут открываться поверх окна повтора/шаблона
+['sh','ed','gd','cf'].forEach(id=>{const e=$('#'+id);if(!e)return;const sb=nest&&e.classList.contains('on');e.classList.toggle('sub',sb);e.inert=sb})}   // v137: окно под вложенным не принимает ни касаний, ни фокуса
 function cpSave(){const s=cpS,c=cd(s.id),nm=($('#cpn').value||'').trim();if(!nm){toast('Введите название');return}
   const em=leadEmo($('#cpem').value||''),col=$('#cpc').value,ov=cfg.catOv[s.id]=cfg.catOv[s.id]||{};
   ov.l=(em?em+' ':'')+nm.slice(0,40);
@@ -4543,13 +4545,15 @@ function applyRec(){const td=ymd(new Date()),add=[];
   if(add.length){tx=[...add,...tx];save()}
   return add.length}
 const rcDef=type=>type==='income'?'in_other':'other';
+// v150: категория в окнах повтора и шаблона — кнопка, открывающая плитки категорий (как в окне операции); значение в скрытом поле
+const CPF=(id,cat)=>`<button type="button" class="cpb" id="${id}b" data-cpf="${id}">${E(cd(cat).l)}</button><input type="hidden" id="${id}" value="${E(cat)}">`;
 const RSEL=(id,arr,v)=>`<select id="${id}">${arr.map(([k,l])=>`<option value="${k}"${String(v)===String(k)?' selected':''}>${l}</option>`).join('')}</select>`;
 function rcFormHtml(){const f=rcS.f,inc=f.type==='income',ed=!!rcS.id,fr=f.freq,r0=ed&&cfg.rec.find(x=>x.id===rcS.id),ps=!!(r0&&r0.paused),vis=on=>on?'':' hidden';   // v144: hidden, а не style — общее правило полей окна (display:block!important) перебивало inline-стиль, и лишние поля были видны
   return `<div class="rct"><span>${ed?'Повторяющаяся операция':'Новая повторяющаяся'}</span><button class="x" data-rc="back" aria-label="Назад" style="font-size:20px;padding:4px 6px">×</button></div>
 <div class="rce"><span class="sgm"><button data-rt="expense" class="${inc?'':'on'}">Расход</button><button data-rt="income" class="${inc?'on':''}">Доход</button></span></div>
 <label class="ef">Сумма, ${E(cfg.cur)}<input id="rca" inputmode="decimal" value="${E(f.amount)}" placeholder="0" autocomplete="off"></label>
 <label class="ef">Название<input id="rcn" type="text" value="${E(f.note)}" placeholder="Например: Аренда" maxlength="60" autocomplete="off"></label>
-<label class="ef">Категория<select id="rcc">${opts(f.type,f.category)}</select></label>
+<label class="ef">Категория${CPF('rcc',f.category)}</label>
 <label class="ef">Как часто${RSEL('rcf',[['month','Каждый месяц'],['week','Каждую неделю'],['year','Раз в год']],fr)}</label>
 <label class="ef" id="rcmw"${vis(fr==='month')}>Когда${RSEL('rcm',[['day','В определённый день'],['first','В первый день месяца'],['last','В последний день месяца']],f.mode)}</label>
 <label class="ef" id="rcww"${vis(fr==='week')}>День недели${RSEL('rcw',RWL.map((l,i)=>[i,l]),f.wd)}</label>
@@ -4624,6 +4628,9 @@ function openRcSt(){if(rcS||isModalOpen())return;cancelGestures();stCover(true);
   rcS={view:'list',st:true};rcRender();rcEl.scrollTop=0;try{setOrigin(rcEl)}catch(e){}rcEl.classList.add('on');ov.className='on'}
 $('#recic').onclick=openRc;
 rcEl.addEventListener('click',e=>{const b=e.target.closest('button')||e.target.closest('.rcr[data-rc]');if(!b||!rcS)return;const a=b.dataset.rc;
+  if(b.dataset.cpf){e.preventDefault();if(rcS.view==='form')rcCollect();else if(rcS.view==='tpl')tplCollect();const f=rcS.f,fid=b.dataset.cpf;
+    const upd=id=>{const i=$('#'+fid),t=$('#'+fid+'b');if(!i||!t||!rcS||rcS.f!==f)return;if(id)i.value=id;if(!ALL.some(c=>c.id===i.value&&c.inc===(f.type==='income')))i.value=rcDef(f.type);f.category=i.value;t.textContent=cd(i.value).l};
+    openCp(f.type,f.category,id=>upd(id),()=>upd());return}
   if(a==='close')closeRc();
   else if(a==='new')rcForm(null);
   else if(a==='edit')rcForm(b.dataset.id);
@@ -4676,7 +4683,7 @@ function tplFormHtml(){const f=rcS.f,inc=f.type==='income',ed=!!rcS.id;
 <div class="rce"><span class="sgm"><button data-tt="expense" class="${inc?'':'on'}">Расход</button><button data-tt="income" class="${inc?'on':''}">Доход</button></span></div>
 <label class="ef">Название<input id="tpn" type="text" value="${E(f.note)}" placeholder="Например: Кофе" maxlength="60" autocomplete="off"></label>
 <label class="ef">Сумма, ${E(cfg.cur)}<input id="tpa" inputmode="decimal" value="${E(f.amount)}" placeholder="0" autocomplete="off"></label>
-<label class="ef">Категория<select id="tpc">${opts(f.type,f.category)}</select></label>
+<label class="ef">Категория${CPF('tpc',f.category)}</label>
 ${f.tags&&f.tags.length?`<div class="rch">Теги: ${f.tags.map(t=>'#'+E(t)).join(' ')}</div>`:''}
 <div class="rch">Шаблон появится в окне добавления (кнопка «+» вверху справа) — одно нажатие, и операция готова к записи.</div>
 <div class="shf">${ed?'<button class="sm del" data-rc="tdel">Удалить</button>':''}<button class="sm" data-rc="back">Отменить</button><button class="sm pr" data-rc="tsave">Сохранить</button></div>`}
@@ -5012,7 +5019,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v149';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v150';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}   // номер сборки виден внизу экрана: по нему понятно, обновился ли Telegram до новой версии
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
@@ -5287,7 +5294,7 @@ async function ibLoop(){
 // ================= v147: своё меню выбора вместо системных списков =================
 // Системный список (select) на iOS забирает фокус: клавиатура закрывается, окно прыгает. Это меню фокус не трогает.
 // Открывается над клавиатурой (или внизу экрана, если клавиатуры нет) на всю свободную высоту, листается пальцем.
-// Работает для всех списков в окнах (повтор, шаблон, цель…) и для категории в окне операции, когда открыта клавиатура.
+// Работает для всех списков в окнах (повтор, лимит, валюта…) и в фильтрах поиска. Категории операций выбираются плитками (openCp), не здесь.
 (function(){
   const WIN='#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc';
   const el=document.createElement('div');el.id='pkr';el.setAttribute('role','dialog');document.body.appendChild(el);
@@ -5296,18 +5303,19 @@ async function ibLoop(){
   const satPx=()=>{const d=document.createElement('div');d.style.cssText='position:fixed;height:var(--sat,0px)';document.body.appendChild(d);const h=d.offsetHeight;d.remove();return h};
   // v149: сторона выбирается один раз при открытии: 'b' — под строкой, 'a' — над строкой (если пункты помещаются целиком), 'f' — длинный список на всю свободную высоту
   function place(){if(!st)return;const v=vis(),T=v.top+satPx()+8,B=v.bot-8;
-    if(st.side!=='f'&&st.anchor&&st.anchor.isConnected){const r=st.anchor.getBoundingClientRect();st.ar=r.top;
+    if(st.side!=='f'&&st.anchor&&st.anchor.isConnected){const r=st.anchor.getBoundingClientRect();st.ar=r.top;hz(r);
       let y=st.side==='b'?r.bottom+6:r.top-6-st.h;y=Math.max(T,Math.min(y,B-st.h));el.style.top=Math.round(y)+'px';el.style.height=Math.round(st.h)+'px';return}
-    const top=Math.max(T,v.bot-Math.min(520,(v.bot-v.top)*.86));el.style.top=Math.round(top)+'px';el.style.height=Math.round(B-top)+'px'}
+    el.style.left=el.style.right='';const top=Math.max(T,v.bot-Math.min(520,(v.bot-v.top)*.86));el.style.top=Math.round(top)+'px';el.style.height=Math.round(B-top)+'px'}
+  const hz=r=>{const W=window.innerWidth;el.style.left=Math.round(Math.max(8,r.left-8))+'px';el.style.right=Math.round(Math.max(8,W-r.right-8))+'px'};   // v150: короткое меню — по ширине строки, а не окна
   function follow(){raf=0;if(!st)return;const a=st.anchor;
-    if(a){const w=a.closest(WIN);if(!a.isConnected||!w||!w.classList.contains('on')||w.classList.contains('sub')){close();return}
+    if(a){const w=a.closest(WIN+',#fp'),ok=w&&(w.id==='fp'?w.classList.contains('open'):w.classList.contains('on')&&!w.classList.contains('sub'));if(!a.isConnected||!ok){close();return}
       if(st.side!=='f'&&Math.abs(a.getBoundingClientRect().top-st.ar)>.5)place()}
     raf=requestAnimationFrame(follow)}
   function open(o){close();st=o;
     el.innerHTML=`<div class="pkh"><b>${o.title||'Выбор'}</b><button type="button" tabindex="-1" data-x aria-label="Закрыть">×</button></div><div class="pkl">`+
       o.items.map(it=>`<button type="button" tabindex="-1" data-v="${String(it.v).replace(/"/g,'&quot;')}" class="${String(it.v)===String(o.value)?'on':''}">${it.e?`<i>${it.e}</i>`:''}<span>${it.l}</span></button>`).join('')+'</div>';
     el.style.transition='none';st.side='f';
-    if(o.anchor){el.classList.add('pop');el.style.height='';el.style.top='0px';const h=el.offsetHeight,v=vis(),T=v.top+satPx()+8,B=v.bot-8,r=o.anchor.getBoundingClientRect();
+    if(o.anchor){el.classList.add('pop');el.style.height='';el.style.top='0px';const r=o.anchor.getBoundingClientRect();hz(r);const h=el.offsetHeight,v=vis(),T=v.top+satPx()+8,B=v.bot-8;
       if(h<=B-(r.bottom+6))st.side='b';else if(h<=r.top-6-T)st.side='a';st.h=h}
     el.classList.toggle('pop',st.side!=='f');el.dataset.s=st.side;place();void el.offsetWidth;el.style.transition='';void el.offsetWidth;el.classList.add('on');
     const l=el.querySelector('.pkl'),cur=l&&l.querySelector('.on');if(cur&&st.side==='f'){const lr=l.getBoundingClientRect(),cr=cur.getBoundingClientRect();l.scrollTop+=cr.top-lr.top-(lr.height-cr.height)/2}
@@ -5317,7 +5325,7 @@ async function ibLoop(){
   // кнопки и строки внутри окна не забирают фокус у поля ввода — клавиатура остаётся; закрыть её — касание мимо окна
   document.addEventListener('mousedown',e=>{const a=document.activeElement,t=e.target;
     if(!a||!/^(INPUT|TEXTAREA)$/.test(a.tagName)||!a.closest||!a.closest(WIN)||!t.closest||!t.closest(WIN))return;
-    if(t.closest('input,textarea,select,[contenteditable]'))return;const lb=t.closest('label');if(lb&&lb.querySelector('input:not([type=date]),textarea'))return;
+    if(t.closest('input,textarea,select,[contenteditable]'))return;const lb=t.closest('label');if(lb&&lb.querySelector('input:not([type=date]):not([type=hidden]),textarea'))return;
     e.preventDefault()},true);
   el.addEventListener('mousedown',e=>e.preventDefault());   // фокус (и клавиатура) остаются в поле
   el.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!st)return;e.preventDefault();
@@ -5326,22 +5334,19 @@ async function ibLoop(){
   // v149: если список не листается (короткий) или палец на заголовке — свайп ничего не двигает под меню
   el.addEventListener('touchmove',e=>{const l=e.target.closest&&e.target.closest('.pkl');if((!l||l.scrollHeight<=l.clientHeight+1)&&e.cancelable)e.preventDefault()},{passive:false});
   // касание мимо меню закрывает только меню (клавиатура остаётся; закрыть её — следующее касание мимо окна)
-  document.addEventListener('pointerdown',e=>{if(st&&!e.target.closest('#pkr')&&!target(e)&&!(e.target.closest&&e.target.closest('#ed #eca'))){close();eat=Date.now()}},true);
+  document.addEventListener('pointerdown',e=>{if(st&&!e.target.closest('#pkr')&&!target(e)){close();eat=Date.now()}},true);
   document.addEventListener('click',e=>{if(eat&&Date.now()-eat<600&&!e.target.closest('#pkr')){eat=0;e.preventDefault();e.stopPropagation()}},true);
   document.addEventListener('keydown',e=>{if(st&&e.key==='Escape'){e.stopPropagation();close()}},true);
   window.addEventListener('resize',()=>{if(st)place()});if(window.visualViewport)window.visualViewport.addEventListener('resize',()=>{if(st)place()});
   // списки (select) в окнах: касание по строке открывает это меню
   const selIn=lb=>lb&&lb.querySelector&&lb.querySelector('select');
-  const target=e=>{const lb=e.target.closest&&e.target.closest('label');return lb&&selIn(lb)&&lb.closest(WIN)?lb:null};
+  const target=e=>{const lb=e.target.closest&&e.target.closest('label,#fp .fr');return lb&&selIn(lb)&&lb.closest(WIN+',#fp')?lb:null};   // v150: и в фильтрах поиска
   document.addEventListener('mousedown',e=>{if(target(e))e.preventDefault()},true);
   document.addEventListener('click',e=>{const lb=target(e);if(!lb)return;e.preventDefault();e.stopPropagation();const sel=selIn(lb);
     const ttl=(lb.querySelector('.fl')||{}).textContent||lb.firstChild&&lb.firstChild.textContent||'Выбор';
     open({title:String(ttl).trim(),anchor:lb,value:sel.value,items:[...sel.options].map(op=>{const m=/^(\p{Extended_Pictographic}[️‍\p{Extended_Pictographic}]*)\s*(.*)$/u.exec(op.textContent);return m?{v:op.value,e:m[1],l:m[2]}:{v:op.value,l:op.textContent}}),
       pick:v=>{sel.value=v;sel.dispatchEvent(new Event('input',{bubbles:true}));sel.dispatchEvent(new Event('change',{bubbles:true}))}})},true);
-  // категория в окне операции: при открытой клавиатуре — это меню (клавиатура остаётся), без клавиатуры — прежняя сетка категорий
-  document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#ed #eca');if(!b||typeof eT==='undefined'||!eT)return;
-    if(!(window.Sheets&&Sheets.kbUp()))return;e.preventDefault();e.stopImmediatePropagation();readEd();
-    const inc=eT.type==='income';open({title:'Категория',anchor:b,value:eT.category,items:ALL.filter(c=>c.inc===inc).map(c=>({v:c.id,e:c.e,l:c.n})),pick:v=>{if(eT){eT.category=v;patchEd()}}})},true);
+  // v150: категория в окнах (операция, повтор, шаблон) всегда открывает плитки категорий: клавиатура опускается, плитки выезжают (openCp)
 })();
 </script>
 <script>
@@ -5349,7 +5354,8 @@ async function ibLoop(){
 // Нативный выбор даты забирает фокус: клавиатура закрывается, окно опускается. Этот календарь фокус не трогает — клавиатура и окно остаются на месте.
 // Работает для всех полей даты внутри окон (операция, черновики, повтор, цель, долг): касание по полю открывает календарь рядом с ним.
 (function(){
-  const WIN='#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc',OPT={rce:1,gby:1,ddu:1};   // необязательные даты — можно очистить
+  const WIN='#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc,#fp',OPT={rce:1,gby:1,ddu:1,fpfrom:1,fpto:1};   // v150: и в фильтрах поиска (#fp)
+  const live=w=>!!w&&(w.id==='fp'?w.classList.contains('open'):w.classList.contains('on')&&!w.classList.contains('sub'));   // необязательные даты — можно очистить
   const MN=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
   const p2=n=>String(n).padStart(2,'0'),ymd=d=>d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
   const el=document.createElement('div');el.id='dpk';el.setAttribute('role','dialog');el.setAttribute('aria-label','Выбор даты');document.body.appendChild(el);
@@ -5368,7 +5374,7 @@ async function ibLoop(){
     if(!st.side)st.side=r.bottom+8+h<=B?'b':r.top-8-h>=T?'a':'c';
     let y=st.side==='b'?r.bottom+8:st.side==='a'?r.top-8-h:B-h;y=Math.max(T,Math.min(y,B-h));const x=Math.min(Math.max(8,r.right-w),W-w-8);
     el.style.left=Math.round(x)+'px';el.style.top=Math.round(y)+'px'}
-  function follow(){chk=0;if(!st)return;const w=st.lb.closest(WIN);if(!st.lb.isConnected||!w||!w.classList.contains('on')||w.classList.contains('sub')){close();return}
+  function follow(){chk=0;if(!st)return;if(!st.lb.isConnected||!live(st.lb.closest(WIN))){close();return}
     if(Math.abs(st.lb.getBoundingClientRect().top-st.ar)>.5)place();chk=requestAnimationFrame(follow)}
   function open(lb){const inp=dateIn(lb);if(!inp)return;const v=/^\d{4}-\d{2}-\d{2}$/.test(inp.value)?inp.value:ymd(new Date());
     st={lb,inp,y:+v.slice(0,4),m:+v.slice(5,7)-1};render();
@@ -5379,7 +5385,7 @@ async function ibLoop(){
   function shift(dir){st.m+=dir;if(st.m<0){st.m=11;st.y--}if(st.m>11){st.m=0;st.y++}render();const g=el.querySelector('.dpg');if(g)g.classList.add(dir>0?'sn':'sp')}
   function set(v){const inp=st.inp;inp.value=v;inp.dispatchEvent(new Event('input',{bubbles:true}));inp.dispatchEvent(new Event('change',{bubbles:true}));close()}
   // касание по полю даты: не даём фокусу уйти (клавиатура остаётся) и открываем свой календарь
-  const target=e=>{const lb=e.target.closest&&e.target.closest('label');return lb&&dateIn(lb)&&lb.closest(WIN)?lb:null};
+  const target=e=>{const lb=e.target.closest&&!e.target.closest('#fp .dx')&&e.target.closest('label,#fp .dfw');return lb&&dateIn(lb)&&lb.closest(WIN)?lb:null};
   document.addEventListener('mousedown',e=>{if(target(e)||e.target.closest('#dpk'))e.preventDefault()},true);
   document.addEventListener('click',e=>{const lb=target(e);if(!lb)return;e.preventDefault();e.stopPropagation();if(st&&st.lb===lb)close();else open(lb)},true);
   document.addEventListener('pointerdown',e=>{if(st&&!e.target.closest('#dpk')&&!target(e))close()},true);
