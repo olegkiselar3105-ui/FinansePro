@@ -1439,6 +1439,12 @@ html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#r
 html:root :is(#sh,#ed,#gd,#cf):is(#sh,#ed,#gd,#cf):is(#sh,#ed,#gd,#cf).sub{pointer-events:none!important}
 html:root :is(#sh,#ed,#gd,#cf,#cp)::after{content:"";position:absolute;inset:0;border-radius:inherit;background:#000;opacity:0;pointer-events:none;transition:opacity .25s cubic-bezier(.26,.24,.25,1)}
 html:root :is(#sh,#ed,#gd,#cf,#cp).sub::after{opacity:.42}
+/* v140: фон на время окон отключён — затемнение непрозрачное (цвет фона, сильно затемнённый), а после его появления страница скрыта (html.bgoff):
+   её сдвиги и перерисовки при смене клавиатуры больше не видны и не тратят время */
+html:root #ov,html:root[data-theme=light] #ov{background:#0a0a0b!important;opacity:0}
+html:root #ov.on{opacity:1}
+@supports (background:color-mix(in srgb,red,blue)){html:root #ov,html:root[data-theme=light] #ov{background:color-mix(in srgb,var(--bg,#111) 42%,#000)!important}}
+html.bgoff :is(#w,#tabs,#topact,#nb,#vb){visibility:hidden!important}
 /* затемнение фона: размер постоянный (--baseh), кривые из эталона */
 html:root #ov{transition:opacity .198s cubic-bezier(.75,.09,.67,1),visibility 0s .198s!important}
 html:root #ov.on{transition:opacity .249s cubic-bezier(.26,.24,.25,1),visibility 0s!important}
@@ -3083,11 +3089,11 @@ function renderEd(){const t=eT,inc=t.type==='income';
   ed.innerHTML=`<div class="eh"><span class="sgm"><button data-et="expense" class="${inc?'':'on'}">Расх.</button><button data-et="income" class="${inc?'on':''}">Дох.</button></span><button class="x" id="ecl" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div>
 <input id="eam" class="${inc?'inc':'exp'}" inputmode="decimal" enterkeyhint="done" value="${t.amount||''}" placeholder="Сумма" aria-label="Сумма">
 ${t.oc?`<div class="eo">${fmt(t.oa)} ${E(t.oc)}</div>`:''}
-<label class="ef">Заметка<input id="eno" type="text" value="${E(t.note)}" placeholder="Заметка" enterkeyhint="done"></label>
+<label class="ef">Заметка<input id="eno" type="text" value="${E(t.note)}" placeholder="Заметка" enterkeyhint="done" autocomplete="off" autocorrect="off" spellcheck="false"></label>
 <label class="ef">Категория<button type="button" class="cpb" id="eca">${E(cd(t.category).l)}</button></label>
 
 <label class="ef">Дата<input id="eda" type="date" value="${t.date}"></label>
-<div class="ef tgf"><div class="tgw">${(t.tags||[]).map(g=>`<button class="tgc" data-er="${E(g)}">#${E(g)} ×</button>`).join('')}<input id="etn" type="text" list="tgl" placeholder="например: #друзья" aria-label="Теги" autocomplete="off" autocapitalize="none" enterkeyhint="done"></div></div>
+<div class="ef tgf"><div class="tgw">${(t.tags||[]).map(g=>`<button class="tgc" data-er="${E(g)}">#${E(g)} ×</button>`).join('')}<input id="etn" type="text" list="tgl" placeholder="например: #друзья" aria-label="Теги" autocomplete="off" autocorrect="off" spellcheck="false" autocapitalize="none" enterkeyhint="done"></div></div>
 <div class="shf"><button class="sm pr" id="esv">Сохранить</button></div>`}
 /* v132: окно операции монтируется один раз (renderEd в openEdit); дальше обновляются только изменившиеся узлы.
    Раньше смена типа/категории/тега пересоздавала innerHTML: поля терялись, фокус и клавиатура сбрасывались, окно мигало. */
@@ -4887,7 +4893,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v139';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v140';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия, которую видит человек (внизу экрана и в письме в поддержку)
 try{document.getElementById('vb').textContent=APP_VER+' · '+IB_VER}catch(e){}   // номер сборки виден внизу экрана: по нему понятно, обновился ли Telegram до новой версии
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
@@ -5059,16 +5065,16 @@ async function ibLoop(){
 })();
 </script>
 <script>
-// ---- v139: окна и клавиатура — написано заново по покадровому разбору записи эталонного приложения (60 к/с) ----
+// ---- v139/v140: окна и клавиатура — написано заново по покадровому разбору записи эталонного приложения (60 к/с) ----
 // Что делает эталон (измерено):
 //  • шторка открывается 246 мс по cubic-bezier(0,0,.17,1), закрывается 192 мс по cubic-bezier(.58,-.03,1,.5) (это в CSS, блок v139);
 //  • шторка жёстко «приклеена» к верху клавиатуры: клавиатура появилась — шторка поехала вместе с ней (296 мс, cubic-bezier(.34,.92,.47,.97)),
-//    клавиатура скрылась — шторка опустилась вместе с ней (232 мс, cubic-bezier(.21,.37,.39,1.03));
-//  • смена цифровой клавиатуры на буквенную и обратно — шторка перескакивает на новую высоту в тот же момент, что и клавиатура.
-// Как это сделано здесь. Браузер не отдаёт высоту клавиатуры покадрово (Telegram меняет высоту webview скачком, с задержкой), поэтому окно ведётся по ВРЕМЕНИ,
-// а не за измерениями: в момент фокуса в поле берём запомненную высоту клавиатуры для этого вида поля (цифры / буквы / выбор) и сразу запускаем движение
-// по кривой эталона; потом, когда webview изменит размер и значение устоится (90 мс), при расхождении плавно (140 мс) доводим. Окно привязано к постоянной
-// высоте экрана (CSS: top = --baseh), поэтому смена высоты webview само окно не двигает. Подъём — одна переменная --lift на окне, которому принадлежит клавиатура.
+//    клавиатура скрылась — шторка опустилась вместе с ней (232 мс, cubic-bezier(.21,.37,.39,1.03)).
+// Как сделано здесь: окно ведётся по ВРЕМЕНИ, а не за замерами (Telegram меняет высоту webview скачком и с задержкой). В момент фокуса берём запомненную
+// высоту клавиатуры для вида поля и сразу запускаем движение по кривой эталона; когда высота webview устоится (90 мс) — при расхождении доводим за 140 мс.
+// Окно привязано к постоянной высоте экрана (CSS: top = --baseh), поэтому смена высоты webview его не двигает. Подъём — переменная --lift на окне.
+// v140: у каждого окна свой подъём. Клавиатура двигает только окно, в котором поле (переднее); задние окна замирают там, где были, и не реагируют
+// на то, что происходит в переднем. Фон (страница) на время окон отключается: затемнение становится непрозрачным, страница скрывается (bgoff).
 (function(){
   window.addEventListener('error',e=>{if(e&&/ResizeObserver loop/.test(e.message||'')){e.stopImmediatePropagation();e.preventDefault()}},true);
   const vv=window.visualViewport,root=document.documentElement,$i=id=>document.getElementById(id);
@@ -5078,10 +5084,12 @@ async function ibLoop(){
   const probe=document.createElement('div');probe.style.cssText='position:fixed;top:0;left:0;width:0;height:var(--sat);visibility:hidden;pointer-events:none';document.body.appendChild(probe);
   const probeB=document.createElement('div');probeB.style.cssText='position:fixed;top:0;left:0;width:0;height:var(--sab);visibility:hidden;pointer-events:none';document.body.appendChild(probeB);
   let sat=probe.offsetHeight,sab=probeB.offsetHeight,baseH=window.innerHeight;
-  let owner=null,lift=0,target=0,tw=null,raf=0,hideT=0,measT=0,offT=0,savedY=0,kbo=false;
+  let owner=null,raf=0,hideT=0,measT=0,offT=0,savedY=0,kbo=false;
+  const st=new Map();   // окно -> {lift,target,tw}
+  const S=el=>{let x=st.get(el);if(!x){x={lift:0,target:0,tw:null};st.set(el,x)}return x};
   const kbp={num:0,alpha:0,pick:0};
-  try{const j=JSON.parse(localStorage.getItem('finapp.kbh2')||'null');if(j)['num','alpha','pick'].forEach(k=>{const v=+j[k];if(v>150&&v<600)kbp[k]=v})}catch(e){}
-  const saveKb=()=>{try{localStorage.setItem('finapp.kbh2',JSON.stringify(kbp))}catch(e){}};
+  try{const j=JSON.parse(localStorage.getItem('finapp.kbh3')||'null');if(j)['num','alpha','pick'].forEach(k=>{const v=+j[k];if(v>150&&v<600)kbp[k]=v})}catch(e){}
+  const saveKb=()=>{try{localStorage.setItem('finapp.kbh3',JSON.stringify(kbp))}catch(e){}};
   // --- cubic-bezier как в CSS
   function ease(c,u){if(u<=0)return 0;if(u>=1)return 1;const x1=c[0],y1=c[1],x2=c[2],y2=c[3];let lo=0,hi=1,t=u;
     for(let i=0;i<28;i++){t=(lo+hi)/2;const x=3*(1-t)*(1-t)*t*x1+3*(1-t)*t*t*x2+t*t*t;if(x<u)lo=t;else hi=t}
@@ -5091,41 +5099,41 @@ async function ibLoop(){
   const kindOf=f=>{if(f.tagName==='SELECT'||(f.tagName==='INPUT'&&/^(date|time|datetime-local|month|week)$/.test(f.type)))return 'pick';
     const m=(f.inputMode||'').toLowerCase();return(m==='decimal'||m==='numeric'||m==='tel'||f.type==='number'||f.type==='tel')?'num':'alpha'};
   const foc=()=>{const a=document.activeElement;return editable(a)&&!!winOf(a)};
-  const measure=()=>{const V=Math.min(window.innerHeight,vv?vv.offsetTop+vv.height:window.innerHeight);return Math.max(0,baseH-V)};   // высота клавиатуры относительно постоянной высоты экрана
-  // --- применение
-  function apply(){if(owner)owner.style.setProperty('--lift',Math.round(lift*10)/10+'px');
-    const k=target>0||lift>1;if(k!==kbo){kbo=k;root.classList.toggle('kbo',k)}}
-  function setMax(to){if(!owner)return;const bo=FLT[owner.id]?sab+12:0;owner.style.setProperty('--kmax',Math.max(160,Math.round(baseH-to-sat-8-bo))+'px')}
-  function go(to,c){to=Math.max(0,Math.round(to));if(tw&&tw.to===to)return;if(!tw&&Math.abs(to-lift)<.5&&to===target)return;
-    target=to;setMax(to);
-    if(RMQ.matches||Math.abs(to-lift)<.5){lift=to;tw=null;apply();return}   // «уменьшение движения»: без анимации
-    tw={from:lift,to,t0:performance.now(),c};if(!raf)raf=requestAnimationFrame(step)}
-  function step(now){raf=0;if(!tw)return;const u=(now-tw.t0)/tw.c[4];
-    if(u>=1){lift=tw.to;tw=null;apply();return}
-    lift=tw.from+(tw.to-tw.from)*ease(tw.c,u);apply();raf=requestAnimationFrame(step)}
-  // --- фокус: окно едет вместе с клавиатурой
+  const measure=()=>{const V=Math.min(window.innerHeight,vv?vv.offsetTop+vv.height:window.innerHeight);return Math.max(0,baseH-V)};
+  // --- движение (у каждого окна своё)
+  function apply(el){const x=S(el);el.style.setProperty('--lift',Math.round(x.lift*10)/10+'px');
+    const o=owner&&st.get(owner),k=!!o&&(o.target>0||o.lift>1);if(k!==kbo){kbo=k;root.classList.toggle('kbo',k)}}
+  function setMax(el,to){const bo=FLT[el.id]?sab+12:0;el.style.setProperty('--kmax',Math.max(160,Math.round(baseH-to-sat-8-bo))+'px')}
+  function go(el,to,c){if(!el)return;const x=S(el);to=Math.max(0,Math.round(to));if(x.tw&&x.tw.to===to)return;if(!x.tw&&Math.abs(to-x.lift)<.5&&to===x.target)return;
+    x.target=to;setMax(el,to);
+    if(RMQ.matches||Math.abs(to-x.lift)<.5){x.lift=to;x.tw=null;apply(el);return}   // «уменьшение движения»: без анимации
+    x.tw={from:x.lift,to,t0:performance.now(),c};if(!raf)raf=requestAnimationFrame(step)}
+  function step(now){raf=0;let more=false;
+    st.forEach((x,el)=>{if(!x.tw)return;const u=(now-x.tw.t0)/x.tw.c[4];
+      if(u>=1){x.lift=x.tw.to;x.tw=null}else{x.lift=x.tw.from+(x.tw.to-x.tw.from)*ease(x.tw.c,u);more=true}apply(el)});
+    if(more)raf=requestAnimationFrame(step)}
+  const isFront=el=>el.classList.contains('on')&&!el.classList.contains('sub');
+  // --- фокус: двигается только окно, в котором поле
   document.addEventListener('focusin',e=>{const f=e.target;if(!editable(f))return;const w=winOf(f);if(!w)return;
-    clearTimeout(hideT);
-    if(owner!==w){if(owner)owner.style.setProperty('--lift','0px');owner=w;lift=0;target=0;tw=null;apply()}
+    clearTimeout(hideT);owner=w;                                         // прежнее окно (если оно теперь заднее) остаётся там, где было
     if(!coarse&&measure()<60)return;                                   // компьютер: экранной клавиатуры нет — окно не двигаем
-    const c=kindOf(f),m=measure(),pred=kbp[c]||(m>120?m:0)||kbp.alpha||kbp.num||Math.round(baseH*.36);
-    go(pred,lift<2?C_SHOW:C_FIT);setTimeout(reveal,420)});
+    const x=S(w),c=kindOf(f),m=measure(),pred=kbp[c]||(m>120?m:0)||kbp.alpha||kbp.num||Math.round(baseH*.36);
+    go(w,pred,x.lift<2?C_SHOW:C_FIT);setTimeout(reveal,420)});
   document.addEventListener('focusout',e=>{const f=e.target;if(!editable(f)||!winOf(f))return;
     if(editable(e.relatedTarget)&&winOf(e.relatedTarget))return;        // переход к другому полю — решит focusin
-    clearTimeout(hideT);hideT=setTimeout(()=>{if(!foc())go(0,C_HIDE)},70)});
-  // --- измерение: после изменения высоты webview значение устаивается 90 мс — тогда запоминаем и при расхождении доводим
+    const w=winOf(f);clearTimeout(hideT);hideT=setTimeout(()=>{if(!foc()&&w===owner&&isFront(w))go(w,0,C_HIDE)},70)});
+  // --- измерение высоты клавиатуры: после изменения высоты webview значение устаивается 90 мс
   function settle(){const K=measure();
-    if(K>120){if(foc()){const c=kindOf(document.activeElement);if(Math.abs(K-(kbp[c]||0))>2){kbp[c]=K;saveKb()}if(Math.abs(K-target)>3)go(K,C_FIT)}}
-    else if(K<60){if(foc()&&lift>1&&coarse){clearTimeout(offT);offT=setTimeout(()=>{if(measure()<60&&foc()&&lift>1&&!tw)go(0,C_FIT)},600)}   // клавиатуры нет (внешняя): но не при коротком «мигании» — ждём 600 мс
-      if(!foc()&&!tw&&lift<1){baseH=window.innerHeight;root.style.setProperty('--baseh',baseH+'px');sat=probe.offsetHeight;sab=probeB.offsetHeight}}}
+    if(K>120){if(foc()&&owner){const c=kindOf(document.activeElement);if(Math.abs(K-(kbp[c]||0))>2){kbp[c]=K;saveKb()}if(Math.abs(K-S(owner).target)>3)go(owner,K,C_FIT)}}
+    else if(K<60){if(foc()&&owner&&S(owner).lift>1&&coarse){clearTimeout(offT);offT=setTimeout(()=>{if(measure()<60&&foc()&&owner&&S(owner).lift>1&&!S(owner).tw)go(owner,0,C_FIT)},600)}   // внешняя клавиатура; короткое «мигание» не считается
+      if(!foc()&&[...st.values()].every(x=>!x.tw&&x.lift<1)){baseH=window.innerHeight;root.style.setProperty('--baseh',baseH+'px');sat=probe.offsetHeight;sab=probeB.offsetHeight}}}
   function onView(){const sh=baseH-window.innerHeight,vt=vv?Math.max(0,vv.offsetTop):0;
     root.style.setProperty('--lay',(sh>120?sh:0)+'px');root.style.setProperty('--vvt',vt+'px');   // нижние панели страницы остаются на месте, пока webview уменьшен клавиатурой
     clearTimeout(measT);measT=setTimeout(settle,90)}
   if(vv){vv.addEventListener('resize',onView);vv.addEventListener('scroll',onView)}
   window.addEventListener('resize',onView);
   try{if(window.__TG)window.__TG.onEvent('viewportChanged',onView)}catch(e){}
-  // поворот экрана (меняется ширина) — пересчитываем постоянную высоту; клавиатура ширину не меняет
-  let baseW=window.innerWidth;
+  let baseW=window.innerWidth;   // поворот экрана (меняется ширина) — пересчитываем постоянную высоту; клавиатура ширину не меняет
   window.addEventListener('orientationchange',()=>setTimeout(()=>{if(window.innerWidth!==baseW){baseW=window.innerWidth;baseH=window.innerHeight;root.style.setProperty('--baseh',baseH+'px');sat=probe.offsetHeight;sab=probeB.offsetHeight}onView()},350));
   root.style.setProperty('--baseh',baseH+'px');
   // --- прокрутка видимой части окна к полю
@@ -5133,17 +5141,21 @@ async function ibLoop(){
     const r=a.getBoundingClientRect(),mr=m.getBoundingClientRect(),pad=14;let d=0;
     if(r.bottom>mr.bottom-pad)d=r.bottom-mr.bottom+pad;else if(r.top<mr.top+pad)d=r.top-mr.top-pad;
     if(d)m.scrollBy({top:d,behavior:RMQ.matches?'auto':'smooth'})}
-  // страница под окном не должна ездить, пока открыто окно
   window.addEventListener('scroll',()=>{if(IDS.some(id=>{const e=$i(id);return e&&e.classList.contains('on')})&&window.scrollY!==savedY)window.scrollTo(0,savedY)},{passive:true});
-  // открытие/закрытие окна
+  // --- окна открываются/закрываются/становятся задними
   const rst=new Map();
-  const mo=new MutationObserver(ms=>{ms.forEach(m=>{const el=m.target,on=el.classList.contains('on'),was=/(^|\s)on(\s|$)/.test(m.oldValue||'');if(on===was)return;
-    if(on){savedY=window.scrollY;clearTimeout(rst.get(el));if(el!==owner||!foc()){el.style.setProperty('--lift','0px');if(el===owner){lift=0;target=0;tw=null;apply()}}}
-    else{if(el.contains(document.activeElement))document.activeElement.blur();
-      clearTimeout(rst.get(el));rst.set(el,setTimeout(()=>{if(el.classList.contains('on'))return;el.style.setProperty('--lift','0px');el.style.removeProperty('--kmax');if(el===owner&&!foc()){lift=0;target=0;tw=null;apply()}},520))}})});
+  const mo=new MutationObserver(ms=>{ms.forEach(m=>{const el=m.target,cls=el.classList,on=cls.contains('on'),was=/(^|\s)on(\s|$)/.test(m.oldValue||''),sub=cls.contains('sub'),wasSub=/(^|\s)sub(\s|$)/.test(m.oldValue||'');
+    if(on&&!was){savedY=window.scrollY;clearTimeout(rst.get(el));if(!el.contains(document.activeElement)){const x=S(el);x.lift=0;x.target=0;x.tw=null;apply(el)}}
+    else if(!on&&was){if(el.contains(document.activeElement))document.activeElement.blur();if(owner===el)owner=null;
+      clearTimeout(rst.get(el));rst.set(el,setTimeout(()=>{if(cls.contains('on'))return;const x=S(el);x.lift=0;x.target=0;x.tw=null;apply(el);el.style.removeProperty('--kmax')},520))}
+    // окно снова стало передним (верхнее закрыли), а клавиатуры для него нет — плавно возвращаем его на место
+    if(on&&wasSub&&!sub){const x=S(el);if((x.lift>1||x.target>0)&&!(foc()&&winOf(document.activeElement)===el))go(el,0,C_HIDE)}})});
   IDS.forEach(id=>{const el=$i(id);if(el)mo.observe(el,{attributes:true,attributeFilter:['class'],attributeOldValue:true})});
-  // для openCp: клавиатура сейчас поднята? и: начать её опускание сразу (окно под панелью опускается вместе с ней)
-  window.Sheets={kbUp:()=>!!owner&&(lift>2||target>2),hideKb(){clearTimeout(hideT);if(owner&&(lift>2||target>2))go(0,C_HIDE)}};
+  // --- фон отключается, пока открыто окно: затемнение становится непрозрачным (CSS), после его появления страница скрывается
+  const ovEl=$i('ov');let bgT=0;
+  if(ovEl)new MutationObserver(()=>{clearTimeout(bgT);if(ovEl.classList.contains('on'))bgT=setTimeout(()=>{if(ovEl.classList.contains('on'))root.classList.add('bgoff')},RMQ.matches?0:270);else root.classList.remove('bgoff')}).observe(ovEl,{attributes:true,attributeFilter:['class']});
+  // для openCp: клавиатура сейчас поднята? и: начать её опускание сразу (окно, в котором было поле, опускается вместе с ней)
+  window.Sheets={kbUp:()=>!!owner&&(S(owner).lift>2||S(owner).target>2),hideKb(){clearTimeout(hideT);if(owner){const x=S(owner);if(x.lift>2||x.target>2)go(owner,0,C_HIDE)}}};
 })();
 </script>
 <script>
