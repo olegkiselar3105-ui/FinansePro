@@ -332,10 +332,6 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:calc(110px 
 .dd{margin-left:6px;font-size:11px;white-space:nowrap}
 .cmp{display:flex;justify-content:space-between;gap:10px;padding:6px 0;font-size:13px}
 .fcl p{margin:0 0 7px;font-size:13px;color:var(--tx2);line-height:1.45}.fcl p:last-child{margin:0}
-#tpl{display:flex;flex-wrap:nowrap;align-items:center;gap:8px;overflow-x:auto;overflow-y:hidden;padding:10px 0 2px;scrollbar-width:none;-webkit-overflow-scrolling:touch;touch-action:none;overscroll-behavior-x:contain}
-.tqh{flex:none;font-size:12px;color:var(--m);padding-right:2px}
-#tpl:empty{display:none}#tpl::-webkit-scrollbar{display:none}
-.tq{flex:none;padding:7px 12px;border:.5px solid var(--b1);border-radius:20px;font-size:13px;color:var(--t);background:rgba(var(--wr),.07);white-space:nowrap;-webkit-user-select:none;user-select:none}
 .gsh{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--m);margin:2px 0 -4px}
 .gsh .gp{color:var(--g);font-size:26px;font-weight:300;line-height:1;padding:0 6px;margin-right:-6px}
 .gh{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:9px}
@@ -449,10 +445,10 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:calc(110px 
 .shf .atg.off{color:var(--rd);border-color:rgba(227,144,144,.5);background:rgba(227,144,144,.1)}
 /* плавность: тяжёлые эффекты убраны с анимируемых слоёв, слои вынесены на GPU */
 #sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc,#fp{will-change:transform,opacity;backface-visibility:hidden;-webkit-backface-visibility:hidden}
-html,button,.pl,.tq,[role=button]{-webkit-tap-highlight-color:transparent}
+html,button,.pl,[role=button]{-webkit-tap-highlight-color:transparent}
 button,.pl,[role=button]{touch-action:manipulation}
 button{transition:opacity .15s ease,color .2s ease,background-color .2s ease,border-color .2s ease}
-.sm:active,.ic:active,.tq:active,.sgm button:active,.sbt button:active{opacity:.55}
+.sm:active,.ic:active,.sgm button:active,.sbt button:active{opacity:.55}
 .sbt button{transition:background-color .3s ease,color .3s ease,opacity .15s ease}
 .pl{transition:background-color .2s ease}.pl:active{background:rgba(var(--wr),.05)}
 #toast.on{animation:ti .38s cubic-bezier(.16,1,.3,1)}
@@ -618,13 +614,13 @@ html.ncv .dg{content-visibility:visible}
 #toast button.tbt:active{transform:scale(.92)}
 
 /* нажатия как в iOS: лёгкое сжатие с пружинным возвратом */
-.sm,.tq,.sgm button,.tabs button,.ic,.cpi,.rcic,.clx,.bulb,#tabs button,#fab,.cc{transition:opacity .15s ease,color .2s ease,background-color .2s ease,border-color .2s ease,transform .55s var(--spring)}
-.sm:active,.tq:active,.sgm button:active,.tabs button:active{transform:scale(.95)}
+.sm,.sgm button,.tabs button,.ic,.cpi,.rcic,.clx,.bulb,#tabs button,#fab,.cc{transition:opacity .15s ease,color .2s ease,background-color .2s ease,border-color .2s ease,transform .55s var(--spring)}
+.sm:active,.sgm button:active,.tabs button:active{transform:scale(.95)}
 .ic:active,.rcic:active,.clx:active,.bulb:active{transform:scale(.88)}
 #tabs button:active{transform:scale(.93)}
 #fab:active{transform:scale(.9)}
 #cp .cpi:active{transform:scale(.95)}
-.sm:active,.tq:active,.sgm button:active,.tabs button:active,.ic:active,.rcic:active,.clx:active,.bulb:active,#tabs button:active,#fab:active,#cp .cpi:active{transition-duration:.15s,.2s,.2s,.2s,.12s}
+.sm:active,.sgm button:active,.tabs button:active,.ic:active,.rcic:active,.clx:active,.bulb:active,#tabs button:active,#fab:active,#cp .cpi:active{transition-duration:.15s,.2s,.2s,.2s,.12s}
 .sw>.r2{transition:background-color .35s ease}
 .sw>.r2:active{opacity:1;background:color-mix(in srgb,var(--s) 90%,var(--t));transition-duration:.08s}
 
@@ -644,17 +640,17 @@ html.ncv .dg{content-visibility:visible}
 @keyframes p{50%{opacity:.6;transform:scale(.93)}}
 /* уважаем «уменьшить движение»: раньше для #gd и #cf этого не было */
 @media (prefers-reduced-motion:reduce){
-  #sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc,#fp,#st,#stw,#toast,#toast.on,#ov,.ind,.ind2,.tg,.tg:after,.sm,.tq,#fab,#tabs button,.cc{transition:none!important}
-  .sm:active,.tq:active,.sgm button:active,.tabs button:active,.ic:active,#tabs button:active,#fab:active{transform:none}
+  #sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc,#fp,#st,#stw,#toast,#toast.on,#ov,.ind,.ind2,.tg,.tg:after,.sm,#fab,#tabs button,.cc{transition:none!important}
+  .sm:active,.sgm button:active,.tabs button:active,.ic:active,#tabs button:active,#fab:active{transform:none}
 }
 /* окно ввода («+»): мягкий выезд без отскока, содержимое подплывает по очереди, уход — плавное втягивание в кнопку */
 :root #sh{transition:transform .52s cubic-bezier(.45,.05,.25,1),opacity .34s ease .1s,visibility 0s .52s,translate .5s var(--ease)}
 :root #sh.on{transition:transform .78s cubic-bezier(.22,1,.36,1),opacity .34s ease-out,visibility 0s,translate .5s var(--ease)}
 :root #sh.on.fxl{transition:transform .78s cubic-bezier(.22,1,.36,1),opacity .34s ease-out,visibility 0s,translate 0s}
-#sh .fld,#sh #tpl,#sh #rev,#sh .shf{opacity:0;transform:translate3d(0,10px,0);transition:opacity 0s .52s,transform 0s .52s}
-#sh.on .fld,#sh.on #tpl,#sh.on #rev,#sh.on .shf{opacity:1;transform:none;transition:opacity .45s ease-out calc(.1s + var(--d,0s)),transform .65s cubic-bezier(.22,1,.36,1) calc(.1s + var(--d,0s))}
-#sh .fld{--d:0s}#sh #tpl{--d:.04s}#sh #rev{--d:.07s}#sh .shf{--d:.1s}
-@media (prefers-reduced-motion:reduce){#sh .fld,#sh #tpl,#sh #rev,#sh .shf{opacity:1;transform:none;transition:none!important}}
+#sh .fld,#sh #rev,#sh .shf{opacity:0;transform:translate3d(0,10px,0);transition:opacity 0s .52s,transform 0s .52s}
+#sh.on .fld,#sh.on #rev,#sh.on .shf{opacity:1;transform:none;transition:opacity .45s ease-out calc(.1s + var(--d,0s)),transform .65s cubic-bezier(.22,1,.36,1) calc(.1s + var(--d,0s))}
+#sh .fld{--d:0s}#sh #rev{--d:.07s}#sh .shf{--d:.1s}
+@media (prefers-reduced-motion:reduce){#sh .fld,#sh #rev,#sh .shf{opacity:1;transform:none;transition:none!important}}
 
 /* =====================================================================
    ПРАВКИ: плашка, цифры, календарь, ссылки «назад», советы, фильтр, разделители
@@ -1207,7 +1203,7 @@ html:root #vb{left:auto!important;right:12px!important;bottom:calc(3px + var(--s
 html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){opacity:1;transition:transform .24s cubic-bezier(.4,0,1,1),visibility 0s .24s,translate .45s cubic-bezier(.32,.72,0,1)}
 html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc).on{transition:transform .42s cubic-bezier(.12,.9,.1,1),visibility 0s,translate .45s cubic-bezier(.32,.72,0,1)}
 html:root #sh.on.fxl{transition:transform .42s cubic-bezier(.12,.9,.1,1),visibility 0s,translate 0s}
-html:root #sh :is(.fld,#tpl,#rev,.shf){opacity:1!important;transform:none!important;transition:none!important}
+html:root #sh :is(.fld,#rev,.shf){opacity:1!important;transform:none!important;transition:none!important}
 html:root #ov{transition:opacity .34s ease,visibility 0s .34s}
 html:root #ov.on{transition:opacity .45s ease}
 /* ===== v98: геометрия и анимации по видео ===== */
@@ -1309,8 +1305,6 @@ html:root :is(#gd,#rc) .shf .sm:not(.pr):not(.del){height:44px;padding:0 18px;bo
 html:root :is(#gd,#rc) :is(.sm.pr,.sm.del){height:44px}
 html:root :is(#gd,#rc) .sm.del{width:44px;background-size:20px}
 /* окно добавления: строка ввода — просто линия, быстрые шаблоны — текст без «таблеток», тег — простая строка */
-html:root #sh .tq{padding:6px 0;border:0;border-radius:0;background:none;color:var(--m2);font-size:13px;border-bottom:1px solid var(--sep)}
-html:root #sh #tpl{gap:16px}
 html:root #sh .shf .atg{border:0;border-radius:0;background:none;padding:8px 0}
 html:root #sh .shf .atg.on,html:root #sh .shf .atg.off{background:none;border:0}
 html:root #sh :is(.sm.pr){height:44px}
@@ -1480,6 +1474,26 @@ html:root #rc .shf .sm.del{order:1}html:root #rc .shf .sm:not(.pr):not(.del){ord
 #sh #tpls{opacity:0;transform:translate3d(0,10px,0);transition:opacity 0s .52s,transform 0s .52s}
 #sh.on #tpls{opacity:1;transform:none;transition:opacity .45s ease-out .14s,transform .65s cubic-bezier(.22,1,.36,1) .14s}
 @media (prefers-reduced-motion:reduce){#sh #tpls,#sh.on #tpls{transition:none}}
+/* v146: свой календарь (не забирает фокус — клавиатура остаётся); нативные поля даты в окнах не принимают касания, их берёт подпись */
+:is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc) input[type=date]{pointer-events:none}
+#dpk{position:fixed;z-index:70;width:min(304px,calc(100vw - 16px));padding:12px 12px 10px;border-radius:22px;background:var(--sb,#1e1e22);color:var(--t);box-shadow:0 12px 40px rgba(0,0,0,.35),0 0 0 .5px var(--sbd,rgba(255,255,255,.12));
+  visibility:hidden;opacity:0;transform:scale(.96);transform-origin:50% 0;transition:opacity .16s ease,transform .2s cubic-bezier(0,0,.17,1),visibility 0s .2s;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+#dpk.on{visibility:visible;opacity:1;transform:none;transition:opacity .16s ease,transform .2s cubic-bezier(0,0,.17,1),visibility 0s}
+#dpk button{border:0;background:none;color:inherit;font:inherit;-webkit-tap-highlight-color:transparent;cursor:pointer}
+#dpk .dph{display:flex;align-items:center;justify-content:space-between;margin:0 2px 8px}
+#dpk .dph b{font-size:15px;font-weight:600}
+#dpk .dph button{width:36px;height:36px;border-radius:50%;font-size:22px;line-height:1;color:var(--m2)}
+#dpk .dph button:active,#dpk .dpg button:active,#dpk .dpf button:active{opacity:.55}
+#dpk .dpw,#dpk .dpg{display:grid;grid-template-columns:repeat(7,1fr);text-align:center}
+#dpk .dpw span{font-size:11.5px;color:var(--m);padding-bottom:4px}
+#dpk .dpg button{height:38px;margin:1px auto;width:38px;border-radius:50%;font-size:15px;font-variant-numeric:tabular-nums}
+#dpk .dpg button.td{box-shadow:inset 0 0 0 1px var(--sbd,rgba(255,255,255,.25))}
+#dpk .dpg button.on{background:var(--sa);color:var(--son);font-weight:600;box-shadow:none}
+#dpk .dpf{display:flex;gap:8px;margin-top:8px}
+#dpk .dpf button{flex:1;height:38px;border-radius:999px;font-size:14px;font-weight:600;background:rgba(var(--wr,255,255,255),.08)}
+#dpk .dpf .dpc{color:var(--rd)}
+#dpk.cmp{padding:8px 10px}#dpk.cmp .dph{margin-bottom:2px}#dpk.cmp .dph button{width:30px;height:30px}#dpk.cmp .dpg button{height:30px;width:30px;font-size:14px;margin:0 auto}#dpk.cmp .dpw span{padding-bottom:2px}#dpk.cmp .dpf{margin-top:4px}#dpk.cmp .dpf button{height:32px}
+@media (prefers-reduced-motion:reduce){#dpk,#dpk.on{transition:none}}
 /* v141: затемнение снова полупрозрачное (список за окном виден затемнённым); страница под окном только не принимает касаний (lockBg) */
 /* затемнение фона: размер постоянный (--baseh), кривые из эталона */
 html:root #ov{transition:opacity .198s cubic-bezier(.75,.09,.67,1),visibility 0s .198s!important}
@@ -1530,7 +1544,6 @@ html:root #ed #eam,html:root #ed label.ef,html:root #ed .ef.tgf,html:root #ed in
 </div>
 <div id="sh" class="glass" role="dialog" aria-label="Новая операция">
 <div class="fld"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input id="inp" placeholder="Заметки, бюджет, лимиты, цели" autocomplete="off" enterkeyhint="done"><button type="button" class="rcic" id="recic" aria-label="Повторяющиеся операции" aria-haspopup="dialog"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg></button></div>
-<div id="tpl"></div>
 <div id="tpls"></div>
 <div id="rev"></div>
 <div class="shf"><button class="sm atg" id="atg" type="button"></button><button class="sm pr" id="go">Добавить</button></div>
@@ -1665,7 +1678,7 @@ tx.forEach(t=>{t.amount=Number.isFinite(+t.amount)?Math.abs(+t.amount):0;if(type
   if(typeof t.category!=='string'||!t.category)t.category=t.type==='income'?'in_other':'other';
   if(typeof t.note!=='string')t.note=t.note==null?'':String(t.note);
   if(Array.isArray(t.tags))t.tags=t.tags.filter(g=>typeof g==='string'&&g);else delete t.tags});
-if(!cfg.rates)cfg.rates={};if(!Array.isArray(cfg.cc))cfg.cc=[];if(!Array.isArray(cfg.curList))cfg.curList=[];if(!cfg.custom)cfg.custom=[];if(!cfg.catOv)cfg.catOv={};if(!cfg.limits||typeof cfg.limits!=='object')cfg.limits={};if(!Array.isArray(cfg.goals))cfg.goals=[];if(!Array.isArray(cfg.debts))cfg.debts=[];if(!Array.isArray(cfg.tplHide))cfg.tplHide=[];if(!Array.isArray(cfg.tpls))cfg.tpls=[];if(!Array.isArray(cfg.hide))cfg.hide=[];if(typeof cfg.carry!=='boolean')cfg.carry=true;if(typeof cfg.carryBud!=='boolean')cfg.carryBud=true;if(!/^\d{4}-\d{2}$/.test(cfg.budOffFrom||''))cfg.budOffFrom=shiftMonth(curM(),1);if(!/^\d{4}-\d{2}$/.test(cfg.carryFrom||''))cfg.carryFrom=curM();delete cfg.openBal;tx=tx.filter(t=>!t.goal);tx.forEach(t=>{if(t.category==='savings')t.category='other';else if(t.category==='savout')t.category='in_other'});
+if(!cfg.rates)cfg.rates={};if(!Array.isArray(cfg.cc))cfg.cc=[];if(!Array.isArray(cfg.curList))cfg.curList=[];if(!cfg.custom)cfg.custom=[];if(!cfg.catOv)cfg.catOv={};if(!cfg.limits||typeof cfg.limits!=='object')cfg.limits={};if(!Array.isArray(cfg.goals))cfg.goals=[];if(!Array.isArray(cfg.debts))cfg.debts=[];delete cfg.tplHide;if(!Array.isArray(cfg.tpls))cfg.tpls=[];if(!Array.isArray(cfg.hide))cfg.hide=[];if(typeof cfg.carry!=='boolean')cfg.carry=true;if(typeof cfg.carryBud!=='boolean')cfg.carryBud=true;if(!/^\d{4}-\d{2}$/.test(cfg.budOffFrom||''))cfg.budOffFrom=shiftMonth(curM(),1);if(!/^\d{4}-\d{2}$/.test(cfg.carryFrom||''))cfg.carryFrom=curM();delete cfg.openBal;tx=tx.filter(t=>!t.goal);tx.forEach(t=>{if(t.category==='savings')t.category='other';else if(t.category==='savout')t.category='in_other'});
 // u — время последней правки операции (ставится в save() автоматически); нужен, чтобы при слиянии выиграла более свежая правка
 let _sn=new Map();
 function snapTx(stamp){const now=Date.now(),keep=new Map();
@@ -2091,7 +2104,7 @@ function lockBg(on){
   if(on)lockRaf=requestAnimationFrame(()=>{lockRaf=requestAnimationFrame(apply)});else apply()
 }
 
-function openSheet(){if(!drafts.length){const el=$('#rev');el.classList.remove('anim','clearing');el.innerHTML=''}syncAuto();cancelGestures();lockBg(true);setOrigin(sh,fab);sh.classList.add('on');ov.className='on';ignore=false;renderTpl()}
+function openSheet(){if(!drafts.length){const el=$('#rev');el.classList.remove('anim','clearing');el.innerHTML=''}syncAuto();cancelGestures();lockBg(true);setOrigin(sh,fab);sh.classList.add('on');ov.className='on';ignore=false;renderTpls()}
 function closeSheet(){cancelAuto();sh.classList.remove('on');unlockIfIdle();cancelGestures()}
 fab.onclick=()=>{if(!isModalOpen())openSheet()};$('#thlp').onclick=()=>{if(isModalOpen())return;if(window.openTips)openTips()};inp.oninput=()=>{cancelAuto();syncBtn()};
 sh.addEventListener('pointerdown',e=>{e.stopPropagation();if(autoT&&e.target.closest('.fld,#rev input,#rev select,#rev .sg,#rev .dp,#rev .cpb,#rev .tgp'))cancelAuto()});
@@ -2283,35 +2296,6 @@ function limitNote(list){const out=[],seen=new Set();
     if(before<lim&&after>=lim)out.push(`«${cd(t.category).l}»: лимит превышен на ${fmt(Math.round(after-lim))}`);
     else if(before<lim*.8&&after>=lim*.8)out.push(`«${cd(t.category).l}»: ${Math.round(after/lim*100)}% лимита`)});
   return out[0]||''}
-// быстрые шаблоны: частые одинаковые траты за последние ~4 месяца (3+ раза)
-let tplC=[];
-function templates(){const lim=ymd(new Date(Date.now()-120*864e5)),map={};
-  tx.forEach(t=>{if(t.date<lim||!(t.amount>0)||t.oc)return;const k=t.type+'|'+t.category+'|'+norm(t.note||'')+'|'+t.amount;
-    const o=map[k]||(map[k]={k,type:t.type,category:t.category,note:t.note||'',amount:t.amount,tags:t.tags||[],n:0,last:''});o.n++;if(t.date>=o.last){o.last=t.date;o.tags=t.tags||[]}});
-  return Object.values(map).filter(o=>o.n>=3&&!cfg.tplHide.includes(o.k)).sort((a,b)=>b.n-a.n||b.last.localeCompare(a.last)).slice(0,8)}
-function renderTpl(){const el=$('#tpl');if(!el)return;tplC=templates();try{renderTpls()}catch(e){}
-  el.scrollLeft=0;el.innerHTML=(tplC.length?'<span class="tqh">Возможно:</span>':'')+tplC.map((o,i)=>`<button class="tq" data-i="${i}">${E(cd(o.category).e)} ${E(o.note||cd(o.category).n)} ${o.type==='income'?'+':''}${fmt(o.amount)}</button>`).join('')}
-(()=>{const el=$('#tpl');let lp=null,hit=false;
-  const hide=i=>{const o=tplC[i];if(!o)return;cfg.tplHide.push(o.k);save();renderTpl();toast('Шаблон скрыт','Отмена',()=>{cfg.tplHide=cfg.tplHide.filter(k=>k!==o.k);save();renderTpl()})};
-  el.addEventListener('pointerdown',e=>{const b=e.target.closest('.tq');if(!b)return;hit=false;clearTimeout(lp);lp=setTimeout(()=>{hit=true;hide(+b.dataset.i)},650)});
-  ['pointerup','pointerleave','pointercancel','pointermove'].forEach(ev=>el.addEventListener(ev,()=>clearTimeout(lp)));
-  el.addEventListener('click',e=>{const b=e.target.closest('.tq');if(!b)return;if(hit){hit=false;return}const o=tplC[+b.dataset.i];if(!o)return;
-    const t={id:uid(),type:o.type,amount:o.amount,category:o.category,note:o.note||cd(o.category).n,date:ymd(new Date()),...(o.tags&&o.tags.length?{tags:[...o.tags]}:{})};
-    inp.value='';closeSheet();commit([t],true)});
-  el.addEventListener('contextmenu',e=>{const b=e.target.closest('.tq');if(b){e.preventDefault();hide(+b.dataset.i)}})})();
-// листание строки «Возможно» пальцем (и мышью) с инерцией
-(()=>{const el=$('#tpl');let st=null,drag=false,dragged=false,vx=0,raf=0;
-  const stop=()=>{if(raf){cancelAnimationFrame(raf);raf=0}};
-  el.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;stop();st={x:e.clientX,sl:el.scrollLeft,id:e.pointerId,lx:e.clientX,lt:performance.now()};drag=false;vx=0});
-  el.addEventListener('pointermove',e=>{if(!st||e.pointerId!==st.id)return;const dx=e.clientX-st.x;
-    if(!drag){if(Math.abs(dx)<6)return;drag=true;try{el.setPointerCapture(e.pointerId)}catch{}}
-    el.scrollLeft=st.sl-dx;const n=performance.now(),dt=n-st.lt;if(dt>0)vx=lpf(vx,(st.lx-e.clientX)/dt,dt,33);st.lx=e.clientX;st.lt=n});
-  const end=e=>{if(!st||e.pointerId!==st.id)return;const was=drag;st=null;if(!was)return;
-    let v=vx,lt=performance.now();const step=n=>{const dt=Math.min(34,Math.max(1,n-lt));lt=n;if(Math.abs(v)<.025){raf=0;return}el.scrollLeft+=v*dt;v*=Math.pow(.94,dt/16.667);raf=requestAnimationFrame(step)};raf=requestAnimationFrame(step);
-    dragged=true;setTimeout(()=>dragged=false,80)};
-  el.addEventListener('pointerup',end);el.addEventListener('pointercancel',end);
-  el.addEventListener('click',e=>{if(dragged){e.stopPropagation();e.preventDefault()}},true)})();
-
 // ================= динамика по месяцам, календарь трат, долги =================
 const MGN=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
 const dayLbl=d=>{const x=new Date(d+'T00:00:00');return x.getDate()+' '+MGN[x.getMonth()]};
@@ -3990,8 +3974,7 @@ function applyMerge(d,o){const {add,sid,isHex,hadTx}=o;
       if(c.cur===cfg.cur&&c.rates&&typeof c.rates==='object')CS.forEach(k=>{const v=Number(c.rates[k]);if(k!==cfg.cur&&v>0&&!(parseFloat(cfg.rates[k])>0))cfg.rates[k]=v});
       if(!(cfg.budget>0)&&Number(c.budget)>0)cfg.budget=Number(c.budget);
       if(_obj(c.bm)){if(!_obj(cfg.bm))cfg.bm={};Object.entries(c.bm).forEach(([k,v])=>{if(/^\d{4}-\d{2}$/.test(k)&&Number(v)>0&&!(Number(cfg.bm[k])>0))cfg.bm[k]=Number(v)})}
-      if(Array.isArray(c.hide))c.hide.map(sid).filter(Boolean).forEach(x=>{if(!cfg.hide.includes(x))cfg.hide.push(x)});
-      if(Array.isArray(c.tplHide))c.tplHide.map(x=>String(x).slice(0,80)).forEach(x=>{if(!cfg.tplHide.includes(x))cfg.tplHide.push(x)})}
+      if(Array.isArray(c.hide))c.hide.map(sid).filter(Boolean).forEach(x=>{if(!cfg.hide.includes(x))cfg.hide.push(x)})}
     const lr={};Object.entries(d.learn||{}).forEach(([k,v])=>{if(sid(v))lr[String(k).slice(0,80)]=sid(v)});
     learn={...lr,...learn};buildAll();tx=[...add,...tx];save();render();renderSt();toast('Импортировано операций: '+add.length)}catch{toast('Не удалось прочитать файл')}}
 // нормализация состояния — та же, что при запуске приложения
@@ -4008,7 +3991,7 @@ tx.forEach(t=>{t.amount=Number.isFinite(+t.amount)?Math.abs(+t.amount):0;if(type
   if(typeof t.category!=='string'||!t.category)t.category=t.type==='income'?'in_other':'other';
   if(typeof t.note!=='string')t.note=t.note==null?'':String(t.note);
   if(Array.isArray(t.tags))t.tags=t.tags.filter(g=>typeof g==='string'&&g);else delete t.tags});
-if(!cfg.rates)cfg.rates={};if(!Array.isArray(cfg.cc))cfg.cc=[];if(!Array.isArray(cfg.curList))cfg.curList=[];if(!cfg.custom)cfg.custom=[];if(!cfg.catOv)cfg.catOv={};if(!cfg.limits||typeof cfg.limits!=='object')cfg.limits={};if(!Array.isArray(cfg.goals))cfg.goals=[];if(!Array.isArray(cfg.debts))cfg.debts=[];if(!Array.isArray(cfg.tplHide))cfg.tplHide=[];if(!Array.isArray(cfg.tpls))cfg.tpls=[];if(!Array.isArray(cfg.hide))cfg.hide=[];if(typeof cfg.carry!=='boolean')cfg.carry=true;if(typeof cfg.carryBud!=='boolean')cfg.carryBud=true;if(!/^\d{4}-\d{2}$/.test(cfg.budOffFrom||''))cfg.budOffFrom=shiftMonth(curM(),1);if(!/^\d{4}-\d{2}$/.test(cfg.carryFrom||''))cfg.carryFrom=curM();delete cfg.openBal;tx=tx.filter(t=>!t.goal);tx.forEach(t=>{if(t.category==='savings')t.category='other';else if(t.category==='savout')t.category='in_other'});
+if(!cfg.rates)cfg.rates={};if(!Array.isArray(cfg.cc))cfg.cc=[];if(!Array.isArray(cfg.curList))cfg.curList=[];if(!cfg.custom)cfg.custom=[];if(!cfg.catOv)cfg.catOv={};if(!cfg.limits||typeof cfg.limits!=='object')cfg.limits={};if(!Array.isArray(cfg.goals))cfg.goals=[];if(!Array.isArray(cfg.debts))cfg.debts=[];delete cfg.tplHide;if(!Array.isArray(cfg.tpls))cfg.tpls=[];if(!Array.isArray(cfg.hide))cfg.hide=[];if(typeof cfg.carry!=='boolean')cfg.carry=true;if(typeof cfg.carryBud!=='boolean')cfg.carryBud=true;if(!/^\d{4}-\d{2}$/.test(cfg.budOffFrom||''))cfg.budOffFrom=shiftMonth(curM(),1);if(!/^\d{4}-\d{2}$/.test(cfg.carryFrom||''))cfg.carryFrom=curM();delete cfg.openBal;tx=tx.filter(t=>!t.goal);tx.forEach(t=>{if(t.category==='savings')t.category='other';else if(t.category==='savout')t.category='in_other'});
 }
 // полная замена данных (облако Telegram): состояние становится таким, как в облаке
 function applyReplace(d){
@@ -4185,7 +4168,7 @@ function stHtml(){
 <div class="pf0"><span class="av${ini?' ini':''}"${ini?` style="background:linear-gradient(160deg,${avc},${avc}cc)"`:''}>${ini?`<i class="avi">${E(ini)}</i>`:person}${ph?`<img src="${E(ph)}" alt="" decoding="async" referrerpolicy="no-referrer" style="opacity:${(window._AV&&window._AV.url===ph&&window._AV.ok)?1:0}" onload="this.style.transition='opacity .25s';this.style.opacity=1" onerror="this.remove()">`:''}</span><span class="pn"><b>${E(nm)}</b><small${un?' class="un"':''}>${E(sub)}</small></span></div>
 <div class="sc">
 ${row('cub','#2f6df6','<path d="M12 3.5v17M16.2 7.6c0-1.6-1.9-2.8-4.2-2.8s-4.2 1.2-4.2 2.9 1.9 2.5 4.2 3.1 4.2 1.4 4.2 3.2-1.9 3-4.2 3-4.2-1.3-4.2-3"/>','Валюта и курсы',E(cfg.cur))}${row('ctc','','','Написать нам')}${row('tou','','','Обучение','Пройти заново')}
-${cfg.tplHide.length?row('tpr','#f39a1f','<path d="M13 3L5 13.5h6L10 21l8-10.5h-6z"/>','Быстрые шаблоны','Вернуть ('+cfg.tplHide.length+')'):''}</div>
+</div>
 <div class="sgh">Внешний вид</div>
 <div class="sc">${thm}</div>
 <div class="sgh">Безопасность</div>
@@ -4202,7 +4185,6 @@ function bindSt(){
   if($('#lkr'))$('#lkr').onclick=()=>openBq('link');
   if($('#mst'))$('#mst').onclick=()=>{msV=mStart();openBq('mstart')};if($('#pin'))$('#pin').onclick=()=>openBq('pin');if($('#prv'))$('#prv').onclick=()=>openBq('prv');
   if($('#crs'))$('#crs').onclick=()=>{cbM=shiftMonth(curM(),1);openBq('carry')};
-  if($('#tpr'))$('#tpr').onclick=()=>{cfg.tplHide=[];save();renderSt();toast('Шаблоны возвращены')};
   if($('#hsb'))homeBind();if($('#botu'))$('#botu').onchange=e=>{const v=String(e.target.value||'').trim();cfg.botUrl=v;save();if(ibBase()){window.__ibBusy=false;inboxPull()}}
   if($('#tou'))$('#tou').onclick=()=>{if(window.AppTour)AppTour.show()};$('#cin').onclick=e=>openCf('catsI',e.currentTarget);$('#cex').onclick=e=>openCf('catsE',e.currentTarget);if($('#rcs'))$('#rcs').onclick=()=>openRcSt();$('#bki').onclick=()=>openBq('import');$('#bke').onclick=()=>openBq('export');$('#bkr').onclick=()=>openBq('reset');$('#ctc').onclick=()=>openBq('contact');}
 function renderSt(){const el=$('#st');if(!el||tab!=='settings')return;el.innerHTML=stHtml();bindSt();if(window.pfSync)window.pfSync()}
@@ -4826,7 +4808,7 @@ function mergeCloudData(d){
     const mg={...dc,...cfg};                                  // одиночные настройки: выигрывают локальные
     ['goals','debts','rec','custom'].forEach(k=>{mg[k]=un(cfg[k],dc[k])});
     ['rates','limits','catOv','bm','rman'].forEach(k=>{mg[k]={...(_obj(dc[k])?dc[k]:{}),...(_obj(cfg[k])?cfg[k]:{})}});
-    ['cc','curList','tplHide'].forEach(k=>{mg[k]=arr(cfg[k],dc[k])});
+    ['cc','curList'].forEach(k=>{mg[k]=arr(cfg[k],dc[k])});
     mg.del=del;
     cfg=mg;tx=out;learn={...(_obj(d.learn)?d.learn:{}),...learn};
     normState();buildAll();snapTx(false);save()}
@@ -5004,7 +4986,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v145';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v146';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}   // номер сборки виден внизу экрана: по нему понятно, обновился ли Telegram до новой версии
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
@@ -5271,6 +5253,49 @@ async function ibLoop(){
   IDS.forEach(id=>{const el=$i(id);if(el)mo.observe(el,{attributes:true,attributeFilter:['class'],attributeOldValue:true})});
   // для openCp: клавиатура сейчас поднята? и: начать её опускание сразу (окно, в котором было поле, опускается вместе с ней)
   window.Sheets={kbUp:()=>!!owner&&(S(owner).lift>2||S(owner).target>2),hideKb(){clearTimeout(hideT);if(owner){const x=S(owner);if(x.lift>2||x.target>2)go(owner,0,C_HIDE)}}};
+})();
+</script>
+<script>
+// ================= v146: свой календарь для дат в окнах =================
+// Нативный выбор даты забирает фокус: клавиатура закрывается, окно опускается. Этот календарь фокус не трогает — клавиатура и окно остаются на месте.
+// Работает для всех полей даты внутри окон (операция, черновики, повтор, цель, долг): касание по полю открывает календарь рядом с ним.
+(function(){
+  const WIN='#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc',OPT={rce:1,gby:1,ddu:1};   // необязательные даты — можно очистить
+  const MN=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+  const p2=n=>String(n).padStart(2,'0'),ymd=d=>d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
+  const el=document.createElement('div');el.id='dpk';el.setAttribute('role','dialog');el.setAttribute('aria-label','Выбор даты');document.body.appendChild(el);
+  let st=null,chk=0;
+  const dateIn=lb=>lb&&lb.querySelector&&lb.querySelector('input[type=date]');
+  function render(){if(!st)return;const {y,m}=st,v=st.inp.value,td=ymd(new Date());
+    const f=new Date(y,m,1),lead=(f.getDay()+6)%7,n=new Date(y,m+1,0).getDate();let cells='';
+    for(let i=0;i<lead;i++)cells+='<i></i>';
+    for(let d=1;d<=n;d++){const k=y+'-'+p2(m+1)+'-'+p2(d);cells+=`<button type="button" tabindex="-1" data-d="${k}" class="${k===v?'on':''}${k===td?' td':''}">${d}</button>`}
+    el.innerHTML=`<div class="dph"><button type="button" tabindex="-1" data-a="p" aria-label="Предыдущий месяц">‹</button><b>${MN[m]} ${y}</b><button type="button" tabindex="-1" data-a="n" aria-label="Следующий месяц">›</button></div>`+
+      `<div class="dpw"><span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span></div><div class="dpg">${cells}</div>`+
+      `<div class="dpf"><button type="button" tabindex="-1" data-a="t">Сегодня</button><button type="button" tabindex="-1" data-a="y">Вчера</button>${OPT[st.inp.id]&&v?'<button type="button" tabindex="-1" data-a="c" class="dpc">Очистить</button>':''}</div>`}
+  function place(){if(!st)return;const r=st.lb.getBoundingClientRect(),vv=window.visualViewport,top0=vv?vv.offsetTop:0,bot=Math.min(window.innerHeight,vv?vv.offsetTop+vv.height:window.innerHeight);
+    el.classList.remove('cmp');if(el.offsetHeight>bot-top0-16)el.classList.add('cmp');   // мало места (клавиатура, маленький экран) — компактные клетки
+    const w=el.offsetWidth,h=el.offsetHeight,W=window.innerWidth;let x=Math.min(Math.max(8,r.right-w),W-w-8),y=r.bottom+8;
+    if(y+h>bot-8)y=r.top-h-8;if(y<top0+8)y=Math.max(top0+8,bot-h-8);
+    el.style.left=Math.round(x)+'px';el.style.top=Math.round(y)+'px'}
+  function open(lb){const inp=dateIn(lb);if(!inp)return;const v=/^\d{4}-\d{2}-\d{2}$/.test(inp.value)?inp.value:ymd(new Date());
+    st={lb,inp,y:+v.slice(0,4),m:+v.slice(5,7)-1};render();el.classList.add('on');place();
+    clearInterval(chk);chk=setInterval(()=>{const w=st&&st.lb.closest(WIN);if(!st||!st.lb.isConnected||!w||!w.classList.contains('on')||w.classList.contains('sub'))close();else place()},250)}
+  function close(){if(!st)return;st=null;clearInterval(chk);el.classList.remove('on')}
+  function set(v){const inp=st.inp;inp.value=v;inp.dispatchEvent(new Event('input',{bubbles:true}));inp.dispatchEvent(new Event('change',{bubbles:true}));close()}
+  // касание по полю даты: не даём фокусу уйти (клавиатура остаётся) и открываем свой календарь
+  const target=e=>{const lb=e.target.closest&&e.target.closest('label');return lb&&dateIn(lb)&&lb.closest(WIN)?lb:null};
+  document.addEventListener('mousedown',e=>{if(target(e)||e.target.closest('#dpk'))e.preventDefault()},true);
+  document.addEventListener('click',e=>{const lb=target(e);if(!lb)return;e.preventDefault();e.stopPropagation();if(st&&st.lb===lb)close();else open(lb)},true);
+  document.addEventListener('pointerdown',e=>{if(st&&!e.target.closest('#dpk')&&!target(e))close()},true);
+  document.addEventListener('keydown',e=>{if(st&&e.key==='Escape'){e.stopPropagation();close()}},true);
+  el.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!st)return;e.preventDefault();
+    if(b.dataset.d)set(b.dataset.d);
+    else if(b.dataset.a==='p'||b.dataset.a==='n'){st.m+=b.dataset.a==='p'?-1:1;if(st.m<0){st.m=11;st.y--}if(st.m>11){st.m=0;st.y++}render();place()}
+    else if(b.dataset.a==='t')set(ymd(new Date()));
+    else if(b.dataset.a==='y'){const d=new Date();d.setDate(d.getDate()-1);set(ymd(d))}
+    else if(b.dataset.a==='c')set('')});
+  ['pointerdown','touchstart'].forEach(ev=>el.addEventListener(ev,e=>e.stopPropagation(),{passive:true}));
 })();
 </script>
 <script>
