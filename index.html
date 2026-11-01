@@ -1430,11 +1430,13 @@ html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#r
   translate:0 calc(-100% - var(--rest) - var(--lift,0px))!important;
   transform:translateY(calc(100% + var(--rest) + var(--lift,0px) + 40px))!important;
   opacity:1!important;visibility:hidden;pointer-events:none;
-  transition:transform .192s cubic-bezier(.58,-.03,1,.5),visibility 0s .192s,max-height var(--kt),padding-bottom var(--kt)!important}
+  transition:transform .192s cubic-bezier(.58,-.03,1,.5),visibility 0s .192s,padding-bottom var(--kt)!important;
+  overflow-x:hidden!important;overscroll-behavior-x:none}   /* v145: окно не сдвигается пальцем вбок (iOS давал пружинящую прокрутку по горизонтали) */
 html:root :is(#sh,#ed):is(#sh,#ed):is(#sh,#ed){--rest:calc(var(--sab,0px) + 12px)}
 html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc).on{
   transform:none!important;visibility:visible;pointer-events:auto;
-  transition:transform .246s cubic-bezier(0,0,.17,1),visibility 0s,max-height var(--kt),padding-bottom var(--kt)!important}
+  transition:transform .246s cubic-bezier(0,0,.17,1),visibility 0s,padding-bottom var(--kt)!important}
+html:root :is(#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#ed,#gd,#cf,#bq,#nc,#cp,#rc){touch-action:pan-y}
 /* вложенное окно сверху: нижнее не принимает касания и затемняется слоем ::after (касание уходит в затемнение и закрывает верхнее окно) */
 html:root :is(#sh,#ed,#gd,#cf):is(#sh,#ed,#gd,#cf):is(#sh,#ed,#gd,#cf).sub{pointer-events:none!important}
 html:root :is(#sh,#ed,#gd,#cf,#cp)::after{content:"";position:absolute;inset:0;border-radius:inherit;background:#000;opacity:0;pointer-events:none;transition:opacity .25s cubic-bezier(.26,.24,.25,1)}
@@ -5002,7 +5004,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v144';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v145';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}   // номер сборки виден внизу экрана: по нему понятно, обновился ли Telegram до новой версии
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
@@ -5211,10 +5213,10 @@ async function ibLoop(){
   const measure=()=>{const V=Math.min(window.innerHeight,vv?vv.offsetTop+vv.height:window.innerHeight);return Math.max(0,baseH-V)};
   // --- движение (у каждого окна своё)
   function apply(el){const x=S(el);el.style.setProperty('--lift',Math.round(x.lift*10)/10+'px');
+    {const bo=FLT[el.id]?sab+12:0,km=Math.max(160,Math.round(baseH-x.lift-sat-8-bo));if(km!==x.km){x.km=km;el.style.setProperty('--kmax',km+'px')}}   // v145: высота окна меняется вместе с подъёмом — верх не выезжает за экран
     const o=owner&&st.get(owner),k=!!o&&(o.target>0||o.lift>1);if(k!==kbo){kbo=k;root.classList.toggle('kbo',k)}}
-  function setMax(el,to){const bo=FLT[el.id]?sab+12:0;el.style.setProperty('--kmax',Math.max(160,Math.round(baseH-to-sat-8-bo))+'px')}
   function go(el,to,c){if(!el)return;const x=S(el);to=Math.max(0,Math.round(to));if(x.tw&&x.tw.to===to)return;if(!x.tw&&Math.abs(to-x.lift)<.5&&to===x.target)return;
-    x.target=to;setMax(el,to);
+    x.target=to;
     if(RMQ.matches||Math.abs(to-x.lift)<.5){x.lift=to;x.tw=null;apply(el);return}   // «уменьшение движения»: без анимации
     x.tw={from:x.lift,to,t0:performance.now(),c};if(!raf)raf=requestAnimationFrame(step)}
   function step(now){raf=0;let more=false;
@@ -5226,14 +5228,16 @@ async function ibLoop(){
   document.addEventListener('focusin',e=>{const f=e.target;if(!editable(f))return;const w=winOf(f);if(!w)return;
     clearTimeout(hideT);owner=w;                                         // прежнее окно (если оно теперь заднее) остаётся там, где было
     if(!coarse&&measure()<60)return;                                   // компьютер: экранной клавиатуры нет — окно не двигаем
-    const x=S(w),c=kindOf(f),m=measure(),pred=kbp[c]||(m>120?m:0)||kbp.alpha||kbp.num||Math.round(baseH*.36);
+    const x=S(w),c=kindOf(f),m=measure();
+    if(c==='pick'){if(x.lift>1||x.target>0)go(w,0,C_HIDE);return}   // v145: выпадающий список и дата открываются без клавиатуры (iOS: меню/календарь) — окно на место
+    const pred=kbp[c]||(m>120?m:0)||kbp.alpha||kbp.num||Math.round(baseH*.36);
     go(w,pred,x.lift<2?C_SHOW:C_FIT);setTimeout(reveal,420)});
   document.addEventListener('focusout',e=>{const f=e.target;if(!editable(f)||!winOf(f))return;
     if(editable(e.relatedTarget)&&winOf(e.relatedTarget))return;        // переход к другому полю — решит focusin
     const w=winOf(f);lastBlur=Date.now();clearTimeout(hideT);hideT=setTimeout(()=>{if(!foc()&&w===owner&&isFront(w))go(w,0,C_HIDE);setTimeout(()=>{if(!foc())syncBase()},500)},70)});
   // --- измерение высоты клавиатуры: после изменения высоты webview значение устаивается 90 мс
   function settle(){const K=measure();
-    if(K>120){if(foc()&&owner){const c=kindOf(document.activeElement);if(Math.abs(K-(kbp[c]||0))>2){kbp[c]=K;saveKb()}if(Math.abs(K-S(owner).target)>3)go(owner,K,C_FIT)}}
+    if(K>120){if(foc()&&owner&&kindOf(document.activeElement)!=='pick'){const c=kindOf(document.activeElement);if(Math.abs(K-(kbp[c]||0))>2){kbp[c]=K;saveKb()}if(Math.abs(K-S(owner).target)>3)go(owner,K,C_FIT)}}
     else if(K<60){if(foc()&&owner&&S(owner).lift>1&&coarse){clearTimeout(offT);offT=setTimeout(()=>{if(measure()<60&&foc()&&owner&&S(owner).lift>1&&!S(owner).tw)go(owner,0,C_FIT)},600)}   // внешняя клавиатура; короткое «мигание» не считается
     }
     // v141: нет поля в фокусе (и клавиатура не уходит прямо сейчас) — значит, высоту поменял сам Telegram (развернул/свернул, смахивание):
