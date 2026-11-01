@@ -1439,6 +1439,13 @@ html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#r
 html:root :is(#sh,#ed,#gd,#cf):is(#sh,#ed,#gd,#cf):is(#sh,#ed,#gd,#cf).sub{pointer-events:none!important}
 html:root :is(#sh,#ed,#gd,#cf,#cp)::after{content:"";position:absolute;inset:0;border-radius:inherit;background:#000;opacity:0;pointer-events:none;transition:opacity .25s cubic-bezier(.26,.24,.25,1)}
 html:root :is(#sh,#ed,#gd,#cf,#cp).sub::after{opacity:.42}
+/* v143: окно операции — внизу две кнопки: «Удалить» слева (мягкий красный, как «Удалить» в других окнах) и «Сохранить» справа (основная, как выбранная «Расх.») */
+html:root #ed .shf.shf{display:flex!important;align-items:center;justify-content:space-between;gap:10px;margin-top:18px;order:9}
+html:root #ed #esv.sm,html:root #ed #edel.sm{display:flex!important;align-items:center;justify-content:center;flex:1 1 0;width:auto;height:48px;padding:0 16px;border-radius:999px;font-size:15px;font-weight:600;letter-spacing:.01em;background-image:none;-webkit-tap-highlight-color:transparent;transition:transform .12s ease,opacity .12s ease}
+html:root #ed #esv.sm{order:2;border:0;background:var(--sa);color:var(--son)}
+html:root #ed #edel.sm{order:1;border:1px solid rgba(227,144,144,.22);background:rgba(227,144,144,.10);color:var(--rd)}
+html:root[data-theme=light] #ed #edel.sm{border-color:rgba(201,74,74,.18);background:rgba(201,74,74,.07)}
+html:root #ed :is(#esv,#edel).sm:active{transform:scale(.97);opacity:.85}
 /* v141: затемнение снова полупрозрачное (список за окном виден затемнённым); страница под окном только не принимает касаний (lockBg) */
 /* затемнение фона: размер постоянный (--baseh), кривые из эталона */
 html:root #ov{transition:opacity .198s cubic-bezier(.75,.09,.67,1),visibility 0s .198s!important}
@@ -2074,7 +2081,7 @@ function closeTopModal(){
   else if(cfT||cf.classList.contains('on'))closeCf();
   else if(gd._bk&&window.bkClose)window.bkClose();
   else if(gT||gd.classList.contains('on')){try{autoGd()}catch(e){}if(gd.classList.contains('on'))closeGoal()}
-  else if(eT||$('#ed').classList.contains('on')){try{if(eT&&pn(($('#eam')||{}).value)>0)saveEd()}catch(e){}if($('#ed').classList.contains('on'))closeEdit()}
+  else if(eT||$('#ed').classList.contains('on')){if($('#ed').classList.contains('on'))closeEdit()}   // v143: окно операции закрывается БЕЗ сохранения — сохраняет только кнопка «Сохранить» или Enter
   else if(sh.classList.contains('on')){inp.value='';closeSheet()}
   else return false;
   return true}
@@ -3089,7 +3096,7 @@ ${t.oc?`<div class="eo">${fmt(t.oa)} ${E(t.oc)}</div>`:''}
 
 <label class="ef">Дата<input id="eda" type="date" value="${t.date}"></label>
 <div class="ef tgf"><div class="tgw">${(t.tags||[]).map(g=>`<button class="tgc" data-er="${E(g)}">#${E(g)} ×</button>`).join('')}<input id="etn" type="text" list="tgl" placeholder="например: #друзья" aria-label="Теги" autocomplete="off" autocorrect="off" spellcheck="false" autocapitalize="none" enterkeyhint="done"></div></div>
-<div class="shf"><button class="sm pr" id="esv">Сохранить</button></div>`}
+<div class="shf"><button type="button" class="sm del" id="edel">Удалить</button><button type="button" class="sm pr" id="esv">Сохранить</button></div>`}
 /* v132: окно операции монтируется один раз (renderEd в openEdit); дальше обновляются только изменившиеся узлы.
    Раньше смена типа/категории/тега пересоздавала innerHTML: поля терялись, фокус и клавиатура сбрасывались, окно мигало. */
 function patchEdTags(){const w=ed.querySelector('.tgw'),i=$('#etn');if(!w||!i||!eT){if(eT)renderEd();return}
@@ -3120,7 +3127,8 @@ ed.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!eT)re
   if(b.dataset.et){readEd();if(eT.type!==b.dataset.et){eT.type=b.dataset.et;eT.category=detect(eT.note,eT.note,eT.type)}eT.addCat=false;patchEd();return}
   if(b.id==='esv')saveEd();else if(b.id==='edel')delEd();else if(b.id==='ecl')closeEdit()});
 ed.addEventListener('click',e=>{const b=e.target.closest('#eca');if(!b||!eT)return;e.preventDefault();readEd();openCp(eT.type,eT.category,id=>{if(eT){eT.category=id;patchEd()}},()=>{if(eT)patchEd()})});
-ed.addEventListener('keydown',e=>{if(eT&&e.key==='Enter'&&(e.target.id==='eam'||e.target.id==='eno')){e.preventDefault();e.target.blur();return}if(!eT)return;if(e.target.id==='etn'&&(e.key==='Enter'||e.key===',')){e.preventDefault();readEd();patchEdTags();return}
+ed.addEventListener('keydown',e=>{if(!eT)return;   // v143: Enter в сумме и заметке сохраняет; в тегах Enter добавляет набранный тег, а в пустом поле тегов — сохраняет
+  if(e.target.id==='etn'&&(e.key===','||(e.key==='Enter'&&e.target.value.trim()))){e.preventDefault();readEd();patchEdTags();return}
   if(e.key==='Enter'&&e.target.tagName==='INPUT'&&e.target.type!=='date'){e.preventDefault();saveEd()}});
 $('#body').addEventListener('click',e=>{if(isModalOpen())return;const d=e.target.dataset;const r2=e.target.closest('.r2[data-id]');if(r2){openEdit(r2.dataset.id);return}const go=e.target.closest('[data-go]');if(go){if(go.dataset.go==='rec'){fab.click();setTimeout(()=>{try{openRc()}catch(x){}},600)}else goDebts();return}const dy=e.target.closest('.cc[data-day]');if(dy){openDay(dy.dataset.day);return}const lkb=e.target.closest('[data-lk]');if(lkb){linkToggle(lkb);return}const da=e.target.closest('[data-da]');if(da){debtAct(da);return}const mo2=e.target.closest('[data-mo]');if(mo2){TSEL=mo2.dataset.mo;render();return}if(d.tn){TN=+d.tn;render();softIn(false);return}const la=e.target.closest('[data-la]');if(la){limAct(la);return}const ga=e.target.closest('[data-ga]');if(ga){goalAct(ga);return}if(d.ps){ps=d.ps;render();softIn(true);return}const nv=e.target.closest('[data-nv]');if(nv){navStats(+nv.dataset.nv);return}if(e.target.closest('[data-tips]')){tipsOpen=!tipsOpen;_tipsF=tipsOpen;render();_tipsF=false;return}if(d.kd){KD=d.kd;render();softIn(false);return}if(d.rg){RG=d.rg;WO=woFor(month);render();softIn(false);return}if(d.tr){TR=d.tr;ftagR=null;render();softIn(false);return}if(d.as){AS=d.as;render();softIn(true);return}const tg=e.target.closest('.pl[data-tag]');if(tg){if(tab==='stats')openTag(tg.dataset.tag,{...lastRange},'stats');else openTag(tg.dataset.tag);return}openCat(e.target.closest('.pl[data-cat],.lr[data-cat]'))});
 $('#body').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const r2=e.target.closest&&e.target.closest('.r2[data-id]');if(r2){e.preventDefault();openEdit(r2.dataset.id);return}const tg=e.target.closest&&e.target.closest('.pl[data-tag]');if(tg){e.preventDefault();openTag(tg.dataset.tag);return}const p=e.target.closest&&e.target.closest('.pl[data-cat]');if(p){e.preventDefault();openCat(p)}}});
@@ -4888,7 +4896,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v142';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v143';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}   // номер сборки виден внизу экрана: по нему понятно, обновился ли Telegram до новой версии
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
