@@ -1150,7 +1150,7 @@ html.plk #lk,#lk.on{visibility:visible;opacity:1;transform:none;pointer-events:a
 </style>
 <style id="v68">
 /* v68: главный блок (месяц + остаток/доход/расход) неподвижный, список заезжает под него; блок полупрозрачный, сквозь него виден размытый список */
-#top{position:sticky;top:max(calc(8px + var(--topgap,40px)),calc(var(--sat) + 8px));z-index:8;   /* v120: при прокрутке основной блок держится на две строки ниже верха (--topgap) */
+#top{position:relative;z-index:8;   /* v151: блок не прилипает к верху — уезжает вместе со списком (см. кнопку «наверх», #totop) */
   background:linear-gradient(180deg,color-mix(in srgb,var(--tp1) 62%,transparent),color-mix(in srgb,var(--tp2) 54%,transparent));
   -webkit-backdrop-filter:blur(22px) saturate(1.7);backdrop-filter:blur(22px) saturate(1.7);
   box-shadow:inset 0 .5px 0 rgba(var(--wr),.16),0 8px 24px rgba(0,0,0,.20)}
@@ -1208,13 +1208,13 @@ html:root #ov{transition:opacity .34s ease,visibility 0s .34s}
 html:root #ov.on{transition:opacity .45s ease}
 /* ===== v98: геометрия и анимации по видео ===== */
 /* полноширинные шторки от самого низа экрана (все окна, кроме окна операции) */
-html:root :is(#gd,#cf,#bq,#nc,#cp,#rc){left:0!important;right:0!important;bottom:0!important;max-width:none!important;margin:0!important;border-radius:28px 28px 0 0!important;padding-bottom:calc(18px + var(--sab,0px))!important}
-html:root.kbo :is(#gd,#cf,#bq,#nc,#cp,#rc){padding-bottom:18px!important}
+/* v153: все окна — карточки как окно операции: поля 12 px по бокам и снизу, скругление со всех сторон */
+html:root :is(#gd,#cf,#bq,#nc,#cp,#rc){left:12px!important;right:12px!important;bottom:calc(var(--sab,0px) + 12px)!important;max-width:none!important;margin:0!important;border-radius:28px!important;padding-bottom:18px!important}
 html:root :is(#gd,#cf,#bq,#nc,#cp,#rc):not(.on){transform:translateY(calc(100% + var(--mb,0px)))!important}
 /* окно операции — карточка с полями по бокам, как в первом видео */
 html:root :is(#sh,#ed){left:12px!important;right:12px!important;max-width:none!important;margin:0!important;bottom:calc(var(--sab,0px) + 12px)!important}
 html:root :is(#sh,#ed):not(.on){transform:translateY(calc(100% + var(--sab,0px) + 12px + var(--mb,0px)))!important}
-@media(min-width:640px){html:root :is(#gd,#cf,#bq,#nc,#cp,#rc){max-width:560px!important;margin:0 auto!important}html:root :is(#sh,#ed){max-width:520px!important;margin:0 auto!important}}
+@media(min-width:640px){html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){max-width:520px!important;margin:0 auto!important}}
 /* открытие 450мс (плавное замедление), закрытие 340мс (разгон вниз за экран); сдвиг под клавиатуру 300мс */
 html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){transition:transform .34s cubic-bezier(.55,.06,.68,.19),visibility 0s .34s,translate .3s cubic-bezier(.25,.8,.25,1)}
 html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc).on{transition:transform .45s cubic-bezier(.215,.61,.355,1),visibility 0s,translate .3s cubic-bezier(.25,.8,.25,1)}
@@ -1426,7 +1426,7 @@ html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#r
   opacity:1!important;visibility:hidden;pointer-events:none;
   transition:transform .192s cubic-bezier(.58,-.03,1,.5),visibility 0s .192s,padding-bottom var(--kt)!important;
   overflow-x:hidden!important;overscroll-behavior-x:none}   /* v145: окно не сдвигается пальцем вбок (iOS давал пружинящую прокрутку по горизонтали) */
-html:root :is(#sh,#ed):is(#sh,#ed):is(#sh,#ed){--rest:calc(var(--sab,0px) + 12px)}
+html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){--rest:calc(var(--sab,0px) + 12px)}   /* v153: все окна стоят на 12 px выше нижнего края, как окно операции */
 html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc).on{
   transform:none!important;visibility:visible;pointer-events:auto;
   transition:transform .246s cubic-bezier(0,0,.17,1),visibility 0s,padding-bottom var(--kt)!important}
@@ -1498,6 +1498,15 @@ html:root #rc .shf .sm.del{order:1}html:root #rc .shf .sm:not(.pr):not(.del){ord
 #pkr[data-s=a]{transform:translate3d(0,8px,0) scale(.97);transform-origin:50% 100%}
 #pkr.on,#pkr.on[data-s]{transform:none}
 @media (prefers-reduced-motion:reduce){#pkr,#pkr.on{transition:none}}
+/* v151: кнопка «наверх» — над вкладкой «Настройки», появляется, когда главный блок ушёл из вида */
+#totop{position:fixed;z-index:9;right:calc(var(--rx,16px) + 8px);bottom:calc(14px + var(--sab) + var(--tbh,63px) + 12px);width:48px;height:48px;padding:0;border:0;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;color:var(--t);background:var(--gloss,none),var(--gbarT,rgba(34,34,38,.6));
+  -webkit-backdrop-filter:blur(20px) saturate(1.6);backdrop-filter:blur(20px) saturate(1.6);box-shadow:inset 0 .5px 0 rgba(var(--wr),.18),0 6px 20px rgba(0,0,0,.28);
+  visibility:hidden;opacity:0;transform:translate3d(0,16px,0) scale(.5);pointer-events:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;
+  transition:opacity .16s ease,transform .2s cubic-bezier(.4,0,1,1),visibility 0s .2s}
+#totop.on{visibility:visible;opacity:1;transform:none;pointer-events:auto;transition:opacity .2s ease,transform .44s cubic-bezier(.34,1.56,.64,1),visibility 0s}
+#totop.on:active{transform:scale(.88);transition:transform .12s ease}
+@media (prefers-reduced-motion:reduce){#totop,#totop.on{transition:none}}
 /* v146: свой календарь (не забирает фокус — клавиатура остаётся); нативные поля даты в окнах не принимают касания, их берёт подпись */
 :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc,#fp) input[type=date]{pointer-events:none}
 #dpk{position:fixed;z-index:70;width:min(304px,calc(100vw - 16px));padding:12px 12px 10px;border-radius:22px;background:var(--sb,#1e1e22);color:var(--t);box-shadow:0 12px 40px rgba(0,0,0,.35),0 0 0 .5px var(--sbd,rgba(255,255,255,.12));
@@ -2102,6 +2111,8 @@ function setOrigin(el,src){
   else{const r=(src||fab).getBoundingClientRect();x=r.left+r.width/2;y=r.top+r.height/2}
   const ky=parseFloat(el.style.getPropertyValue('--ky'))||0,ty=ky-el.offsetHeight/2;
   el.style.setProperty('--o',(x-el.offsetLeft)+'px '+(y-(el.offsetTop+ty))+'px')}
+// v153: курсор в поле при открытии окна — только на компьютере. На телефоне фокус из таймера не открывает клавиатуру (iOS), а окно поднималось под неё и висело посередине
+const autoF=(sel,ms)=>{if(matchMedia('(pointer:coarse)').matches)return;setTimeout(()=>{const a=$(sel);if(a)a.focus({preventScroll:true})},ms)};
 const isModalOpen=()=>sh.classList.contains('on')||($('#ed')&&$('#ed').classList.contains('on'))||($('#gd')&&$('#gd').classList.contains('on'))||($('#cf')&&$('#cf').classList.contains('on'))||($('#bq')&&$('#bq').classList.contains('on'))||($('#nc')&&$('#nc').classList.contains('on'))||($('#cp')&&$('#cp').classList.contains('on'))||($('#rc')&&$('#rc').classList.contains('on'))||!!document.querySelector('#tpv:not(.cl),#wr:not(.cl)');
 function cancelGestures(){
   try{if(typeof openSw!=='undefined'&&openSw)closeSw(openSw)}catch{}
@@ -2438,12 +2449,12 @@ function openDebt(d,src){if(isModalOpen())return;cancelGestures();lockBg(true);g
 <label class="ef">Уже возвращено<input id="dpd" inputmode="decimal" value="${v.paid||''}" placeholder="0"></label>
 <label class="ef">Вернуть до<input id="ddu" type="date" value="${E(v.due||'')}"></label>
 <div class="shf">${d?'<button class="sm del" id="gdel">Удалить</button>':'<span></span>'}<button class="sm pr${d?' auto':''}" id="gsvb">Сохранить</button></div>`;showGd(src);
-  if(!d)setTimeout(()=>{const a=$('#dwh');if(a)a.focus({preventScroll:true})},60)}
+  if(!d)autoF('#dwh',60)}
 function openDpay(d,src){if(isModalOpen())return;cancelGestures();lockBg(true);gT={mode:'dpay',id:d.id};
   gd.innerHTML=`<div class="eh"><b>${d.dir==='in'?'Получено':'Возвращено'}</b><button class="x" id="gcl" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div>
 <input id="gam" class="${d.dir==='in'?'inc':'exp'}" inputmode="decimal" placeholder="0" aria-label="Сумма">
 <div class="eo">${E(d.who)} · осталось ${fmt(Math.round(dRem(d)))} из ${fmt(d.amount)} ${cfg.cur}</div>
-<div class="shf"><button class="sm" id="dfull">Всё</button><button class="sm pr" id="gsvb">Записать</button></div>`;showGd(src);setTimeout(()=>{const a=$('#gam');if(a)a.focus({preventScroll:true})},60)}
+<div class="shf"><button class="sm" id="dfull">Всё</button><button class="sm pr" id="gsvb">Записать</button></div>`;showGd(src);autoF('#gam',60)}
 function saveDebt(){if(!gT||gT.mode!=='debt')return;const who=($('#dwh').value||'').trim().slice(0,40)||'Без имени',am=pn($('#dam').value),paid=Math.max(0,Math.min(am,pn($('#dpd').value))),due=$('#ddu').value||'';
   if(!(am>0)){toast('Укажите сумму долга');return}
   if(gT.id){const d=cfg.debts.find(x=>x.id===gT.id);if(d)Object.assign(d,{who,dir:gT.dir,amount:am,paid,due});if(am-paid<=0){if(!d.closed)d.closed=ymd(new Date())}else delete d.closed}
@@ -2534,7 +2545,7 @@ function openDep(g,src){if(isModalOpen())return;cancelGestures();lockBg(true);gT
   gd.innerHTML=`<div class="eh"><span class="sgm"><button data-gm="in" class="on">Взнос</button><button data-gm="out">Снять</button></span><button class="x" id="gcl" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div>
 <input id="gam" class="inc" inputmode="decimal" placeholder="0" aria-label="Сумма">
 <div class="eo">${E(g.name)} · ${fmt(g.saved)} из ${fmt(g.target)} ${cfg.cur}</div>
-<div class="shf"><span></span><button class="sm pr" id="gdep">Внести</button></div>`;showGd(src);setTimeout(()=>{const a=$('#gam');if(a)a.focus({preventScroll:true})},60)}
+<div class="shf"><span></span><button class="sm pr" id="gdep">Внести</button></div>`;showGd(src);autoF('#gam',60)}
 function closeGoal(){gd.classList.remove('on');gT=null;unlockIfIdle();cancelGestures()}
 function saveGoal(){if(!gT)return;if(gT.mode==='debt')return saveDebt();if(gT.mode==='dpay')return saveDpay();if(gT.mode==='lim')return saveLim();if(gT.mode==='bud')return saveBud();const nm=($('#gnm').value||'').trim().slice(0,40)||'Цель',tg=pn($('#gtg').value),sv=Math.max(0,pn($('#gsv').value)),pl=Math.max(0,pn($('#gpl').value)),tag=normTag($('#gtn').value),by=/^\d{4}-\d{2}-\d{2}$/.test(($('#gby')||{}).value||'')?$('#gby').value:'';
   if(!(tg>0)){toast('Укажите сумму цели');return}
@@ -3191,7 +3202,7 @@ $('#tabs').onclick=e=>{if(isModalOpen()||tbdBlock)return;const b=e.target.closes
 // so the next page is actually visible while dragging. Release continues from the finger's position.
 const bodyEl=$('#body'),GAP=16;
 let tp=null,tpBlock=false,tpRaf=0;
-const TP_SKIP='#lk,#lt0,#st .lt,#st .pf0,.swb,#top,#tabs,#fab,#thlp,#topact,.hd,#sp,#stw,#sh,#ed,#gd,#cf,#bq,#nc,#cp,#ov,#toast,#tour,input,select,textarea';
+const TP_SKIP='#totop,#lk,#lt0,#st .lt,#st .pf0,.swb,#top,#tabs,#fab,#thlp,#topact,.hd,#sp,#stw,#sh,#ed,#gd,#cf,#bq,#nc,#cp,#ov,#toast,#tour,input,select,textarea';
 const setLt0=t=>{const e=document.getElementById('lt0');if(!e)return;e.style.display=t==='settings'?'none':'';e.textContent=ttlOf(t)};
 const ttlOf=t=>t==='list'?(ftag?'#'+ftag+(fcat?' › '+cd(fcat.id).l:''):fcat?cd(fcat.id).l:fday?dayLbl(fday):'Операции'):t==='stats'?'Аналитика':t==='tags'?'Планы':t==='settings'?'Настройки':'Советы';
 const tabInd=()=>$('#tabs').querySelector('.ind');
@@ -3619,58 +3630,28 @@ function endMs(e,cancel){if(!ms||e.pointerId!==ms.id)return;const m=ms;ms=null;i
 topEl.addEventListener('pointerup',e=>endMs(e,false));topEl.addEventListener('pointercancel',e=>endMs(e,true));
 topEl.addEventListener('click',e=>{if(msBlock){e.stopPropagation();e.preventDefault()}},true);
 
-// ---------- сжатие главного блока при прокрутке списка ----------
-// Пока блок прилип к верху, по мере прокрутки он сужается до трёх цифр (остаток, доход, расход):
-// строка с месяцем, подпись «Остаток», кольцо бюджета и нижние строки плавно сворачиваются.
-// Место блока в потоке не меняется (margin-bottom), поэтому список не прыгает; путь прокрутки равен
-// высоте сжатия, так что список всё время остаётся на одном расстоянии под блоком.
+// v151: главный блок больше не прилипает к верху и не сжимается при прокрутке — уезжает вместе со списком.
+// Когда он ушёл из вида, справа внизу (над вкладкой «Настройки») появляется кнопка «наверх».
 (function(){
-  const sw=$('#tps'),sum=$('#sum');if(!sw||!sum)return;
-  const PR=['height','marginTop','marginBottom','paddingTop','paddingBottom'];
-  const SPEC=[['.mo',PR,1],['#sum > .sht',PR,1],['#sum > :not(.bw):not(.sht)',PR,1],['#sum .gg',['width','height'],1],['#sum .bl',['minHeight'],0]];
-  const px=v=>parseFloat(v)||0;
-  let T=[],tot=null,N={},H0=0,R=0,dirty=true,hid=true,lastP=-1,raf=0;
-  const obs=new MutationObserver(()=>{dirty=true;update()});
-  function clear(){
-    T.forEach(t=>{const s=t.e.style;t.pr.forEach(k=>{s[k]=''});s.opacity='';s.overflow='';s.pointerEvents=''});
-    const s=topEl.style;s.paddingTop='';s.paddingBottom='';s.marginBottom='';if(tot)tot.style.marginBottom=''}
-  function apply(p){
-    const k=1-p;
-    T.forEach(t=>{const s=t.e.style;t.pr.forEach((key,i)=>{s[key]=(t.n[i]*k)+'px'});
-      if(t.f){s.opacity=String(Math.max(0,1-p*1.7));s.overflow='hidden';s.pointerEvents=p>.4?'none':''}});
-    const s=topEl.style;s.paddingTop=(N.pt+8*p)+'px';s.paddingBottom=(N.pb-6*p)+'px';
-    if(tot)tot.style.marginBottom=(N.tm-6*p)+'px';
-    s.marginBottom=(N.mb+H0-topEl.offsetHeight)+'px'}
-  function measure(){
-    clear();T=[];tot=null;
-    const h=topEl.offsetHeight;if(!h)return false;
-    const cs=getComputedStyle(topEl);N={pt:px(cs.paddingTop),pb:px(cs.paddingBottom),mb:px(cs.marginBottom),tm:0};
-    SPEC.forEach(([q,pr,f])=>topEl.querySelectorAll(q).forEach(e=>{const c=getComputedStyle(e);T.push({e,pr,f,n:pr.map(k=>px(c[k]))})}));
-    tot=topEl.querySelector('.tot');if(tot)N.tm=px(getComputedStyle(tot).marginBottom);
-    H0=h;apply(1);R=Math.max(30,H0-topEl.offsetHeight);return true}
-  function core(){
-    raf=0;
-    if(!topEl.offsetHeight){hid=true;return}
-    if(dirty||hid){if(!measure())return;dirty=hid=false;lastP=-1}
-    const cs=getComputedStyle(topEl);
-    let p=(px(cs.top)-(sw.getBoundingClientRect().bottom+px(cs.marginTop)))/R;
-    try{if(active)p=0}catch(e){}
-    p=p>0?Math.min(1,Math.round(p*1000)/1000):0;
-    if(RM)p=p>=.5?1:0;   // «уменьшение движения»: без плавного сжатия — блок переключается сразу
-    if(p===lastP)return;lastP=p;
-    if(p===0)clear();else apply(p);
-    topEl.classList.toggle('cz',p>=.5)}
-  function update(){try{core()}finally{obs.takeRecords()}}
-  const kick=()=>{if(!raf)raf=requestAnimationFrame(update)};
+  const b=document.createElement('button');b.id='totop';b.type='button';b.tabIndex=-1;b.setAttribute('aria-label','Наверх');
+  b.innerHTML='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5.5"/><path d="M5.5 12L12 5.5 18.5 12"/></svg>';
+  document.body.appendChild(b);
+  let raf=0,shown=false,sat=0;
+  const satM=()=>{const d=document.createElement('div');d.style.cssText='position:fixed;height:var(--sat,0px)';document.body.appendChild(d);sat=d.offsetHeight;d.remove()};
+  const pos=()=>{const t=document.querySelector('#tabs [data-t="settings"]');if(!t)return;const r=t.getBoundingClientRect();if(r.width)b.style.right=Math.max(8,Math.round(window.innerWidth-(r.left+r.width/2)-24))+'px'};
+  function check(){raf=0;let gone;
+    if(isModalOpen())gone=false;
+    else if(topEl.offsetHeight)gone=topEl.getBoundingClientRect().bottom<sat+4;   // блок целиком ушёл за верх
+    else gone=(window.scrollY||0)>Math.max(240,window.innerHeight*.5);           // экраны без блока (настройки, поиск)
+    if(gone===shown)return;shown=gone;if(gone)pos();b.classList.toggle('on',gone)}
+  const kick=()=>{if(!raf)raf=requestAnimationFrame(check)};
   addEventListener('scroll',kick,{passive:true});
-  addEventListener('resize',()=>{dirty=true;kick()});
-  addEventListener('load',()=>{dirty=true;kick()});
-  try{['safeAreaChanged','contentSafeAreaChanged','fullscreenChanged'].forEach(ev=>TGW.onEvent(ev,()=>{dirty=true;kick()}))}catch(e){}   // вход/выход из полноэкранного режима меняет --sat — блок пересчитывает сжатие
-  // тап по свёрнутому блоку плавно возвращает список наверх (там снова видны месяц и стрелки)
-  topEl.addEventListener('click',e=>{if(!topEl.classList.contains('cz')||msBlock||isModalOpen())return;
-    e.preventDefault();e.stopPropagation();window.scrollTo({top:0,behavior:RM?'auto':'smooth'})},true);
-  obs.observe(topEl,{attributes:true,attributeFilter:['style']});obs.observe(sum,{childList:true});
-  requestAnimationFrame(()=>{dirty=true;update()});
+  addEventListener('resize',()=>{satM();if(shown)pos();kick()});
+  try{['safeAreaChanged','contentSafeAreaChanged','fullscreenChanged'].forEach(ev=>TGW.onEvent(ev,()=>{satM();kick()}))}catch(e){}
+  new MutationObserver(kick).observe(ov,{attributes:true,attributeFilter:['class']});   // открылось/закрылось окно
+  new MutationObserver(kick).observe(topEl,{attributes:true,attributeFilter:['style']});   // вкладка без блока
+  b.addEventListener('click',e=>{e.preventDefault();if(isModalOpen())return;try{settleAll()}catch(err){}window.scrollTo({top:0,behavior:RM?'auto':'smooth'})});
+  satM();kick();
 })();
 
 
@@ -4444,7 +4425,7 @@ function openNc(type,done,cancel){const el=$('#nc');ncType=type==='income'?'inco
   el.innerHTML=`<div class="nct">Новая категория · ${ncType==='income'?'доход':'расход'}</div><div class="ncr"><input type="color" id="ncc" value="${nextColor(ncType==='income')}" aria-label="Цвет"><input id="ncn" placeholder="Название" maxlength="40" autocomplete="off" aria-label="Название новой категории" enterkeyhint="next"></div><input id="ncw" placeholder="Ключевые слова: детск, игрушк" autocomplete="off" aria-label="Слова для голосового ввода"><div class="ncb"><button class="sm" id="ncx">Отмена</button><button class="sm pr" id="nca">Добавить</button></div>`;
   ['sh','ed','gd','cf'].forEach(id=>{const e=$('#'+id);if(e&&e.classList.contains('on'))e.classList.add('sub')});
   try{setOrigin(el)}catch(e){}el.classList.add('on');ov.className='on';
-  setTimeout(()=>{const n=$('#ncn');if(n)n.focus({preventScroll:true})},140)}
+  autoF('#ncn',140)}
 function closeNc(ok){const el=$('#nc');if(!el.classList.contains('on'))return;el.classList.remove('on');
   syncSub();
   const cancel=ncCancel;ncCb=null;ncCancel=null;if(!ok&&cancel)cancel()}
@@ -5019,7 +5000,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v150';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v153';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}   // номер сборки виден внизу экрана: по нему понятно, обновился ли Telegram до новой версии
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
@@ -5204,13 +5185,15 @@ async function ibLoop(){
 (function(){
   window.addEventListener('error',e=>{if(e&&/ResizeObserver loop/.test(e.message||'')){e.stopImmediatePropagation();e.preventDefault()}},true);
   const vv=window.visualViewport,root=document.documentElement,$i=id=>document.getElementById(id);
-  const IDS=['sh','ed','gd','cf','bq','nc','cp','rc'],SEL='#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc',FLT={sh:1,ed:1};
+  const IDS=['sh','ed','gd','cf','bq','nc','cp','rc'],SEL='#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc',FLT={sh:1,ed:1,gd:1,cf:1,bq:1,nc:1,cp:1,rc:1};   // v153: все окна — карточки с отступом снизу
   const C_SHOW=[.344,.919,.472,.97,296],C_HIDE=[.208,.37,.385,1.035,232],C_FIT=[.2,.8,.2,1,140];   // x1,y1,x2,y2, мс — из эталона (C_FIT — быстрая подгонка)
   const RMQ=matchMedia('(prefers-reduced-motion: reduce)'),coarse=matchMedia('(pointer:coarse)').matches;
   const probe=document.createElement('div');probe.style.cssText='position:fixed;top:0;left:0;width:0;height:var(--sat);visibility:hidden;pointer-events:none';document.body.appendChild(probe);
   const probeB=document.createElement('div');probeB.style.cssText='position:fixed;top:0;left:0;width:0;height:var(--sab);visibility:hidden;pointer-events:none';document.body.appendChild(probeB);
   let sat=probe.offsetHeight,sab=probeB.offsetHeight,baseH=window.innerHeight;
-  let owner=null,raf=0,hideT=0,measT=0,offT=0,savedY=0,kbo=false,lastBlur=0;
+  let owner=null,raf=0,hideT=0,measT=0,offT=0,chkT=0,savedY=0,kbo=false,lastBlur=0,lastUser=0;
+  // v153: время последнего касания/клавиши. iOS показывает клавиатуру только на фокус от касания; фокус из программы (окно само ставит курсор) — без клавиатуры
+  ['touchend','pointerup','mouseup','keydown'].forEach(ev=>document.addEventListener(ev,()=>{lastUser=Date.now()},true));
   const st=new Map();   // окно -> {lift,target,tw}
   const S=el=>{let x=st.get(el);if(!x){x={lift:0,target:0,tw:null};st.set(el,x)}return x};
   const kbp={num:0,alpha:0,pick:0};
@@ -5247,15 +5230,21 @@ async function ibLoop(){
     if(!coarse&&measure()<60)return;                                   // компьютер: экранной клавиатуры нет — окно не двигаем
     const x=S(w),c=kindOf(f),m=measure();
     if(c==='pick'){if(x.lift>1||x.target>0)go(w,0,C_HIDE);return}   // v145: выпадающий список и дата открываются без клавиатуры (iOS: меню/календарь) — окно на место
+    if(coarse&&m<60&&Date.now()-lastUser>700){if(x.lift>1||x.target>0)go(w,0,C_HIDE);return}   // v153: курсор поставлен без касания — клавиатуры не будет, окно не поднимаем (появится — подгонит settle)
     const sg=sigOf(f),pred=kbp[sg]||kbp[c]||(m>120?m:0)||kbp.alpha||kbp.num||Math.round(baseH*.36);
-    go(w,pred,x.lift<2?C_SHOW:C_FIT);setTimeout(reveal,420)});
+    go(w,pred,x.lift<2?C_SHOW:C_FIT);setTimeout(reveal,420);
+    // v153: клавиатура так и не появилась (webview не уменьшился) — окно не висит посередине, а возвращается вниз
+    clearTimeout(chkT);chkT=setTimeout(()=>{if(coarse&&owner===w&&measure()<60&&!S(w).tw&&S(w).lift>1)go(w,0,C_HIDE)},1100)});
   document.addEventListener('focusout',e=>{const f=e.target;if(!editable(f)||!winOf(f))return;
     if(editable(e.relatedTarget)&&winOf(e.relatedTarget))return;        // переход к другому полю — решит focusin
     const w=winOf(f);lastBlur=Date.now();clearTimeout(hideT);hideT=setTimeout(()=>{if(!foc()&&w===owner&&isFront(w))go(w,0,C_HIDE);setTimeout(()=>{if(!foc())syncBase()},500)},70)});
   // --- измерение высоты клавиатуры: после изменения высоты webview значение устаивается 90 мс
   function settle(){const K=measure();
     if(K>120){if(foc()&&owner&&kindOf(document.activeElement)!=='pick'){const c=sigOf(document.activeElement);if(Math.abs(K-(kbp[c]||0))>2){kbp[c]=K;saveKb()}if(Math.abs(K-S(owner).target)>3)go(owner,K,C_FIT)}}
-    else if(K<60){if(foc()&&owner&&S(owner).lift>1&&coarse){clearTimeout(offT);offT=setTimeout(()=>{if(measure()<60&&foc()&&owner&&S(owner).lift>1&&!S(owner).tw)go(owner,0,C_FIT)},600)}   // внешняя клавиатура; короткое «мигание» не считается
+    else if(K<60){
+      // v153: клавиатуры нет и поля в фокусе нет (поле перерисовали, пока клавиатура была открыта, — focusout не пришёл) — ни одно переднее окно не остаётся поднятым
+      if(!foc())st.forEach((x,el)=>{if((x.lift>1||x.target>0)&&isFront(el))go(el,0,C_HIDE)});
+      if(foc()&&owner&&S(owner).lift>1&&coarse){clearTimeout(offT);offT=setTimeout(()=>{if(measure()<60&&foc()&&owner&&S(owner).lift>1&&!S(owner).tw)go(owner,0,C_HIDE)},300)}   // v153: 300 мс (было 600) — окно не висит наверху после ухода клавиатуры   // внешняя клавиатура; короткое «мигание» не считается
     }
     // v141: нет поля в фокусе (и клавиатура не уходит прямо сейчас) — значит, высоту поменял сам Telegram (развернул/свернул, смахивание):
     // постоянная высота экрана = текущая. Раньше такое изменение принималось за клавиатуру, и окно открывалось ниже видимой части — было видно только затемнение
@@ -5323,10 +5312,19 @@ async function ibLoop(){
   function close(){if(!st)return;st=null;cancelAnimationFrame(raf);raf=0;el.classList.remove('on')}
   window.Picker={open,close,isOpen:()=>!!st};
   // кнопки и строки внутри окна не забирают фокус у поля ввода — клавиатура остаётся; закрыть её — касание мимо окна
-  document.addEventListener('mousedown',e=>{const a=document.activeElement,t=e.target;
-    if(!a||!/^(INPUT|TEXTAREA)$/.test(a.tagName)||!a.closest||!a.closest(WIN)||!t.closest||!t.closest(WIN))return;
+  // v153: …но касание в НЕактивное место окна (текст, отступы, заголовок) прячет клавиатуру
+  const ACT='button,a[href],label,input,select,textarea,summary,[contenteditable],[role=button],[role=tab],[role=option],[role=switch],[tabindex]:not([tabindex="-1"]),[data-id],[data-rc],[data-a],[data-t],[data-v],[data-tt],[data-rt],[data-cpf],[data-te],[data-tp],.rcr,.tpr,.cpi,.sgm,.dp,.chip';
+  const active=t=>{for(let n=t;n&&n.nodeType===1;n=n.parentElement){if(n.matches(WIN))return false;if(n.matches(ACT))return true;try{if(getComputedStyle(n).cursor==='pointer')return true}catch(e){}}return false};
+  const typing=()=>{const a=document.activeElement;return !!a&&/^(INPUT|TEXTAREA)$/.test(a.tagName)&&!!a.closest&&!!a.closest(WIN)};
+  document.addEventListener('mousedown',e=>{const t=e.target;
+    if(!typing()||!t.closest||!t.closest(WIN))return;
     if(t.closest('input,textarea,select,[contenteditable]'))return;const lb=t.closest('label');if(lb&&lb.querySelector('input:not([type=date]):not([type=hidden]),textarea'))return;
+    if(!active(t))return;   // неактивное место: фокус уходит как обычно (на компьютере), на телефоне — см. касание ниже
     e.preventDefault()},true);
+  let tp=null;
+  document.addEventListener('touchstart',e=>{const t=e.target;tp=e.touches.length===1&&typing()&&t.closest&&t.closest(WIN)&&!active(t)?{x:e.touches[0].clientX,y:e.touches[0].clientY,t:Date.now()}:null},{capture:true,passive:true});
+  document.addEventListener('touchmove',e=>{if(tp){const p=e.touches[0];if(Math.abs(p.clientX-tp.x)>10||Math.abs(p.clientY-tp.y)>10)tp=null}},{capture:true,passive:true});
+  document.addEventListener('touchend',()=>{if(tp&&Date.now()-tp.t<600&&typing())document.activeElement.blur();tp=null},{capture:true,passive:true});
   el.addEventListener('mousedown',e=>e.preventDefault());   // фокус (и клавиатура) остаются в поле
   el.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!st)return;e.preventDefault();
     if(b.hasAttribute('data-x')){close();return}const o=st;close();try{o.pick(b.dataset.v)}catch(err){}});
@@ -5342,7 +5340,8 @@ async function ibLoop(){
   const selIn=lb=>lb&&lb.querySelector&&lb.querySelector('select');
   const target=e=>{const lb=e.target.closest&&e.target.closest('label,#fp .fr');return lb&&selIn(lb)&&lb.closest(WIN+',#fp')?lb:null};   // v150: и в фильтрах поиска
   document.addEventListener('mousedown',e=>{if(target(e))e.preventDefault()},true);
-  document.addEventListener('click',e=>{const lb=target(e);if(!lb)return;e.preventDefault();e.stopPropagation();const sel=selIn(lb);
+  document.addEventListener('click',e=>{const lb=target(e);if(!lb)return;e.preventDefault();e.stopPropagation();if(st&&st.anchor===lb){close();return}   // v152: повторное нажатие на ту же строку закрывает меню
+    const sel=selIn(lb);
     const ttl=(lb.querySelector('.fl')||{}).textContent||lb.firstChild&&lb.firstChild.textContent||'Выбор';
     open({title:String(ttl).trim(),anchor:lb,value:sel.value,items:[...sel.options].map(op=>{const m=/^(\p{Extended_Pictographic}[️‍\p{Extended_Pictographic}]*)\s*(.*)$/u.exec(op.textContent);return m?{v:op.value,e:m[1],l:m[2]}:{v:op.value,l:op.textContent}}),
       pick:v=>{sel.value=v;sel.dispatchEvent(new Event('input',{bubbles:true}));sel.dispatchEvent(new Event('change',{bubbles:true}))}})},true);
@@ -5753,7 +5752,7 @@ function bulk(kind){
   gd.innerHTML=`<div class="eh"><b>${ttl}</b><button class="x" id="bkx" type="button" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div>${h}<div class="shf"><span></span><button class="sm pr" id="bkok" type="button">Применить</button></div>`;
   gd._bk={kind,ids,mode:'add'};lockBg(true);cancelGestures();
   const first=D.querySelector('#body .sw .r2')||fab;showGd(first);
-  setTimeout(()=>{const i=$('#bkv');if(i&&kind!=='date')i.focus()},380)}
+  if(kind!=='date')autoF('#bkv',380)}
 function bkClose(){gd._bk=null;gd.classList.remove('on');unlockIfIdle();try{cancelGestures()}catch(e){}}
 window.bkClose=bkClose;   // v69: нужна общему закрытию верхнего окна (оверлей / Escape)
 gd.addEventListener('click',e=>{const k=gd._bk;if(!k)return;
