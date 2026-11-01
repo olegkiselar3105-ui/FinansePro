@@ -32,4 +32,9 @@
 ## Обновление
 
 - Приложение: загрузить `index.html` (и при изменении `sw.js`) в репозиторий → GitHub Pages обновится сам.
-- Воркер: Cloudflare → Workers → finansepro → Edit code → вставить `worker/worker.js` → Deploy.
+- Воркер: деплоится автоматически через Cloudflare Workers Builds при слиянии в `main`
+  (`worker/worker.js` + настройки из `worker/wrangler.toml`). Код в панели вручную не править —
+  следующий деплой из репозитория его перезапишет. Статус сборки: Workers → finansepro → Deployments.
+- Секреты и переменные (`ALLOWED_IDS`, `DAILY_LIMIT`, `APP_URL`) по-прежнему задаются в панели, деплой их не трогает.
+- Новая привязка (KV, D1 и т.п.) добавляется в `wrangler.toml`, а не только в панели: привязки,
+  которых нет в файле, при деплое удаляются.
