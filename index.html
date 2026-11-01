@@ -1293,7 +1293,7 @@ html:root #gd #gam:focus{border-bottom:2px solid var(--t)!important;box-shadow:n
 html:root #gd .fl-sum{display:none}
 /* поля — строки: подпись слева, значение справа, линия снизу */
 html:root :is(#gd,#rc,#nc) label.ef{display:flex!important;align-items:center;justify-content:space-between;gap:12px;margin:0!important;padding:9px 0!important;border:0!important;border-bottom:1px solid var(--sep)!important;border-radius:0!important;box-shadow:none!important}
-html:root :is(#gd,#rc,#nc) label.ef:focus-within{border-bottom:1px solid var(--t)!important;box-shadow:none!important}
+html:root :is(#gd,#rc,#nc) label.ef:focus-within{border-bottom:1px solid var(--sep)!important;box-shadow:none!important}   /* v147: строка в фокусе не подсвечивается */
 html:root :is(#gd,#rc,#nc) label.ef .fl{position:static;flex:none;padding:0;background:none;font-size:13px;color:var(--m2)}
 html:root :is(#gd,#rc,#nc) label.ef :is(input,select,.cpb){flex:1;min-width:0;width:auto!important;text-align:right!important;text-align-last:right!important;font-size:16px!important;padding:2px 0!important;background:none}
 html:root :is(#gd,#rc,#nc) label.ef:has(select)::after{right:0;margin-top:-2px}
@@ -1474,6 +1474,26 @@ html:root #rc .shf .sm.del{order:1}html:root #rc .shf .sm:not(.pr):not(.del){ord
 #sh #tpls{opacity:0;transform:translate3d(0,10px,0);transition:opacity 0s .52s,transform 0s .52s}
 #sh.on #tpls{opacity:1;transform:none;transition:opacity .45s ease-out .14s,transform .65s cubic-bezier(.22,1,.36,1) .14s}
 @media (prefers-reduced-motion:reduce){#sh #tpls,#sh.on #tpls{transition:none}}
+/* v147: своё меню выбора; системные списки в окнах не принимают касания (их берёт строка), обводки фокуса нет */
+:is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc) select{pointer-events:none}
+:is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc) :is(input,select,textarea,button):focus{outline:none!important}
+:is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc) label{-webkit-tap-highlight-color:transparent}
+#pkr{position:fixed;z-index:72;left:max(8px,calc(50% - 260px));right:max(8px,calc(50% - 260px));display:flex;flex-direction:column;border-radius:24px;background:var(--sb,#1e1e22);color:var(--t);
+  box-shadow:0 12px 40px rgba(0,0,0,.35),0 0 0 .5px var(--sbd,rgba(255,255,255,.12));visibility:hidden;opacity:0;transform:translate3d(0,14px,0);
+  transition:opacity .16s ease,transform .24s cubic-bezier(0,0,.17,1),visibility 0s .24s;-webkit-user-select:none;user-select:none}
+#pkr.on{visibility:visible;opacity:1;transform:none;transition:opacity .16s ease,transform .24s cubic-bezier(0,0,.17,1),visibility 0s}
+#pkr .pkh{flex:none;display:flex;align-items:center;justify-content:space-between;padding:12px 10px 6px 18px}
+#pkr .pkh b{font-size:15px;font-weight:600}
+#pkr .pkh button{width:36px;height:36px;border:0;background:none;color:var(--m2);font-size:22px;border-radius:50%;-webkit-tap-highlight-color:transparent}
+#pkr .pkl{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding:0 8px 8px;scrollbar-width:none}
+#pkr .pkl::-webkit-scrollbar{display:none}
+#pkr .pkl button{display:flex;align-items:center;gap:12px;width:100%;min-height:46px;padding:0 12px;border:0;border-radius:14px;background:none;color:var(--t);font:inherit;font-size:16px;text-align:left;-webkit-tap-highlight-color:transparent}
+#pkr .pkl button i{font-style:normal;width:24px;text-align:center;font-size:19px}
+#pkr .pkl button span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pkr .pkl button.on{background:rgba(var(--wr,255,255,255),.08);font-weight:600}
+#pkr .pkl button.on::after{content:"";width:8px;height:14px;margin-right:4px;border:solid var(--t);border-width:0 2px 2px 0;transform:rotate(45deg) translate(-2px,-2px)}
+#pkr .pkl button:active{background:rgba(var(--wr,255,255,255),.12)}
+@media (prefers-reduced-motion:reduce){#pkr,#pkr.on{transition:none}}
 /* v146: свой календарь (не забирает фокус — клавиатура остаётся); нативные поля даты в окнах не принимают касания, их берёт подпись */
 :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc) input[type=date]{pointer-events:none}
 #dpk{position:fixed;z-index:70;width:min(304px,calc(100vw - 16px));padding:12px 12px 10px;border-radius:22px;background:var(--sb,#1e1e22);color:var(--t);box-shadow:0 12px 40px rgba(0,0,0,.35),0 0 0 .5px var(--sbd,rgba(255,255,255,.12));
@@ -1492,7 +1512,7 @@ html:root #rc .shf .sm.del{order:1}html:root #rc .shf .sm:not(.pr):not(.del){ord
 #dpk .dpf{display:flex;gap:8px;margin-top:8px}
 #dpk .dpf button{flex:1;height:38px;border-radius:999px;font-size:14px;font-weight:600;background:rgba(var(--wr,255,255,255),.08)}
 #dpk .dpf .dpc{color:var(--rd)}
-#dpk.cmp{padding:8px 10px}#dpk.cmp .dph{margin-bottom:2px}#dpk.cmp .dph button{width:30px;height:30px}#dpk.cmp .dpg button{height:30px;width:30px;font-size:14px;margin:0 auto}#dpk.cmp .dpw span{padding-bottom:2px}#dpk.cmp .dpf{margin-top:4px}#dpk.cmp .dpf button{height:32px}
+#dpk.dps{padding:8px 10px}#dpk.dps .dph{margin-bottom:2px}#dpk.dps .dph button{width:30px;height:30px}#dpk.dps .dpg button{height:30px;width:30px;font-size:14px;margin:0 auto}#dpk.dps .dpw span{padding-bottom:2px}#dpk.dps .dpf{margin-top:4px}#dpk.dps .dpf button{height:32px}
 @media (prefers-reduced-motion:reduce){#dpk,#dpk.on{transition:none}}
 /* v141: затемнение снова полупрозрачное (список за окном виден затемнённым); страница под окном только не принимает касаний (lockBg) */
 /* затемнение фона: размер постоянный (--baseh), кривые из эталона */
@@ -4986,7 +5006,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v146';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v147';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}   // номер сборки виден внизу экрана: по нему понятно, обновился ли Telegram до новой версии
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
@@ -5181,7 +5201,7 @@ async function ibLoop(){
   const st=new Map();   // окно -> {lift,target,tw}
   const S=el=>{let x=st.get(el);if(!x){x={lift:0,target:0,tw:null};st.set(el,x)}return x};
   const kbp={num:0,alpha:0,pick:0};
-  try{const j=JSON.parse(localStorage.getItem('finapp.kbh3')||'null');if(j)['num','alpha','pick'].forEach(k=>{const v=+j[k];if(v>150&&v<600)kbp[k]=v})}catch(e){}
+  try{const j=JSON.parse(localStorage.getItem('finapp.kbh3')||'null');if(j)Object.keys(j).forEach(k=>{const v=+j[k];if(/^[\w:]{1,12}$/.test(k)&&v>150&&v<600)kbp[k]=v})}catch(e){}
   const saveKb=()=>{try{localStorage.setItem('finapp.kbh3',JSON.stringify(kbp))}catch(e){}};
   // --- cubic-bezier как в CSS
   function ease(c,u){if(u<=0)return 0;if(u>=1)return 1;const x1=c[0],y1=c[1],x2=c[2],y2=c[3];let lo=0,hi=1,t=u;
@@ -5192,6 +5212,7 @@ async function ibLoop(){
   const kindOf=f=>{if(f.tagName==='SELECT'||(f.tagName==='INPUT'&&/^(date|time|datetime-local|month|week)$/.test(f.type)))return 'pick';
     const m=(f.inputMode||'').toLowerCase();return(m==='decimal'||m==='numeric'||m==='tel'||f.type==='number'||f.type==='tel')?'num':'alpha'};
   const foc=()=>{const a=document.activeElement;return editable(a)&&!!winOf(a)};
+  const sigOf=f=>{const k=kindOf(f);return k==='alpha'&&(f.getAttribute('autocorrect')==='off'||f.getAttribute('spellcheck')==='false')?'alpha:nb':k};   // v147: у полей без подсказок клавиатура ниже — запоминаем отдельно
   const measure=()=>{const V=Math.min(window.innerHeight,vv?vv.offsetTop+vv.height:window.innerHeight);return Math.max(0,baseH-V)};
   // --- движение (у каждого окна своё)
   function apply(el){const x=S(el);el.style.setProperty('--lift',Math.round(x.lift*10)/10+'px');
@@ -5200,9 +5221,10 @@ async function ibLoop(){
   function go(el,to,c){if(!el)return;const x=S(el);to=Math.max(0,Math.round(to));if(x.tw&&x.tw.to===to)return;if(!x.tw&&Math.abs(to-x.lift)<.5&&to===x.target)return;
     x.target=to;
     if(RMQ.matches||Math.abs(to-x.lift)<.5){x.lift=to;x.tw=null;apply(el);return}   // «уменьшение движения»: без анимации
-    x.tw={from:x.lift,to,t0:performance.now(),c};if(!raf)raf=requestAnimationFrame(step)}
+    x.tw={from:x.lift,to,tt:0,last:0,c};if(!raf)raf=requestAnimationFrame(step)}
   function step(now){raf=0;let more=false;
-    st.forEach((x,el)=>{if(!x.tw)return;const u=(now-x.tw.t0)/x.tw.c[4];
+    // v147: время анимации идёт по кадрам и не больше 20 мс за кадр: если iOS пропустил кадры (начало клавиатуры), окно не перескакивает, а продолжает плавно
+    st.forEach((x,el)=>{if(!x.tw)return;const w=x.tw;if(w.last)w.tt+=Math.min(20,Math.max(0,now-w.last));w.last=now;const u=w.tt/w.c[4];
       if(u>=1){x.lift=x.tw.to;x.tw=null}else{x.lift=x.tw.from+(x.tw.to-x.tw.from)*ease(x.tw.c,u);more=true}apply(el)});
     if(more)raf=requestAnimationFrame(step)}
   const isFront=el=>el.classList.contains('on')&&!el.classList.contains('sub');
@@ -5212,14 +5234,14 @@ async function ibLoop(){
     if(!coarse&&measure()<60)return;                                   // компьютер: экранной клавиатуры нет — окно не двигаем
     const x=S(w),c=kindOf(f),m=measure();
     if(c==='pick'){if(x.lift>1||x.target>0)go(w,0,C_HIDE);return}   // v145: выпадающий список и дата открываются без клавиатуры (iOS: меню/календарь) — окно на место
-    const pred=kbp[c]||(m>120?m:0)||kbp.alpha||kbp.num||Math.round(baseH*.36);
+    const sg=sigOf(f),pred=kbp[sg]||kbp[c]||(m>120?m:0)||kbp.alpha||kbp.num||Math.round(baseH*.36);
     go(w,pred,x.lift<2?C_SHOW:C_FIT);setTimeout(reveal,420)});
   document.addEventListener('focusout',e=>{const f=e.target;if(!editable(f)||!winOf(f))return;
     if(editable(e.relatedTarget)&&winOf(e.relatedTarget))return;        // переход к другому полю — решит focusin
     const w=winOf(f);lastBlur=Date.now();clearTimeout(hideT);hideT=setTimeout(()=>{if(!foc()&&w===owner&&isFront(w))go(w,0,C_HIDE);setTimeout(()=>{if(!foc())syncBase()},500)},70)});
   // --- измерение высоты клавиатуры: после изменения высоты webview значение устаивается 90 мс
   function settle(){const K=measure();
-    if(K>120){if(foc()&&owner&&kindOf(document.activeElement)!=='pick'){const c=kindOf(document.activeElement);if(Math.abs(K-(kbp[c]||0))>2){kbp[c]=K;saveKb()}if(Math.abs(K-S(owner).target)>3)go(owner,K,C_FIT)}}
+    if(K>120){if(foc()&&owner&&kindOf(document.activeElement)!=='pick'){const c=sigOf(document.activeElement);if(Math.abs(K-(kbp[c]||0))>2){kbp[c]=K;saveKb()}if(Math.abs(K-S(owner).target)>3)go(owner,K,C_FIT)}}
     else if(K<60){if(foc()&&owner&&S(owner).lift>1&&coarse){clearTimeout(offT);offT=setTimeout(()=>{if(measure()<60&&foc()&&owner&&S(owner).lift>1&&!S(owner).tw)go(owner,0,C_FIT)},600)}   // внешняя клавиатура; короткое «мигание» не считается
     }
     // v141: нет поля в фокусе (и клавиатура не уходит прямо сейчас) — значит, высоту поменял сам Telegram (развернул/свернул, смахивание):
@@ -5256,6 +5278,53 @@ async function ibLoop(){
 })();
 </script>
 <script>
+// ================= v147: своё меню выбора вместо системных списков =================
+// Системный список (select) на iOS забирает фокус: клавиатура закрывается, окно прыгает. Это меню фокус не трогает.
+// Открывается над клавиатурой (или внизу экрана, если клавиатуры нет) на всю свободную высоту, листается пальцем.
+// Работает для всех списков в окнах (повтор, шаблон, цель…) и для категории в окне операции, когда открыта клавиатура.
+(function(){
+  const WIN='#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc';
+  const el=document.createElement('div');el.id='pkr';el.setAttribute('role','dialog');document.body.appendChild(el);
+  let st=null,eat=0;
+  const vis=()=>{const vv=window.visualViewport;return{top:(vv?vv.offsetTop:0),bot:Math.min(window.innerHeight,vv?vv.offsetTop+vv.height:window.innerHeight)}};
+  const satPx=()=>{const d=document.createElement('div');d.style.cssText='position:fixed;height:var(--sat,0px)';document.body.appendChild(d);const h=d.offsetHeight;d.remove();return h};
+  function place(){if(!st)return;const v=vis(),top=Math.max(v.top+satPx()+8,v.bot-Math.min(520,(v.bot-v.top)*.86));
+    el.style.top=Math.round(top)+'px';el.style.height=Math.round(v.bot-8-top)+'px'}
+  function open(o){close();st=o;
+    el.innerHTML=`<div class="pkh"><b>${o.title||'Выбор'}</b><button type="button" tabindex="-1" data-x aria-label="Закрыть">×</button></div><div class="pkl">`+
+      o.items.map(it=>`<button type="button" tabindex="-1" data-v="${String(it.v).replace(/"/g,'&quot;')}" class="${String(it.v)===String(o.value)?'on':''}">${it.e?`<i>${it.e}</i>`:''}<span>${it.l}</span></button>`).join('')+'</div>';
+    place();el.classList.add('on');const cur=el.querySelector('.pkl .on');if(cur)cur.scrollIntoView({block:'center'})}
+  function close(){if(!st)return;st=null;el.classList.remove('on')}
+  window.Picker={open,close,isOpen:()=>!!st};
+  // кнопки и строки внутри окна не забирают фокус у поля ввода — клавиатура остаётся; закрыть её — касание мимо окна
+  document.addEventListener('mousedown',e=>{const a=document.activeElement,t=e.target;
+    if(!a||!/^(INPUT|TEXTAREA)$/.test(a.tagName)||!a.closest||!a.closest(WIN)||!t.closest||!t.closest(WIN))return;
+    if(t.closest('input,textarea,select,[contenteditable]'))return;const lb=t.closest('label');if(lb&&lb.querySelector('input:not([type=date]),textarea'))return;
+    e.preventDefault()},true);
+  el.addEventListener('mousedown',e=>e.preventDefault());   // фокус (и клавиатура) остаются в поле
+  el.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!st)return;e.preventDefault();
+    if(b.hasAttribute('data-x')){close();return}const o=st;close();try{o.pick(b.dataset.v)}catch(err){}});
+  ['pointerdown','touchstart','touchmove'].forEach(ev=>el.addEventListener(ev,e=>e.stopPropagation(),{passive:true}));
+  // касание мимо меню закрывает только меню (клавиатура остаётся; закрыть её — следующее касание мимо окна)
+  document.addEventListener('pointerdown',e=>{if(st&&!e.target.closest('#pkr')&&!target(e)&&!(e.target.closest&&e.target.closest('#ed #eca'))){close();eat=Date.now()}},true);
+  document.addEventListener('click',e=>{if(eat&&Date.now()-eat<600&&!e.target.closest('#pkr')){eat=0;e.preventDefault();e.stopPropagation()}},true);
+  document.addEventListener('keydown',e=>{if(st&&e.key==='Escape'){e.stopPropagation();close()}},true);
+  window.addEventListener('resize',()=>{if(st)place()});if(window.visualViewport)window.visualViewport.addEventListener('resize',()=>{if(st)place()});
+  // списки (select) в окнах: касание по строке открывает это меню
+  const selIn=lb=>lb&&lb.querySelector&&lb.querySelector('select');
+  const target=e=>{const lb=e.target.closest&&e.target.closest('label');return lb&&selIn(lb)&&lb.closest(WIN)?lb:null};
+  document.addEventListener('mousedown',e=>{if(target(e))e.preventDefault()},true);
+  document.addEventListener('click',e=>{const lb=target(e);if(!lb)return;e.preventDefault();e.stopPropagation();const sel=selIn(lb);
+    const ttl=(lb.querySelector('.fl')||{}).textContent||lb.firstChild&&lb.firstChild.textContent||'Выбор';
+    open({title:String(ttl).trim(),value:sel.value,items:[...sel.options].map(op=>{const m=/^(\p{Extended_Pictographic}[️‍\p{Extended_Pictographic}]*)\s*(.*)$/u.exec(op.textContent);return m?{v:op.value,e:m[1],l:m[2]}:{v:op.value,l:op.textContent}}),
+      pick:v=>{sel.value=v;sel.dispatchEvent(new Event('input',{bubbles:true}));sel.dispatchEvent(new Event('change',{bubbles:true}))}})},true);
+  // категория в окне операции: при открытой клавиатуре — это меню (клавиатура остаётся), без клавиатуры — прежняя сетка категорий
+  document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#ed #eca');if(!b||typeof eT==='undefined'||!eT)return;
+    if(!(window.Sheets&&Sheets.kbUp()))return;e.preventDefault();e.stopImmediatePropagation();readEd();
+    const inc=eT.type==='income';open({title:'Категория',value:eT.category,items:ALL.filter(c=>c.inc===inc).map(c=>({v:c.id,e:c.e,l:c.n})),pick:v=>{if(eT){eT.category=v;patchEd()}}})},true);
+})();
+</script>
+<script>
 // ================= v146: свой календарь для дат в окнах =================
 // Нативный выбор даты забирает фокус: клавиатура закрывается, окно опускается. Этот календарь фокус не трогает — клавиатура и окно остаются на месте.
 // Работает для всех полей даты внутри окон (операция, черновики, повтор, цель, долг): касание по полю открывает календарь рядом с ним.
@@ -5274,7 +5343,7 @@ async function ibLoop(){
       `<div class="dpw"><span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span></div><div class="dpg">${cells}</div>`+
       `<div class="dpf"><button type="button" tabindex="-1" data-a="t">Сегодня</button><button type="button" tabindex="-1" data-a="y">Вчера</button>${OPT[st.inp.id]&&v?'<button type="button" tabindex="-1" data-a="c" class="dpc">Очистить</button>':''}</div>`}
   function place(){if(!st)return;const r=st.lb.getBoundingClientRect(),vv=window.visualViewport,top0=vv?vv.offsetTop:0,bot=Math.min(window.innerHeight,vv?vv.offsetTop+vv.height:window.innerHeight);
-    el.classList.remove('cmp');if(el.offsetHeight>bot-top0-16)el.classList.add('cmp');   // мало места (клавиатура, маленький экран) — компактные клетки
+    el.classList.remove('dps');if(el.offsetHeight>bot-top0-16)el.classList.add('dps');   // мало места (клавиатура, маленький экран) — компактные клетки
     const w=el.offsetWidth,h=el.offsetHeight,W=window.innerWidth;let x=Math.min(Math.max(8,r.right-w),W-w-8),y=r.bottom+8;
     if(y+h>bot-8)y=r.top-h-8;if(y<top0+8)y=Math.max(top0+8,bot-h-8);
     el.style.left=Math.round(x)+'px';el.style.top=Math.round(y)+'px'}
