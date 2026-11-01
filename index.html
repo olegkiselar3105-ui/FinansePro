@@ -1245,10 +1245,6 @@ html:root #ov{will-change:opacity}
 /* v136: затемнение с размытием держит высоту «без клавиатуры» (--baseh ставит скрипт клавиатуры): окно Telegram уменьшается под клавиатуру, а слой с backdrop-filter
    не меняет размер — иначе iOS заново размывает весь список на каждом кадре. min-height:100% — страховка, если --baseh устарел */
 html:root #ov{height:var(--baseh,100%);min-height:100%}
-/* v137: окно под вложенным (категории, новая категория, повторы) не принимает касания — они уходят в затемнение, а оно закрывает верхнее окно;
-   pin — окно закреплено по верхнему краю (--st ставит скрипт клавиатуры), чтобы не зависеть от смены высоты webview при закрытии клавиатуры */
-html:root :is(#sh,#ed,#gd,#cf):is(#sh,#ed,#gd,#cf):is(#sh,#ed,#gd,#cf).sub{pointer-events:none!important}
-html:root :is(#sh,#ed,#gd,#cf):is(#sh,#ed,#gd,#cf):is(#sh,#ed,#gd,#cf).pin{top:var(--st)!important;bottom:auto!important;margin-bottom:0!important;translate:0 var(--pd,0px)!important}
 html:root #ov{touch-action:none}
 
 /* ===== v101: окно операции — плоский компактный вид: строки с линиями вместо рамок и «таблеток» ===== */
@@ -1422,26 +1418,32 @@ html.pfp #nbp{display:flex}
 #tour .tr-sl.on .v6 .hd6{animation:v6h 2.6s 1.7s ease-in-out infinite}
 @keyframes v6h{0%{opacity:0;transform:translate(16px,22px)}25%{opacity:1;transform:translate(0,0)}42%{transform:scale(.84)}58%{transform:scale(1)}85%{opacity:1}100%{opacity:0}}
 </style>
-<style>/* v123: подъём окна над клавиатурой — отступ снизу из --mb (перебивает margin:0!important выше) */
-html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){margin-bottom:var(--mb,0px)!important}
+<style id="v139">
+/* v139: окна (шторки) — движение написано заново по покадровому разбору записи эталонного приложения (60 к/с).
+   Снято с эталона: открытие шторки 246 мс cubic-bezier(0,0,.17,1); затемнение при открытии 249 мс cubic-bezier(.26,.24,.25,1);
+   закрытие шторки 192 мс cubic-bezier(.58,-.03,1,.5); затемнение при закрытии 198 мс cubic-bezier(.75,.09,.67,1).
+   Положение: окно привязано к ПОСТОЯННОЙ высоте экрана (--baseh), а не к низу webview, поэтому не двигается, когда Telegram меняет высоту при клавиатуре.
+   Подъём над клавиатурой — только --lift (его по кадрам ведёт скрипт «окна и клавиатура»), открытие/закрытие — transform. */
 html{overscroll-behavior:none}
-</style>
-<style id="v132">
-/* v132: окна — один механизм движения и никаких скачков.
-   • сдвиг над клавиатурой: только translate (композитор) от JS-пружины; margin-bottom больше не меняется каждый кадр (это была перекладка страницы на каждом кадре),
-     CSS-переход translate убран — иначе он боролся с пружиной;
-   • закрытие с открытой клавиатурой: закрывающий transform включает текущий сдвиг, окно уходит за экран целиком (раньше пропадало на лету, не доехав);
-   • вложенное окно (категории, новая категория, повторы): родитель не масштабируется и не меняет прозрачность — он спокойно остаётся на месте, затемняется только opacity слоя ::after (раньше opacity прыгала 1→.55→1 без перехода). */
-html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){margin-bottom:0!important;translate:0 calc(var(--ky,0px) + var(--fx,0px) - var(--mb,0px))!important}
-html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){transition:transform .24s var(--m-out),visibility 0s .24s,translate 0s,max-height var(--kt),padding-bottom var(--kt)}
-html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc).on{transition:transform .25s var(--m-in),visibility 0s,translate 0s,max-height var(--kt),padding-bottom var(--kt)}
-html:root #sh.on.fxl{transition:transform .25s var(--m-in),visibility 0s,translate 0s,max-height 0s}
-html:root :is(#sh,#ed):not(.on){transform:translate3d(0,calc(100% + var(--sab,0px) + 12px + var(--mb,0px) - var(--ky,0px)),0)!important}
-html:root :is(#gd,#cf,#bq,#nc,#cp,#rc):not(.on){transform:translate3d(0,calc(100% + var(--mb,0px) - var(--ky,0px)),0)!important}
-html:root :is(#sh,#ed,#gd,#cf,#cp).on.sub{transform:none!important;opacity:1!important}
-html:root :is(#sh,#ed,#gd,#cf,#cp)::after{content:"";position:absolute;inset:0;border-radius:inherit;background:#000;opacity:0;pointer-events:none;transition:opacity .25s var(--m-ov-in)}
+html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){
+  --rest:0px;top:var(--baseh,100%)!important;bottom:auto!important;margin-top:0!important;margin-bottom:0!important;
+  translate:0 calc(-100% - var(--rest) - var(--lift,0px))!important;
+  transform:translateY(calc(100% + var(--rest) + var(--lift,0px) + 40px))!important;
+  opacity:1!important;visibility:hidden;pointer-events:none;
+  transition:transform .192s cubic-bezier(.58,-.03,1,.5),visibility 0s .192s,max-height var(--kt),padding-bottom var(--kt)!important}
+html:root :is(#sh,#ed):is(#sh,#ed):is(#sh,#ed){--rest:calc(var(--sab,0px) + 12px)}
+html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc).on{
+  transform:none!important;visibility:visible;pointer-events:auto;
+  transition:transform .246s cubic-bezier(0,0,.17,1),visibility 0s,max-height var(--kt),padding-bottom var(--kt)!important}
+/* вложенное окно сверху: нижнее не принимает касания и затемняется слоем ::after (касание уходит в затемнение и закрывает верхнее окно) */
+html:root :is(#sh,#ed,#gd,#cf):is(#sh,#ed,#gd,#cf):is(#sh,#ed,#gd,#cf).sub{pointer-events:none!important}
+html:root :is(#sh,#ed,#gd,#cf,#cp)::after{content:"";position:absolute;inset:0;border-radius:inherit;background:#000;opacity:0;pointer-events:none;transition:opacity .25s cubic-bezier(.26,.24,.25,1)}
 html:root :is(#sh,#ed,#gd,#cf,#cp).sub::after{opacity:.42}
-@media (prefers-reduced-motion:reduce){html:root :is(#sh,#ed,#gd,#cf,#cp)::after{transition:none}}
+/* затемнение фона: размер постоянный (--baseh), кривые из эталона */
+html:root #ov{transition:opacity .198s cubic-bezier(.75,.09,.67,1),visibility 0s .198s!important}
+html:root #ov.on{transition:opacity .249s cubic-bezier(.26,.24,.25,1),visibility 0s!important}
+@media (prefers-reduced-motion:reduce){
+  html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc),html:root #ov,html:root #ov.on,html:root :is(#sh,#ed,#gd,#cf,#cp)::after{transition:none!important}}
 </style>
 <style id="v131">
 /* v131: окно операции: при смене поля подчёркивание не перекрашивается/не утолщается (давало белые мерцания), без переходов */
@@ -4338,14 +4340,13 @@ function openCp(type,cur,cb,chg){if(cpS||isCpBusy())return;
   const alone=!isModalOpen();if(alone){cancelGestures();lockBg(true)}
   cpS={type:type==='income'?'income':'expense',cur,cb,chg,edit:false,view:'grid',id:null};cpRender();
   ['sh','ed','gd','cf'].forEach(id=>{const e=$('#'+id);if(e&&e.classList.contains('on'))e.classList.add('sub')});syncSub();
-  // v138: сначала закрепляем окно под панелью по верхнему краю (его положение больше не зависит от высоты webview), и только потом убираем клавиатуру:
-  // окно плавно опускается вниз само (translate), а панель выезжает, когда клавиатура уже ушла
-  if(window.__pinSub)window.__pinSub();
+  // v139: как в эталоне — клавиатура и окно под панелью опускаются вместе (232 мс), панель категорий выезжает чуть позже (через 90 мс), когда движение вниз уже идёт
+  const kbWas=!!(window.Sheets&&Sheets.kbUp());if(window.Sheets)Sheets.hideKb();
   {const a=document.activeElement;if(a&&a!==document.body&&a.closest&&a.closest('#sh,#ed,#gd,#cf,#rc')&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))a.blur()}
   const mine=cpS,show=()=>{if(cpS!==mine)return;
     if(!alone&&!['sh','ed','gd','cf'].some(id=>{const e=$('#'+id);return e&&e.classList.contains('on')})){cpS=null;syncSub();return}   // родительское окно закрыли, пока ждали
     try{setOrigin(cpEl)}catch(e){}cpEl.classList.add('on');ov.className='on'};
-  if(window.__afterKb)window.__afterKb(show,260);else show()}
+  if(kbWas)setTimeout(show,90);else show()}
 const isCpBusy=()=>$('#nc').classList.contains('on')||bq.classList.contains('on');
 function closeCp(){if(!cpS&&!cpEl.classList.contains('on'))return;cpEl.classList.remove('on');cpS=null;syncSub();if(unlockIfIdle())cancelGestures()}
 // родительские окна затемняем, пока поверх них открыто вложенное (категории, новая категория, повторы); снимаем только когда вложенных не осталось
@@ -4886,7 +4887,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v138';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v139';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия, которую видит человек (внизу экрана и в письме в поддержку)
 try{document.getElementById('vb').textContent=APP_VER+' · '+IB_VER}catch(e){}   // номер сборки виден внизу экрана: по нему понятно, обновился ли Telegram до новой версии
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
@@ -5058,143 +5059,91 @@ async function ibLoop(){
 })();
 </script>
 <script>
-// ---- v112: окна и клавиатура по референс-видео ----
-// Принцип из видео: окно НЕ меняет высоту и не пересчитывает раскладку — оно целиком сдвигается вверх ровно на высоту клавиатуры
-// (translate на композиторе), поэтому и появление, и скрытие, и смена раскладки (цифры → буквы) идут без рывков.
+// ---- v139: окна и клавиатура — написано заново по покадровому разбору записи эталонного приложения (60 к/с) ----
+// Что делает эталон (измерено):
+//  • шторка открывается 246 мс по cubic-bezier(0,0,.17,1), закрывается 192 мс по cubic-bezier(.58,-.03,1,.5) (это в CSS, блок v139);
+//  • шторка жёстко «приклеена» к верху клавиатуры: клавиатура появилась — шторка поехала вместе с ней (296 мс, cubic-bezier(.34,.92,.47,.97)),
+//    клавиатура скрылась — шторка опустилась вместе с ней (232 мс, cubic-bezier(.21,.37,.39,1.03));
+//  • смена цифровой клавиатуры на буквенную и обратно — шторка перескакивает на новую высоту в тот же момент, что и клавиатура.
+// Как это сделано здесь. Браузер не отдаёт высоту клавиатуры покадрово (Telegram меняет высоту webview скачком, с задержкой), поэтому окно ведётся по ВРЕМЕНИ,
+// а не за измерениями: в момент фокуса в поле берём запомненную высоту клавиатуры для этого вида поля (цифры / буквы / выбор) и сразу запускаем движение
+// по кривой эталона; потом, когда webview изменит размер и значение устоится (90 мс), при расхождении плавно (140 мс) доводим. Окно привязано к постоянной
+// высоте экрана (CSS: top = --baseh), поэтому смена высоты webview само окно не двигает. Подъём — одна переменная --lift на окне, которому принадлежит клавиатура.
 (function(){
-  // безобидное предупреждение ResizeObserver не должно светиться красным
   window.addEventListener('error',e=>{if(e&&/ResizeObserver loop/.test(e.message||'')){e.stopImmediatePropagation();e.preventDefault()}},true);
-  /* ================= v123: клавиатура и окна — переписано с нуля =================
-     Принцип: положение окна на ЭКРАНЕ ведёт одна пружина (плавное приближение к цели), а не CSS-переходы за меняющейся раскладкой.
-     • цель = «над клавиатурой» (если в окне поле в фокусе) или «обычное место» (если нет);
-     • высоту клавиатуры берём из измерений (visualViewport / размер окна) и из памяти — окно начинает ехать в момент касания поля;
-     • любые мгновенные скачки раскладки (Telegram меняет высоту webview, iOS подкручивает страницу) гасятся сами:
-       мы каждый кадр пересчитываем отступ так, чтобы окно на экране двигалось только по пружине;
-     • короткие «мигания» клавиатуры (цифры → буквы) не считаются закрытием — окно не прыгает. */
   const vv=window.visualViewport,root=document.documentElement,$i=id=>document.getElementById(id);
   const IDS=['sh','ed','gd','cf','bq','nc','cp','rc'],SEL='#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc',FLT={sh:1,ed:1};
-  // v136: зазор над клавиатурой; пружина второго порядка (критическое затухание): стартует с нулевой скоростью и без перелёта,
-  // ~0.4 с до покоя (прежняя пружина первого порядка делала самый большой шаг в первом же кадре — до 46 px — это и был «рывок»);
-  // KB_GRACE — сколько мс клавиатуру, исчезнувшую при смене поля, считаем «мигнувшей», а не закрытой
-  const GAP=10,OMEGA=15,KB_GRACE=220,RECEDE_MS=70,RMQ=matchMedia('(prefers-reduced-motion: reduce)');
+  const C_SHOW=[.344,.919,.472,.97,296],C_HIDE=[.208,.37,.385,1.035,232],C_FIT=[.2,.8,.2,1,140];   // x1,y1,x2,y2, мс — из эталона (C_FIT — быстрая подгонка)
+  const RMQ=matchMedia('(prefers-reduced-motion: reduce)'),coarse=matchMedia('(pointer:coarse)').matches;
   const probe=document.createElement('div');probe.style.cssText='position:fixed;top:0;left:0;width:0;height:var(--sat);visibility:hidden;pointer-events:none';document.body.appendChild(probe);
   const probeB=document.createElement('div');probeB.style.cssText='position:fixed;top:0;left:0;width:0;height:var(--sab);visibility:hidden;pointer-events:none';document.body.appendChild(probeB);
-  const coarse=matchMedia('(pointer:coarse)').matches;
-  let baseH=window.innerHeight,lastOut=0,savedY=0,_lay='',_vvt='',_kbo=false,sat=probe.offsetHeight,sab=probeB.offsetHeight;
-  let kbOpen=false,visHold=0,lastRaw=0,holdEl=null,intent=null,kbSeen=0,kbSaveT=0,raf=0,tPrev=0,swUntil=0,noGrace=0,_bh=0,recede=0;
-  const S=new Map(),busy=new Map(),rst=new Map();
-  try{const v=+localStorage.getItem('finapp.kbh');if(v>150&&v<600)kbSeen=v}catch(e){}
-  const editable=()=>{const a=document.activeElement;return !!a&&(a.tagName==='TEXTAREA'||a.tagName==='SELECT'||(a.tagName==='INPUT'&&!/^(checkbox|radio|button|color|range|file|submit|reset)$/.test(a.type)))};
-  const anyOpen=()=>IDS.some(id=>{const e=$i(id);return e&&e.classList.contains('on')});
+  let sat=probe.offsetHeight,sab=probeB.offsetHeight,baseH=window.innerHeight;
+  let owner=null,lift=0,target=0,tw=null,raf=0,hideT=0,measT=0,offT=0,savedY=0,kbo=false;
+  const kbp={num:0,alpha:0,pick:0};
+  try{const j=JSON.parse(localStorage.getItem('finapp.kbh2')||'null');if(j)['num','alpha','pick'].forEach(k=>{const v=+j[k];if(v>150&&v<600)kbp[k]=v})}catch(e){}
+  const saveKb=()=>{try{localStorage.setItem('finapp.kbh2',JSON.stringify(kbp))}catch(e){}};
+  // --- cubic-bezier как в CSS
+  function ease(c,u){if(u<=0)return 0;if(u>=1)return 1;const x1=c[0],y1=c[1],x2=c[2],y2=c[3];let lo=0,hi=1,t=u;
+    for(let i=0;i<28;i++){t=(lo+hi)/2;const x=3*(1-t)*(1-t)*t*x1+3*(1-t)*t*t*x2+t*t*t;if(x<u)lo=t;else hi=t}
+    return 3*(1-t)*(1-t)*t*y1+3*(1-t)*t*t*y2+t*t*t}
+  const editable=f=>!!f&&!!f.tagName&&(f.tagName==='TEXTAREA'||f.tagName==='SELECT'||(f.tagName==='INPUT'&&!/^(checkbox|radio|button|submit|reset|file|range|image|hidden|color)$/.test(f.type)));
   const winOf=n=>(n&&n.closest)?n.closest(SEL):null;
-  const start=()=>{if(!raf){tPrev=0;raf=requestAnimationFrame(frame)}};
-  // пружина второго порядка (критическое затухание): s.v — нижний край окна на экране, s.vel — скорость
-  function spring(s,tgt,dt){const d0=s.v-tgt;
-    if(RMQ.matches||(Math.abs(d0)<.4&&Math.abs(s.vel)<4)){s.v=tgt;s.vel=0;return}   // «уменьшение движения»: без пружины, окно встаёт на место сразу
-    const k=dt/1000,ex=Math.exp(-OMEGA*k),q=s.vel+OMEGA*d0;s.v=tgt+(d0+q*k)*ex;s.vel=(s.vel-q*OMEGA*k)*ex}
-  // закрепить окно по верхнему краю в текущем месте экрана (v137/v138)
-  function pinEl(el,s,vt){const bp=parseFloat(getComputedStyle(el).bottom)||0,r=el.getBoundingClientRect();
-    s.pin=true;s.bp=bp;s.v=s.v0=r.bottom-vt;s.vel=0;s.pd=0;
-    el.style.setProperty('--st',Math.round(r.top*10)/10+'px');el.style.setProperty('--pd','0px');el.classList.add('pin')}
-  // сразу, не дожидаясь кадра: вызывается при открытии вложенного окна ДО закрытия клавиатуры
-  window.__pinSub=()=>{const vt=vv?Math.max(0,vv.offsetTop):0;IDS.forEach(id=>{const el=$i(id),s=el&&S.get(el);if(s&&!s.pin&&el.classList.contains('on')&&el.classList.contains('sub'))pinEl(el,s,vt)});start()};
-  function frame(now){raf=0;
-    const dt=Math.min(50,tPrev?now-tPrev:16);tPrev=now;
-    const L=window.innerHeight,h=vv?vv.height:L,vt=vv?Math.max(0,vv.offsetTop):0,a=document.activeElement,foc=editable(),T=Date.now();
-    if(!foc&&!kbOpen&&T-lastOut>1000)baseH=L;
-    if(!kbOpen&&baseH!==_bh){_bh=baseH;root.style.setProperty('--baseh',baseH+'px')}   // затемнение держит высоту «без клавиатуры» и не меняет размер вместе с окном Telegram
-    // --- есть ли клавиатура (с «гистерезисом»: короткие мигания при смене раскладки не считаются закрытием)
-    const raw=(foc||T-lastOut<600)&&(baseH-h)>120;   // v131: при смене поля фокус на миг пропадает -- клавиатура остаётся, окно не опускается
-    // v138: окно следует за высотой клавиатуры в обе стороны — буквы → цифры (клавиатура ниже): окно плавно опускается, цифры → буквы: поднимается.
-    // Клавиатура, которая стала выше, учитывается сразу; ниже — только если так держится дольше RECEDE_MS (отсекает короткие «мигания» при смене раскладки)
-    if(raw){if(kbOpen&&h>visHold){if(!recede)recede=T;if(T-recede>=RECEDE_MS)visHold=h}else{recede=0;visHold=h}
-      kbOpen=true;lastRaw=T;holdEl=winOf(a)||holdEl}
-    // v136: клавиатура считается открытой, пока: поле в фокусе (450 мс от последнего замера), или идёт переход к другому полю (swUntil: тап по полю / focusout с relatedTarget),
-    // или после потери фокуса прошло меньше KB_GRACE (iOS на 100–250 мс убирает клавиатуру при смене цифровой на буквенную). После Enter/«Готово» (noGrace) — прежние 90 мс
-    else{recede=0;if(kbOpen&&!((foc&&T-lastRaw<450)||T<swUntil||(!foc&&T-lastOut<(T<noGrace?90:KB_GRACE))))kbOpen=false}
-    if(!kbOpen){sat=probe.offsetHeight;sab=probeB.offsetHeight}
-    const kb=kbOpen?Math.max(0,baseH-visHold):0;
-    if(kbOpen&&kb>150&&Math.abs(kb-kbSeen)>2){kbSeen=kb;clearTimeout(kbSaveT);kbSaveT=setTimeout(()=>{try{localStorage.setItem('finapp.kbh',String(Math.round(kbSeen)))}catch(e){}},800)}
-    const keep=intent&&T-intent.t<20000&&((foc&&winOf(a)===intent.el)||(!foc&&T-lastOut<600));   // окно остаётся поднятым, пока поле в фокусе и в короткой паузе при смене поля
-    if(intent&&(kbOpen||(T>=intent.until&&!keep)||(!foc&&T-intent.t>350&&T-lastOut>=600)))intent=null;
-    const pk=intent?intent.kb:0;
-    // нижние панели страницы (вкладки, «+») держим на месте, пока webview уменьшен клавиатурой
-    const shrink=baseH-L,lay=(shrink>120?shrink:0)+'px';if(lay!==_lay){_lay=lay;root.style.setProperty('--lay',lay)}
-    const vtp=vt+'px';if(vtp!==_vvt){_vvt=vtp;root.style.setProperty('--vvt',vtp)}
-    if(kbOpen!==_kbo){_kbo=kbOpen;root.classList.toggle('kbo',kbOpen)}
-    // --- окна
-    let any=false;
-    IDS.forEach(id=>{const el=$i(id);if(!el||!el.classList.contains('on'))return;any=true;
-      // v137: пока поверх окна открыто вложенное (.sub), окно «пристёгивается» к экрану по верхнему краю (--st, класс pin) и не зависит от того, как
-      // Telegram меняет высоту webview при закрытии клавиатуры: раньше оно пересчитывалось от нижнего края каждый кадр и на кадры «телепортировалось» вниз.
-      // При снятии вложенного окна отстёгиваем так, чтобы положение на экране не изменилось, и дальше окно плавно опускается пружиной.
-      let s=S.get(el);const isSub=el.classList.contains('sub');
-      if(s&&isSub&&!s.pin)pinEl(el,s,vt);
-      if(s&&s.pin){
-        if(isSub){                                                    // закреплено по верхнему краю: от высоты webview не зависит; опускаем только через translate (--pd)
-          spring(s,baseH-s.bp,dt);const pd=Math.round((s.v-s.v0)*10)/10;if(pd!==s.pd){s.pd=pd;el.style.setProperty('--pd',pd+'px')}
-          return}
-        const r=el.getBoundingClientRect();s.pin=false;s.v=r.bottom-vt;s.mb=NaN;s.km=0;el.classList.remove('pin');el.style.removeProperty('--st');el.style.removeProperty('--pd')}
-      const bp=parseFloat(getComputedStyle(el).bottom)||0,nat=L-bp,R0=baseH-bp;   // нижний край окна «по раскладке» и в покое (координаты layout viewport)
-      const isT=(kbOpen||pk>0)&&(el.contains(a)||el===holdEl||(intent&&el===intent.el));
-      const vis=kbOpen?visHold:baseH-pk;
-      if(!s){s={v:nat-vt,mb:0,km:0,vel:0,pin:false};S.set(el,s)}
-      const tgt=isT?Math.min(R0,vis-GAP):R0;
-      spring(s,tgt,dt);
-      const mb=Math.round((nat-vt-s.v)*10)/10;   // на сколько поднять окно, чтобы на экране его нижний край был в s.v
-      if(mb!==s.mb){s.mb=mb;el.style.setProperty('--mb',mb+'px')}
-      const bo=FLT[id]?sab+12:0,avail=Math.max(160,Math.round((isT?vis:L)-sat-8-bo));
-      if(Math.abs(avail-s.km)>=1){s.km=avail;el.style.setProperty('--kmax',avail+'px');busy.set(el,performance.now()+700)}});
-    if(any||kbOpen||pk>0)raf=requestAnimationFrame(frame)}
-  function reveal(){if(!editable())return;const a=document.activeElement,m=a.closest('#rev,#cf,#ed,#gd,#rc');if(!m||m.scrollHeight<=m.clientHeight+1)return;
+  const kindOf=f=>{if(f.tagName==='SELECT'||(f.tagName==='INPUT'&&/^(date|time|datetime-local|month|week)$/.test(f.type)))return 'pick';
+    const m=(f.inputMode||'').toLowerCase();return(m==='decimal'||m==='numeric'||m==='tel'||f.type==='number'||f.type==='tel')?'num':'alpha'};
+  const foc=()=>{const a=document.activeElement;return editable(a)&&!!winOf(a)};
+  const measure=()=>{const V=Math.min(window.innerHeight,vv?vv.offsetTop+vv.height:window.innerHeight);return Math.max(0,baseH-V)};   // высота клавиатуры относительно постоянной высоты экрана
+  // --- применение
+  function apply(){if(owner)owner.style.setProperty('--lift',Math.round(lift*10)/10+'px');
+    const k=target>0||lift>1;if(k!==kbo){kbo=k;root.classList.toggle('kbo',k)}}
+  function setMax(to){if(!owner)return;const bo=FLT[owner.id]?sab+12:0;owner.style.setProperty('--kmax',Math.max(160,Math.round(baseH-to-sat-8-bo))+'px')}
+  function go(to,c){to=Math.max(0,Math.round(to));if(tw&&tw.to===to)return;if(!tw&&Math.abs(to-lift)<.5&&to===target)return;
+    target=to;setMax(to);
+    if(RMQ.matches||Math.abs(to-lift)<.5){lift=to;tw=null;apply();return}   // «уменьшение движения»: без анимации
+    tw={from:lift,to,t0:performance.now(),c};if(!raf)raf=requestAnimationFrame(step)}
+  function step(now){raf=0;if(!tw)return;const u=(now-tw.t0)/tw.c[4];
+    if(u>=1){lift=tw.to;tw=null;apply();return}
+    lift=tw.from+(tw.to-tw.from)*ease(tw.c,u);apply();raf=requestAnimationFrame(step)}
+  // --- фокус: окно едет вместе с клавиатурой
+  document.addEventListener('focusin',e=>{const f=e.target;if(!editable(f))return;const w=winOf(f);if(!w)return;
+    clearTimeout(hideT);
+    if(owner!==w){if(owner)owner.style.setProperty('--lift','0px');owner=w;lift=0;target=0;tw=null;apply()}
+    if(!coarse&&measure()<60)return;                                   // компьютер: экранной клавиатуры нет — окно не двигаем
+    const c=kindOf(f),m=measure(),pred=kbp[c]||(m>120?m:0)||kbp.alpha||kbp.num||Math.round(baseH*.36);
+    go(pred,lift<2?C_SHOW:C_FIT);setTimeout(reveal,420)});
+  document.addEventListener('focusout',e=>{const f=e.target;if(!editable(f)||!winOf(f))return;
+    if(editable(e.relatedTarget)&&winOf(e.relatedTarget))return;        // переход к другому полю — решит focusin
+    clearTimeout(hideT);hideT=setTimeout(()=>{if(!foc())go(0,C_HIDE)},70)});
+  // --- измерение: после изменения высоты webview значение устаивается 90 мс — тогда запоминаем и при расхождении доводим
+  function settle(){const K=measure();
+    if(K>120){if(foc()){const c=kindOf(document.activeElement);if(Math.abs(K-(kbp[c]||0))>2){kbp[c]=K;saveKb()}if(Math.abs(K-target)>3)go(K,C_FIT)}}
+    else if(K<60){if(foc()&&lift>1&&coarse){clearTimeout(offT);offT=setTimeout(()=>{if(measure()<60&&foc()&&lift>1&&!tw)go(0,C_FIT)},600)}   // клавиатуры нет (внешняя): но не при коротком «мигании» — ждём 600 мс
+      if(!foc()&&!tw&&lift<1){baseH=window.innerHeight;root.style.setProperty('--baseh',baseH+'px');sat=probe.offsetHeight;sab=probeB.offsetHeight}}}
+  function onView(){const sh=baseH-window.innerHeight,vt=vv?Math.max(0,vv.offsetTop):0;
+    root.style.setProperty('--lay',(sh>120?sh:0)+'px');root.style.setProperty('--vvt',vt+'px');   // нижние панели страницы остаются на месте, пока webview уменьшен клавиатурой
+    clearTimeout(measT);measT=setTimeout(settle,90)}
+  if(vv){vv.addEventListener('resize',onView);vv.addEventListener('scroll',onView)}
+  window.addEventListener('resize',onView);
+  try{if(window.__TG)window.__TG.onEvent('viewportChanged',onView)}catch(e){}
+  // поворот экрана (меняется ширина) — пересчитываем постоянную высоту; клавиатура ширину не меняет
+  let baseW=window.innerWidth;
+  window.addEventListener('orientationchange',()=>setTimeout(()=>{if(window.innerWidth!==baseW){baseW=window.innerWidth;baseH=window.innerHeight;root.style.setProperty('--baseh',baseH+'px');sat=probe.offsetHeight;sab=probeB.offsetHeight}onView()},350));
+  root.style.setProperty('--baseh',baseH+'px');
+  // --- прокрутка видимой части окна к полю
+  function reveal(){const a=document.activeElement;if(!editable(a))return;const m=a.closest('#rev,#cf,#ed,#gd,#rc');if(!m||m.scrollHeight<=m.clientHeight+1)return;
     const r=a.getBoundingClientRect(),mr=m.getBoundingClientRect(),pad=14;let d=0;
     if(r.bottom>mr.bottom-pad)d=r.bottom-mr.bottom+pad;else if(r.top<mr.top+pad)d=r.top-mr.top-pad;
     if(d)m.scrollBy({top:d,behavior:RMQ.matches?'auto':'smooth'})}
-  // v137: вызвать cb, когда клавиатура ушла (окно Telegram вернулось к полной высоте); если клавиатуры нет — сразу, синхронно; не дольше max мс
-  window.__afterKb=(cb,max)=>{const t0=Date.now();(function chk(){const h=Math.min(window.innerHeight,vv?vv.height:window.innerHeight);
-    if(baseH-h<60||Date.now()-t0>(max||260)){cb();return}setTimeout(chk,16)})()};
-  if(vv){vv.addEventListener('resize',start);vv.addEventListener('scroll',start)}
-  window.addEventListener('resize',start);
-  try{if(window.__TG)window.__TG.onEvent('viewportChanged',start)}catch(e){}
-  window.addEventListener('orientationchange',()=>setTimeout(start,300));
   // страница под окном не должна ездить, пока открыто окно
-  window.addEventListener('scroll',()=>{if(anyOpen()&&window.scrollY!==savedY)window.scrollTo(0,savedY)},{passive:true});
-  // намерение: окно начинает ехать вверх в момент касания поля (iOS ещё не прислал высоту), потом цель уточняется по измерению
-  function setIntent(f){
-    if(kbOpen||!coarse||!f||f.readOnly||f.inputMode==='none')return;
-    if(!(f.tagName==='TEXTAREA'||(f.tagName==='INPUT'&&/^(text|search|number|tel|email|url|password|)$/.test(f.type))))return;
-    const m=winOf(f);if(!m||!m.classList.contains('on'))return;
-    intent={el:m,kb:kbSeen||Math.round(window.innerHeight*.36),until:Date.now()+900,t:Date.now()};start()}
-  /* v126: окно НЕ двигаем на pointerdown -- оно уезжало из-под пальца до отпускания, и тап не попадал в поле (клавиатура не открывалась). Сдвиг начинается на focusin, когда тап уже состоялся. */
-  document.addEventListener('focusin',e=>{if(!intent)setIntent(e.target);start();setTimeout(reveal,420)});
-  // переход к другому полю: тап по полю при открытой клавиатуре или focusout с relatedTarget — окно не опускаем, даже если iOS на миг убрал клавиатуру
-  const isEd=n=>!!n&&!!n.tagName&&(n.tagName==='TEXTAREA'||(n.tagName==='INPUT'&&!/^(checkbox|radio|button|color|range|file|submit|reset)$/.test(n.type)))&&!!winOf(n);
-  document.addEventListener('pointerdown',e=>{if(kbOpen&&isEd(e.target))swUntil=Date.now()+600},true);
-  document.addEventListener('keydown',e=>{if(e.key==='Enter')noGrace=Date.now()+700},true);   // Enter/«Готово» — клавиатуру убирают нарочно, ждать незачем
-  document.addEventListener('focusout',e=>{lastOut=Date.now();if(isEd(e.relatedTarget))swUntil=lastOut+600;start();setTimeout(start,120)});
-  // изменение высоты окна из-за содержимого (например, под строкой ввода появляется разбор) — мягко, но не во время сдвига под клавиатуру
-  const last=new Map(),inBusy=new Set();
-  if(window.ResizeObserver){
-    const ro=new ResizeObserver(es=>{start();es.forEach(en=>{const el=en.target;if(inBusy.has(el))return;
-      if(window._fxLock||performance.now()<(busy.get(el)||0)){last.set(el,el.offsetHeight);return}
-      const nh=el.offsetHeight,oh=last.get(el);last.set(el,nh);
-      if(oh==null||!el.classList.contains('on')||Math.abs(nh-oh)<3||Math.abs(nh-oh)>700||!el.animate||RMQ.matches)return;
-      inBusy.add(el);
-      // запускаем анимацию вне колбэка наблюдателя, чтобы не было ошибки «ResizeObserver loop»
-      requestAnimationFrame(()=>{try{const o=el.style.overflow;el.style.overflow='hidden';
-        const an=el.animate([{height:oh+'px'},{height:nh+'px'}],{duration:380,easing:'cubic-bezier(.22,1,.36,1)'});
-        const fin=()=>{inBusy.delete(el);el.style.overflow=o;last.set(el,el.offsetHeight)};an.onfinish=fin;an.oncancel=fin}
-        catch(err){inBusy.delete(el)}})})});
-    IDS.forEach(id=>{const el=$i(id);if(el)ro.observe(el)})}
-  // открытие/закрытие окна: закрытое окно доезжает вниз с прежним отступом, потом отступ сбрасываем, когда оно уже скрыто
-  const mo=new MutationObserver(ms=>{ms.forEach(m=>{const el=m.target,on=el.classList.contains('on'),was=/(^|\s)on(\s|$)/.test(m.oldValue||'');
-      if(on===was)return;
-      if(on){savedY=window.scrollY;clearTimeout(rst.get(el));S.delete(el);el.classList.remove('pin');el.style.removeProperty('--st');el.style.removeProperty('--pd');el.style.setProperty('--mb','0px')}
-      else{if(el.contains(document.activeElement))document.activeElement.blur();
-        clearTimeout(rst.get(el));rst.set(el,setTimeout(()=>{if(el.classList.contains('on'))return;
-          el.style.transition='none';el.classList.remove('pin');el.style.removeProperty('--st');el.style.removeProperty('--pd');el.style.setProperty('--mb','0px');el.style.removeProperty('--kmax');void el.offsetHeight;el.style.transition='';S.delete(el)},520))}});start()});
+  window.addEventListener('scroll',()=>{if(IDS.some(id=>{const e=$i(id);return e&&e.classList.contains('on')})&&window.scrollY!==savedY)window.scrollTo(0,savedY)},{passive:true});
+  // открытие/закрытие окна
+  const rst=new Map();
+  const mo=new MutationObserver(ms=>{ms.forEach(m=>{const el=m.target,on=el.classList.contains('on'),was=/(^|\s)on(\s|$)/.test(m.oldValue||'');if(on===was)return;
+    if(on){savedY=window.scrollY;clearTimeout(rst.get(el));if(el!==owner||!foc()){el.style.setProperty('--lift','0px');if(el===owner){lift=0;target=0;tw=null;apply()}}}
+    else{if(el.contains(document.activeElement))document.activeElement.blur();
+      clearTimeout(rst.get(el));rst.set(el,setTimeout(()=>{if(el.classList.contains('on'))return;el.style.setProperty('--lift','0px');el.style.removeProperty('--kmax');if(el===owner&&!foc()){lift=0;target=0;tw=null;apply()}},520))}})});
   IDS.forEach(id=>{const el=$i(id);if(el)mo.observe(el,{attributes:true,attributeFilter:['class'],attributeOldValue:true})});
-  start();
+  // для openCp: клавиатура сейчас поднята? и: начать её опускание сразу (окно под панелью опускается вместе с ней)
+  window.Sheets={kbUp:()=>!!owner&&(lift>2||target>2),hideKb(){clearTimeout(hideT);if(owner&&(lift>2||target>2))go(0,C_HIDE)}};
 })();
 </script>
 <script>
