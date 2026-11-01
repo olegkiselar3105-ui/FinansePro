@@ -1,0 +1,20 @@
+# Настройки воркера для деплоя через Wrangler (командная строка Cloudflare).
+# Пока воркер обновляется вставкой кода в панели Cloudflare, этот файл ни на что не влияет.
+# Перед первым деплоем через Wrangler впишите id из панели Cloudflare (Workers → finansepro → Settings → Bindings).
+# Секреты (BOT_TOKEN, GROQ_KEY, WEBHOOK_SECRET) сюда НЕ пишутся: только командой `npx wrangler secret put ИМЯ`.
+
+name = "finansepro"
+main = "worker.js"
+compatibility_date = "2026-11-01"
+
+# Не стирать переменные, заданные в панели Cloudflare (ALLOWED_IDS, DAILY_LIMIT, APP_URL)
+keep_vars = true
+
+[[kv_namespaces]]
+binding = "FIN"
+id = "ВПИСАТЬ_ID_KV_ИЗ_ПАНЕЛИ"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "ВПИСАТЬ_ИМЯ_БАЗЫ_ИЗ_ПАНЕЛИ"
+database_id = "ВПИСАТЬ_ID_БАЗЫ_ИЗ_ПАНЕЛИ"
