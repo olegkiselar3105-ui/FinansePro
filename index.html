@@ -1242,6 +1242,9 @@ html:root #ed::before{width:100%;max-width:none;border-radius:0;opacity:1;backgr
 /* слой окна готов заранее, а раскладка внутри окна не пересчитывает страницу и наоборот */
 html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){will-change:transform;contain:layout style}
 html:root #ov{will-change:opacity}
+/* v136: затемнение с размытием держит высоту «без клавиатуры» (--baseh ставит скрипт клавиатуры): окно Telegram уменьшается под клавиатуру, а слой с backdrop-filter
+   не меняет размер — иначе iOS заново размывает весь список на каждом кадре. min-height:100% — страховка, если --baseh устарел */
+html:root #ov{height:var(--baseh,100%);min-height:100%}
 html:root #ov{touch-action:none}
 
 /* ===== v101: окно операции — плоский компактный вид: строки с линиями вместо рамок и «таблеток» ===== */
@@ -4566,6 +4569,9 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)recTick()}
 let _fitT=0;
 let _scT=0;window.addEventListener('scroll',()=>{_scT=Date.now()},{passive:true});
 function fitScroll(){const de=document.documentElement,B=$('#body'),tb=$('#tabs');if(!B||!tb)return;
+  // v136: пока открыто окно, страница под ним неподвижна — не снимаем и не возвращаем html.ns на каждый resize от клавиатуры
+  // (это перекладка всего списка прямо во время движения окна); проверим заново, когда окно закроется
+  if(isModalOpen()){clearTimeout(_fitT);_fitT=setTimeout(fitScroll,500);return}
   // пока палец листает список (или сразу после) — ничего не меряем и не прыгаем наверх
   if(Date.now()-_scT<350||(typeof tp!=='undefined'&&tp&&tp.on)||(typeof OS!=='undefined'&&(OS.raf||OS.y||OS.drag))){fitSoon();return}
   const sy=window.scrollY||0;
@@ -4867,7 +4873,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v135';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v136';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия, которую видит человек (внизу экрана и в письме в поддержку)
 try{document.getElementById('vb').textContent=APP_VER}catch(e){}
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
@@ -5054,12 +5060,15 @@ async function ibLoop(){
      • короткие «мигания» клавиатуры (цифры → буквы) не считаются закрытием — окно не прыгает. */
   const vv=window.visualViewport,root=document.documentElement,$i=id=>document.getElementById(id);
   const IDS=['sh','ed','gd','cf','bq','nc','cp','rc'],SEL='#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc',FLT={sh:1,ed:1};
-  const GAP=10,TAU=78;   // зазор над клавиатурой; постоянная времени пружины (мс): ~0.3 с до покоя, без перелёта
+  // v136: зазор над клавиатурой; пружина второго порядка (критическое затухание): стартует с нулевой скоростью и без перелёта,
+  // ~0.4 с до покоя (прежняя пружина первого порядка делала самый большой шаг в первом же кадре — до 46 px — это и был «рывок»);
+  // KB_GRACE — сколько мс клавиатуру, исчезнувшую при смене поля, считаем «мигнувшей», а не закрытой
+  const GAP=10,OMEGA=15,KB_GRACE=220,RMQ=matchMedia('(prefers-reduced-motion: reduce)');
   const probe=document.createElement('div');probe.style.cssText='position:fixed;top:0;left:0;width:0;height:var(--sat);visibility:hidden;pointer-events:none';document.body.appendChild(probe);
   const probeB=document.createElement('div');probeB.style.cssText='position:fixed;top:0;left:0;width:0;height:var(--sab);visibility:hidden;pointer-events:none';document.body.appendChild(probeB);
   const coarse=matchMedia('(pointer:coarse)').matches;
   let baseH=window.innerHeight,lastOut=0,savedY=0,_lay='',_vvt='',_kbo=false,sat=probe.offsetHeight,sab=probeB.offsetHeight;
-  let kbOpen=false,visHold=0,lastRaw=0,holdEl=null,intent=null,kbSeen=0,kbSaveT=0,raf=0,tPrev=0;
+  let kbOpen=false,visHold=0,lastRaw=0,holdEl=null,intent=null,kbSeen=0,kbSaveT=0,raf=0,tPrev=0,swUntil=0,noGrace=0,_bh=0;
   const S=new Map(),busy=new Map(),rst=new Map();
   try{const v=+localStorage.getItem('finapp.kbh');if(v>150&&v<600)kbSeen=v}catch(e){}
   const editable=()=>{const a=document.activeElement;return !!a&&(a.tagName==='TEXTAREA'||a.tagName==='SELECT'||(a.tagName==='INPUT'&&!/^(checkbox|radio|button|color|range|file|submit|reset)$/.test(a.type)))};
@@ -5070,10 +5079,14 @@ async function ibLoop(){
     const dt=Math.min(50,tPrev?now-tPrev:16);tPrev=now;
     const L=window.innerHeight,h=vv?vv.height:L,vt=vv?Math.max(0,vv.offsetTop):0,a=document.activeElement,foc=editable(),T=Date.now();
     if(!foc&&!kbOpen&&T-lastOut>1000)baseH=L;
+    if(!kbOpen&&baseH!==_bh){_bh=baseH;root.style.setProperty('--baseh',baseH+'px')}   // затемнение держит высоту «без клавиатуры» и не меняет размер вместе с окном Telegram
     // --- есть ли клавиатура (с «гистерезисом»: короткие мигания при смене раскладки не считаются закрытием)
     const raw=(foc||T-lastOut<600)&&(baseH-h)>120;   // v131: при смене поля фокус на миг пропадает -- клавиатура остаётся, окно не опускается
-    if(raw){kbOpen=true;visHold=h;lastRaw=T;holdEl=winOf(a)||holdEl}
-    else if(kbOpen&&!((foc&&T-lastRaw<450)||(!foc&&T-lastOut<90)))kbOpen=false;
+    // при переходе к другому полю (swUntil) окно не следует за клавиатурой, пока та уходит вниз (h растёт): если она вернётся — окно уже на месте; а если станет выше — поднимаем сразу
+    if(raw){if(!(kbOpen&&T<swUntil&&h>visHold))visHold=h;kbOpen=true;lastRaw=T;holdEl=winOf(a)||holdEl}
+    // v136: клавиатура считается открытой, пока: поле в фокусе (450 мс от последнего замера), или идёт переход к другому полю (swUntil: тап по полю / focusout с relatedTarget),
+    // или после потери фокуса прошло меньше KB_GRACE (iOS на 100–250 мс убирает клавиатуру при смене цифровой на буквенную). После Enter/«Готово» (noGrace) — прежние 90 мс
+    else if(kbOpen&&!((foc&&T-lastRaw<450)||T<swUntil||(!foc&&T-lastOut<(T<noGrace?90:KB_GRACE))))kbOpen=false;
     if(!kbOpen){sat=probe.offsetHeight;sab=probeB.offsetHeight}
     const kb=kbOpen?Math.max(0,baseH-visHold):0;
     if(kbOpen&&kb>150&&Math.abs(kb-kbSeen)>2){kbSeen=kb;clearTimeout(kbSaveT);kbSaveT=setTimeout(()=>{try{localStorage.setItem('finapp.kbh',String(Math.round(kbSeen)))}catch(e){}},800)}
@@ -5089,18 +5102,24 @@ async function ibLoop(){
     IDS.forEach(id=>{const el=$i(id);if(!el||!el.classList.contains('on'))return;any=true;
       const bp=parseFloat(getComputedStyle(el).bottom)||0,nat=L-bp,R0=baseH-bp;   // нижний край окна «по раскладке» и в покое (координаты layout viewport)
       const isT=(kbOpen||pk>0)&&(el.contains(a)||el===holdEl||(intent&&el===intent.el));
-      const vis=kbOpen?visHold:baseH-pk,tgt=isT?Math.min(R0,vis-GAP):R0;
-      let s=S.get(el);if(!s){s={v:nat-vt,mb:0,km:0};S.set(el,s)}
-      const d=tgt-s.v;if(Math.abs(d)<.4)s.v=tgt;else s.v+=d*(1-Math.exp(-dt/TAU));
+      const vis=kbOpen?visHold:baseH-pk;
+      let s=S.get(el);if(!s){s={v:nat-vt,mb:0,km:0,vel:0,sub:null};S.set(el,s)}
+      // v136: пока поверх окна открыто вложенное (категории и т.п.), окно стоит на месте: не следует за закрывающейся клавиатурой
+      // (раньше оно падало вниз, пока панель категорий ехала вверх — два окна двигались навстречу друг другу)
+      const sub=el.classList.contains('sub');if(sub){if(s.sub==null)s.sub=s.v}else s.sub=null;
+      const tgt=sub?s.sub:(isT?Math.min(R0,vis-GAP):R0);
+      const d0=s.v-tgt;
+      if(RMQ.matches||(Math.abs(d0)<.4&&Math.abs(s.vel)<4)){s.v=tgt;s.vel=0}   // «уменьшение движения»: без пружины, окно встаёт на место сразу
+      else{const k=dt/1000,ex=Math.exp(-OMEGA*k),q=s.vel+OMEGA*d0;s.v=tgt+(d0+q*k)*ex;s.vel=(s.vel-q*OMEGA*k)*ex}
       const mb=Math.round((nat-vt-s.v)*10)/10;   // на сколько поднять окно, чтобы на экране его нижний край был в s.v
       if(mb!==s.mb){s.mb=mb;el.style.setProperty('--mb',mb+'px')}
       const bo=FLT[id]?sab+12:0,avail=Math.max(160,Math.round((isT?vis:L)-sat-8-bo));
-      if(Math.abs(avail-s.km)>=1){s.km=avail;el.style.setProperty('--kmax',avail+'px');busy.set(el,performance.now()+700)}});
+      if(!sub&&Math.abs(avail-s.km)>=1){s.km=avail;el.style.setProperty('--kmax',avail+'px');busy.set(el,performance.now()+700)}});
     if(any||kbOpen||pk>0)raf=requestAnimationFrame(frame)}
   function reveal(){if(!editable())return;const a=document.activeElement,m=a.closest('#rev,#cf,#ed,#gd,#rc');if(!m||m.scrollHeight<=m.clientHeight+1)return;
     const r=a.getBoundingClientRect(),mr=m.getBoundingClientRect(),pad=14;let d=0;
     if(r.bottom>mr.bottom-pad)d=r.bottom-mr.bottom+pad;else if(r.top<mr.top+pad)d=r.top-mr.top-pad;
-    if(d)m.scrollBy({top:d,behavior:'smooth'})}
+    if(d)m.scrollBy({top:d,behavior:RMQ.matches?'auto':'smooth'})}
   if(vv){vv.addEventListener('resize',start);vv.addEventListener('scroll',start)}
   window.addEventListener('resize',start);
   try{if(window.__TG)window.__TG.onEvent('viewportChanged',start)}catch(e){}
@@ -5115,14 +5134,18 @@ async function ibLoop(){
     intent={el:m,kb:kbSeen||Math.round(window.innerHeight*.36),until:Date.now()+900,t:Date.now()};start()}
   /* v126: окно НЕ двигаем на pointerdown -- оно уезжало из-под пальца до отпускания, и тап не попадал в поле (клавиатура не открывалась). Сдвиг начинается на focusin, когда тап уже состоялся. */
   document.addEventListener('focusin',e=>{if(!intent)setIntent(e.target);start();setTimeout(reveal,420)});
-  document.addEventListener('focusout',()=>{lastOut=Date.now();start();setTimeout(start,120)});
+  // переход к другому полю: тап по полю при открытой клавиатуре или focusout с relatedTarget — окно не опускаем, даже если iOS на миг убрал клавиатуру
+  const isEd=n=>!!n&&!!n.tagName&&(n.tagName==='TEXTAREA'||(n.tagName==='INPUT'&&!/^(checkbox|radio|button|color|range|file|submit|reset)$/.test(n.type)))&&!!winOf(n);
+  document.addEventListener('pointerdown',e=>{if(kbOpen&&isEd(e.target))swUntil=Date.now()+600},true);
+  document.addEventListener('keydown',e=>{if(e.key==='Enter')noGrace=Date.now()+700},true);   // Enter/«Готово» — клавиатуру убирают нарочно, ждать незачем
+  document.addEventListener('focusout',e=>{lastOut=Date.now();if(isEd(e.relatedTarget))swUntil=lastOut+600;start();setTimeout(start,120)});
   // изменение высоты окна из-за содержимого (например, под строкой ввода появляется разбор) — мягко, но не во время сдвига под клавиатуру
   const last=new Map(),inBusy=new Set();
   if(window.ResizeObserver){
     const ro=new ResizeObserver(es=>{start();es.forEach(en=>{const el=en.target;if(inBusy.has(el))return;
       if(window._fxLock||performance.now()<(busy.get(el)||0)){last.set(el,el.offsetHeight);return}
       const nh=el.offsetHeight,oh=last.get(el);last.set(el,nh);
-      if(oh==null||!el.classList.contains('on')||Math.abs(nh-oh)<3||Math.abs(nh-oh)>700||!el.animate)return;
+      if(oh==null||!el.classList.contains('on')||Math.abs(nh-oh)<3||Math.abs(nh-oh)>700||!el.animate||RMQ.matches)return;
       inBusy.add(el);
       // запускаем анимацию вне колбэка наблюдателя, чтобы не было ошибки «ResizeObserver loop»
       requestAnimationFrame(()=>{try{const o=el.style.overflow;el.style.overflow='hidden';
