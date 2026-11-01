@@ -72,6 +72,10 @@ html.nt *:not(.thm i),html.nt *:not(.thm i)::before,html.nt *:not(.thm i)::after
 html{scroll-padding-top:var(--sat);background:var(--bg)}
 html,body{touch-action:pan-y pinch-zoom;overscroll-behavior-y:none}
 html.ns,html.ns body{overflow:hidden;height:100%}
+/* v135: overflow:hidden делал body отдельной областью прокрутки, и липкий #top отсчитывал свой top (= --sat + 8px) от верха body,
+   который сам стоит ниже на padding-top у html (= --sat): в полноэкранном Telegram отступ считался дважды и блок закрывал первую строку.
+   clip обрезает так же, но области прокрутки не создаёт (как в v131 для окон); в старых браузерах без clip остаётся hidden */
+html.ns body{overflow:clip}
 #vb{position:fixed;right:8px;bottom:calc(2px + var(--sab,0px));z-index:5;font-size:10px;line-height:12px;letter-spacing:.2px;color:var(--m);opacity:.45;pointer-events:none;user-select:none;-webkit-user-select:none;font-variant-numeric:tabular-nums}
 #body .dg{will-change:auto}
 #body{position:relative;display:flow-root;min-height:55vh;touch-action:pan-y pinch-zoom;will-change:transform}
@@ -3594,6 +3598,7 @@ topEl.addEventListener('click',e=>{if(msBlock){e.stopPropagation();e.preventDefa
   addEventListener('scroll',kick,{passive:true});
   addEventListener('resize',()=>{dirty=true;kick()});
   addEventListener('load',()=>{dirty=true;kick()});
+  try{['safeAreaChanged','contentSafeAreaChanged','fullscreenChanged'].forEach(ev=>TGW.onEvent(ev,()=>{dirty=true;kick()}))}catch(e){}   // вход/выход из полноэкранного режима меняет --sat — блок пересчитывает сжатие
   // тап по свёрнутому блоку плавно возвращает список наверх (там снова видны месяц и стрелки)
   topEl.addEventListener('click',e=>{if(!topEl.classList.contains('cz')||msBlock||isModalOpen())return;
     e.preventDefault();e.stopPropagation();window.scrollTo({top:0,behavior:RM?'auto':'smooth'})},true);
@@ -4762,7 +4767,7 @@ async function cloudSync(why){
   try{TGW.onEvent('activated',()=>{if(CL.on&&Date.now()-CL.lastSync>20000)cloudSync('resume')})}catch{}
   // тема Telegram (светлая/тёмная) и безопасные отступы меняются на лету
   try{TGW.onEvent('themeChanged',()=>{if(cfg.theme==='auto')applyTheme(true)})}catch{}
-  try{['safeAreaChanged','contentSafeAreaChanged'].forEach(ev=>TGW.onEvent(ev,fitSoon))}catch{}
+  try{['safeAreaChanged','contentSafeAreaChanged','fullscreenChanged'].forEach(ev=>TGW.onEvent(ev,fitSoon))}catch{}
   if(!(TGW.isVersionAtLeast&&TGW.isVersionAtLeast('6.9'))||!TGW.CloudStorage){
     const m='Эта версия Telegram не поддерживает облачное хранилище (нужна 6.9+). Данные хранятся только на устройстве.';
     CL.lastErr={t:'fatal',m};csSet('err',m);return}
@@ -4862,7 +4867,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v134';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v135';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия, которую видит человек (внизу экрана и в письме в поддержку)
 try{document.getElementById('vb').textContent=APP_VER}catch(e){}
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
