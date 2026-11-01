@@ -1,0 +1,9 @@
+# Образец переменных для локального запуска воркера (npx wrangler dev).
+# Скопируйте в worker/.dev.vars и впишите свои значения. Файл .dev.vars в git не попадает (.gitignore).
+# Настоящие значения хранятся только в Cloudflare (Settings → Variables and Secrets).
+BOT_TOKEN=
+GROQ_KEY=
+WEBHOOK_SECRET=
+ALLOWED_IDS=
+DAILY_LIMIT=60
+APP_URL=
