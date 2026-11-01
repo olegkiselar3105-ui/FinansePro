@@ -4998,7 +4998,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v151';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v152';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}   // номер сборки виден внизу экрана: по нему понятно, обновился ли Telegram до новой версии
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
@@ -5321,7 +5321,8 @@ async function ibLoop(){
   const selIn=lb=>lb&&lb.querySelector&&lb.querySelector('select');
   const target=e=>{const lb=e.target.closest&&e.target.closest('label,#fp .fr');return lb&&selIn(lb)&&lb.closest(WIN+',#fp')?lb:null};   // v150: и в фильтрах поиска
   document.addEventListener('mousedown',e=>{if(target(e))e.preventDefault()},true);
-  document.addEventListener('click',e=>{const lb=target(e);if(!lb)return;e.preventDefault();e.stopPropagation();const sel=selIn(lb);
+  document.addEventListener('click',e=>{const lb=target(e);if(!lb)return;e.preventDefault();e.stopPropagation();if(st&&st.anchor===lb){close();return}   // v152: повторное нажатие на ту же строку закрывает меню
+    const sel=selIn(lb);
     const ttl=(lb.querySelector('.fl')||{}).textContent||lb.firstChild&&lb.firstChild.textContent||'Выбор';
     open({title:String(ttl).trim(),anchor:lb,value:sel.value,items:[...sel.options].map(op=>{const m=/^(\p{Extended_Pictographic}[️‍\p{Extended_Pictographic}]*)\s*(.*)$/u.exec(op.textContent);return m?{v:op.value,e:m[1],l:m[2]}:{v:op.value,l:op.textContent}}),
       pick:v=>{sel.value=v;sel.dispatchEvent(new Event('input',{bubbles:true}));sel.dispatchEvent(new Event('change',{bubbles:true}))}})},true);
