@@ -1491,11 +1491,16 @@ html:root #rc .shf .sm.del{order:1}html:root #rc .shf .sm:not(.pr):not(.del){ord
 #pkr .pkl button span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #pkr .pkl button.on{background:rgba(var(--wr,255,255,255),.08);font-weight:600}
 #pkr .pkl button.on::after{content:"";width:8px;height:14px;margin-right:4px;border:solid var(--t);border-width:0 2px 2px 0;transform:rotate(45deg) translate(-2px,-2px)}
+/* v149: короткий список — небольшое меню у строки (под ней или над ней), высотой ровно по пунктам; длинный — как раньше, на всю свободную высоту */
+#pkr.pop{border-radius:20px}#pkr.pop .pkh{display:none}#pkr.pop .pkl{padding:6px;overflow:hidden}
+#pkr[data-s=b]{transform:translate3d(0,-8px,0) scale(.97);transform-origin:50% 0}
+#pkr[data-s=a]{transform:translate3d(0,8px,0) scale(.97);transform-origin:50% 100%}
+#pkr.on,#pkr.on[data-s]{transform:none}
 @media (prefers-reduced-motion:reduce){#pkr,#pkr.on{transition:none}}
 /* v146: свой календарь (не забирает фокус — клавиатура остаётся); нативные поля даты в окнах не принимают касания, их берёт подпись */
 :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc) input[type=date]{pointer-events:none}
 #dpk{position:fixed;z-index:70;width:min(304px,calc(100vw - 16px));padding:12px 12px 10px;border-radius:22px;background:var(--sb,#1e1e22);color:var(--t);box-shadow:0 12px 40px rgba(0,0,0,.35),0 0 0 .5px var(--sbd,rgba(255,255,255,.12));
-  visibility:hidden;opacity:0;transform:scale(.96);transform-origin:50% 0;transition:opacity .16s ease,transform .2s cubic-bezier(0,0,.17,1),visibility 0s .2s;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+  visibility:hidden;opacity:0;transform:scale(.96);transform-origin:50% 0;transition:opacity .16s ease,transform .2s cubic-bezier(0,0,.17,1),visibility 0s .2s;-webkit-user-select:none;user-select:none;touch-action:none;overflow:hidden}
 #dpk.on{visibility:visible;opacity:1;transform:none;transition:opacity .16s ease,transform .2s cubic-bezier(0,0,.17,1),visibility 0s}
 #dpk button{border:0;background:none;color:inherit;font:inherit;-webkit-tap-highlight-color:transparent;cursor:pointer}
 #dpk .dph{display:flex;align-items:center;justify-content:space-between;margin:0 2px 8px}
@@ -1505,13 +1510,16 @@ html:root #rc .shf .sm.del{order:1}html:root #rc .shf .sm:not(.pr):not(.del){ord
 #dpk .dpw,#dpk .dpg{display:grid;grid-template-columns:repeat(7,1fr);text-align:center}
 #dpk .dpw span{font-size:11.5px;color:var(--m);padding-bottom:4px}
 #dpk .dpg button{height:38px;margin:1px auto;width:38px;border-radius:50%;font-size:15px;font-variant-numeric:tabular-nums}
+#dpk .dpg button.ot{color:var(--m);opacity:.55}
+#dpk .dpg.sn{animation:dpsn .22s cubic-bezier(0,0,.17,1)}#dpk .dpg.sp{animation:dpsp .22s cubic-bezier(0,0,.17,1)}
+@keyframes dpsn{from{transform:translate3d(28px,0,0);opacity:0}}@keyframes dpsp{from{transform:translate3d(-28px,0,0);opacity:0}}
 #dpk .dpg button.td{box-shadow:inset 0 0 0 1px var(--sbd,rgba(255,255,255,.25))}
-#dpk .dpg button.on{background:var(--sa);color:var(--son);font-weight:600;box-shadow:none}
+#dpk .dpg button.on{background:var(--sa);color:var(--son);font-weight:600;box-shadow:none;opacity:1}
 #dpk .dpf{display:flex;gap:8px;margin-top:8px}
 #dpk .dpf button{flex:1;height:38px;border-radius:999px;font-size:14px;font-weight:600;background:rgba(var(--wr,255,255,255),.08)}
 #dpk .dpf .dpc{color:var(--rd)}
 #dpk.dps{padding:8px 10px}#dpk.dps .dph{margin-bottom:2px}#dpk.dps .dph button{width:30px;height:30px}#dpk.dps .dpg button{height:30px;width:30px;font-size:14px;margin:0 auto}#dpk.dps .dpw span{padding-bottom:2px}#dpk.dps .dpf{margin-top:4px}#dpk.dps .dpf button{height:32px}
-@media (prefers-reduced-motion:reduce){#dpk,#dpk.on{transition:none}}
+@media (prefers-reduced-motion:reduce){#dpk,#dpk.on{transition:none}#dpk .dpg.sn,#dpk .dpg.sp{animation:none}}
 /* v141: затемнение снова полупрозрачное (список за окном виден затемнённым); страница под окном только не принимает касаний (lockBg) */
 /* затемнение фона: размер постоянный (--baseh), кривые из эталона */
 html:root #ov{transition:opacity .198s cubic-bezier(.75,.09,.67,1),visibility 0s .198s!important}
@@ -5004,7 +5012,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v148';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v149';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}   // номер сборки виден внизу экрана: по нему понятно, обновился ли Telegram до новой версии
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
@@ -5283,16 +5291,28 @@ async function ibLoop(){
 (function(){
   const WIN='#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc';
   const el=document.createElement('div');el.id='pkr';el.setAttribute('role','dialog');document.body.appendChild(el);
-  let st=null,eat=0;
+  let st=null,eat=0,raf=0;
   const vis=()=>{const vv=window.visualViewport;return{top:(vv?vv.offsetTop:0),bot:Math.min(window.innerHeight,vv?vv.offsetTop+vv.height:window.innerHeight)}};
   const satPx=()=>{const d=document.createElement('div');d.style.cssText='position:fixed;height:var(--sat,0px)';document.body.appendChild(d);const h=d.offsetHeight;d.remove();return h};
-  function place(){if(!st)return;const v=vis(),top=Math.max(v.top+satPx()+8,v.bot-Math.min(520,(v.bot-v.top)*.86));
-    el.style.top=Math.round(top)+'px';el.style.height=Math.round(v.bot-8-top)+'px'}
+  // v149: сторона выбирается один раз при открытии: 'b' — под строкой, 'a' — над строкой (если пункты помещаются целиком), 'f' — длинный список на всю свободную высоту
+  function place(){if(!st)return;const v=vis(),T=v.top+satPx()+8,B=v.bot-8;
+    if(st.side!=='f'&&st.anchor&&st.anchor.isConnected){const r=st.anchor.getBoundingClientRect();st.ar=r.top;
+      let y=st.side==='b'?r.bottom+6:r.top-6-st.h;y=Math.max(T,Math.min(y,B-st.h));el.style.top=Math.round(y)+'px';el.style.height=Math.round(st.h)+'px';return}
+    const top=Math.max(T,v.bot-Math.min(520,(v.bot-v.top)*.86));el.style.top=Math.round(top)+'px';el.style.height=Math.round(B-top)+'px'}
+  function follow(){raf=0;if(!st)return;const a=st.anchor;
+    if(a){const w=a.closest(WIN);if(!a.isConnected||!w||!w.classList.contains('on')||w.classList.contains('sub')){close();return}
+      if(st.side!=='f'&&Math.abs(a.getBoundingClientRect().top-st.ar)>.5)place()}
+    raf=requestAnimationFrame(follow)}
   function open(o){close();st=o;
     el.innerHTML=`<div class="pkh"><b>${o.title||'Выбор'}</b><button type="button" tabindex="-1" data-x aria-label="Закрыть">×</button></div><div class="pkl">`+
       o.items.map(it=>`<button type="button" tabindex="-1" data-v="${String(it.v).replace(/"/g,'&quot;')}" class="${String(it.v)===String(o.value)?'on':''}">${it.e?`<i>${it.e}</i>`:''}<span>${it.l}</span></button>`).join('')+'</div>';
-    place();el.classList.add('on');const cur=el.querySelector('.pkl .on');if(cur)cur.scrollIntoView({block:'center'})}
-  function close(){if(!st)return;st=null;el.classList.remove('on')}
+    el.style.transition='none';st.side='f';
+    if(o.anchor){el.classList.add('pop');el.style.height='';el.style.top='0px';const h=el.offsetHeight,v=vis(),T=v.top+satPx()+8,B=v.bot-8,r=o.anchor.getBoundingClientRect();
+      if(h<=B-(r.bottom+6))st.side='b';else if(h<=r.top-6-T)st.side='a';st.h=h}
+    el.classList.toggle('pop',st.side!=='f');el.dataset.s=st.side;place();void el.offsetWidth;el.style.transition='';void el.offsetWidth;el.classList.add('on');
+    const l=el.querySelector('.pkl'),cur=l&&l.querySelector('.on');if(cur&&st.side==='f'){const lr=l.getBoundingClientRect(),cr=cur.getBoundingClientRect();l.scrollTop+=cr.top-lr.top-(lr.height-cr.height)/2}
+    cancelAnimationFrame(raf);raf=requestAnimationFrame(follow)}
+  function close(){if(!st)return;st=null;cancelAnimationFrame(raf);raf=0;el.classList.remove('on')}
   window.Picker={open,close,isOpen:()=>!!st};
   // кнопки и строки внутри окна не забирают фокус у поля ввода — клавиатура остаётся; закрыть её — касание мимо окна
   document.addEventListener('mousedown',e=>{const a=document.activeElement,t=e.target;
@@ -5303,6 +5323,8 @@ async function ibLoop(){
   el.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!st)return;e.preventDefault();
     if(b.hasAttribute('data-x')){close();return}const o=st;close();try{o.pick(b.dataset.v)}catch(err){}});
   ['pointerdown','touchstart','touchmove'].forEach(ev=>el.addEventListener(ev,e=>e.stopPropagation(),{passive:true}));
+  // v149: если список не листается (короткий) или палец на заголовке — свайп ничего не двигает под меню
+  el.addEventListener('touchmove',e=>{const l=e.target.closest&&e.target.closest('.pkl');if((!l||l.scrollHeight<=l.clientHeight+1)&&e.cancelable)e.preventDefault()},{passive:false});
   // касание мимо меню закрывает только меню (клавиатура остаётся; закрыть её — следующее касание мимо окна)
   document.addEventListener('pointerdown',e=>{if(st&&!e.target.closest('#pkr')&&!target(e)&&!(e.target.closest&&e.target.closest('#ed #eca'))){close();eat=Date.now()}},true);
   document.addEventListener('click',e=>{if(eat&&Date.now()-eat<600&&!e.target.closest('#pkr')){eat=0;e.preventDefault();e.stopPropagation()}},true);
@@ -5314,12 +5336,12 @@ async function ibLoop(){
   document.addEventListener('mousedown',e=>{if(target(e))e.preventDefault()},true);
   document.addEventListener('click',e=>{const lb=target(e);if(!lb)return;e.preventDefault();e.stopPropagation();const sel=selIn(lb);
     const ttl=(lb.querySelector('.fl')||{}).textContent||lb.firstChild&&lb.firstChild.textContent||'Выбор';
-    open({title:String(ttl).trim(),value:sel.value,items:[...sel.options].map(op=>{const m=/^(\p{Extended_Pictographic}[️‍\p{Extended_Pictographic}]*)\s*(.*)$/u.exec(op.textContent);return m?{v:op.value,e:m[1],l:m[2]}:{v:op.value,l:op.textContent}}),
+    open({title:String(ttl).trim(),anchor:lb,value:sel.value,items:[...sel.options].map(op=>{const m=/^(\p{Extended_Pictographic}[️‍\p{Extended_Pictographic}]*)\s*(.*)$/u.exec(op.textContent);return m?{v:op.value,e:m[1],l:m[2]}:{v:op.value,l:op.textContent}}),
       pick:v=>{sel.value=v;sel.dispatchEvent(new Event('input',{bubbles:true}));sel.dispatchEvent(new Event('change',{bubbles:true}))}})},true);
   // категория в окне операции: при открытой клавиатуре — это меню (клавиатура остаётся), без клавиатуры — прежняя сетка категорий
   document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#ed #eca');if(!b||typeof eT==='undefined'||!eT)return;
     if(!(window.Sheets&&Sheets.kbUp()))return;e.preventDefault();e.stopImmediatePropagation();readEd();
-    const inc=eT.type==='income';open({title:'Категория',value:eT.category,items:ALL.filter(c=>c.inc===inc).map(c=>({v:c.id,e:c.e,l:c.n})),pick:v=>{if(eT){eT.category=v;patchEd()}}})},true);
+    const inc=eT.type==='income';open({title:'Категория',anchor:b,value:eT.category,items:ALL.filter(c=>c.inc===inc).map(c=>({v:c.id,e:c.e,l:c.n})),pick:v=>{if(eT){eT.category=v;patchEd()}}})},true);
 })();
 </script>
 <script>
@@ -5334,21 +5356,27 @@ async function ibLoop(){
   let st=null,chk=0;
   const dateIn=lb=>lb&&lb.querySelector&&lb.querySelector('input[type=date]');
   function render(){if(!st)return;const {y,m}=st,v=st.inp.value,td=ymd(new Date());
-    const f=new Date(y,m,1),lead=(f.getDay()+6)%7,n=new Date(y,m+1,0).getDate();let cells='';
-    for(let i=0;i<lead;i++)cells+='<i></i>';
-    for(let d=1;d<=n;d++){const k=y+'-'+p2(m+1)+'-'+p2(d);cells+=`<button type="button" tabindex="-1" data-d="${k}" class="${k===v?'on':''}${k===td?' td':''}">${d}</button>`}
+    // v149: всегда 6 недель (42 клетки) — размер календаря не меняется от месяца; пустые места заняты днями соседних месяцев
+    const lead=(new Date(y,m,1).getDay()+6)%7;let cells='';
+    for(let i=0;i<42;i++){const d=new Date(y,m,1-lead+i),k=ymd(d);cells+=`<button type="button" tabindex="-1" data-d="${k}" class="${d.getMonth()!==m?'ot':''}${k===v?' on':''}${k===td?' td':''}">${d.getDate()}</button>`}
     el.innerHTML=`<div class="dph"><button type="button" tabindex="-1" data-a="p" aria-label="Предыдущий месяц">‹</button><b>${MN[m]} ${y}</b><button type="button" tabindex="-1" data-a="n" aria-label="Следующий месяц">›</button></div>`+
       `<div class="dpw"><span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span></div><div class="dpg">${cells}</div>`+
       `<div class="dpf"><button type="button" tabindex="-1" data-a="t">Сегодня</button><button type="button" tabindex="-1" data-a="y">Вчера</button>${OPT[st.inp.id]&&v?'<button type="button" tabindex="-1" data-a="c" class="dpc">Очистить</button>':''}</div>`}
-  function place(){if(!st)return;const r=st.lb.getBoundingClientRect(),vv=window.visualViewport,top0=vv?vv.offsetTop:0,bot=Math.min(window.innerHeight,vv?vv.offsetTop+vv.height:window.innerHeight);
-    el.classList.remove('dps');if(el.offsetHeight>bot-top0-16)el.classList.add('dps');   // мало места (клавиатура, маленький экран) — компактные клетки
-    const w=el.offsetWidth,h=el.offsetHeight,W=window.innerWidth;let x=Math.min(Math.max(8,r.right-w),W-w-8),y=r.bottom+8;
-    if(y+h>bot-8)y=r.top-h-8;if(y<top0+8)y=Math.max(top0+8,bot-h-8);
+  const vis=()=>{const vv=window.visualViewport,t=vv?vv.offsetTop:0;return{T:t+8,B:Math.min(window.innerHeight,vv?vv.offsetTop+vv.height:window.innerHeight)-8}};
+  // v149: сторона (под полем / над полем / внизу) выбирается один раз при открытии — календарь не перескакивает; дальше он только следует за полем
+  function place(){if(!st)return;const r=st.lb.getBoundingClientRect(),{T,B}=vis(),w=el.offsetWidth,h=el.offsetHeight,W=window.innerWidth;st.ar=r.top;
+    if(!st.side)st.side=r.bottom+8+h<=B?'b':r.top-8-h>=T?'a':'c';
+    let y=st.side==='b'?r.bottom+8:st.side==='a'?r.top-8-h:B-h;y=Math.max(T,Math.min(y,B-h));const x=Math.min(Math.max(8,r.right-w),W-w-8);
     el.style.left=Math.round(x)+'px';el.style.top=Math.round(y)+'px'}
+  function follow(){chk=0;if(!st)return;const w=st.lb.closest(WIN);if(!st.lb.isConnected||!w||!w.classList.contains('on')||w.classList.contains('sub')){close();return}
+    if(Math.abs(st.lb.getBoundingClientRect().top-st.ar)>.5)place();chk=requestAnimationFrame(follow)}
   function open(lb){const inp=dateIn(lb);if(!inp)return;const v=/^\d{4}-\d{2}-\d{2}$/.test(inp.value)?inp.value:ymd(new Date());
-    st={lb,inp,y:+v.slice(0,4),m:+v.slice(5,7)-1};render();el.classList.add('on');place();
-    clearInterval(chk);chk=setInterval(()=>{const w=st&&st.lb.closest(WIN);if(!st||!st.lb.isConnected||!w||!w.classList.contains('on')||w.classList.contains('sub'))close();else place()},250)}
-  function close(){if(!st)return;st=null;clearInterval(chk);el.classList.remove('on')}
+    st={lb,inp,y:+v.slice(0,4),m:+v.slice(5,7)-1};render();
+    el.style.transition='none';el.classList.remove('dps');const {T,B}=vis();if(el.offsetHeight>B-T)el.classList.add('dps');   // мало места (клавиатура, маленький экран) — компактные клетки
+    place();el.style.transformOrigin=st.side==='a'?'50% 100%':'50% 0';void el.offsetWidth;el.style.transition='';void el.offsetWidth;el.classList.add('on');
+    cancelAnimationFrame(chk);chk=requestAnimationFrame(follow)}
+  function close(){if(!st)return;st=null;cancelAnimationFrame(chk);chk=0;el.classList.remove('on')}
+  function shift(dir){st.m+=dir;if(st.m<0){st.m=11;st.y--}if(st.m>11){st.m=0;st.y++}render();const g=el.querySelector('.dpg');if(g)g.classList.add(dir>0?'sn':'sp')}
   function set(v){const inp=st.inp;inp.value=v;inp.dispatchEvent(new Event('input',{bubbles:true}));inp.dispatchEvent(new Event('change',{bubbles:true}));close()}
   // касание по полю даты: не даём фокусу уйти (клавиатура остаётся) и открываем свой календарь
   const target=e=>{const lb=e.target.closest&&e.target.closest('label');return lb&&dateIn(lb)&&lb.closest(WIN)?lb:null};
@@ -5358,11 +5386,18 @@ async function ibLoop(){
   document.addEventListener('keydown',e=>{if(st&&e.key==='Escape'){e.stopPropagation();close()}},true);
   el.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!st)return;e.preventDefault();
     if(b.dataset.d)set(b.dataset.d);
-    else if(b.dataset.a==='p'||b.dataset.a==='n'){st.m+=b.dataset.a==='p'?-1:1;if(st.m<0){st.m=11;st.y--}if(st.m>11){st.m=0;st.y++}render();place()}
+    else if(b.dataset.a==='p'||b.dataset.a==='n')shift(b.dataset.a==='p'?-1:1)
     else if(b.dataset.a==='t')set(ymd(new Date()));
     else if(b.dataset.a==='y'){const d=new Date();d.setDate(d.getDate()-1);set(ymd(d))}
     else if(b.dataset.a==='c')set('')});
   ['pointerdown','touchstart'].forEach(ev=>el.addEventListener(ev,e=>e.stopPropagation(),{passive:true}));
+  // v149: палец по календарю ничего под ним не листает (окно не ползёт); свайп влево/вправо — следующий/предыдущий месяц
+  let sx=0,sy=0,sw=0;
+  el.addEventListener('touchstart',e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;sw=e.touches.length===1},{passive:true});
+  el.addEventListener('touchmove',e=>{if(e.cancelable)e.preventDefault()},{passive:false});
+  el.addEventListener('touchend',e=>{if(!sw||!st)return;sw=0;const t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;
+    if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy)*1.3){if(e.cancelable)e.preventDefault();shift(dx<0?1:-1)}});
+  window.addEventListener('resize',()=>{if(st){st.side=null;place()}});
 })();
 </script>
 <script>
