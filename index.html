@@ -138,6 +138,14 @@ option{background:var(--s);color:var(--t)}
 .sum{padding:4px 0 16px}
 .sum small{display:block;font-size:12px;color:var(--m)}
 .sum .sht{display:flex;justify-content:space-between;align-items:center}
+/* v158: переключатель переноса остатка — сразу после «Остаток» */
+#sum .sht{justify-content:flex-start;gap:8px}
+#carry{position:relative;flex:none;width:32px;height:19px;padding:0;border:0;border-radius:10px;background:rgba(var(--wr),.2);transition:background .2s ease;-webkit-tap-highlight-color:transparent;cursor:pointer}
+#carry::before{content:"";position:absolute;inset:-12px -10px}
+#carry i{position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .24s cubic-bezier(.3,1.35,.5,1)}
+#carry.on{background:var(--g)}
+#carry.on i{transform:translateX(13px)}
+@media (prefers-reduced-motion:reduce){#carry,#carry i{transition:none}}
 .sum .cry{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--m);cursor:pointer}
 .sum .tot{white-space:nowrap;display:block;font-size:40px;font-weight:500;line-height:1.1;letter-spacing:-.02em;margin:4px 0 10px}
 .io{display:flex;gap:20px;font-size:15px;color:var(--m)}.io b{font-weight:500;color:var(--t);margin-left:4px;display:inline-block;font-variant-numeric:tabular-nums}
@@ -2894,7 +2902,7 @@ function render(){
   const I=mt.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0),X=mt.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
   const sg_=t=>t.type==='income'?t.amount:-t.amount,cOn=cfg.carry&&month>=cfg.carryFrom,prior=cOn?tx.filter(t=>{const m_=mOf(t.date);return m_>=cfg.carryFrom&&m_<month}).reduce((s,t)=>s+sg_(t),0):0,bal=Math.round((prior+mt.reduce((s,t)=>s+sg_(t),0))*100)/100;
   const ex_=cOn&&Math.abs(prior)>=.005?`<small>С прошлых месяцев: ${prior<0?'−':'+'}${fmt(Math.round(Math.abs(prior)))}</small>`:'';
-  {const sm=$('#sum'),h=`<div class="sht"><small>Остаток · ${cfg.cur}</small></div><div class="bw"><div class="bl"><b class="tot" id="sbal" data-v="${bal}" style="font-size:${numSz((bal<0?'−':'')+fmt(Math.round(Math.abs(bal))))}px">${bal<0&&Math.round(Math.abs(bal))>0?'−':''}${fmt(Math.round(Math.abs(bal)))}</b><div class="io"><span>Доход<b class="inc" id="sinc" data-v="${I}">${fmt(Math.round(I))}</b></span><span>Расход<b class="exp" id="sexp" data-v="${X}">${fmt(Math.round(X))}</b></span></div></div>${gaugeHtml(X)}</div>${budgetLine(X)}${debtNote()}`;if(sm._h!==h){sm.innerHTML=h;sm._h=h;runNums();runGauge()}};
+  {const sm=$('#sum'),h=`<div class="sht"><small>Остаток</small><button type="button" id="carry" class="${cOn?'on':''}" role="switch" aria-checked="${cOn}" aria-label="Переносить остаток с этого месяца"><i></i></button></div><div class="bw"><div class="bl"><b class="tot" id="sbal" data-v="${bal}" style="font-size:${numSz((bal<0?'−':'')+fmt(Math.round(Math.abs(bal))))}px">${bal<0&&Math.round(Math.abs(bal))>0?'−':''}${fmt(Math.round(Math.abs(bal)))}</b><div class="io"><span>Доход<b class="inc" id="sinc" data-v="${I}">${fmt(Math.round(I))}</b></span><span>Расход<b class="exp" id="sexp" data-v="${X}">${fmt(Math.round(X))}</b></span></div></div>${gaugeHtml(X)}</div>${budgetLine(X)}${debtNote()}`;if(sm._h!==h){sm.innerHTML=h;sm._h=h;runNums();runGauge()}};
   buildTabs();
   $('#ttl').textContent=ttlOf(tab);setLt0(tab);
   const dlst=$('#tgl');if(dlst)dlst.innerHTML=allTags().map(g=>`<option value="${E(g)}">`).join('');
@@ -4785,7 +4793,11 @@ document.addEventListener('transitionend',fitSoon,true);document.addEventListene
 setInterval(recTick,300000);
 render();
 if(_recN)setTimeout(()=>toast('Повторяющиеся операции добавлены: '+_recN),debtList().some(x=>x.n<=3)?5800:500);
-$('#sum').addEventListener('click',e=>{if(e.target.closest('#carry')){if(cfg.carry&&month>=cfg.carryFrom)cfg.carry=false;else{cfg.carry=true;cfg.carryFrom=month}save();render();return}{const g=e.target.closest('[data-go]');if(g&&g.dataset.go!=='rec')goDebts()}});
+$('#sum').addEventListener('click',e=>{{const cb=e.target.closest('#carry');if(cb){e.stopPropagation();
+  // v158: переключатель переноса остатка рядом с «Остаток»: вкл — остаток переносится начиная с открытого месяца (раньше месяцы не считаются), выкл — перенос отключён
+  const on=!(cfg.carry&&month>=cfg.carryFrom);if(on){cfg.carry=true;cfg.carryFrom=month}else cfg.carry=false;save();
+  cb.classList.toggle('on',on);cb.setAttribute('aria-checked',on);try{hap('light',{m:300,k:'cr'})}catch(x){}
+  setTimeout(render,230);return}}/* состояние показывает сам переключатель: информационные уведомления в приложении не показываются */{const g=e.target.closest('[data-go]');if(g&&g.dataset.go!=='rec')goDebts()}});
 setTimeout(()=>{const l=debtList().filter(x=>x.n<=3);if(l.length)toast('🔔 '+l[0].d.who+': '+dueTxt(l[0].n)+(l.length>1?' · ещё '+(l.length-1):''))},700);
 
 // ================= Облачная синхронизация через Telegram CloudStorage =================
@@ -5070,7 +5082,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v157';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v158';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}   // номер сборки виден внизу экрана: по нему понятно, обновился ли Telegram до новой версии
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
