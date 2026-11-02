@@ -1178,7 +1178,7 @@ html.intro #thlp{animation:inUp .9s cubic-bezier(.22,1,.36,1) .58s backwards}
 :root[data-theme=light]{--sb:#fff;--sbd:rgba(0,0,0,.12);--sa:var(--t);--son:var(--on);--stn:rgba(0,0,0,.07);--sov:rgba(0,0,0,.5)}
 html:root #ov,html:root[data-theme=light] #ov{background:var(--sov)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc,#fp){background:var(--sb)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;border:0!important;box-shadow:0 -4px 40px rgba(0,0,0,.2)!important;border-radius:28px!important}
-html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){top:auto!important;bottom:calc(var(--sab,0px) + 12px)!important;margin-bottom:var(--mb,0px)!important;translate:0 calc(var(--ky,0px) + var(--fx,0px))!important;transform-origin:50% 100%!important}
+html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){top:auto!important;bottom:calc(var(--sab,0px) + 12px)!important;margin-bottom:var(--mb,0px)!important;translate:0 calc(var(--ky,0px) + var(--fx,0px));transform-origin:50% 100%!important}
 html:root :is(#ed,#gd,#rc,#bq,#nc,#cp){padding:10px 18px 18px!important}
 html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):not(.on){transform:translateY(calc(100% + var(--sab,0px) + 40px + var(--mb,0px)))!important}
 html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc)::before{content:"";display:block;width:40px;height:5px;border-radius:4px;background:var(--m,#888);opacity:.45;margin:0 auto 14px}
@@ -1425,7 +1425,7 @@ html.pfp #nbp{display:flex}
 html{overscroll-behavior:none}
 html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){
   --rest:0px;top:var(--baseh,100%)!important;bottom:auto!important;margin-top:0!important;margin-bottom:0!important;
-  translate:0 calc(-100% - var(--rest) - var(--lift,0px))!important;
+  translate:0 calc(-100% - var(--rest) - var(--lift,0px));   /* v156: без !important — подъём над клавиатурой ведёт анимация (Web Animations), а !important её перебивал */
   transform:translateY(calc(100% + var(--rest) + var(--lift,0px) + 40px))!important;
   opacity:1!important;visibility:hidden;pointer-events:none;
   transition:transform .192s cubic-bezier(.58,-.03,1,.5),visibility 0s .192s,padding-bottom var(--kt)!important;
@@ -3644,24 +3644,38 @@ function endMs(e,cancel){if(!ms||e.pointerId!==ms.id)return;const m=ms;ms=null;i
 topEl.addEventListener('pointerup',e=>endMs(e,false));topEl.addEventListener('pointercancel',e=>endMs(e,true));
 topEl.addEventListener('click',e=>{if(msBlock){e.stopPropagation();e.preventDefault()}},true);
 
-// v155: свайп влево/вправо по списку операций листает месяц (только на вкладке «Операции», не в поиске). Список идёт за пальцем, затем — та же анимация, что у стрелок месяца
+// v155/v156: свайп влево/вправо по списку операций листает месяц (только «Операции», не в поиске и не в режиме выбора).
+// v156: жест ведётся по touch-событиям: pointer-события iOS обрывает, как только решает, что страницу можно прокручивать, — на длинном списке
+// свайп дёргался на 15 pt и возвращался (на пустом месяце работал). Как только движение распознано как горизонтальное, до конца жеста
+// заблокированы прокрутка страницы, долгое нажатие и нажатия; если первым распознано вертикальное движение — это прокрутка, свайпа нет.
 (function(){let g=null,blk=false;
   const ok=()=>tab==='list'&&!searchOn()&&!isModalOpen()&&!window.__selOn;
-  bodyEl.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;if(!e.isPrimary||!ok())return;if(e.target.closest('input,select,textarea'))return;
-    g={x:e.clientX,y:e.clientY,id:e.pointerId,on:false,dx:0,v:0,lx:e.clientX,lt:performance.now()}});
-  bodyEl.addEventListener('pointermove',e=>{if(!g||e.pointerId!==g.id)return;const dx=e.clientX-g.x,dy=e.clientY-g.y;
-    if(!g.on){if(Math.abs(dy)>10&&Math.abs(dy)>Math.abs(dx)){g=null;return}
-      if(Math.abs(dx)>8&&Math.abs(dx)>Math.abs(dy)*1.1){settleAll();g.on=true;try{bodyEl.setPointerCapture(e.pointerId)}catch{}bodyEl.style.willChange='transform,opacity'}else return}
-    g.dx=dx;const n=performance.now(),dt=n-g.lt;if(dt>0)g.v=lpf(g.v,(g.lx-e.clientX)/dt,dt,33);g.lx=e.clientX;g.lt=n;
-    const x=dx*.55;bodyEl.style.transform=`translate3d(${x}px,0,0)`;bodyEl.style.opacity=String(1-Math.min(.45,Math.abs(x)/500))});
-  function end(e,cancel){if(!g||e.pointerId!==g.id)return;const m=g;g=null;if(!m.on)return;blk=true;setTimeout(()=>blk=false,80);
-    const x=m.dx*.55,op=parseFloat(bodyEl.style.opacity)||1,go=!cancel&&(Math.abs(m.dx)>50||(Math.abs(m.v)>.4&&Math.abs(m.dx)>18));
+  const paint=()=>{if(!g||!g.on)return;g.raf=0;const x=g.dx*.55;bodyEl.style.transform=`translate3d(${x}px,0,0)`;bodyEl.style.opacity=String(1-Math.min(.45,Math.abs(x)/500))};
+  function begin(x,y){g={x,y,on:false,ax:null,dx:0,v:0,lx:x,lt:performance.now(),raf:0}}
+  function move(x,y,ev){if(!g)return;const dx=x-g.x,dy=y-g.y;
+    if(!g.ax){if(Math.max(Math.abs(dx),Math.abs(dy))<7)return;
+      if(Math.abs(dx)>Math.abs(dy)*1.15&&(!ev||ev.cancelable!==false)){g.ax='h';g.on=true;settleAll();try{window.__cmCancel&&window.__cmCancel()}catch(e){}bodyEl.style.willChange='transform,opacity'}
+      else{g=null;return}}
+    if(ev&&ev.cancelable)ev.preventDefault();   // свайп: страница не прокручивается
+    g.dx=dx;const n=performance.now(),dt=n-g.lt;if(dt>0)g.v=lpf(g.v,(g.lx-x)/dt,dt,33);g.lx=x;g.lt=n;
+    if(!g.raf)g.raf=requestAnimationFrame(paint)}
+  function end(cancel){if(!g)return;const m=g;g=null;if(m.raf)cancelAnimationFrame(m.raf);if(!m.on)return;blk=true;setTimeout(()=>blk=false,350);
+    const x=m.dx*.55,op=parseFloat(bodyEl.style.opacity)||1,go=!cancel&&(Math.abs(m.dx)>50||(Math.abs(m.v)>.35&&Math.abs(m.dx)>18));
     bodyEl.style.transform='';bodyEl.style.opacity='';bodyEl.style.willChange='';
     if(go){try{hap.sw('select')}catch(err){}const s=m.dx<0?1:-1;swapAnim(s,()=>shift(s),[bodyEl,topEl],x,op,false);return}
     if(!RM&&bodyEl.animate)bodyEl.animate([{transform:`translate3d(${x}px,0,0)`,opacity:op},{transform:'none',opacity:1}],{duration:280,easing:'cubic-bezier(.22,1,.36,1)'})}
-  bodyEl.addEventListener('pointerup',e=>end(e,false));bodyEl.addEventListener('pointercancel',e=>end(e,true));
-  bodyEl.addEventListener('lostpointercapture',e=>{if(g&&g.on)end(e,false)});
-  bodyEl.addEventListener('click',e=>{if(blk){e.stopPropagation();e.preventDefault()}},true);
+  // палец (телефон)
+  bodyEl.addEventListener('touchstart',e=>{if(e.touches.length!==1||!ok()||(e.target.closest&&e.target.closest('input,select,textarea'))){g=null;return}const t=e.touches[0];begin(t.clientX,t.clientY)},{passive:true});
+  bodyEl.addEventListener('touchmove',e=>{if(!g)return;if(e.touches.length!==1){end(true);return}const t=e.touches[0];move(t.clientX,t.clientY,e)},{passive:false});
+  bodyEl.addEventListener('touchend',()=>end(false),{passive:true});bodyEl.addEventListener('touchcancel',()=>end(true),{passive:true});
+  // мышь (компьютер)
+  let mid=null;
+  bodyEl.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse'||e.button!==0||!ok())return;mid=e.pointerId;begin(e.clientX,e.clientY)});
+  bodyEl.addEventListener('pointermove',e=>{if(e.pointerId!==mid||!g)return;const was=g.on;move(e.clientX,e.clientY,null);if(!was&&g&&g.on){try{bodyEl.setPointerCapture(e.pointerId)}catch{}}});
+  bodyEl.addEventListener('pointerup',e=>{if(e.pointerId===mid){mid=null;end(false)}});bodyEl.addEventListener('pointercancel',e=>{if(e.pointerId===mid){mid=null;end(true)}});
+  // пока идёт свайп и сразу после — нажатия (строка, день) не срабатывают
+  document.addEventListener('click',e=>{if(blk||(g&&g.on)){e.stopPropagation();e.preventDefault()}},true);
+  document.addEventListener('contextmenu',e=>{if(g&&g.on)e.preventDefault()},true);
 })();
 
 // v151: главный блок больше не прилипает к верху и не сжимается при прокрутке — уезжает вместе со списком.
@@ -5047,7 +5061,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v155';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v156';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}   // номер сборки виден внизу экрана: по нему понятно, обновился ли Telegram до новой версии
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
@@ -5261,13 +5275,28 @@ async function ibLoop(){
   function apply(el){const x=S(el);el.style.setProperty('--lift',Math.round(x.lift*10)/10+'px');
     {const bo=FLT[el.id]?sab+12:0,km=Math.max(160,Math.round(baseH-x.lift-sat-8-bo));if(km!==x.km){x.km=km;el.style.setProperty('--kmax',km+'px')}}   // v145: высота окна меняется вместе с подъёмом — верх не выезжает за экран
     const o=owner&&st.get(owner),k=!!o&&(o.target>0||o.lift>1);if(k!==kbo){kbo=k;root.classList.toggle('kbo',k)}}
+  // v156: подъём окна ведёт системный аниматор (Web Animations, свойство translate) — он идёт отдельно от JavaScript, синхронно с экраном, как клавиатура.
+  // Раньше --lift менялся из JS каждый кадр: если кадр не успевал (в момент появления клавиатуры), окно стояло, а следующим кадром прыгало вдвое (видео: 19, 44, 8, 18, 6, 12…).
+  // Высокие окна, у которых при подъёме меняется высота (--kmax), по-прежнему ведутся по кадрам.
+  const WA=!!Element.prototype.animate;
+  const kmOf=(el,L)=>Math.max(160,Math.round(baseH-L-sat-8-(FLT[el.id]?sab+12:0)));
+  function restPx(el){const p=document.createElement('i');p.style.cssText='position:absolute;left:0;top:0;width:0;visibility:hidden;pointer-events:none;height:var(--rest,0px)';el.appendChild(p);const h=p.offsetHeight;p.remove();return h}
+  function cur(x){const w=x.tw;if(!w)return x.lift;if(w.wa){const u=Math.min(1,Math.max(0,(w.wa.currentTime||0)/w.c[4]));return w.from+(w.to-w.from)*ease(w.c,u)}return x.lift}
+  function halt(el){const x=S(el),w=x.tw;if(!w)return;const v=cur(x);if(w.wa){try{w.wa.cancel()}catch(e){}}x.tw=null;x.lift=v;x.target=v;apply(el)}   // остановить подъём там, где окно сейчас
   function go(el,to,c){if(!el)return;const x=S(el);to=Math.max(0,Math.round(to));if(x.tw&&x.tw.to===to)return;if(!x.tw&&Math.abs(to-x.lift)<.5&&to===x.target)return;
+    const from=cur(x);if(x.tw&&x.tw.wa){try{x.tw.wa.cancel()}catch(e){}}x.tw=null;x.lift=from;
     x.target=to;
-    if(RMQ.matches||Math.abs(to-x.lift)<.5){x.lift=to;x.tw=null;apply(el);return}   // «уменьшение движения»: без анимации
-    x.tw={from:x.lift,to,tt:0,last:0,c};if(!raf)raf=requestAnimationFrame(step)}
+    if(RMQ.matches||Math.abs(to-from)<.5){x.lift=to;apply(el);return}   // «уменьшение движения»: без анимации
+    if(WA&&el.scrollHeight<=Math.min(kmOf(el,from),kmOf(el,to))){   // окно по высоте помещается и до, и после — меняется только положение
+      const r=restPx(el),k=v=>`0 calc(-100% - ${Math.round((r+v)*10)/10}px)`;
+      x.lift=to;apply(el);
+      const a=el.animate([{translate:k(from)},{translate:k(to)}],{duration:c[4],easing:`cubic-bezier(${c[0]},${c[1]},${c[2]},${c[3]})`});
+      const w={wa:a,from,to,c};x.tw=w;a.onfinish=()=>{if(x.tw===w)x.tw=null};return}
+    apply(el);   // v156: окно сразу встаёт в точку, откуда продолжается движение (при переходе с системной анимации не было кадра со старым положением)
+    x.tw={from,to,tt:0,last:0,c};if(!raf)raf=requestAnimationFrame(step)}
   function step(now){raf=0;let more=false;
     // v147: время анимации идёт по кадрам и не больше 20 мс за кадр: если iOS пропустил кадры (начало клавиатуры), окно не перескакивает, а продолжает плавно
-    st.forEach((x,el)=>{if(!x.tw)return;const w=x.tw;if(w.last)w.tt+=Math.min(20,Math.max(0,now-w.last));w.last=now;const u=w.tt/w.c[4];
+    st.forEach((x,el)=>{if(!x.tw||x.tw.wa)return;const w=x.tw;if(w.last)w.tt+=Math.min(20,Math.max(0,now-w.last));w.last=now;const u=w.tt/w.c[4];
       if(u>=1){x.lift=x.tw.to;x.tw=null}else{x.lift=x.tw.from+(x.tw.to-x.tw.from)*ease(x.tw.c,u);more=true}apply(el)});
     if(more)raf=requestAnimationFrame(step)}
   const isFront=el=>el.classList.contains('on')&&!el.classList.contains('sub');
@@ -5327,10 +5356,10 @@ async function ibLoop(){
   const rst=new Map();
   const mo=new MutationObserver(ms=>{ms.forEach(m=>{const el=m.target,cls=el.classList,on=cls.contains('on'),was=/(^|\s)on(\s|$)/.test(m.oldValue||''),sub=cls.contains('sub'),wasSub=/(^|\s)sub(\s|$)/.test(m.oldValue||'');
     if(on&&!was){savedY=window.scrollY;clearTimeout(rst.get(el));if(!foc()&&Date.now()-lastBlur>400)syncBase();   // окно всегда открывается в текущей видимой части экрана
-      if(!el.contains(document.activeElement)){const x=S(el);x.lift=0;x.target=0;x.tw=null;apply(el)}}
-    else if(!on&&was){{const x=S(el);if(x.tw){x.tw=null;x.target=x.lift;apply(el)}}   // v154: закрытие: подъём замирает — окно уезжает вниз от того места, где было (раньше оно подпрыгивало, если закрыть его, пока оно опускалось за клавиатурой)
+      if(!el.contains(document.activeElement)){halt(el);const x=S(el);x.lift=0;x.target=0;apply(el)}}
+    else if(!on&&was){halt(el);   // v154: закрытие: подъём замирает — окно уезжает вниз от того места, где было (раньше оно подпрыгивало, если закрыть его, пока оно опускалось за клавиатурой)
       if(el.contains(document.activeElement))document.activeElement.blur();if(owner===el)owner=null;
-      clearTimeout(rst.get(el));rst.set(el,setTimeout(()=>{if(cls.contains('on'))return;const x=S(el);x.lift=0;x.target=0;x.tw=null;apply(el);el.style.removeProperty('--kmax')},520))}
+      clearTimeout(rst.get(el));rst.set(el,setTimeout(()=>{if(cls.contains('on'))return;halt(el);const x=S(el);x.lift=0;x.target=0;apply(el);el.style.removeProperty('--kmax')},520))}
     // окно снова стало передним (верхнее закрыли), а клавиатуры для него нет — плавно возвращаем его на место
     if(on&&wasSub&&!sub){const x=S(el);if((x.lift>1||x.target>0)&&!(foc()&&winOf(document.activeElement)===el))go(el,0,C_HIDE)}})});
   IDS.forEach(id=>{const el=$i(id);if(el)mo.observe(el,{attributes:true,attributeFilter:['class'],attributeOldValue:true})});
@@ -5711,6 +5740,7 @@ function liftOff(instant){clearTimeout(liftOut);const n=lifted;lifted=null;if(!n
   if(instant){n.classList.remove('prs','pr-t');return}
   n.classList.remove('prs');liftOut=setTimeout(()=>n.classList.remove('pr-t'),420)}
 function cancelPend(){clearTimeout(pT);clearTimeout(lT);pend=null;liftOff()}
+window.__cmCancel=()=>{cancelPend();liftOff(true)};   // v156: свайп месяца отменяет начатое долгое нажатие (и «приподнятую» строку)
 D.addEventListener('pointerdown',e=>{
   if(e.pointerType==='mouse'&&e.button!==0)return;
   if(open||sel.on||modal()||D.getElementById('spl')||tourOn())return;
