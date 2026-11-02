@@ -5000,7 +5000,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v153';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v154';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}   // номер сборки виден внизу экрана: по нему понятно, обновился ли Telegram до новой версии
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
@@ -5191,7 +5191,7 @@ async function ibLoop(){
   const probe=document.createElement('div');probe.style.cssText='position:fixed;top:0;left:0;width:0;height:var(--sat);visibility:hidden;pointer-events:none';document.body.appendChild(probe);
   const probeB=document.createElement('div');probeB.style.cssText='position:fixed;top:0;left:0;width:0;height:var(--sab);visibility:hidden;pointer-events:none';document.body.appendChild(probeB);
   let sat=probe.offsetHeight,sab=probeB.offsetHeight,baseH=window.innerHeight;
-  let owner=null,raf=0,hideT=0,measT=0,offT=0,chkT=0,savedY=0,kbo=false,lastBlur=0,lastUser=0;
+  let owner=null,raf=0,hideT=0,measT=0,offT=0,chkT=0,savedY=0,kbo=false,lastBlur=0,lastUser=0,seenKb=false;   // v154: seenKb — клавиатура уже замерена после фокуса
   // v153: время последнего касания/клавиши. iOS показывает клавиатуру только на фокус от касания; фокус из программы (окно само ставит курсор) — без клавиатуры
   ['touchend','pointerup','mouseup','keydown'].forEach(ev=>document.addEventListener(ev,()=>{lastUser=Date.now()},true));
   const st=new Map();   // окно -> {lift,target,tw}
@@ -5232,19 +5232,30 @@ async function ibLoop(){
     if(c==='pick'){if(x.lift>1||x.target>0)go(w,0,C_HIDE);return}   // v145: выпадающий список и дата открываются без клавиатуры (iOS: меню/календарь) — окно на место
     if(coarse&&m<60&&Date.now()-lastUser>700){if(x.lift>1||x.target>0)go(w,0,C_HIDE);return}   // v153: курсор поставлен без касания — клавиатуры не будет, окно не поднимаем (появится — подгонит settle)
     const sg=sigOf(f),pred=kbp[sg]||kbp[c]||(m>120?m:0)||kbp.alpha||kbp.num||Math.round(baseH*.36);
+    seenKb=m>120;   // клавиатура уже стоит (переход между полями) — или только поедет: Telegram сообщает новую высоту экрана примерно через 0,5 с
+    keepScroll(w,f,pred);
     go(w,pred,x.lift<2?C_SHOW:C_FIT);setTimeout(reveal,420);
-    // v153: клавиатура так и не появилась (webview не уменьшился) — окно не висит посередине, а возвращается вниз
-    clearTimeout(chkT);chkT=setTimeout(()=>{if(coarse&&owner===w&&measure()<60&&!S(w).tw&&S(w).lift>1)go(w,0,C_HIDE)},1100)});
+    // v153/v154: клавиатура так и не появилась (webview так и не уменьшился за 1,5 с) — окно не висит посередине, а возвращается вниз
+    clearTimeout(chkT);chkT=setTimeout(()=>{if(coarse&&!seenKb&&owner===w&&measure()<60&&!S(w).tw&&S(w).lift>1)go(w,0,C_HIDE)},1500)});
+  // v154: при фокусе iOS сама мгновенно прокручивает содержимое окна к полю, даже когда поле и так будет видно над клавиатурой —
+  // содержимое подскакивало и потом сползало. Если поле видно и без прокрутки, прокрутку возвращаем (нужную досдвигает плавно reveal)
+  function keepScroll(w,f,pred){if(w.scrollHeight<=w.clientHeight+1)return;const s0=w.scrollTop,t0=Date.now();
+    const on=()=>{if(Date.now()-t0>200){w.removeEventListener('scroll',on);return}const d=w.scrollTop-s0;if(Math.abs(d)<1)return;
+      const r=f.getBoundingClientRect(),wr=w.getBoundingClientRect(),top=r.top+d,bot=r.bottom+d,lim=Math.min(wr.bottom,baseH-pred)-8;
+      if(top>=wr.top+8&&bot<=lim)w.scrollTop=s0};
+    w.addEventListener('scroll',on,{passive:true});setTimeout(()=>w.removeEventListener('scroll',on),220)}
   document.addEventListener('focusout',e=>{const f=e.target;if(!editable(f)||!winOf(f))return;
     if(editable(e.relatedTarget)&&winOf(e.relatedTarget))return;        // переход к другому полю — решит focusin
     const w=winOf(f);lastBlur=Date.now();clearTimeout(hideT);hideT=setTimeout(()=>{if(!foc()&&w===owner&&isFront(w))go(w,0,C_HIDE);setTimeout(()=>{if(!foc())syncBase()},500)},70)});
   // --- измерение высоты клавиатуры: после изменения высоты webview значение устаивается 90 мс
   function settle(){const K=measure();
-    if(K>120){if(foc()&&owner&&kindOf(document.activeElement)!=='pick'){const c=sigOf(document.activeElement);if(Math.abs(K-(kbp[c]||0))>2){kbp[c]=K;saveKb()}if(Math.abs(K-S(owner).target)>3)go(owner,K,C_FIT)}}
+    if(K>120){if(foc())seenKb=true;if(foc()&&owner&&kindOf(document.activeElement)!=='pick'){const c=sigOf(document.activeElement);if(Math.abs(K-(kbp[c]||0))>2){kbp[c]=K;saveKb()}if(Math.abs(K-S(owner).target)>3)go(owner,K,C_FIT)}}
     else if(K<60){
       // v153: клавиатуры нет и поля в фокусе нет (поле перерисовали, пока клавиатура была открыта, — focusout не пришёл) — ни одно переднее окно не остаётся поднятым
       if(!foc())st.forEach((x,el)=>{if((x.lift>1||x.target>0)&&isFront(el))go(el,0,C_HIDE)});
-      if(foc()&&owner&&S(owner).lift>1&&coarse){clearTimeout(offT);offT=setTimeout(()=>{if(measure()<60&&foc()&&owner&&S(owner).lift>1&&!S(owner).tw)go(owner,0,C_HIDE)},300)}   // v153: 300 мс (было 600) — окно не висит наверху после ухода клавиатуры   // внешняя клавиатура; короткое «мигание» не считается
+      // v154: только если клавиатура уже была замерена после фокуса. Иначе это просто Telegram ещё не сообщил новую высоту (≈0,5 с после появления клавиатуры) —
+      // в v153 окно в этот момент уезжало за клавиатуру и возвращалось при каждом её появлении
+      if(seenKb&&foc()&&owner&&S(owner).lift>1&&coarse){clearTimeout(offT);offT=setTimeout(()=>{if(measure()<60&&foc()&&owner&&S(owner).lift>1&&!S(owner).tw)go(owner,0,C_HIDE)},450)}   // внешняя клавиатура; короткое «мигание» не считается
     }
     // v141: нет поля в фокусе (и клавиатура не уходит прямо сейчас) — значит, высоту поменял сам Telegram (развернул/свернул, смахивание):
     // постоянная высота экрана = текущая. Раньше такое изменение принималось за клавиатуру, и окно открывалось ниже видимой части — было видно только затемнение
@@ -5270,7 +5281,8 @@ async function ibLoop(){
   const mo=new MutationObserver(ms=>{ms.forEach(m=>{const el=m.target,cls=el.classList,on=cls.contains('on'),was=/(^|\s)on(\s|$)/.test(m.oldValue||''),sub=cls.contains('sub'),wasSub=/(^|\s)sub(\s|$)/.test(m.oldValue||'');
     if(on&&!was){savedY=window.scrollY;clearTimeout(rst.get(el));if(!foc()&&Date.now()-lastBlur>400)syncBase();   // окно всегда открывается в текущей видимой части экрана
       if(!el.contains(document.activeElement)){const x=S(el);x.lift=0;x.target=0;x.tw=null;apply(el)}}
-    else if(!on&&was){if(el.contains(document.activeElement))document.activeElement.blur();if(owner===el)owner=null;
+    else if(!on&&was){{const x=S(el);if(x.tw){x.tw=null;x.target=x.lift;apply(el)}}   // v154: закрытие: подъём замирает — окно уезжает вниз от того места, где было (раньше оно подпрыгивало, если закрыть его, пока оно опускалось за клавиатурой)
+      if(el.contains(document.activeElement))document.activeElement.blur();if(owner===el)owner=null;
       clearTimeout(rst.get(el));rst.set(el,setTimeout(()=>{if(cls.contains('on'))return;const x=S(el);x.lift=0;x.target=0;x.tw=null;apply(el);el.style.removeProperty('--kmax')},520))}
     // окно снова стало передним (верхнее закрыли), а клавиатуры для него нет — плавно возвращаем его на место
     if(on&&wasSub&&!sub){const x=S(el);if((x.lift>1||x.target>0)&&!(foc()&&winOf(document.activeElement)===el))go(el,0,C_HIDE)}})});
@@ -5316,15 +5328,21 @@ async function ibLoop(){
   const ACT='button,a[href],label,input,select,textarea,summary,[contenteditable],[role=button],[role=tab],[role=option],[role=switch],[tabindex]:not([tabindex="-1"]),[data-id],[data-rc],[data-a],[data-t],[data-v],[data-tt],[data-rt],[data-cpf],[data-te],[data-tp],.rcr,.tpr,.cpi,.sgm,.dp,.chip';
   const active=t=>{for(let n=t;n&&n.nodeType===1;n=n.parentElement){if(n.matches(WIN))return false;if(n.matches(ACT))return true;try{if(getComputedStyle(n).cursor==='pointer')return true}catch(e){}}return false};
   const typing=()=>{const a=document.activeElement;return !!a&&/^(INPUT|TEXTAREA)$/.test(a.tagName)&&!!a.closest&&!!a.closest(WIN)};
-  document.addEventListener('mousedown',e=>{const t=e.target;
-    if(!typing()||!t.closest||!t.closest(WIN))return;
-    if(t.closest('input,textarea,select,[contenteditable]'))return;const lb=t.closest('label');if(lb&&lb.querySelector('input:not([type=date]):not([type=hidden]),textarea'))return;
-    if(!active(t))return;   // неактивное место: фокус уходит как обычно (на компьютере), на телефоне — см. касание ниже
-    e.preventDefault()},true);
+  // v154: решаем по элементу, который выбрала сама iOS (mousedown после касания: iOS «доводит» неточное касание до ближайшего поля/кнопки),
+  // а не по точке касания: в v153 касание рядом с полем тегов прятало клавиатуру, а iOS тут же ставила курсор в поле — клавиатура уезжала и выезжала
+  const fieldIn=t=>{if(t.closest('input,textarea,select,[contenteditable]'))return true;const lb=t.closest('label');return !!(lb&&lb.querySelector('input:not([type=date]):not([type=hidden]),textarea'))};
+  const near=(x,y)=>{for(const [dx,dy] of [[0,0],[-14,0],[14,0],[0,-14],[0,14]]){const n=document.elementFromPoint(x+dx,y+dy);if(n&&n.closest&&n.closest(WIN)&&(fieldIn(n)||active(n)))return true}return false};
   let tp=null;
-  document.addEventListener('touchstart',e=>{const t=e.target;tp=e.touches.length===1&&typing()&&t.closest&&t.closest(WIN)&&!active(t)?{x:e.touches[0].clientX,y:e.touches[0].clientY,t:Date.now()}:null},{capture:true,passive:true});
+  document.addEventListener('mousedown',e=>{const t=e.target,p=tp;if(p){clearTimeout(p.timer);tp=null}
+    if(!typing()||!t.closest||!t.closest(WIN))return;
+    if(fieldIn(t))return;
+    if(!active(t)){if(p&&document.activeElement===p.a)p.a.blur();return}   // неактивное место: клавиатуру прячем (на компьютере фокус уходит и так)
+    e.preventDefault()},true);
+  document.addEventListener('touchstart',e=>{const t=e.target;tp=e.touches.length===1&&typing()&&t.closest&&t.closest(WIN)?{x:e.touches[0].clientX,y:e.touches[0].clientY,t:Date.now(),a:document.activeElement,tg:t}:null},{capture:true,passive:true});
   document.addEventListener('touchmove',e=>{if(tp){const p=e.touches[0];if(Math.abs(p.clientX-tp.x)>10||Math.abs(p.clientY-tp.y)>10)tp=null}},{capture:true,passive:true});
-  document.addEventListener('touchend',()=>{if(tp&&Date.now()-tp.t<600&&typing())document.activeElement.blur();tp=null},{capture:true,passive:true});
+  document.addEventListener('touchend',()=>{const p=tp;if(!p)return;if(Date.now()-p.t>600){tp=null;return}
+    // iOS не прислала mousedown (касание по месту без обработчиков) — прячем клавиатуру, только если рядом с пальцем нет ни поля, ни кнопки
+    p.timer=setTimeout(()=>{if(tp!==p)return;tp=null;if(typing()&&document.activeElement===p.a&&!fieldIn(p.tg)&&!active(p.tg)&&!near(p.x,p.y))p.a.blur()},160)},{capture:true,passive:true});
   el.addEventListener('mousedown',e=>e.preventDefault());   // фокус (и клавиатура) остаются в поле
   el.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!st)return;e.preventDefault();
     if(b.hasAttribute('data-x')){close();return}const o=st;close();try{o.pick(b.dataset.v)}catch(err){}});
