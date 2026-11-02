@@ -1503,8 +1503,11 @@ html:root #rc .shf .sm.del{order:1}html:root #rc .shf .sm:not(.pr):not(.del){ord
 #pkr.on,#pkr.on[data-s]{transform:none}
 @media (prefers-reduced-motion:reduce){#pkr,#pkr.on{transition:none}}
 /* v155: «Аналитика» и «Планы» — главный блок и строка разделов закреплены сверху, листается только содержимое под ними; оно уходит под размытую подложку */
-html.stk #top{position:sticky;top:calc(var(--sat) + 8px)}
-html.stk #sbw{position:sticky;top:calc(var(--sat) + 8px + var(--toph,0px));z-index:8}
+/* v157: и строка заголовка с кнопками (лампочка, «+») — вся шапка стоит там же, где при открытии страницы (--stk0..2 — её места без прокрутки) */
+html.stk #lt0{position:sticky;top:var(--stk0,0px);z-index:8}
+html.stk #topact{position:fixed;z-index:9}
+html.stk #top{position:sticky;top:var(--stk1,calc(var(--sat) + 8px))}
+html.stk #sbw{position:sticky;top:var(--stk2,calc(var(--sat) + 8px + var(--toph,0px)));z-index:8}
 #stkbg{position:fixed;left:0;right:0;top:0;height:var(--stkh,0px);z-index:7;pointer-events:none;background:rgba(var(--bgr),.62);
   -webkit-backdrop-filter:blur(22px) saturate(1.6);backdrop-filter:blur(22px) saturate(1.6);
   -webkit-mask-image:linear-gradient(#000 calc(100% - 22px),transparent);mask-image:linear-gradient(#000 calc(100% - 22px),transparent);
@@ -3702,17 +3705,23 @@ topEl.addEventListener('click',e=>{if(msBlock){e.stopPropagation();e.preventDefa
   satM();kick();window.__totopKick=kick;
 })();
 // v155: закреплённая шапка «Аналитики» и «Планов» и размытая подложка под ней
-(function(){const R=document.documentElement,bg=document.createElement('div');bg.id='stkbg';document.body.appendChild(bg);let raf=0;
+(function(){const R=document.documentElement,bg=document.createElement('div');bg.id='stkbg';document.body.appendChild(bg);let raf=0,dirty=true;
+  // v157: места шапки без прокрутки: на миг снимаем закрепление и меряем (в одном кадре, на экране не видно)
+  function meas(){const y=window.scrollY||0,lt=document.getElementById('lt0'),sb=sbwEl();R.classList.remove('stk');
+    const at=e=>e&&e.offsetHeight?Math.round(e.getBoundingClientRect().top+y):null,a=at(lt),b=at(topEl),c=at(sb);R.classList.add('stk');
+    if(a!=null)R.style.setProperty('--stk0',a+'px');if(b!=null)R.style.setProperty('--stk1',b+'px');if(c!=null)R.style.setProperty('--stk2',c+'px');dirty=false}
   function upd(){raf=0;let on=false;try{on=(tab==='stats'||tab==='tags')&&!!topEl.offsetHeight}catch(e){}
-    R.classList.toggle('stk',on);if(!on){bg.classList.remove('on');return}
+    if(!on){R.classList.remove('stk');bg.classList.remove('on');dirty=true;return}
+    R.classList.add('stk');if(dirty)meas();
     R.style.setProperty('--toph',topEl.offsetHeight+'px');
-    const tr=topEl.getBoundingClientRect(),sb=sbwEl(),sr=sb&&sb.offsetHeight?sb.getBoundingClientRect():tr,st=parseFloat(getComputedStyle(topEl).top)||0;
+    const tr=topEl.getBoundingClientRect(),sb=sbwEl(),sr=sb&&sb.offsetHeight?sb.getBoundingClientRect():tr;
     R.style.setProperty('--stkh',Math.round(Math.max(tr.bottom,sr.bottom)+10)+'px');
-    bg.classList.toggle('on',(window.scrollY||0)>2&&tr.top<=st+.5)}
-  const kick=()=>{if(!raf)raf=requestAnimationFrame(upd)};
-  addEventListener('scroll',kick,{passive:true});addEventListener('resize',kick);
-  try{const r0=render;render=function(){const v=r0.apply(this,arguments);kick();if(window.__totopKick)window.__totopKick();return v}}catch(e){}
-  new MutationObserver(kick).observe(sbwEl(),{childList:true,subtree:true});kick();
+    bg.classList.toggle('on',(window.scrollY||0)>2)}
+  const kick=()=>{if(!raf)raf=requestAnimationFrame(upd)},re=()=>{dirty=true;kick()};
+  addEventListener('scroll',kick,{passive:true});addEventListener('resize',re);
+  try{const r0=render;render=function(){const v=r0.apply(this,arguments);re();if(window.__totopKick)window.__totopKick();return v}}catch(e){}
+  try{['safeAreaChanged','contentSafeAreaChanged','fullscreenChanged'].forEach(ev=>TGW.onEvent(ev,re))}catch(e){}
+  new MutationObserver(re).observe(sbwEl(),{childList:true,subtree:true});new MutationObserver(re).observe(topEl,{childList:true,subtree:true});kick();
 })();
 
 
@@ -5061,7 +5070,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v156';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v157';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}   // номер сборки виден внизу экрана: по нему понятно, обновился ли Telegram до новой версии
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
