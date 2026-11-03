@@ -926,7 +926,7 @@ html.selm .ck{width:22px;margin-right:12px;opacity:1;transform:none;border:1.5px
 .ck.part::after{left:4px;top:8px;width:10px;height:0;border-width:0 0 2px 0;transform:none}
 html.selm .sw>.r2.sel{background:color-mix(in srgb,var(--s) 86%,#3b8cf5)}
 html.selm .cd.sel{background:color-mix(in srgb,var(--s) 86%,#3b8cf5)}
-html.selm .sw>.r2,html.selm .sw>.dh,html.selm .cd{cursor:pointer}
+html.selm .sw>.r2,html.selm .sw>.dh,html.selm .cd,#body .gsec .cd{cursor:pointer}
 html.selm .gh .ck{align-self:center}
 html.selm #tabs,html.selm #fab{opacity:0;pointer-events:none;transform:translateY(40px) scale(.96)}
 #selbar,#selmore{position:fixed;bottom:calc(14px + var(--sab));z-index:16;opacity:0;pointer-events:none;transform:translateY(40px) scale(.96);transition:opacity .25s ease,transform .55s var(--spring);background:var(--gloss),var(--gbar);-webkit-backdrop-filter:var(--gblur);backdrop-filter:var(--gblur);border:.5px solid var(--gbd);box-shadow:var(--gshb);color:var(--t)}
@@ -1716,9 +1716,9 @@ function cloudPersist(){try{localStorage.setItem('finapp.mtime',String(CL.lt))}c
 // категории: id, название, цвет, ключевые слова (подстроки)
 // v165: категории без ключевых слов. Категория операции — из фразы после слова «категория», иначе — память (что выбирали для такой же заметки), иначе «Прочее».
 // CAT2 — прежний набор: у всех, кто уже пользовался приложением, он остаётся (вместе с их переименованиями, своими категориями и порядком).
-const CAT2={e:[['food','Питание'],['transport','Транспортные'],['fun','Развлечение'],['phone','Телефон'],['byt','Бытовые'],['comm','Коммуналка'],['tithe','Десятина'],['plush','Плюшки'],['rel','Отношения'],['health','Здоровье'],['clothes','Одежда'],['beauty','Красота'],['edu','Обучение'],['gift','Подарки'],['fees','Комиссии'],['hobby','Хобби Насти'],['work','Работа'],['debt','Долг'],['kid','Ребенок'],['save','Накопления'],['other','Прочее']],i:[['salary','Зарплата'],['adv','Аванс'],['hobbyin','Хобби Насти'],['wsal','Зарплата Насти'],['in_other','Другой доход']]};
+const CAT2={e:[['food','Питание'],['transport','Транспортные'],['fun','Развлечение'],['phone','Телефон'],['byt','Бытовые'],['comm','Коммуналка'],['tithe','Десятина'],['plush','Плюшки'],['rel','Отношения'],['health','Здоровье'],['clothes','Одежда'],['beauty','Красота'],['edu','Обучение'],['gift','Подарки'],['fees','Комиссии'],['hobby','Хобби Насти'],['work','Работа'],['debt','Долг'],['kid','Ребенок'],['save','Накопления'],['other','Прочее']],i:[['salary','Зарплата'],['adv','Аванс'],['hobbyin','Хобби Насти'],['wsal','Зарплата Насти'],['debtin','Долг'],['in_other','Другой доход']]};
 // CAT3 — общий набор для новых пользователей (id «долг», «накопления», «прочее», «другой доход» общие: на них завязаны цели, долги и разбор)
-const CAT3={e:[['food','Продукты','🛒'],['cafe','Кафе и рестораны','🍽️'],['transport','Транспорт','🚌'],['comm','Жильё и коммуналка','🏠'],['phone','Связь и интернет','📱'],['health','Здоровье','💊'],['clothes','Одежда и обувь','👕'],['beauty','Красота','💄'],['fun','Развлечения','🎉'],['subs','Подписки','🔁'],['edu','Образование','📚'],['gift','Подарки','🎁'],['byt','Дом и быт','🪑'],['kid','Дети','🧸'],['pets','Питомцы','🐾'],['trip','Путешествия','✈️'],['sport','Спорт','💪'],['debt','Долг','💸'],['save','Накопления','🐖'],['other','Прочее','📦']],i:[['salary','Зарплата','💰'],['side','Подработка','💻'],['in_gift','Подарки','🎁'],['refund','Кэшбэк и возвраты','💳'],['in_other','Другой доход','💵']]};
+const CAT3={e:[['food','Продукты','🛒'],['cafe','Кафе и рестораны','🍽️'],['transport','Транспорт','🚌'],['comm','Жильё и коммуналка','🏠'],['phone','Связь и интернет','📱'],['health','Здоровье','💊'],['clothes','Одежда и обувь','👕'],['beauty','Красота','💄'],['fun','Развлечения','🎉'],['subs','Подписки','🔁'],['edu','Образование','📚'],['gift','Подарки','🎁'],['byt','Дом и быт','🪑'],['kid','Дети','🧸'],['pets','Питомцы','🐾'],['trip','Путешествия','✈️'],['sport','Спорт','💪'],['debt','Долг','💸'],['save','Накопления','🐖'],['other','Прочее','📦']],i:[['salary','Зарплата','💰'],['side','Подработка','💻'],['in_gift','Подарки','🎁'],['refund','Кэшбэк и возвраты','💳'],['debtin','Долг','🤝'],['in_other','Другой доход','💵']]};
 // какой набор у пользователя: прежний — если он уже пользовался приложением (отметка catV=2 есть у всех, в том числе в облаке), иначе общий.
 // Решение «общий» записывается только после сверки с облаком: новое устройство старого пользователя не должно затереть его категории
 function catSet(){if(cfg.catSet==='v2'||cfg.catSet==='v3')return cfg.catSet;if(cfg.catV===2){cfg.catSet='v2';return 'v2'}
@@ -1746,7 +1746,7 @@ function pickColor(inc,used){let best=null,bd=-1;
 const dot=id=>`<i class="cdot" style="background:${cd(id).c}"></i>`;
 let ALL=[],INC=new Set();
 const noEmo=t=>{const r=String(t==null?'':t).replace(/[\u{1F000}-\u{1FAFF}\u2600-\u27BF\u2B00-\u2BFF\u200d\ufe0f\u20e3\u2764]+/gu,'').replace(/\s+/g,' ').trim();return r||String(t==null?'':t)};
-const EMO={food:'🍜',transport:'🚖',fun:'🎉',phone:'📞',byt:'🪑',comm:'🧾',tithe:'🫳🏼',plush:'🙈',rel:'👩‍❤️‍👨',health:'🧘🏼',clothes:'🧥',beauty:'💄',edu:'📙',gift:'🎁',fees:'',hobby:'🧸',work:'⚒️',debt:'💸',kid:'👶',save:'🐖',other:'📦',salary:'💰',adv:'💵',hobbyin:'🧸',wsal:'🏡',in_other:'💵'};
+const EMO={food:'🍜',transport:'🚖',fun:'🎉',phone:'📞',byt:'🪑',comm:'🧾',tithe:'🫳🏼',plush:'🙈',rel:'👩‍❤️‍👨',health:'🧘🏼',clothes:'🧥',beauty:'💄',edu:'📙',gift:'🎁',fees:'',hobby:'🧸',work:'⚒️',debt:'💸',debtin:'🤝',kid:'👶',save:'🐖',other:'📦',salary:'💰',adv:'💵',hobbyin:'🧸',wsal:'🏡',in_other:'💵'};
 // подбор эмодзи по смыслу названия (для своих и переименованных категорий)
 const GUESS=[[/кофе|чай|латте|капучино/,'☕'],[/пиво|вино|алкогол|бар\b|коктейл/,'🍺'],[/сладост|шоколад|десерт|торт|конфет|мороженое/,'🍰'],[/кафе|ресторан|обед|ужин|завтрак|пицц|суши|бургер|шаурм|фастфуд|еда вне|доставка еды/,'🍽️'],
  [/хлеб|выпечк|булоч/,'🥖'],[/мясо|колбас/,'🥩'],[/рыба|рыбал/,'🎣'],[/молок|сыр|яйц/,'🥛'],[/продукт|магазин|супермаркет|овощ|фрукт|рынок|базар/,'🛒'],
@@ -1835,6 +1835,13 @@ function dLbl(ds){return +ds.slice(8,10)+' '+MGN[+ds.slice(5,7)-1]}
 function shiftMonth(m,d){let y=+m.slice(0,4),n=+m.slice(5,7)+d;while(n>12){n-=12;y++}while(n<1){n+=12;y--}return y+'-'+String(n).padStart(2,'0')}
 const budgetOf=m=>bmOwn(m)?Number(cfg.bm[m]):((carryBudOn()||m<budOffFrom())?(Number(cfg.budget)||0):0);
 function setCarryBud(on){cfg.carryBud=!!on;if(!on)cfg.budOffFrom=shiftMonth(curM(),1);save()}
+// v168: перенос лимитов — отдельно от бюджета. Включён: общие лимиты (cfg.limits) действуют во всех месяцах; выключен — с месяца limOffFrom у каждого месяца свои лимиты (cfg.lm[месяц]), прошлые месяцы не меняются
+const carryLimOn=()=>cfg.carryLim!==false;
+const limOffFrom=()=>/^\d{4}-\d{2}$/.test(cfg.limOffFrom||'')?cfg.limOffFrom:'9999-99';
+const limOwnMode=m=>!carryLimOn()&&m>=limOffFrom();
+function limOf(m){m=m||month;const own=_obj(cfg.lm)&&_obj(cfg.lm[m])?cfg.lm[m]:{};return limOwnMode(m)?{...own}:{...(cfg.limits||{}),...own}}
+function setLimit(m,id,v){v=Number(v)||0;if(limOwnMode(m)){if(!_obj(cfg.lm))cfg.lm={};const o=cfg.lm[m]=_obj(cfg.lm[m])?cfg.lm[m]:{};if(v>0)o[id]=v;else delete o[id]}else{cfg.limits=cfg.limits||{};if(v>0)cfg.limits[id]=v;else delete cfg.limits[id];if(_obj(cfg.lm)&&_obj(cfg.lm[m]))delete cfg.lm[m][id]}}
+function setCarryLim(on){cfg.carryLim=!!on;if(!on)cfg.limOffFrom=shiftMonth(curM(),1);save()}
 function setCarryBal(on){cfg.carry=!!on;if(on)cfg.carryFrom=curM();save()}
 const linkSum=()=>{const g=linkGoalOn(),d=linkDebtOn();return g&&d?'Вкл':g?'Цели':d?'Долги':'Выкл'};
 const carrySum=()=>carryBudOn()?'Вкл':'Выкл';   // v160: в настройках — только перенос бюджета; перенос остатка — переключатель в главном блоке
@@ -1846,6 +1853,12 @@ const linkGoalOn=()=>(typeof cfg.linkGoal==='boolean'?cfg.linkGoal:cfg.link)!==f
 function addLinkedExpense(kind,amount,note){amount=Math.round((Number(amount)||0)*100)/100;if(!(amount>0))return null;
   const t={id:uid(),type:'expense',amount,category:kind==='goal'?'save':'debt',note:String(note||'').slice(0,80),date:ymd(new Date())};
   tx=[t,...tx];return t}
+// v168: доход по долгу (вам вернули / вы взяли в долг) — категория доходов «Долг»
+function addLinkedIncome(amount,note){amount=Math.round((Number(amount)||0)*100)/100;if(!(amount>0))return null;
+  const t={id:uid(),type:'income',amount,category:'debtin',note:String(note||'').slice(0,80),date:ymd(new Date())};
+  tx=[t,...tx];return t}
+// деньги по долгу: dir 'in' (вам должны): выдали — расход, вернули вам — доход; dir 'out' (вы должны): взяли — доход, вы вернули — расход
+const debtMove=(dir,phase,amount,who)=>!linkDebtOn()?null:((dir==='in')===(phase==='open')?addLinkedExpense('debt',amount,who):addLinkedIncome(amount,who));
 
 // переход на новый список категорий (один раз): старые операции, лимиты и повторы переезжают в новые категории
 if(cfg.catV!==2&&tx.length){   // v165: только для старых данных (до catV=2); новому пользователю отметку не ставим — у него общий набор
@@ -2018,7 +2031,7 @@ function bLim(c,v){const k=curM(),sp=spentIn(k,c.id);return '🚦 Лимит «'
 function botOpLine(d){const c=cd(d.category),inc=d.type==='income';let s=(inc?'💰 Доход: +':'💸 Расход: −')+BM_(d.amount)+'\n'+c.l+(d.note&&d.note!==c.n?' · '+d.note:'')+' · '+dChip(d.date).toLowerCase();
   if(d.oc)s+='\n'+fmt(d.oa)+' '+d.oc+(d.rt?' по курсу '+fmtN(d.rt):'');
   if(d.tags&&d.tags.length)s+='\n'+d.tags.map(g=>'#'+g).join(' ');
-  if(!inc){const lim=+((cfg.limits||{})[d.category])||0;if(lim>0){const sp=spentIn(perKey(d.date),d.category);s+='\n🚦 Лимит «'+c.n+'»: '+fmt(sp)+' из '+BM_(lim)+(sp>lim?' — превышен на '+BM_(sp-lim):' · осталось '+BM_(lim-sp))}}
+  if(!inc){const lim=+(limOf(perKey(d.date))[d.category])||0;if(lim>0){const sp=spentIn(perKey(d.date),d.category);s+='\n🚦 Лимит «'+c.n+'»: '+fmt(sp)+' из '+BM_(lim)+(sp>lim?' — превышен на '+BM_(sp-lim):' · осталось '+BM_(lim-sp))}}
   return s}
 function botBudLine(ds){const k=curM();if(!ds.some(d=>d.type==='expense'&&perKey(d.date)===k))return '';let b=0;try{b=budgetOf(k)}catch(e){}if(!(b>0))return '';const sp=spentIn(k);
   return '📊 Бюджет на '+MN[+k.slice(5,7)-1].toLowerCase()+': потрачено '+fmt(sp)+' из '+BM_(b)+(sp>b?' — перерасход '+BM_(sp-b):' · осталось '+BM_(b-sp))}
@@ -2090,16 +2103,16 @@ function voiceCmds(raw){
       say(o?'С «'+o.who+'» долг в другую сторону: '+(o.dir==='out'?'вы должны. Если это вы вернули — скажите «вернул '+o.who+' 100»':'вам должны. Если вам вернули — скажите «'+o.who+' вернул 100»'):'Долга «'+nm+'» нет. Сначала запишите: «'+nm+(isFem(nm)?' должна':' должен')+' мне 500»');return true}return false}
     const v=val(m,a);if(!(v>0))return false;
     const add=Math.min(v,DR(d));d.paid=Math.min(d.amount,d.paid+v);d.log=(d.log||[]).concat({d:ymd(new Date()),a:add}).slice(-200);if(DR(d)<=0&&!d.closed)d.closed=ymd(new Date());
-    const lk=d.dir==='out'&&linkDebtOn()&&addLinkedExpense('debt',add,d.who);
-    say('Долг «'+d.who+'»: '+(d.dir==='in'?'вернули ':'вы вернули ')+fmt(add)+(DR(d)<=0?' · закрыт ✓':' · осталось '+fmt(Math.round(DR(d)*100)/100))+(lk?' · расход':''),
-      (d.dir==='in'?'💵 '+d.who+(isFem(d.who)?' вернула ':' вернул ')+BM_(add):'💵 Вы вернули долг · '+d.who+': '+BM_(add))+(DR(d)<=0?'\n✅ Долг закрыт полностью':'\nОсталось вернуть: '+BM_(DR(d))+' из '+BM_(d.amount))+(lk?'\nЗаписано и в расходы':''));return true};
+    const lk=debtMove(d.dir,'pay',add,d.who),lkI=lk&&lk.type==='income';
+    say('Долг «'+d.who+'»: '+(d.dir==='in'?'вернули ':'вы вернули ')+fmt(add)+(DR(d)<=0?' · закрыт ✓':' · осталось '+fmt(Math.round(DR(d)*100)/100))+(lk?(lkI?' · доход':' · расход'):''),
+      (d.dir==='in'?'💵 '+d.who+(isFem(d.who)?' вернула ':' вернул ')+BM_(add):'💵 Вы вернули долг · '+d.who+': '+BM_(add))+(DR(d)<=0?'\n✅ Долг закрыт полностью':'\nОсталось вернуть: '+BM_(DR(d))+' из '+BM_(d.amount))+(lk?(lkI?'\nЗаписано в доходы':'\nЗаписано в расходы'):''));return true};
   const mkDebt=(name,v,dir)=>{name=name.trim().replace(/^(у|для|перед|от)\s+/,'').replace(/^долг\S*\s+/,'');if(!name||!(v>0)||/^(?:я|мы|мне|нам|меня|мной|ему|ей|им)$/.test(name)||/^(?:по|за|на|в|с|со|из|к|о|об|при|про|под|над)\s/.test(name))return false;
     const nm=name.split(/\s+/).map(nomName).map(cap).join(' ').slice(0,40),ex=(cfg.debts||[]).find(d=>DR(d)>0&&d.dir===dir&&words(d.who).length===words(nm).length&&words(nm).every(w=>words(d.who).some(x=>stemEq(w,x))));
     let dd=ex;if(ex)ex.amount=Math.round((ex.amount+v)*100)/100;else{dd={id:uid(),who:nm,dir,amount:v,paid:0,due:'',created:ymd(new Date()),log:[]};cfg.debts.push(dd)}
     newDebts.push(dd);
-    const lk=dir==='in'&&linkDebtOn()&&addLinkedExpense('debt',v,nm);
-    say((dir==='in'?'Долг: '+dd.who+(isFem(dd.who)?' должна':' должен')+' вам '+fmt(dd.amount):'Долг: вы должны '+dd.who+' '+fmt(dd.amount))+(lk?' · расход':''),
-      '🤝 '+(ex?'Долг увеличен на '+BM_(v):'Новый долг')+'\n'+(dir==='in'?dd.who+(isFem(dd.who)?' должна':' должен')+' вам '+BM_(DR(dd))+'\nКогда вернёт, напишите: «'+dd.who+(isFem(dd.who)?' вернула':' вернул')+' 100»':'Вы должны · '+dd.who+': '+BM_(DR(dd))+'\nКогда вернёте, напишите: «вернул '+dd.who+' 100»')+(lk?'\nЗаписано и в расходы':''));return true};
+    const lk=debtMove(dir,'open',v,nm),lkI=lk&&lk.type==='income';
+    say((dir==='in'?'Долг: '+dd.who+(isFem(dd.who)?' должна':' должен')+' вам '+fmt(dd.amount):'Долг: вы должны '+dd.who+' '+fmt(dd.amount))+(lk?(lkI?' · доход':' · расход'):''),
+      '🤝 '+(ex?'Долг увеличен на '+BM_(v):'Новый долг')+'\n'+(dir==='in'?dd.who+(isFem(dd.who)?' должна':' должен')+' вам '+BM_(DR(dd))+'\nКогда вернёт, напишите: «'+dd.who+(isFem(dd.who)?' вернула':' вернул')+' 100»':'Вы должны · '+dd.who+': '+BM_(DR(dd))+'\nКогда вернёте, напишите: «вернул '+dd.who+' 100»')+(lk?(lkI?'\nЗаписано в доходы':'\nЗаписано в расходы'):''));return true};
   const RV='(?:вернул[аи]?|отдал[аи]?|погасил[аи]?|выплатил[аи]?|вернули|отдали)';
   for(const n of [2,1]){const NM=Array(n).fill(W).join('\\s+'),S=n===1;
     // «мне вернули 50 Ивана», «мне вернул Иван 100», «Иван вернул мне 100» — деньги вернули вам (долг «мне должны»)
@@ -2151,7 +2164,7 @@ function voiceCmds(raw){
     if(!c)c=ALL.find(x=>!x.inc&&ws.every(w=>words(x.n).some(y=>stemEq(w,y))));
     if(!c){const id=detect(nm,nm,'expense');c=ALL.find(x=>x.id===id&&!x.inc&&id!=='other')}
     if(!c){say('Не нашёл категорию «'+nm.trim()+'»');return true}
-    cfg.limits[c.id]=v;say('Лимит «'+c.n+'»: '+fmt(v)+' '+cfg.cur,bLim(c,v));return true};
+    setLimit(curM(),c.id,v);say('Лимит «'+c.n+'»: '+fmt(v)+' '+cfg.cur,bLim(c,v));return true};
   const LM='(?:\\s*в\\s+месяц)?';
   take(new RegExp(B+'(?:поставь\\S*\\s+|установи\\S*\\s+|задай\\S*\\s+)?лимит\\S*\\s+(?:на\\s+|по\\s+|для\\s+)?('+W+'(?:\\s+'+W+')?)'+LM+'\\s*(?:на\\s+|=|-|—|:)?\\s*'+AMT+LM,'g'),m=>setLim(m[1].replace(/\\s+(в|на)$/,''),val(m,2)));
   take(new RegExp(B+'(?:поставь\\S*\\s+|установи\\S*\\s+|задай\\S*\\s+)?лимит\\S*\\s+'+AMT+'\\s+(?:на\\s+|по\\s+|для\\s+)('+W+'(?:\\s+(?!в\\s)'+W+')?)(?![а-яa-z-])'+LM,'g'),m=>setLim(m[4],val(m,1)));
@@ -2442,14 +2455,14 @@ const fcHtml=()=>{const f=forecast();return f?`<div class="fc${f.warn?' w':''}">
 // карточки статистики: прогноз, лимиты, сравнение
 function extraCards(it){let h='';const f=forecast();
   if(f)h+=`<div class="cd fcl"><h4>Прогноз месяца</h4>${f.lines.map(l=>`<p>${E(l)}</p>`).join('')}</div>`;
-  const lims=Object.entries(cfg.limits||{}).filter(([id,v])=>v>0&&ALL.some(c=>c.id===id&&!c.inc)).map(([id,v])=>{const sp=sumBy(month,'expense',id);return{id,v,sp,p:sp/v*100}}).sort((a,b)=>b.p-a.p);
+  const lims=Object.entries(limOf(month)).filter(([id,v])=>v>0&&ALL.some(c=>c.id===id&&!c.inc)).map(([id,v])=>{const sp=sumBy(month,'expense',id);return{id,v,sp,p:sp/v*100}}).sort((a,b)=>b.p-a.p);
   if(lims.length)h+=`<div class="cd"><h4>Лимиты · ${MN[+month.slice(5,7)-1]}</h4>`+lims.map(l=>{const c=cd(l.id),col=l.p>=100?'#ff6b6b':l.p>=80?'#f2c14e':'var(--g)';return `<div class="lr" data-cat="${l.id}" role="button" tabindex="0"><div class="lh"><span>${dot(l.id)}${E(c.l)}</span><span style="color:${l.p>=80?col:'var(--m2)'}">${fmt(l.sp)} / ${fmt(l.v)}${l.p>=100?' · +'+fmt(l.sp-l.v):''}</span></div><div class="lb"><i style="width:${Math.min(100,l.p)}%;background:${col}"></i></div></div>`}).join('')+`</div>`;
   const cs=it.map(([id])=>({id,...cmpCat('expense',id)})).filter(x=>x.d!=null&&Math.abs(x.d)>=10&&Math.abs(x.cur-x.prev)>=1).sort((a,b)=>Math.abs(b.cur-b.prev)-Math.abs(a.cur-a.prev)).slice(0,4);
   if(cs.length)h+=`<div class="cd"><h4>К прошлому месяцу${cs[0].partial?' (за те же дни)':''}</h4>`+cs.map(x=>`<div class="cmp"><span>${E(cd(x.id).l)}</span><span style="color:${x.d>0?'var(--rd)':'var(--g)'}">${sgn(x.d)} · ${x.cur>=x.prev?'+':'−'}${fmt(Math.abs(Math.round(x.cur-x.prev)))}</span></div>`).join('')+`</div>`;
   return h}
 // предупреждение при добавлении: 80% и 100% лимита
 function limitNote(list){const out=[],seen=new Set();
-  list.forEach(t=>{if(t.type!=='expense')return;const lim=cfg.limits&&cfg.limits[t.category];if(!(lim>0))return;const m=mOf(t.date),k=m+t.category;if(seen.has(k))return;seen.add(k);
+  list.forEach(t=>{if(t.type!=='expense')return;const m=mOf(t.date),lim=limOf(m)[t.category];if(!(lim>0))return;const k=m+t.category;if(seen.has(k))return;seen.add(k);
     const add=list.filter(x=>x.type==='expense'&&x.category===t.category&&mOf(x.date)===m).reduce((s,x)=>s+x.amount,0),after=sumBy(m,'expense',t.category),before=after-add;
     if(before<lim&&after>=lim)out.push(`«${cd(t.category).l}»: лимит превышен на ${fmt(Math.round(after-lim))}`);
     else if(before<lim*.8&&after>=lim*.8)out.push(`«${cd(t.category).l}»: ${Math.round(after/lim*100)}% лимита`)});
@@ -2579,14 +2592,13 @@ function saveDebt(){if(!gT||gT.mode!=='debt')return;const who=($('#dwh').value||
   if(!(am>0)){toast('Укажите сумму долга');return}
   if(gT.id){const d=cfg.debts.find(x=>x.id===gT.id);if(d)Object.assign(d,{who,dir:gT.dir,amount:am,paid,due});if(am-paid<=0){if(!d.closed)d.closed=ymd(new Date())}else delete d.closed}
   else{cfg.debts.push({id:uid(),who,dir:gT.dir,amount:am,paid,due,created:ymd(new Date()),log:[]});
-    if(gT.dir==='in'&&linkDebtOn()){const out=Math.round((am-paid)*100)/100;
-      if(out>0&&addLinkedExpense('debt',out,who))toast('Записано как расход: '+fmt(out)+' '+cfg.cur)}}
+    {const out=Math.round((am-paid)*100)/100,lk=out>0&&debtMove(gT.dir,'open',out,who);if(lk)toast((lk.type==='income'?'Записано как доход: ':'Записано как расход: ')+fmt(out)+' '+cfg.cur)}}
   save();closeGoal();render()}
 function saveDpay(){if(!gT||gT.mode!=='dpay')return;const d=cfg.debts.find(x=>x.id===gT.id),a=pn($('#gam').value);if(!d)return;if(!(a>0)){toast('Укажите сумму');return}
   const add=Math.min(a,dRem(d));d.paid=Math.min(d.amount,d.paid+a);d.log=(d.log||[]).concat({d:ymd(new Date()),a:add}).slice(-200);if(dRem(d)<=0)d.closed=ymd(new Date());
-  let lk=false;if(d.dir==='out'&&linkDebtOn()&&add>0)lk=!!addLinkedExpense('debt',add,d.who);
+  const lk=add>0?debtMove(d.dir,'pay',add,d.who):null,lw=lk?(lk.type==='income'?'доход':'расход'):'';
   save();closeGoal();render();
-  if(dRem(d)<=0)toast('Долг «'+d.who+'» закрыт ✓'+(lk?' · записано как расход':''));else if(lk)toast('Записано как расход: '+fmt(add)+' '+cfg.cur)}
+  if(dRem(d)<=0)toast('Долг «'+d.who+'» закрыт ✓'+(lk?' · записано как '+lw:''));else if(lk)toast('Записано как '+lw+': '+fmt(add)+' '+cfg.cur)}
 function goDebts(){if(isModalOpen())return;ps='debts';if(tab==='tags')render();else setTab('tags')}
 // цели накопления
 const gd=$('#gd');let gT=null;
@@ -2610,6 +2622,12 @@ function goalsHtml(){const gs=cfg.goals||[];
   else h+=gs.map(g=>{const i=goalInfo(g),sp=g.tag?tx.filter(t=>t.type==='expense'&&(t.tags||[]).includes(g.tag)).reduce((s,t)=>s+t.amount,0):0;
     return `<div class="cd"><div class="gh"><b>${E(g.name)}</b><span>${fmt(g.saved)} / ${fmt(g.target)} ${cfg.cur}</span></div><div class="lb"><i style="width:${i.p}%;background:${i.p>=100?'var(--g)':'var(--t)'}"></i></div><div class="gx">${Math.round(i.p)}% · ${E(i.txt)}</div>${g.tag?`<div class="gb"><button class="tgc sg2" data-ga="tag" data-gid="${g.id}">#${E(g.tag)} · потрачено ${fmt(sp)}</button></div>`:''}<div class="gb"><button class="sm" data-ga="dep" data-gid="${g.id}">+ Взнос</button><button class="sm" data-ga="edit" data-gid="${g.id}">Изменить</button></div></div>`}).join('');
   return `<div class="gsec">${h}</div>`}
+// v168: нажатие на плитку (не на кнопку) — сразу основное действие: долг → «Получил/Вернул», цель → взнос, бюджет и лимит → изменить
+function cardTap(t){if(tab!=='tags'||!t.closest||t.closest('button,a,input,select,textarea,label,.gsh,.sbt'))return false;const c=t.closest('#body .cd');if(!c||!c.querySelector('.gh'))return false;const q=k=>c.querySelector('['+k+']'),dd=q('data-did'),gg=q('data-gid'),ll=q('data-cid'),w=dd?{k:'debt',id:dd.dataset.did}:gg?{k:'goal',id:gg.dataset.gid}:ll?{k:'lim',id:ll.dataset.cid}:q('data-la="bud"')?{k:'bud'}:null;if(!w)return false;
+  if(w.k==='debt'){const d=(cfg.debts||[]).find(x=>x.id===w.id);if(!d)return false;dRem(d)>0?openDpay(d,c):openDebt(d,c)}
+  else if(w.k==='goal'){const g=(cfg.goals||[]).find(x=>x.id===w.id);if(!g)return false;openDep(g,c)}
+  else if(w.k==='lim')openLim(w.id,c);else if(w.k==='bud')openBud(c);else return false;
+  return true}
 function goalAct(el){const a=el.dataset.ga,g=(cfg.goals||[]).find(x=>x.id===el.dataset.gid);
   if(a==='new')openGoal(null,el);else if(a==='edit'&&g)openGoal(g,el);else if(a==='dep'&&g)openDep(g,el);else if(a==='tag'&&g&&g.tag)openTag(g.tag)}
 // ---- подразделы страницы «Планы»: Теги · Цели · Бюджет и лимиты ----
@@ -2624,19 +2642,21 @@ function budgetHtml(){const X=sumBy(month,'expense'),Bd=budgetOf(month),mn=MN[+m
   else{const p=X/Bd*100;
     h+=`<div class="cd"><div class="gh"><b>Бюджет · ${mn}</b><span>${fmt(X)} / ${fmt(Bd)} ${cfg.cur}</span></div><div class="lb"><i style="width:${Math.min(100,p)}%;background:${limCol(p)}"></i></div><div class="gx">${Math.round(p)}% · ${p>=100?'Превышен на '+fmt(Math.round(X-Bd)):'Осталось '+fmt(Math.round(Bd-X))} ${cfg.cur}</div><div class="gx" style="margin-top:2px">${own?'Только для этого месяца':'Общий бюджет — для месяцев без своего'}</div><div class="gb"><button class="sm" data-la="bud">Изменить</button></div></div>`}
   {const ks=Object.keys(cfg.bm||{}).filter(k=>Number(cfg.bm[k])>0).sort().reverse().slice(0,6);if(ks.length)h+=`<div class="gx" style="margin:6px 2px 0">Свои бюджеты: ${ks.map(k=>E(MS[+k.slice(5,7)-1]+(k.slice(0,4)!==month.slice(0,4)?' '+k.slice(2,4):'')+' '+fmt(cfg.bm[k]))).join(' · ')}${Number(cfg.budget)>0?' · общий '+fmt(cfg.budget):''}</div>`}
-  h+=`<div class="gsh" style="margin-top:14px"><span>Лимиты по категориям:</span><button class="gp" data-la="new" aria-label="Добавить лимит">+</button></div>`;
-  const ls=Object.entries(cfg.limits||{}).filter(([id,v])=>v>0&&ALL.some(c=>c.id===id&&!c.inc)).map(([id,v])=>{const sp=sumBy(month,'expense',id);return{id,v,sp,p:sp/v*100}}).sort((a,b)=>b.p-a.p);
-  if(!ls.length)h+=`<div class="cd" style="color:var(--m);font-size:13px;line-height:1.45">Например: «Продукты 3 000 в месяц». Нажмите «+» — покажу, сколько уже потрачено и когда подойдёте к лимиту.</div>`;
+  h+=`<div class="gsh" style="margin-top:14px">${mtg('cl',carryLimOn(),'Переносить лимиты на следующие месяцы')}<button class="gp" data-la="new" aria-label="Добавить лимит">+</button></div>`;
+  const ls=Object.entries(limOf(month)).filter(([id,v])=>v>0&&ALL.some(c=>c.id===id&&!c.inc)).map(([id,v])=>{const sp=sumBy(month,'expense',id);return{id,v,sp,p:sp/v*100}}).sort((a,b)=>b.p-a.p);
+  if(!ls.length&&limOwnMode(month)&&Object.values(cfg.limits||{}).some(v=>v>0))h+=`<div class="cd" style="color:var(--m);font-size:13px;line-height:1.45">Перенос лимитов выключен — на ${mn.toLowerCase()} лимитов нет. Нажмите «+», чтобы задать их для этого месяца.</div>`;
+  else if(!ls.length)h+=`<div class="cd" style="color:var(--m);font-size:13px;line-height:1.45">Например: «Продукты 3 000 в месяц». Нажмите «+» — покажу, сколько уже потрачено и когда подойдёте к лимиту.</div>`;
   else h+=ls.map(l=>{const c=cd(l.id);
     return `<div class="cd"><div class="gh"><b>${dot(l.id)}${E(c.l)}</b><span>${fmt(l.sp)} / ${fmt(l.v)} ${cfg.cur}</span></div><div class="lb"><i style="width:${Math.min(100,l.p)}%;background:${limCol(l.p)}"></i></div><div class="gx">${Math.round(l.p)}% · ${l.p>=100?'Превышен на '+fmt(Math.round(l.sp-l.v)):'Осталось '+fmt(Math.round(l.v-l.sp))} ${cfg.cur}</div><div class="gb"><button class="sm" data-la="edit" data-cid="${l.id}">Изменить</button></div></div>`}).join('');
   return h+`</div>`}
 function limAct(el){const a=el.dataset.la;if(a==='bud')openBud(el);else if(a==='new')openLim(null,el);else if(a==='edit')openLim(el.dataset.cid,el)}
-function openLim(id,src){if(isModalOpen())return;const used=cfg.limits||{},cats=ALL.filter(c=>!c.inc&&(c.id===id||!(used[c.id]>0)));
+function openLim(id,src){if(isModalOpen())return;const used=limOf(month),cats=ALL.filter(c=>!c.inc&&(c.id===id||!(used[c.id]>0)));
   if(!cats.length){toast('Лимиты заданы для всех категорий');return}
   cancelGestures();lockBg(true);gT={mode:'lim',id:id||null};
   gd.innerHTML=`<div class="eh"><b>${id?'Лимит':'Новый лимит'}</b><button class="x" id="gcl" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div>
 <label class="ef">Категория<select id="lcat"${id?' disabled':''}>${cats.map(c=>`<option value="${c.id}"${c.id===id?' selected':''}>${E(c.l)}</option>`).join('')}</select></label>
 <label class="ef">Лимит в месяц<input id="lam" inputmode="decimal" value="${id?used[id]:''}" placeholder="3 000" autocomplete="off"></label>
+<div class="eo">${E(limOwnMode(month)?'Только на '+MN[+month.slice(5,7)-1].toLowerCase()+': перенос лимитов выключен.':carryLimOn()?'Лимит действует каждый месяц, пока включён перенос лимитов.':'Со следующего месяца лимиты не переносятся — их нужно будет задать заново.')}</div>
 <div class="shf">${id?'<button class="sm del" id="gdel">Удалить</button>':'<span></span>'}<button class="sm pr${id?' auto':''}" id="gsvb">Сохранить</button></div>`;showGd(src)}
 function openBud(src){if(isModalOpen())return;cancelGestures();lockBg(true);const own=bmOwn(month),eff=budgetOf(month),sc=(own||Number(cfg.budget)>0)?'m':'all';gT={mode:'bud',scope:sc};const mn=MN[+month.slice(5,7)-1];
   gd.innerHTML=`<div class="eh"><span class="sgm" id="bsc"><button data-bs="m" class="${sc==='m'?'on':''}">Только ${E(mn.toLowerCase())}</button><button data-bs="all" class="${sc==='all'?'on':''}">Все месяцы</button></span><button class="x" id="gcl" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div>
@@ -2647,7 +2667,7 @@ function budHint(){const h=$('#bhint');if(!h||!gT||gT.mode!=='bud')return;const 
   if(!carryBudOn()&&gT.scope==='m'){h.textContent='Бюджет задаётся только на '+mn+'. Перенос бюджета выключен — на другие месяцы он сам не распространяется.';return}
   h.textContent=gT.scope==='m'?'Бюджет задаётся только на '+mn+'. Остальные месяцы берут общий'+(Number(cfg.budget)>0?' ('+fmt(cfg.budget)+')':' (пока не задан)')+'.':'Общий бюджет действует во всех месяцах, где нет своего.'}
 function saveLim(){const id=gT.id||($('#lcat')||{}).value,v=pn($('#lam').value);if(!id)return;if(!(v>0)){toast('Укажите сумму лимита');return}
-  cfg.limits=cfg.limits||{};cfg.limits[id]=v;save();closeGoal();render()}
+  setLimit(month,id,v);save();closeGoal();render()}
 function saveBud(){const v=pn($('#bam').value);if(!(v>0)){toast('Укажите сумму бюджета');return}
   if(gT&&gT.scope==='m'){if(!_obj(cfg.bm))cfg.bm={};cfg.bm[month]=v;toast('Бюджет · '+MN[+month.slice(5,7)-1]+': '+fmt(v)+' '+cfg.cur)}
   else{cfg.budget=v;if(_obj(cfg.bm))delete cfg.bm[month];if(!carryBudOn()&&month>=budOffFrom()){if(!_obj(cfg.bm))cfg.bm={};cfg.bm[month]=v}}
@@ -2677,7 +2697,7 @@ function delGoal(){if(gT&&gT.mode==='debt'&&gT.id){const i=cfg.debts.findIndex(x
   if(gT&&gT.mode==='bud'){const mo=month;
     if(bmOwn(mo)){const o=cfg.bm[mo];delete cfg.bm[mo];save();closeGoal();render();toast('Бюджет месяца сброшен к общему','Отмена',()=>{cfg.bm[mo]=o;save();render()},'del');return}
     const o=cfg.budget;cfg.budget=0;save();closeGoal();render();toast('Бюджет убран','Отмена',()=>{cfg.budget=o;save();render()},'del');return}
-  if(gT&&gT.mode==='lim'&&gT.id){const id=gT.id,o=cfg.limits[id];delete cfg.limits[id];save();closeGoal();render();toast('Лимит удалён','Отмена',()=>{cfg.limits[id]=o;save();render()},'del');return}
+  if(gT&&gT.mode==='lim'&&gT.id){const id=gT.id,lm0=month,o=limOf(lm0)[id];setLimit(lm0,id,0);save();closeGoal();render();toast('Лимит удалён','Отмена',()=>{setLimit(lm0,id,o);save();render()},'del');return}
   if(!gT||!gT.id)return;const i=cfg.goals.findIndex(x=>x.id===gT.id);if(i<0){closeGoal();return}const it=cfg.goals[i];cfg.goals.splice(i,1);tomb(it.id);save();closeGoal();render();
   toast('Цель удалена','Отмена',()=>{untomb(it.id);cfg.goals.splice(Math.min(i,cfg.goals.length),0,it);save();render()},'del')}
 function saveDep(){if(!gT)return;const g=cfg.goals.find(x=>x.id===gT.id),a=pn($('#gam').value);if(!g)return;if(!(a>0)){toast('Укажите сумму');return}
@@ -2713,7 +2733,7 @@ function tips(m){
   const WANT=['fun','plush','clothes','beauty','gift','hobby','rel'],wn=WANT.reduce((s,id)=>s+(by[id]||0),0);
   if(I>0&&(!cur||el>=8)&&wn>I*.3)add(86,'Правило 50/30/20: желания',`На «желания» (${WANT.filter(has).map(lab).join(', ')}) ушло ${R(wn)} ${C} — это ${Math.round(wn/I*100)}% дохода, ориентир — до 30%. Чтобы вернуться в норму, сократите их на ${R(wn-I*.3)} ${C} в месяц и переведите эту сумму в накопления.`,'«All Your Worth», Э. Уоррен, А. Тьяги');
   {const FX=['food','plush','fun','clothes','beauty','gift','transport'];let tp=null;FX.forEach(id=>{if(has(id)&&(!tp||by[id]>by[tp]))tp=id});
-   if(tp&&el>=5&&by[tp]>=X*.08){const wk=mon(by[tp])/N*7,hasLim=cfg.limits&&cfg.limits[tp]>0;
+   if(tp&&el>=5&&by[tp]>=X*.08){const wk=mon(by[tp])/N*7,hasLim=limOf(month)[tp]>0;
      add(80,'Метод конвертов',`На «${lab(tp)}» уходит в среднем ${R(wk)} ${C} в неделю. Выделяйте на неделю фиксированные ${R(nice(wk*.9))} ${C} (наличными или на отдельной карте): закончились — до следующей недели без трат.`+(hasLim?'':' Закрепите это лимитом: «Планы → Бюджет и лимиты».'),'Метод конвертов, Д. Рэмси')}}
   {const ES=['comm','food','transport','health','phone','kid','debt','byt'],es=mon(ES.reduce((s,id)=>s+(by[id]||0),0)),hasG=goals.some(g=>/подушк|резерв|безопасн|запас/i.test(g.name||''));
    if(es>0&&!hasG&&(!cur||el>=10))add(78,'Подушка безопасности',`Обязательные расходы ≈ ${R(es)} ${C} в месяц. Первая цель — отложить на 3 месяца: ≈ ${R(es*3)} ${C} (потом до 6). Создайте цель в «Планы → Цели» и пополняйте её в день дохода.`)}
@@ -3312,7 +3332,7 @@ ed.addEventListener('click',e=>{const b=e.target.closest('#eca');if(!b||!eT)retu
 ed.addEventListener('keydown',e=>{if(!eT)return;   // v143: Enter в сумме и заметке сохраняет; в тегах Enter добавляет набранный тег, а в пустом поле тегов — сохраняет
   if(e.target.id==='etn'&&(e.key===','||(e.key==='Enter'&&e.target.value.trim()))){e.preventDefault();readEd();patchEdTags();return}
   if(e.key==='Enter'&&e.target.tagName==='INPUT'&&e.target.type!=='date'){e.preventDefault();saveEd()}});
-$('#body').addEventListener('click',e=>{if(isModalOpen())return;const d=e.target.dataset;const r2=e.target.closest('.r2[data-id]');if(r2){openEdit(r2.dataset.id);return}const go=e.target.closest('[data-go]');if(go){if(go.dataset.go==='rec'){fab.click();setTimeout(()=>{try{openRc()}catch(x){}},600)}else goDebts();return}const dy=e.target.closest('.cc[data-day]');if(dy){openDay(dy.dataset.day);return}const lkb=e.target.closest('[data-lk]');if(lkb){linkToggle(lkb);return}const da=e.target.closest('[data-da]');if(da){debtAct(da);return}const mo2=e.target.closest('[data-mo]');if(mo2){TSEL=mo2.dataset.mo;render();return}if(d.tn){TN=+d.tn;render();softIn(false);return}const la=e.target.closest('[data-la]');if(la){limAct(la);return}const ga=e.target.closest('[data-ga]');if(ga){goalAct(ga);return}if(d.ps){ps=d.ps;render();softIn(true);return}const nv=e.target.closest('[data-nv]');if(nv){navStats(+nv.dataset.nv);return}if(e.target.closest('[data-tips]')){tipsOpen=!tipsOpen;_tipsF=tipsOpen;render();_tipsF=false;return}if(d.kd){KD=d.kd;render();softIn(false);return}if(d.rg){RG=d.rg;WO=woFor(month);render();softIn(false);return}if(d.tr){TR=d.tr;ftagR=null;render();softIn(false);return}if(d.as){AS=d.as;render();softIn(true);return}const tg=e.target.closest('.pl[data-tag]');if(tg){if(tab==='stats')openTag(tg.dataset.tag,{...lastRange},'stats');else openTag(tg.dataset.tag);return}openCat(e.target.closest('.pl[data-cat],.lr[data-cat]'))});
+$('#body').addEventListener('click',e=>{if(isModalOpen())return;const d=e.target.dataset;const r2=e.target.closest('.r2[data-id]');if(r2){openEdit(r2.dataset.id);return}if(cardTap(e.target))return;const go=e.target.closest('[data-go]');if(go){if(go.dataset.go==='rec'){fab.click();setTimeout(()=>{try{openRc()}catch(x){}},600)}else goDebts();return}const dy=e.target.closest('.cc[data-day]');if(dy){openDay(dy.dataset.day);return}const lkb=e.target.closest('[data-lk]');if(lkb){linkToggle(lkb);return}const da=e.target.closest('[data-da]');if(da){debtAct(da);return}const mo2=e.target.closest('[data-mo]');if(mo2){TSEL=mo2.dataset.mo;render();return}if(d.tn){TN=+d.tn;render();softIn(false);return}const la=e.target.closest('[data-la]');if(la){limAct(la);return}const ga=e.target.closest('[data-ga]');if(ga){goalAct(ga);return}if(d.ps){ps=d.ps;render();softIn(true);return}const nv=e.target.closest('[data-nv]');if(nv){navStats(+nv.dataset.nv);return}if(e.target.closest('[data-tips]')){tipsOpen=!tipsOpen;_tipsF=tipsOpen;render();_tipsF=false;return}if(d.kd){KD=d.kd;render();softIn(false);return}if(d.rg){RG=d.rg;WO=woFor(month);render();softIn(false);return}if(d.tr){TR=d.tr;ftagR=null;render();softIn(false);return}if(d.as){AS=d.as;render();softIn(true);return}const tg=e.target.closest('.pl[data-tag]');if(tg){if(tab==='stats')openTag(tg.dataset.tag,{...lastRange},'stats');else openTag(tg.dataset.tag);return}openCat(e.target.closest('.pl[data-cat],.lr[data-cat]'))});
 $('#body').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const r2=e.target.closest&&e.target.closest('.r2[data-id]');if(r2){e.preventDefault();openEdit(r2.dataset.id);return}const tg=e.target.closest&&e.target.closest('.pl[data-tag]');if(tg){e.preventDefault();openTag(tg.dataset.tag);return}const p=e.target.closest&&e.target.closest('.pl[data-cat]');if(p){e.preventDefault();openCat(p)}}});
 sbwEl().addEventListener('click',e=>{if(isModalOpen())return;const b=e.target.closest('[data-as],[data-ps]');if(!b)return;
   if(b.dataset.as){if(b.dataset.as===AS)return;AS=b.dataset.as}else{if(b.dataset.ps===ps)return;ps=b.dataset.ps}
@@ -4272,7 +4292,7 @@ ${cadOpen?`<div class="cpl">${rest.map(c=>`<button type="button" class="cpi" dat
       const rt=parseFloat(cfg.rates[nc])||0,CS=codes();
       const apply=f=>{const R=v=>Math.round((Number(v)||0)*f*100)/100;
         if(f){tx.forEach(t=>{t.amount=R(t.amount)});cfg.budget=R(cfg.budget);Object.keys(cfg.bm||{}).forEach(k=>{cfg.bm[k]=R(cfg.bm[k])});
-          Object.keys(cfg.limits).forEach(k=>{cfg.limits[k]=R(cfg.limits[k])});
+          Object.keys(cfg.limits).forEach(k=>{cfg.limits[k]=R(cfg.limits[k])});if(_obj(cfg.lm))Object.values(cfg.lm).forEach(o=>{if(_obj(o))Object.keys(o).forEach(k=>{o[k]=R(o[k])})});
           cfg.goals.forEach(g=>{g.target=R(g.target);g.saved=R(g.saved);g.plan=R(g.plan);(g.log||[]).forEach(l=>{if(typeof l.a==='number')l.a=R(l.a)})});
           cfg.debts.forEach(d=>{d.amount=R(d.amount);d.paid=R(d.paid);(d.log||[]).forEach(l=>{if(typeof l.a==='number')l.a=R(l.a)})});
           cfg.rec.forEach(r=>{r.amount=R(r.amount)})}
@@ -4307,7 +4327,7 @@ function delCat(id){const c=cd(id);if(CPROT.includes(id))return;
     if(eT&&eT.category===id)eT.category=fb;
     Object.keys(learn).forEach(k=>{if(learn[k]===id)delete learn[k]});(cfg.rec||[]).forEach(r=>{if(r.category===id)r.category=fb});(cfg.tpls||[]).forEach(r=>{if(r.category===id)r.category=fb});
     if(c.custom){cfg.custom=cfg.custom.filter(x=>x.id!==id);tomb(id)}else cfg.hide=(cfg.hide||[]).filter(h=>h!==id).concat(id);
-    delete cfg.catOv[id];delete cfg.limits[id];
+    delete cfg.catOv[id];delete cfg.limits[id];if(_obj(cfg.lm))Object.values(cfg.lm).forEach(o=>{if(_obj(o))delete o[id]});
     if(cfg.ord)['expense','income'].forEach(k=>{if(Array.isArray(cfg.ord[k]))cfg.ord[k]=cfg.ord[k].filter(x=>x!==id)});
     buildAll();save();render();renderCf()})}
 // перетаскивание строк за ≡ (порядок сохраняется в cfg.ord)
@@ -4655,7 +4675,7 @@ $('#fi').onchange=e=>{const f=e.target.files[0];if(f)importFile(f,e.target)};
 
 // ================= окно выбора категории: сетка по три в ряд, внизу «Добавить» и «Редактировать» =================
 const cpEl=$('#cp');let cpS=null;
-const CPROT=['other','in_other'];
+const CPROT=['other','in_other','debt','debtin','save'];   // v168: служебные категории нельзя удалить
 function cpHtml(){const s=cpS,inc=s.type==='income';
   if(s.view==='edit'){const c=cd(s.id),x=c.custom?cfg.custom.find(z=>z.id===c.id):null,col=/^#[0-9a-f]{6}$/i.test(c.c)?c.c:'#888888';
     return `<div class="cpt0"><span>Редактировать категорию</span></div>
@@ -4698,7 +4718,7 @@ function cpDel(){const s=cpS,c=cd(s.id);if(CPROT.includes(c.id))return;
     if(eT&&eT.category===id)eT.category=fb;
     Object.keys(learn).forEach(k=>{if(learn[k]===id)delete learn[k]});(cfg.rec||[]).forEach(r=>{if(r.category===id)r.category=fb});(cfg.tpls||[]).forEach(r=>{if(r.category===id)r.category=fb});
     if(c.custom){cfg.custom=cfg.custom.filter(x=>x.id!==id);tomb(id)}else cfg.hide=(cfg.hide||[]).filter(h=>h!==id).concat(id);
-    delete cfg.catOv[id];delete cfg.limits[id];
+    delete cfg.catOv[id];delete cfg.limits[id];if(_obj(cfg.lm))Object.values(cfg.lm).forEach(o=>{if(_obj(o))delete o[id]});
     if(cfg.ord)['expense','income'].forEach(k=>{if(Array.isArray(cfg.ord[k]))cfg.ord[k]=cfg.ord[k].filter(x=>x!==id)});
     buildAll();save();render();
     if(cpS){if(cpS.direct){const ch=cpS.chg;closeCp();if(ch)ch();return}if(cpS.cur===id)cpS.cur=fb;cpS.view='grid';cpRender();if(cpS.chg)cpS.chg()}})}
@@ -5015,7 +5035,7 @@ setInterval(recTick,300000);
 render();
 if(_recN)setTimeout(()=>toast('Повторяющиеся операции добавлены: '+_recN),debtList().some(x=>x.n<=3)?5800:500);
 $('#body').addEventListener('click',e=>{const b=e.target.closest('.mtg[data-mt]');if(!b)return;e.preventDefault();e.stopPropagation();const k=b.dataset.mt;let on;
-  if(k==='ld'){on=!linkDebtOn();cfg.linkDebt=on;save()}else if(k==='lg'){on=!linkGoalOn();cfg.linkGoal=on;save()}else if(k==='cb'){on=!carryBudOn();setCarryBud(on)}else return;
+  if(k==='ld'){on=!linkDebtOn();cfg.linkDebt=on;save()}else if(k==='lg'){on=!linkGoalOn();cfg.linkGoal=on;save()}else if(k==='cb'){on=!carryBudOn();setCarryBud(on)}else if(k==='cl'){on=!carryLimOn();setCarryLim(on)}else return;
   b.classList.toggle('on',on);b.setAttribute('aria-checked',on);try{hap('light',{k:'mt'})}catch(x){}setTimeout(render,230)},true);
 $('#sum').addEventListener('click',e=>{{const cb=e.target.closest('#carry');if(cb){e.stopPropagation();
   // v158: переключатель переноса остатка рядом с «Остаток»: вкл — остаток переносится начиная с открытого месяца (раньше месяцы не считаются), выкл — перенос отключён
@@ -5127,7 +5147,7 @@ function mergeCloudData(d){
     const arr=(a,b)=>[...new Set([...(Array.isArray(a)?a:[]),...(Array.isArray(b)?b:[])])];
     const mg={...dc,...cfg};                                  // одиночные настройки: выигрывают локальные
     ['goals','debts','rec','custom'].forEach(k=>{mg[k]=un(cfg[k],dc[k])});
-    ['rates','limits','catOv','bm','rman'].forEach(k=>{mg[k]={...(_obj(dc[k])?dc[k]:{}),...(_obj(cfg[k])?cfg[k]:{})}});
+    ['rates','limits','catOv','bm','rman','lm'].forEach(k=>{mg[k]={...(_obj(dc[k])?dc[k]:{}),...(_obj(cfg[k])?cfg[k]:{})}});
     ['cc','curList'].forEach(k=>{mg[k]=arr(cfg[k],dc[k])});
     mg.del=del;
     cfg=mg;tx=out;learn={...(_obj(d.learn)?d.learn:{}),...learn};
@@ -5308,7 +5328,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v167';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v168';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}   // номер сборки виден внизу экрана: по нему понятно, обновился ли Telegram до новой версии
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
@@ -5982,7 +6002,7 @@ function planDel(ws){
   ws.forEach(w=>{
     if(w.k==='debt'){const i=cfg.debts.findIndex(x=>x.id===w.id);if(i<0)return;const o=cfg.debts[i];cfg.debts.splice(i,1);tomb(o.id);undo.push(()=>{untomb(o.id);cfg.debts.splice(Math.min(i,cfg.debts.length),0,o)})}
     else if(w.k==='goal'){const i=cfg.goals.findIndex(x=>x.id===w.id);if(i<0)return;const o=cfg.goals[i];cfg.goals.splice(i,1);tomb(o.id);undo.push(()=>{untomb(o.id);cfg.goals.splice(Math.min(i,cfg.goals.length),0,o)})}
-    else if(w.k==='lim'){const o=cfg.limits[w.id];delete cfg.limits[w.id];undo.push(()=>{cfg.limits[w.id]=o})}
+    else if(w.k==='lim'){const m0=month,o=limOf(m0)[w.id];setLimit(m0,w.id,0);undo.push(()=>{setLimit(m0,w.id,o)})}
     else if(w.k==='bud'){const mo=month;if(bmOwn(mo)){const o=cfg.bm[mo];delete cfg.bm[mo];undo.push(()=>{cfg.bm[mo]=o});msg='Бюджет месяца сброшен к общему'}else{const o=cfg.budget;cfg.budget=0;undo.push(()=>{cfg.budget=o})}}
     if(!msg||ws.length===1&&!msg)msg=names[w.k]});
   if(!undo.length)return;
@@ -6157,17 +6177,17 @@ const v2=(ic,rows)=>`<div class="v2" style="display:flex;align-items:center;gap:
 const SL=[
 {h:'Знайте, куда уходят деньги',p:'Записывайте траты за секунду — просто фразой. Остальное приложение сделает само, а данные останутся только у вас.',v:
    `<div class="v1g"></div><svg class="v1" viewBox="96 96 320 320" width="116" height="116" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><linearGradient id="trg" x1="0" x2="1"><stop offset="0" style="stop-color:var(--g);stop-opacity:.3"/><stop offset=".5" style="stop-color:var(--g)"/><stop offset="1" style="stop-color:var(--g);stop-opacity:.3"/></linearGradient><clipPath id="trc"><rect x="96" y="96" width="320" height="104"/></clipPath></defs><g clip-path="url(#trc)"><rect class="bill" x="172" y="180" width="164" height="40" rx="10" fill="url(#trg)" stroke="none"/></g><path class="d" pathLength="1" d="M146 214 L150 178 C151 160 160 152 175 148 L316 126 C329 124 338 133 338 147 L338 196"/><rect class="d" pathLength="1" x="139" y="196" width="244" height="168" rx="40"/><circle class="dot" cx="335" cy="277" r="15" fill="currentColor" stroke="none"/></svg>`},
-  {h:'Пишите — приложение разберётся',p:'Напишите несколько трат подряд: «кофе 5, такси 12». Сумма, категория и дата определятся сами.',v:v2('pen',[['☕','Кофе','−5','exp'],['🚕','Такси','−12','exp'],['💼','Зарплата','+1 500','inc']])},
-  {h:'Записывайте через бота',p:'Напишите боту в чате «такси 120» или отправьте голосовое. Запись сама появится в приложении, как только вы его откроете.',v:v2('send',[['🚕','Такси','−200','exp'],['☕','Кофе','−50','exp'],['💼','Зарплата','+500','inc']])},
+  {h:'Пишите — приложение разберётся',p:'Несколько трат подряд: «кофе 5, такси 12». Категорию задайте словом: «такси 12 категория транспорт» — дальше приложение её запомнит.',v:v2('pen',[['☕','Кофе','−5','exp'],['🚕','Такси','−12','exp'],['💼','Зарплата','+1 500','inc']])},
+  {h:'Записывайте через бота',p:'Напишите боту «такси 120» или отправьте голосовое. В приложении запись откроется на проверку — сохраните её, и бот ответит «Записано».',v:v2('send',[['🚕','Такси','−200','exp'],['☕','Кофе','−50','exp'],['💼','Зарплата','+500','inc']])},
   {h:'Повторы и шаблоны',p:'Аренда, подписки, зарплата — настройте один раз, и записи будут появляться сами. Частые траты — в одно касание.',v:v2('repeat',[['🏠','Аренда','−500','exp'],['📺','Подписка','−9','exp'],['💼','Зарплата','+1 500','inc']])},
-{h:'Вся картина за секунды',p:'Остаток, динамика по месяцам, календарь трат и теги. Сравнивайте с прошлым месяцем.',v:
+{h:'Вся картина за секунды',p:'Остаток, динамика, календарь трат и теги. Месяцы листаются свайпом по списку операций — сравнивайте с прошлым.',v:
    `<div class="v3p"><b class="inc">−12%</b> к прошлому месяцу</div><div class="v3" style="display:flex">${[[46,62],[58,50],[40,70],[66,54],[52,44],[72,38]].map((p,i)=>`<div><i class="a" style="--h:${p[0]}%;--i:${i}"></i><i class="b" style="--h:${p[1]}%;--i:${i}"></i></div>`).join('')}</div>`},
   {h:'Теги для любых поводов',p:'Группируйте траты по поводам: «такси 100 тег друзья». Нажмите на тег — увидите все его операции.',v:v2('tag',[['👥','#друзья','−85','exp'],['✈️','#отпуск','−420','exp'],['🎁','#подарки','−60','exp']])},
-{h:'Планы и цели',p:'Копите на цели, задавайте бюджет и лимиты по категориям. Лимит желтеет у 80% и краснеет при превышении.',v:
+{h:'Планы и цели',p:'Цели, бюджет и лимиты. Нажмите на плитку — внесите взнос или измените сумму. Перенос бюджета и лимитов на следующий месяц включается отдельно.',v:
    `<div class="v4" style="display:flex">${[['Отпуск','65%','',0],['Лимит: продукты','84%','#f2c14e',1],['Бюджет месяца','40%','',2]].map(r=>`<div style="--w:${r[1]};--i:${r[3]};${r[2]?'--c:'+r[2]:''}"><span>${r[0]}</span><b>${r[1]}</b><s><u></u></s></div>`).join('')}</div>`},
-  {h:'Долги без забывчивости',p:'Кто кому должен и до какого числа — одной фразой: «одолжил Ивану 500». Когда подойдёт срок, приложение напомнит.',v:v2('bell',[['🤝','Иван','+500','inc'],['🤝','Анна','−200','exp'],['⏰','Напомню','завтра']])},
+  {h:'Долги без забывчивости',p:'«Одолжил Ивану 500» — и долг записан, а о сроке приложение напомнит. Выдача и возврат долга попадают в расходы и доходы.',v:v2('bell',[['🤝','Иван','+500','inc'],['🤝','Анна','−200','exp'],['⏰','Напомню','завтра']])},
   {h:'Любая валюта',p:'Выберите основную валюту в настройках — курсы валют обновляются автоматически.',v:v2('coin',[['💵','Доллар','$'],['💶','Евро','€'],['💱','Курс','авто']])},
-  {h:'Данные под защитой',p:'PIN-код и скрытие сумм защитят данные. Резервную копию можно сохранить в Excel или JSON и вернуть в любой момент.',v:v2('lock',[['🔒','PIN-код','Вкл'],['🙈','Суммы','скрыты'],['💾','Копия','Excel']])},
+  {h:'Данные под защитой',p:'PIN-код или Face ID и скрытие сумм защитят данные. Резервную копию можно сохранить в Excel или JSON и вернуть в любой момент.',v:v2('lock',[['🔒','PIN-код','Вкл'],['🙈','Суммы','скрыты'],['💾','Копия','Excel']])},
 {h:'Обучение всегда под рукой',p:'Захотите вспомнить, как всё устроено, — откройте «Настройки» и нажмите «Обучение». Пройти его можно в любой момент.',v:`<div class="v6"><div style="--d:.4s"><em>💱</em><span>Валюта и курсы</span><b>MDL</b></div><div class="hl" style="--d:.9s"><em>📖</em><span>Обучение</span><b>Пройти заново</b></div><div style="--d:1.4s"><em>🔒</em><span>PIN-код</span><b>Вкл</b></div><i class="hd6">👆</i></div>`}
 ];
 
@@ -6424,7 +6444,7 @@ function build(kind){
     cards.push({k:'К '+(yr?'прошлому году':'прошлому месяцу'),big:{v:Math.abs(ch),f:'p',s:ch>=0?'+':'−'},sub:'расходы в день '+(ch>=0?'выросли':'снизились')+(bc?' · сильнее всего изменились «'+cd(bc).n+'»':''),g:ch>0?RED:GRN})}
   const tg={};ex.forEach(t=>(t.tags||[]).forEach(g=>tg[g]=(tg[g]||0)+t.amount));const tt=Object.entries(tg).sort((a,b)=>b[1]-a[1])[0];
   if(tt)cards.push({k:'Любимый тег',em:'🏷️',t:'#'+tt[0],sub:'на него ушло '+M(tt[1]),g:'#ffb454'});
-  const lm=cfg.limits||{},li=Object.keys(lm).filter(i=>lm[i]>0),gl=cfg.goals||[],rows=[];
+  const lm=yr?{}:limOf(mOf(from)),li=Object.keys(lm).filter(i=>lm[i]>0),gl=cfg.goals||[],rows=[];
   if(!yr&&li.length){const ok=li.filter(i=>(by[i]||0)<=lm[i]).length;rows.push({e:ok===li.length?'✅':'🎯',l:'В лимит уложились',v:ok+' из '+li.length})}
   if(gl.length){rows.push({e:'🏁',l:'Накоплено по целям',v:M(sum(gl.map(g=>({amount:+g.saved||0}))))});const dn=gl.filter(g=>g.closed&&g.closed>=from&&g.closed<=to).length;if(dn)rows.push({e:'🎉',l:'Целей достигнуто',v:String(dn)})}
   if(rows.length)cards.push({k:'Лимиты и цели',rows,g:GRN});
