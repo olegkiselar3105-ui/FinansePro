@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v183';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v184';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -1193,8 +1193,17 @@ button,a,label,select,summary{touch-action:manipulation}
 /* плашки («Удалено · Отмена», «Сохранено» и т.п.) всплывают ПОВЕРХ кнопки «+»: по высоте — на уровне самой кнопки, слой выше неё (z-index 300) */
 :root #toast{bottom:calc(14px + var(--tbh) + var(--fabg) + 7px + var(--sab))}
 /* v172: при открытом окне «+» уведомление — сверху: снизу оно ложилось на строки черновиков, и следующее нажатие на корзину попадало в «Отмена» */
-html:root:has(#sh.on) #toast{top:calc(var(--sat) + 12px);bottom:auto}
-html:root:has(#sh.on) #toast:not(.on){transform:translate3d(0,-34px,0) scale(.94)}
+/* v184: плашка «Удалено · Отмена» — ложится ровно на место нижней панели (те же края, высота, скругление и стекло), всегда внизу и поверх всего:
+   на главном экране — поверх нижней панели, в окнах — у нижнего края поверх окна, при клавиатуре — сразу над ней (--tkb считает JS по видимой части экрана) */
+html:root #toast#toast{--tsb:rgba(30,30,34,.9);z-index:400;top:auto!important;left:var(--rx)!important;right:var(--rx)!important;width:auto!important;max-width:none!important;margin:0!important;
+  bottom:calc(14px + var(--sab) + var(--tkb,0px))!important;min-height:var(--tbh,63px);padding:6px 6px 6px 18px!important;border-radius:32px!important;gap:12px!important;
+  font-size:15px!important;line-height:1.3;color:var(--t);background:var(--gloss),var(--tsb)!important;-webkit-backdrop-filter:var(--gblur);backdrop-filter:var(--gblur);border:.5px solid var(--gbd)!important;box-shadow:var(--gsh)!important}
+html:root[data-theme=light] #toast#toast{--tsb:rgba(250,250,252,.92)}
+html:root #toast#toast.kb{bottom:calc(10px + var(--tkb,0px))!important}
+html:root #toast#toast .ttx{flex:1;min-width:0;font-weight:500}
+html:root #toast#toast .tic{display:flex;flex:none;color:var(--m2)}
+html:root #toast#toast button.tbt{flex:none;height:calc(var(--tbh,63px) - 14px);padding:0 20px;border:0;border-radius:999px;background:rgba(var(--wr),.12);color:var(--t);font-size:15px;font-weight:600;text-decoration:none}
+html:root #toast#toast button.tbt:active{transform:scale(.94);background:rgba(var(--wr),.2)}
 /* экран PIN: одна и та же анимация и при появлении, и при уходе после ввода PIN (плавное проявление с лёгким масштабом; при запуске приложения экран закрыт сразу, без вспышки содержимого) */
 #lk{display:flex;visibility:hidden;opacity:0;transform:scale(1.04);pointer-events:none;transition:opacity .34s cubic-bezier(.4,0,.2,1),transform .5s cubic-bezier(.22,1,.36,1),visibility 0s .5s}
 html.plk #lk,#lk.on{visibility:visible;opacity:1;transform:none;pointer-events:auto;transition:opacity .34s cubic-bezier(.4,0,.2,1),transform .5s cubic-bezier(.22,1,.36,1),visibility 0s}
@@ -1234,7 +1243,7 @@ html:root :is(#ed,#gd,#rc,#nc) label.ef,html:root #ed .ef.tgf{position:relative;
 html:root :is(#ed,#gd,#rc,#nc) label.ef:focus-within{border-color:var(--sa)!important;box-shadow:0 0 0 1px var(--sa)}
 html:root :is(#ed,#gd,#rc,#nc) .fl,html:root #ed .ef.tgf>span:first-child{position:absolute;top:-9px;left:14px;padding:0 5px;background:var(--sb);font-size:12px;line-height:1.2;color:var(--m2)}
 html:root :is(#ed,#gd,#rc,#nc) label.ef :is(input,select,.cpb){display:block;width:100%!important;max-width:none!important;text-align:left!important;text-align-last:left!important;font-size:16px!important;padding:4px 0 6px;border:0!important;background:none;color:var(--t)}
-html:root :is(#ed,#gd,#rc) label.ef:has(select,.cpb)::after{content:"";position:absolute;right:18px;top:50%;margin-top:-2px;border:5px solid transparent;border-top-color:var(--m2)}
+html:root :is(#ed,#gd,#rc) label.ef:has(select,.cpb)::after{content:none;display:none}   /* v184: стрелки у списков убраны */
 html:root :is(#ed #eam,#gd #gam){display:block;width:100%;box-sizing:border-box;font-size:18px!important;font-weight:400;letter-spacing:0;text-align:left;color:var(--t)!important;padding:14px 16px 12px!important;border:1px solid var(--sbd);border-radius:18px;margin:0!important}
 html:root :is(#ed #eam,#gd #gam):focus{border-color:var(--sa);box-shadow:0 0 0 1px var(--sa);outline:0}
 .fl-sum{position:relative;height:16px}.fl-sum b{position:absolute;left:14px;top:7px;padding:0 5px;background:var(--sb);font-size:12px;font-weight:400;line-height:1.2;color:var(--m2);z-index:1}
@@ -1351,8 +1360,8 @@ html:root :is(#gd,#rc,#nc) label.ef{display:flex!important;align-items:center;ju
 html:root :is(#gd,#rc,#nc) label.ef:focus-within{border-bottom:1px solid var(--sep)!important;box-shadow:none!important}   /* v147: строка в фокусе не подсвечивается */
 html:root :is(#gd,#rc,#nc) label.ef .fl{position:static;flex:none;padding:0;background:none;font-size:13px;color:var(--m2)}
 html:root :is(#gd,#rc,#nc) label.ef :is(input,select,.cpb){flex:1;min-width:0;width:auto!important;text-align:right!important;text-align-last:right!important;font-size:16px!important;padding:2px 0!important;background:none}
-html:root :is(#gd,#rc,#nc) label.ef:has(select)::after{right:0;margin-top:-2px}
-html:root :is(#gd,#rc,#nc) label.ef select{padding-right:16px!important}
+html:root :is(#gd,#rc,#nc) label.ef:has(select)::after{content:none;display:none}
+html:root :is(#gd,#rc,#nc) label.ef select{padding-right:0!important}
 html:root :is(#gd,#rc,#nc) label.ef:has(.cpb)::after{display:none}
 /* кнопки внизу: одинаковая высота */
 html:root :is(#gd,#rc) .shf{margin-top:12px}
@@ -1506,7 +1515,7 @@ html:root #ed .eab:active{opacity:.55}
 html:root #ed .eab.on{color:var(--g)}
 /* окно повтора и шаблона: «Удалить» слева, «Отменить», «Сохранить» справа */
 html:root #rc label.ef[hidden]{display:none!important}
-html:root #rc#rc label.ef select{padding-right:28px!important}
+html:root #rc#rc label.ef select{padding-right:0!important}
 html:root #rc .shf .sm.del{order:1}html:root #rc .shf .sm:not(.pr):not(.del){order:2}html:root #rc .shf .sm.pr{order:3}
 /* окно добавления: список шаблонов под строкой ввода */
 #tpls{margin-top:14px}
@@ -4489,16 +4498,29 @@ ${cadOpen?`<div class="cpl">${rest.map(c=>`<button type="button" class="cpi" dat
 }
 function openCpEdit(id,type){if(cpS||isCpBusy())return;cpS={type,cur:null,cb:null,chg:renderCf,edit:true,view:'edit',id,direct:true};cpRender();
   ['sh','ed','gd','cf'].forEach(i=>{const e=$('#'+i);if(e&&e.classList.contains('on'))e.classList.add('sub')});cpEl.classList.add('on');ov.className='on'}
-function delCat(id){const c=cd(id);if(CPROT.includes(id))return;
-  bqAsk('Удалить категорию «'+c.n+'»?','Операции этой категории перейдут в «Прочее». Это нельзя отменить.','Удалить',()=>{
-    const fb=INC.has(id)?'in_other':'other';
-    tx.forEach(t=>{if(t.category===id)t.category=fb});drafts.forEach(t=>{if(t.category===id)t.category=fb});
+// v184: удаление категории — сразу, с «Отменой» внизу (раньше — окно подтверждения «Это нельзя отменить»).
+// catRemove делает то же, что и раньше, и возвращает функцию, которая возвращает всё затронутое: операции, черновики, память выбора,
+// повторы, шаблоны, свою категорию или её скрытие, оформление, лимиты и порядок
+function catRemove(id){const c=cd(id),fb=INC.has(id)?'in_other':'other',cp_=o=>o==null?o:JSON.parse(JSON.stringify(o));
+  const S={tx:tx.filter(t=>t.category===id).map(t=>t.id),dr:drafts.filter(t=>t.category===id).map(t=>t.id),eT:!!(eT&&eT.category===id),
+    learn:Object.keys(learn).filter(k=>learn[k]===id),rec:(cfg.rec||[]).filter(r=>r.category===id),tpl:(cfg.tpls||[]).filter(r=>r.category===id),
+    cu:c.custom?cp_(cfg.custom.find(x=>x.id===id)):null,ci:c.custom?cfg.custom.findIndex(x=>x.id===id):-1,hide:cp_(cfg.hide||[]),ov:cp_(cfg.catOv[id]),lim:cfg.limits[id],lm:{},ord:cp_(cfg.ord||null)};
+  if(_obj(cfg.lm))Object.entries(cfg.lm).forEach(([m,o])=>{if(_obj(o)&&id in o)S.lm[m]=o[id]});
+  tx.forEach(t=>{if(t.category===id)t.category=fb});drafts.forEach(t=>{if(t.category===id)t.category=fb});
     if(eT&&eT.category===id)eT.category=fb;
     Object.keys(learn).forEach(k=>{if(learn[k]===id)delete learn[k]});(cfg.rec||[]).forEach(r=>{if(r.category===id)r.category=fb});(cfg.tpls||[]).forEach(r=>{if(r.category===id)r.category=fb});
     if(c.custom){cfg.custom=cfg.custom.filter(x=>x.id!==id);tomb(id)}else cfg.hide=(cfg.hide||[]).filter(h=>h!==id).concat(id);
     delete cfg.catOv[id];delete cfg.limits[id];if(_obj(cfg.lm))Object.values(cfg.lm).forEach(o=>{if(_obj(o))delete o[id]});
     if(cfg.ord)['expense','income'].forEach(k=>{if(Array.isArray(cfg.ord[k]))cfg.ord[k]=cfg.ord[k].filter(x=>x!==id)});
-    buildAll();save();render();renderCf()})}
+  buildAll();save();
+  return()=>{const T=new Set(S.tx),D=new Set(S.dr);tx.forEach(t=>{if(T.has(t.id))t.category=id});drafts.forEach(t=>{if(D.has(t.id))t.category=id});
+    if(S.eT&&eT&&eT.category===fb)eT.category=id;S.learn.forEach(k=>learn[k]=id);S.rec.forEach(r=>r.category=id);S.tpl.forEach(r=>r.category=id);
+    if(S.cu){untomb(id);if(!cfg.custom.some(x=>x.id===id))cfg.custom.splice(Math.max(0,Math.min(S.ci,cfg.custom.length)),0,S.cu)}else cfg.hide=S.hide;
+    if(S.ov!=null)cfg.catOv[id]=S.ov;if(S.lim!=null)cfg.limits[id]=S.lim;Object.entries(S.lm).forEach(([m,v])=>{if(!_obj(cfg.lm))cfg.lm={};if(!_obj(cfg.lm[m]))cfg.lm[m]={};cfg.lm[m][id]=v});
+    if(S.ord)cfg.ord=S.ord;buildAll();save()}}
+function delCat(id){const c=cd(id);if(CPROT.includes(id))return;const nm=c.n;
+  const back=catRemove(id);render();renderCf();
+  toast('Категория «'+nm+'» удалена','Отмена',()=>{back();render();renderCf();if(drafts.length)renderRev(true)},'del')}
 // перетаскивание строк за ≡ (порядок сохраняется в cfg.ord)
 function catDrag(list,type){
   // строки не переносятся в DOM во время жеста (это сбрасывало захват пальца): двигаем transform'ом, соседи едут анимацией, порядок фиксируем один раз при отпускании
@@ -4898,16 +4920,10 @@ function cpSave(){const s=cpS,c=cd(s.id),nm=($('#cpn').value||'').trim();if(!nm)
   if(s.direct){closeCp();if(s.chg)s.chg();return}
   s.view='grid';cpRender();if(s.chg)s.chg()}
 function cpDel(){const s=cpS,c=cd(s.id);if(CPROT.includes(c.id))return;
-  bqAsk('Удалить категорию?','Операции этой категории перейдут в «Прочее». Это нельзя отменить.','Удалить',()=>{
-    const id=c.id,fb=INC.has(id)?'in_other':'other';
-    tx.forEach(t=>{if(t.category===id)t.category=fb});drafts.forEach(t=>{if(t.category===id)t.category=fb});
-    if(eT&&eT.category===id)eT.category=fb;
-    Object.keys(learn).forEach(k=>{if(learn[k]===id)delete learn[k]});(cfg.rec||[]).forEach(r=>{if(r.category===id)r.category=fb});(cfg.tpls||[]).forEach(r=>{if(r.category===id)r.category=fb});
-    if(c.custom){cfg.custom=cfg.custom.filter(x=>x.id!==id);tomb(id)}else cfg.hide=(cfg.hide||[]).filter(h=>h!==id).concat(id);
-    delete cfg.catOv[id];delete cfg.limits[id];if(_obj(cfg.lm))Object.values(cfg.lm).forEach(o=>{if(_obj(o))delete o[id]});
-    if(cfg.ord)['expense','income'].forEach(k=>{if(Array.isArray(cfg.ord[k]))cfg.ord[k]=cfg.ord[k].filter(x=>x!==id)});
-    buildAll();save();render();
-    if(cpS){if(cpS.direct){const ch=cpS.chg;closeCp();if(ch)ch();return}if(cpS.cur===id)cpS.cur=fb;cpS.view='grid';cpRender();if(cpS.chg)cpS.chg()}})}
+  const id=c.id,nm=c.n,fb=INC.has(id)?'in_other':'other',back=catRemove(id);render();
+  const redraw=()=>{if(drafts.length)renderRev(true);if(typeof renderCf==='function')try{renderCf()}catch(e){}};
+  toast('Категория «'+nm+'» удалена','Отмена',()=>{back();render();redraw();if(cpS&&!cpS.direct&&cpS.view==='grid'){cpRender()}},'del');
+  if(cpS){if(cpS.direct){const ch=cpS.chg;closeCp();if(ch)ch();return}if(cpS.cur===id)cpS.cur=fb;cpS.view='grid';cpRender();if(cpS.chg)cpS.chg()}}
 cpEl.addEventListener('click',e=>{if(!cpS)return;const b=e.target.closest('button');if(!b)return;
   if(b.classList.contains('cpi')){const id=b.dataset.id;if(cpS.edit){cpS.view='edit';cpS.id=id;cpRender();return}const cb=cpS.cb;closeCp();cb(id);return}
   const a=b.dataset.cp,s=cpS;
@@ -4966,10 +4982,14 @@ function toastDel(n,undo){const el=$('#toast'),live=!!delB&&el.classList.contain
   toast(null,'Отмена',()=>{const u=b.u.slice().reverse();if(delB===b)delB=null;u.forEach(f=>f())},'del',delMsg(b.n))}
 // Плашка показывается только для отмены действия (кнопка «Отмена» / «Сохранить»). Подтверждения вроде «Сохранено» не показываем:
 // человек и так видит, что сделал. Остаются только короткие объяснения, почему действие не выполнилось (ошибки и «укажите сумму»).
+// v184: плашка поднимается над клавиатурой: --tkb — сколько экрана снизу закрыто (видимая часть короче окна)
+function toastKb(){const el=$('#toast');if(!el)return;const vv=window.visualViewport,V=vv?Math.min(window.innerHeight,vv.offsetTop+vv.height):window.innerHeight,
+  k=Math.max(0,Math.round(window.innerHeight-V)),on=k>80;el.style.setProperty('--tkb',(on?k:0)+'px');el.classList.toggle('kb',on)}
+try{if(window.visualViewport){visualViewport.addEventListener('resize',toastKb);visualViewport.addEventListener('scroll',toastKb)}window.addEventListener('resize',toastKb)}catch(e){}
 function toast(m,lbl,fn,kind,html){
   if(!lbl&&!(m!=null&&/^(⚠|Введите|Выберите|Укажите|Число месяца|Платежей|Дата окончания|Не удалось|Нет доступа|Датчик|Доступ запрещён|В таблице нет|Пока нечего|Новых данных|Ничего не изменилось|Облако Telegram недоступно|Контакт|Бот:)/.test(String(m)))){if(!_tb)delB=null;_tb=0;return}
   const el=$('#toast');clearTimeout(tt);if(!_tb)delB=null;_tb=0;
-  el.dataset.k=kind||'';
+  el.dataset.k=kind||'';toastKb();
   el.innerHTML=(TIC[kind]?`<span class="tic">${TIC[kind]}</span>`:'')+`<span class="ttx">${html!=null?html:E(m)}</span>`+(lbl?`<button type="button" class="tbt">${lbl}</button>`:'');
   if(kind==='del'){try{if(hap.age()>1500)hap('medium',{k:'del'})}catch(e){}}   // удаление: один отклик (если свайп/меню уже не дали его только что)
   const was=el.classList.contains('on');void el.offsetWidth;el.classList.add('on');if(was&&el.animate&&!matchMedia('(prefers-reduced-motion:reduce)').matches)el.animate([{transform:'translateY(0) scale(1)'},{transform:'translateY(-4px) scale(1.02)',offset:.4},{transform:'translateY(0) scale(1)'}],{duration:460,easing:'cubic-bezier(.32,.72,0,1)'});
