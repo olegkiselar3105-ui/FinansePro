@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v179';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v180';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -776,6 +776,10 @@ html.intro #body .dg{animation:inDg .85s cubic-bezier(.22,1,.36,1) calc(.2s + va
 .sw.nwh{opacity:0!important;animation:none!important}.sw.nwa{animation:none!important;will-change:transform,opacity}
 html.intro #body .dg .sw:not(.sd){animation:inRow .7s cubic-bezier(.22,1,.36,1) calc(.34s + var(--ri,0)*.05s) backwards}
 html.intro #body>*:not(.dg){animation:inA .8s cubic-bezier(.22,1,.36,1) .2s backwards}
+/* v180: перерисовка во время появления (данные из облака, от бота) — новые элементы продолжают анимацию с того же места, а не начинают заново */
+html.intro.rr #body .dg{animation-delay:calc(.2s + var(--gi,0)*.07s - var(--ie,0s))}
+html.intro.rr #body .dg .sw:not(.sd){animation-delay:calc(.34s + var(--ri,0)*.05s - var(--ie,0s))}
+html.intro.rr #body>*:not(.dg){animation-delay:calc(.2s - var(--ie,0s))}
 html.intro #tabs,html.intro #fab{animation:inUp .9s cubic-bezier(.22,1,.36,1) .4s backwards}
 @keyframes inA{from{opacity:0;transform:translate3d(0,10px,0)}}
 @keyframes inTop{from{opacity:0;transform:translate3d(0,28px,0) scale(.95);filter:blur(10px)}}
@@ -1833,7 +1837,7 @@ let month=curM(),tab='list',drafts=[],undoIds=null,KD='expense',RG='month';
 const PGY={};let pgCur=null,pgFresh=false;   // v55: прокрутка каждой страницы (см. pgKey)
 function mk(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
 function ymd(d){return mk(d)+'-'+String(d.getDate()).padStart(2,'0')}
-const save=()=>{snapTx(true);S.set('finapp.tx',tx);S.set('finapp.settings',cfg);S.set('finapp.learn',learn);cloudTouch()};
+const save=()=>{try{lkSync()}catch(e){console.error(e)}snapTx(true);S.set('finapp.tx',tx);S.set('finapp.settings',cfg);S.set('finapp.learn',learn);cloudTouch()};
 // бюджет по месяцам: cfg.bm = {'2026-10': 20000}; месяц без своего бюджета берёт общий (cfg.budget)
 const bmOwn=m=>!!(cfg.bm&&Number(cfg.bm[m])>0);
 // перенос бюджета: включён (по умолчанию) — общий бюджет действует и в следующих месяцах; выключен — с месяца budOffFrom его нужно задавать вручную (прошлые месяцы не меняются)
@@ -1878,7 +1882,78 @@ function addLinkedIncome(amount,note){amount=Math.round((Number(amount)||0)*100)
   const t={id:uid(),type:'income',amount,category:'debtin',note:String(note||'').slice(0,80),date:ymd(new Date())};
   tx=[t,...tx];return t}
 // деньги по долгу: dir 'in' (вам должны): выдали — расход, вернули вам — доход; dir 'out' (вы должны): взяли — доход, вы вернули — расход
-const debtMove=(dir,phase,amount,who)=>!linkDebtOn()?null:((dir==='in')===(phase==='open')?addLinkedExpense('debt',amount,who):addLinkedIncome(amount,who));
+// v180: d — сам долг, e — запись истории возврата (для phase 'pay'); для 'open' запись выдачи создаётся здесь (d.ol). Операция запоминает связь
+const debtMove=(dir,phase,amount,who,d,e)=>{if(!linkDebtOn())return null;
+  const t=(dir==='in')===(phase==='open')?addLinkedExpense('debt',amount,who):addLinkedIncome(amount,who);
+  if(t&&d){if(!e){e={d:t.date,a:t.amount};lkList(d,'d','open').push(e)}lkSet(t,'d',d,e,phase)}
+  return t};
+
+// ===== v180: связь операций с долгами и целями =====
+// Операция, созданная из долга или цели, помнит, откуда она: t.lk={k:'d'|'g',id,e,p}; запись в истории — свою операцию (e.t).
+// d.log — возвраты (меняют paid), d.ol — выдачи и займы (меняют amount), g.log — взносы (меняют saved).
+// Источник правды — список операций: lkSync() (вызывается в save) подгоняет долги и цели под операции: операцию удалили, изменили сумму или дату,
+// сменили категорию, вернули «Отменой», она пришла с другого устройства. Записи без связи (старые, снятия из цели) не трогаются.
+function r2(v){return Math.round((Number(v)||0)*100)/100}
+function lkCat(k,p,dir){return k==='g'?['expense','save']:((dir==='in')===(p==='open')?['expense','debt']:['income','debtin'])}
+function lkList(o,k,p){return k==='d'&&p==='open'?(o.ol=Array.isArray(o.ol)?o.ol:[]):(o.log=Array.isArray(o.log)?o.log:[])}
+function lkSet(t,k,o,e,p){if(!t||!o||!e)return t;if(!e.id)e.id=uid();t.lk={k,id:o.id,e:e.id};if(k==='d')t.lk.p=p==='open'?'open':'pay';e.t=t.id;return t}
+function lkFix(o,k){if(k==='d'){o.amount=Math.max(0,r2(o.amount));o.paid=Math.max(0,Math.min(o.amount,r2(o.paid)));if(o.amount-o.paid<=0){if(!o.closed)o.closed=ymd(new Date())}else delete o.closed}
+  else{o.saved=Math.max(0,r2(o.saved));if(o.target>0&&o.saved>=o.target){if(!o.closed)o.closed=ymd(new Date())}else delete o.closed}}
+function lkEff(x,delta){const o=x.o;if(x.k==='g')o.saved=r2((+o.saved||0)+delta);else if(x.p==='open')o.amount=r2((+o.amount||0)+delta);else o.paid=r2((+o.paid||0)+delta);lkFix(o,x.k)}
+function lkTx(k,id){return tx.filter(t=>t.lk&&t.lk.k===k&&t.lk.id===id)}
+function lkSync(){let ch=false;const T=new Map(tx.map(t=>[t.id,t])),ents=new Map();
+  (cfg.debts||[]).forEach(d=>{(d.log||[]).forEach(e=>{if(e&&e.id)ents.set(e.id,{o:d,e,k:'d',p:'pay'})});(d.ol||[]).forEach(e=>{if(e&&e.id)ents.set(e.id,{o:d,e,k:'d',p:'open'})})});
+  (cfg.goals||[]).forEach(g=>(g.log||[]).forEach(e=>{if(e&&e.id)ents.set(e.id,{o:g,e,k:'g',p:'dep'})}));
+  const ok=(t,x)=>{const c=lkCat(x.k,x.p,x.o.dir);return t.type===c[0]&&t.category===c[1]};
+  // 1) записи истории со связью: операция удалена или стала другой категории — снимаем её влияние; сумма или дата изменились — переносим
+  ents.forEach(x=>{if(!x.e.t)return;const t=T.get(x.e.t);
+    if(!t||!t.lk||t.lk.e!==x.e.id||!ok(t,x)){
+      lkEff(x,-r2(x.e.a));const L=lkList(x.o,x.k,x.p),i=L.indexOf(x.e);if(i>=0)L.splice(i,1);ents.delete(x.e.id);
+      if(t&&t.lk&&t.lk.e===x.e.id)delete t.lk;
+      // долг, созданный этой операцией, без других записей и возвратов — убираем целиком
+      if(x.k==='d'&&x.p==='open'&&!(x.o.amount>0)&&!(x.o.paid>0)&&!(x.o.log||[]).length&&!(x.o.ol||[]).length){cfg.debts=cfg.debts.filter(d=>d!==x.o);tomb(x.o.id)}
+      ch=true;return}
+    const a=r2(t.amount);if(a!==r2(x.e.a)){lkEff(x,a-r2(x.e.a));x.e.a=a;ch=true}
+    if(x.e.d!==t.date){x.e.d=t.date;ch=true}});
+  // 2) операции со связью, у которых нет записи (вернули «Отменой», пришли с другого устройства) — восстанавливаем запись; владельца нет — связь снимаем
+  tx.forEach(t=>{if(!t.lk)return;const x=ents.get(t.lk.e);if(x&&x.e.t===t.id)return;
+    const k=t.lk.k,p=k==='g'?'dep':(t.lk.p==='open'?'open':'pay'),o=x?null:((k==='d'?cfg.debts:cfg.goals)||[]).find(z=>z.id===t.lk.id);
+    if(!o||!ok(t,{k,p,o})){delete t.lk;ch=true;return}
+    const e={d:t.date,a:r2(t.amount),id:t.lk.e,t:t.id};lkList(o,k,p).push(e);lkEff({o,k,p},e.a);ents.set(e.id,{o,e,k,p});ch=true});
+  return ch}
+// правка долга или цели в «Планах»: уменьшение снимается с последних связанных записей (и их операций), увеличение — новая связанная запись
+function lkShrink(o,k,p,need){const L=lkList(o,k,p);
+  for(let i=L.length-1;i>=0&&need>.004;i--){const e=L[i],t=e&&e.t&&tx.find(z=>z.id===e.t);if(!t)continue;const a=r2(e.a);
+    if(a<=need+.004){tx=tx.filter(z=>z!==t);tomb(t.id);L.splice(i,1);need=r2(need-a)}else{e.a=r2(a-need);t.amount=e.a;need=0}}
+  return need}
+function lkNew(o,k,p,a){a=r2(a);if(!(a>0))return null;const c=lkCat(k,p,o.dir);
+  const t=c[0]==='income'?addLinkedIncome(a,o.who):addLinkedExpense(k==='g'?'goal':'debt',a,k==='g'?'Взнос в цель «'+o.name+'»':o.who);
+  if(t){const e={d:t.date,a:t.amount};lkList(o,k,p).push(e);lkSet(t,k,o,e,p)}return t}
+function lkDebtEdit(d,o0){
+  lkTx('d',d.id).forEach(t=>{if(t.note===o0.who)t.note=d.who;const c=lkCat('d',t.lk.p,d.dir);t.type=c[0];t.category=c[1]});
+  const dA=r2(d.amount-o0.amount),dP=r2(d.paid-o0.paid);
+  if(dA<0)lkShrink(d,'d','open',-dA);
+  else if(dA>0){const L=(d.ol||[]).filter(e=>e&&e.t&&tx.some(t=>t.id===e.t));
+    if(L.length){const e=L[L.length-1],t=tx.find(z=>z.id===e.t);e.a=r2(e.a+dA);t.amount=e.a}else if(linkDebtOn())lkNew(d,'d','open',dA)}
+  if(dP<0)lkShrink(d,'d','pay',-dP);else if(dP>0&&linkDebtOn())lkNew(d,'d','pay',dP)}
+function lkGoalEdit(g,o0){const n0='Взнос в цель «'+o0.name+'»';lkTx('g',g.id).forEach(t=>{if(t.note===n0)t.note='Взнос в цель «'+g.name+'»'});
+  const dS=r2(g.saved-o0.saved);if(dS<0)lkShrink(g,'g','dep',-dS);else if(dS>0&&linkGoalOn())lkNew(g,'g','dep',dS)}
+function lkMigrateSoon(){try{if(lkMigrate()){save();if(typeof render==='function')render()}}catch(e){console.error(e)}}
+setTimeout(()=>{if(!IN_TG||!CL.on)lkMigrateSoon()},3000);
+// старые записи (до v180): связываем один раз и только однозначные совпадения — тот же тип, категория, сумма, дата и заметка (имя или «Взнос в цель «…»»)
+function lkMigrate(){if(cfg.lkM)return false;cfg.lkM=1;
+  const free=new Map(),want=new Map(),put=(m,k,v)=>m.set(k,(m.get(k)||[]).concat([v]));
+  tx.forEach(t=>{if(!t.lk)put(free,t.type+'|'+t.category+'|'+r2(t.amount)+'|'+t.date+'|'+t.note,t)});
+  (cfg.debts||[]).forEach(d=>(d.log||[]).forEach(e=>{if(!e||e.t||!(e.a>0))return;const c=lkCat('d','pay',d.dir);put(want,c[0]+'|'+c[1]+'|'+r2(e.a)+'|'+e.d+'|'+d.who,{o:d,e,k:'d',p:'pay'})}));
+  (cfg.goals||[]).forEach(g=>(g.log||[]).forEach(e=>{if(!e||e.t||!(e.a>0))return;put(want,'expense|save|'+r2(e.a)+'|'+e.d+'|Взнос в цель «'+g.name+'»',{o:g,e,k:'g',p:'dep'})}));
+  const used=new Set();
+  want.forEach((ws,k)=>{const fs=free.get(k);if(ws.length!==1||!fs||fs.length!==1)return;const x=ws[0];lkSet(fs[0],x.k,x.o,x.e,x.p);used.add(fs[0].id)});
+  // выдача долга: сумма могла меняться — ищем по типу, категории, дате создания и имени
+  const fo=new Map(),wo=new Map();
+  tx.forEach(t=>{if(!t.lk&&!used.has(t.id))put(fo,t.type+'|'+t.category+'|'+t.date+'|'+t.note,t)});
+  (cfg.debts||[]).forEach(d=>{if((d.ol||[]).length)return;const c=lkCat('d','open',d.dir);put(wo,c[0]+'|'+c[1]+'|'+d.created+'|'+d.who,d)});
+  wo.forEach((ds,k)=>{const fs=fo.get(k);if(ds.length!==1||!fs||fs.length!==1)return;const d=ds[0],t=fs[0],e={d:t.date,a:r2(t.amount)};lkList(d,'d','open').push(e);lkSet(t,'d',d,e,'open')});
+  return true}
 
 // переход на новый список категорий (один раз): старые операции, лимиты и повторы переезжают в новые категории
 if(cfg.catV!==2&&tx.length){   // v165: только для старых данных (до catV=2); новому пользователю отметку не ставим — у него общий набор
@@ -2071,7 +2146,7 @@ function voiceCmds(raw){
   const findGoal=ws=>(cfg.goals||[]).find(g=>{const gw=words(g.name);return ws.length&&ws.every(w=>gw.some(x=>stemEq(w,x)))});
   const B='(?:^|[\\s,;.])';
   const dep=(m,a,ws)=>{const g=findGoal(ws);if(!g)return false;const v=val(m,a);if(!(v>0))return false;
-    const real=goalDeposit(g,v,1),lk=linkGoalOn()&&addLinkedExpense('goal',real||v,'Взнос в цель «'+g.name+'»');say('В цель «'+g.name+'»: +'+fmt(real||v)+(g.saved>=g.target?' 🎉':'')+(lk?' · расход':''),bGoal(g,'+',real||v,lk));return true};
+    const real=goalDeposit(g,v,1),ge=g.log[g.log.length-1],lk=linkGoalOn()&&real>0&&lkSet(addLinkedExpense('goal',real,'Взнос в цель «'+g.name+'»'),'g',g,ge);say('В цель «'+g.name+'»: +'+fmt(real||v)+(g.saved>=g.target?' 🎉':'')+(lk?' · расход':''),bGoal(g,'+',real||v,lk));return true};
   const take=(re,fn)=>{let m,guard=0;while(guard++<6&&(m=re.exec(t))){if(fn(m)){t=t.replace(m[0],' ');re.lastIndex=0}else{re.lastIndex=m.index+1}}};
   // бюджет на конкретный месяц: «бюджет на ноябрь 25000», «бюджет ноябрь 25 000», «бюджет на этот месяц 25000»
   const MI_={янв:1,фев:2,мар:3,апр:4,мая:5,май:5,июн:6,июл:7,авг:8,сен:9,окт:10,ноя:11,дек:12},BV='(?:(?:установи\\S*|поставь\\S*|задай\\S*|сделай\\S*|измени\\S*|новый|мой)\\s+)?бюджет\\s+(?:на\\s+)?';
@@ -2123,8 +2198,8 @@ function voiceCmds(raw){
       say(o?'С «'+o.who+'» долг в другую сторону: '+(o.dir==='out'?'вы должны. Если это вы вернули — скажите «вернул '+o.who+' 100»':'вам должны. Если вам вернули — скажите «'+o.who+' вернул 100»'):'Долга «'+nm+'» нет. Сначала запишите: «'+nm+(isFem(nm)?' должна':' должен')+' мне 500»');return true}return false}
     const v=val(m,a);if(!(v>0))return false;return payOne(d,v)};
   const payOne=(d,v)=>{
-    const add=Math.min(v,DR(d));d.paid=Math.min(d.amount,d.paid+v);d.log=(d.log||[]).concat({d:ymd(new Date()),a:add}).slice(-200);if(DR(d)<=0&&!d.closed)d.closed=ymd(new Date());
-    const lk=debtMove(d.dir,'pay',add,d.who),lkI=lk&&lk.type==='income';
+    const add=Math.min(v,DR(d)),pe={d:ymd(new Date()),a:add};d.paid=Math.min(d.amount,d.paid+v);d.log=(d.log||[]).concat(pe).slice(-200);if(DR(d)<=0&&!d.closed)d.closed=ymd(new Date());
+    const lk=debtMove(d.dir,'pay',add,d.who,d,pe),lkI=lk&&lk.type==='income';
     say('Долг «'+d.who+'»: '+(d.dir==='in'?'вернули ':'вы вернули ')+fmt(add)+(DR(d)<=0?' · закрыт ✓':' · осталось '+fmt(Math.round(DR(d)*100)/100))+(lk?(lkI?' · доход':' · расход'):''),
       (d.dir==='in'?'💵 '+d.who+(isFem(d.who)?' вернула ':' вернул ')+BM_(add):'💵 Вы вернули долг · '+d.who+': '+BM_(add))+(DR(d)<=0?'\n✅ Долг закрыт полностью':'\nОсталось вернуть: '+BM_(DR(d))+' из '+BM_(d.amount))+(lk?(lkI?'\nЗаписано в доходы':'\nЗаписано в расходы'):''));return true};
   // v171: возврат по смыслу фразы. dir 'in' — деньги пришли вам («Ксюша вернула долг 500»), 'out' — ушли от вас («вернул Ксюше 500»).
@@ -2147,7 +2222,7 @@ function voiceCmds(raw){
     const nm=name.split(/\s+/).map(nomName).map(cap).join(' ').slice(0,40),ex=(cfg.debts||[]).find(d=>DR(d)>0&&d.dir===dir&&words(d.who).length===words(nm).length&&words(nm).every(w=>words(d.who).some(x=>stemEq(w,x))));
     let dd=ex;if(ex)ex.amount=Math.round((ex.amount+v)*100)/100;else{dd={id:uid(),who:nm,dir,amount:v,paid:0,due:'',created:ymd(new Date()),log:[]};cfg.debts.push(dd)}
     newDebts.push(dd);
-    const lk=debtMove(dir,'open',v,nm),lkI=lk&&lk.type==='income';
+    const lk=debtMove(dir,'open',v,nm,dd),lkI=lk&&lk.type==='income';
     say((dir==='in'?'Долг: '+dd.who+(isFem(dd.who)?' должна':' должен')+' вам '+fmt(dd.amount):'Долг: вы должны '+dd.who+' '+fmt(dd.amount))+(lk?(lkI?' · доход':' · расход'):''),
       '🤝 '+(ex?'Долг увеличен на '+BM_(v):'Новый долг')+'\n'+(dir==='in'?dd.who+(isFem(dd.who)?' должна':' должен')+' вам '+BM_(DR(dd))+'\nКогда вернёт, напишите: «'+dd.who+(isFem(dd.who)?' вернула':' вернул')+' 100»':'Вы должны · '+dd.who+': '+BM_(DR(dd))+'\nКогда вернёте, напишите: «вернул '+dd.who+' 100»')+(lk?(lkI?'\nЗаписано в доходы':'\nЗаписано в расходы'):''));return true};
   const RV='(?:вернул[аи]?|отдал[аи]?|погасил[аи]?|выплатил[аи]?|вернули|отдали)',dW=/долг|взаймы/.test(t);
@@ -2627,13 +2702,13 @@ function openDpay(d,src){if(isModalOpen())return;cancelGestures();lockBg(true);g
 <div class="shf"><button class="sm" id="dfull">Всё</button><button class="sm pr" id="gsvb">Записать</button></div>`;showGd(src);autoF('#gam',60)}
 function saveDebt(){if(!gT||gT.mode!=='debt')return;const who=($('#dwh').value||'').trim().slice(0,40)||'Без имени',am=pn($('#dam').value),paid=Math.max(0,Math.min(am,pn($('#dpd').value))),due=$('#ddu').value||'';
   if(!(am>0)){toast('Укажите сумму долга');return}
-  if(gT.id){const d=cfg.debts.find(x=>x.id===gT.id);if(d)Object.assign(d,{who,dir:gT.dir,amount:am,paid,due});if(am-paid<=0){if(!d.closed)d.closed=ymd(new Date())}else delete d.closed}
+  if(gT.id){const d=cfg.debts.find(x=>x.id===gT.id);if(d){const o0={who:d.who,dir:d.dir,amount:+d.amount||0,paid:+d.paid||0};Object.assign(d,{who,dir:gT.dir,amount:am,paid,due});lkDebtEdit(d,o0);if(am-paid<=0){if(!d.closed)d.closed=ymd(new Date())}else delete d.closed}}
   else{cfg.debts.push({id:uid(),who,dir:gT.dir,amount:am,paid,due,created:ymd(new Date()),log:[]});
-    {const out=Math.round((am-paid)*100)/100,lk=out>0&&debtMove(gT.dir,'open',out,who);if(lk)toast((lk.type==='income'?'Записано как доход: ':'Записано как расход: ')+fmt(out)+' '+cfg.cur)}}
+    {const nd=cfg.debts[cfg.debts.length-1],out=Math.round((am-paid)*100)/100,lk=out>0&&debtMove(gT.dir,'open',out,who,nd);if(lk)toast((lk.type==='income'?'Записано как доход: ':'Записано как расход: ')+fmt(out)+' '+cfg.cur)}}
   save();closeGoal();render()}
 function saveDpay(){if(!gT||gT.mode!=='dpay')return;const d=cfg.debts.find(x=>x.id===gT.id),a=pn($('#gam').value);if(!d)return;if(!(a>0)){toast('Укажите сумму');return}
-  const add=Math.min(a,dRem(d));d.paid=Math.min(d.amount,d.paid+a);d.log=(d.log||[]).concat({d:ymd(new Date()),a:add}).slice(-200);if(dRem(d)<=0)d.closed=ymd(new Date());
-  const lk=add>0?debtMove(d.dir,'pay',add,d.who):null,lw=lk?(lk.type==='income'?'доход':'расход'):'';
+  const add=Math.min(a,dRem(d)),pe={d:ymd(new Date()),a:add};d.paid=Math.min(d.amount,d.paid+a);d.log=(d.log||[]).concat(pe).slice(-200);if(dRem(d)<=0)d.closed=ymd(new Date());
+  const lk=add>0?debtMove(d.dir,'pay',add,d.who,d,pe):null,lw=lk?(lk.type==='income'?'доход':'расход'):'';
   save();closeGoal();render();
   if(dRem(d)<=0)toast('Долг «'+d.who+'» закрыт ✓'+(lk?' · записано как '+lw:''));else if(lk)toast('Записано как '+lw+': '+fmt(add)+' '+cfg.cur)}
 function goDebts(){if(isModalOpen())return;ps='debts';if(tab==='tags')render();else setTab('tags')}
@@ -2727,19 +2802,23 @@ function openDep(g,src){if(isModalOpen())return;cancelGestures();lockBg(true);gT
 function closeGoal(){gd.classList.remove('on');gT=null;unlockIfIdle();cancelGestures()}
 function saveGoal(){if(!gT)return;if(gT.mode==='debt')return saveDebt();if(gT.mode==='dpay')return saveDpay();if(gT.mode==='lim')return saveLim();if(gT.mode==='bud')return saveBud();const nm=($('#gnm').value||'').trim().slice(0,40)||'Цель',tg=pn($('#gtg').value),sv=Math.max(0,pn($('#gsv').value)),pl=Math.max(0,pn($('#gpl').value)),tag=normTag($('#gtn').value),by=/^\d{4}-\d{2}-\d{2}$/.test(($('#gby')||{}).value||'')?$('#gby').value:'';
   if(!(tg>0)){toast('Укажите сумму цели');return}
-  if(gT.id){const g=cfg.goals.find(x=>x.id===gT.id);if(g)Object.assign(g,{name:nm,target:tg,saved:sv,plan:pl,tag,by});if(g){if(g.saved>=g.target){if(!g.closed)g.closed=ymd(new Date())}else delete g.closed}}
+  if(gT.id){const g=cfg.goals.find(x=>x.id===gT.id);if(g){const o0={name:g.name,saved:+g.saved||0};Object.assign(g,{name:nm,target:tg,saved:sv,plan:pl,tag,by});lkGoalEdit(g,o0)}if(g){if(g.saved>=g.target){if(!g.closed)g.closed=ymd(new Date())}else delete g.closed}}
   else cfg.goals.push({id:uid(),name:nm,target:tg,saved:sv,plan:pl,tag,by,created:ymd(new Date()),log:[]});
   save();closeGoal();render()}
-function delGoal(){if(gT&&gT.mode==='debt'&&gT.id){const i=cfg.debts.findIndex(x=>x.id===gT.id);if(i<0){closeGoal();return}const it=cfg.debts[i];cfg.debts.splice(i,1);tomb(it.id);save();closeGoal();render();toast('Долг удалён','Отмена',()=>{untomb(it.id);cfg.debts.splice(Math.min(i,cfg.debts.length),0,it);save();render()},'del');return}
+// v180: вместе с долгом или целью удаляются их связанные операции; «Отмена» возвращает всё
+function lkDrop(k,id){const lt=lkTx(k,id),ids=new Set(lt.map(t=>t.id));if(lt.length){tx=tx.filter(t=>!ids.has(t.id));tomb([...ids])}
+  return{n:lt.length,back:()=>{if(!lt.length)return;untomb([...ids]);const have=new Set(tx.map(t=>t.id));tx=[...lt.filter(t=>!have.has(t.id)),...tx]}}}
+const lkMsg=n=>n?' вместе с операциями: '+n:'';
+function delGoal(){if(gT&&gT.mode==='debt'&&gT.id){const i=cfg.debts.findIndex(x=>x.id===gT.id);if(i<0){closeGoal();return}const it=cfg.debts[i];cfg.debts.splice(i,1);tomb(it.id);const dr=lkDrop('d',it.id);save();closeGoal();render();toast('Долг удалён'+lkMsg(dr.n),'Отмена',()=>{untomb(it.id);cfg.debts.splice(Math.min(i,cfg.debts.length),0,it);dr.back();save();render()},'del');return}
   if(gT&&gT.mode==='bud'){const mo=month;
     if(bmOwn(mo)){const o=cfg.bm[mo];delete cfg.bm[mo];save();closeGoal();render();toast('Бюджет месяца сброшен к общему','Отмена',()=>{cfg.bm[mo]=o;save();render()},'del');return}
     const o=cfg.budget;cfg.budget=0;save();closeGoal();render();toast('Бюджет убран','Отмена',()=>{cfg.budget=o;save();render()},'del');return}
   if(gT&&gT.mode==='lim'&&gT.id){const id=gT.id,lm0=month,o=limOf(lm0)[id];setLimit(lm0,id,0);save();closeGoal();render();toast('Лимит удалён','Отмена',()=>{setLimit(lm0,id,o);save();render()},'del');return}
-  if(!gT||!gT.id)return;const i=cfg.goals.findIndex(x=>x.id===gT.id);if(i<0){closeGoal();return}const it=cfg.goals[i];cfg.goals.splice(i,1);tomb(it.id);save();closeGoal();render();
-  toast('Цель удалена','Отмена',()=>{untomb(it.id);cfg.goals.splice(Math.min(i,cfg.goals.length),0,it);save();render()},'del')}
+  if(!gT||!gT.id)return;const i=cfg.goals.findIndex(x=>x.id===gT.id);if(i<0){closeGoal();return}const it=cfg.goals[i];cfg.goals.splice(i,1);tomb(it.id);const dr=lkDrop('g',it.id);save();closeGoal();render();
+  toast('Цель удалена'+lkMsg(dr.n),'Отмена',()=>{untomb(it.id);cfg.goals.splice(Math.min(i,cfg.goals.length),0,it);dr.back();save();render()},'del')}
 function saveDep(){if(!gT)return;const g=cfg.goals.find(x=>x.id===gT.id),a=pn($('#gam').value);if(!g)return;if(!(a>0)){toast('Укажите сумму');return}
   const sg=gT.sign||1,real=goalDeposit(g,a,sg);if(g.saved>=g.target){if(!g.closed)g.closed=ymd(new Date())}else delete g.closed;
-  let lk=false;if(sg>0&&linkGoalOn()&&real>0)lk=!!addLinkedExpense('goal',real,'Взнос в цель «'+g.name+'»');
+  let lk=false;if(sg>0&&linkGoalOn()&&real>0)lk=!!lkSet(addLinkedExpense('goal',real,'Взнос в цель «'+g.name+'»'),'g',g,g.log[g.log.length-1]);
   save();closeGoal();render();const sfx=lk?' · записано как расход':'';
   if(g.saved>=g.target&&sg>0)toast('Цель «'+g.name+'» достигнута 🎉'+sfx);else if(real>0)toast((sg>0?'Внесено в цель: +'+fmt(real):'Снято из цели: −'+fmt(real))+sfx)}
 gd.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!gT)return;
@@ -3054,6 +3133,8 @@ function flipRun(m){
         const dr=ro-(w.getBoundingClientRect().top-r.top);
         if(Math.abs(dr)>1)mvY(w,dr)})})
   }catch(e){}}
+// порядковые номера карточек дня и строк для задержек анимации появления
+window.__introIdx=()=>{document.querySelectorAll('#body .dg').forEach((d,i)=>d.style.setProperty('--gi',Math.min(i,5)));document.querySelectorAll('#body .dg .sw:not(.sd)').forEach((r,i)=>r.style.setProperty('--ri',Math.min(i,9)))};
 function render(){
   pgSettle();openSw=null;sd=null;
   {const k=pgKey();if(pgCur==null)pgCur=k;else if(k!==pgCur){if(!pgFresh)PGY[pgCur]=Math.max(0,window.scrollY||0);pgFresh=false;pgCur=k}}   // v55
@@ -3070,7 +3151,10 @@ function render(){
   $('#top').style.display=tab==='settings'||(tab==='list'&&searchOn())?'none':'';$('#sp').style.display=tab==='list'?'':'none';if(tab!=='list')$('#chip').innerHTML='';
   const y0=window.scrollY||0;
   const fs=flipSnap();
-  buildPage(tab,$('#body'),false);hoistBar();
+  {const R_=document.documentElement,inI=R_.classList.contains('intro')&&window.__introT;
+    if(inI){R_.style.setProperty('--ie',((performance.now()-window.__introT)/1000).toFixed(3)+'s');R_.classList.add('rr')}
+    buildPage(tab,$('#body'),false);if(inI)window.__introIdx()}
+  hoistBar();
   if(y0>0&&Math.abs((window.scrollY||0)-y0)>2&&document.documentElement.scrollHeight>=y0+innerHeight)window.scrollTo(0,y0);   // перерисовка (бот, облако) не сбрасывает прокрутку
   flipRun(fs);fitSoon()}
 function buildPage(pg,B,peek){if(!TXMd++)TXM=new Map();try{return buildPage0(pg,B,peek)}finally{if(!--TXMd)TXM=null}}
@@ -5256,7 +5340,7 @@ async function cloudSync(why){
     else if(!edited&&m.t>CL.lt)r=await cloudPull(m);                       // основы нет (первый запуск после обновления): новее по времени
     else await cloudPush();                                                // локальная новее (или равна, но изменена)
     if(r==='defer')defer=true;
-    else{ok=true;cloudBase(CL.lh);CL.lastSync=Date.now();CL.fails=0;CL.lastErr=null;CL.errShown='';csSet('ok','');if(CL.manual)toast('Облако Telegram: всё сохранено');
+    else{ok=true;cloudBase(CL.lh);CL.lastSync=Date.now();setTimeout(lkMigrateSoon,0);CL.fails=0;CL.lastErr=null;CL.errShown='';csSet('ok','');if(CL.manual)toast('Облако Telegram: всё сохранено');
       try{if(localStorage.getItem('finapp.rst')){localStorage.removeItem('finapp.rst');if(CL.pulled)toast('Данные восстановлены из облака Telegram')}}catch{}}
   }catch(e){cloudFail(e)}
   finally{
@@ -5497,7 +5581,9 @@ async function ibLoop(){
     try{IB.ctl&&IB.ctl.abort()}catch{}
     inboxPull(false)},5000);
   // проверка новой версии приложения: GitHub Pages и Telegram любят держать старую копию страницы
-  let vcAt=0;
+  let vcAt=0,vPend='';
+  const vGo=()=>{if(!vPend)return;try{sessionStorage.setItem('finapp.vr',vPend)}catch{}const u=new URL(location.href);u.searchParams.set('v',vPend);vPend='';location.replace(u.toString())};
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)vGo()});try{TGW.onEvent('deactivated',vGo)}catch{}
   const verCheck=async()=>{
     if(Date.now()-vcAt<10*60e3)return;vcAt=Date.now();
     try{
@@ -5514,8 +5600,8 @@ async function ibLoop(){
       if(tried===m[1])return;                                                              // уже пробовали — без бесконечных перезагрузок
       const tr=document.getElementById('tour');
       if((typeof isModalOpen==='function'&&isModalOpen())||(tr&&tr.classList.contains('on'))||(typeof inp!=='undefined'&&inp&&inp.value.trim()))return;
-      try{sessionStorage.setItem('finapp.vr',m[1])}catch{}
-      const u=new URL(location.href);u.searchParams.set('v',m[1]);location.replace(u.toString())
+      // v180: не перезагружаем на глазах — новая версия включится, когда приложение свернут (или при следующем открытии)
+      vPend=m[1];if(document.hidden)vGo()
     }catch{}};
   setTimeout(verCheck,2500);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});
@@ -5894,10 +5980,9 @@ if('serviceWorker' in navigator&&location.protocol!=='file:'){
   // новая версия взяла управление — перезагружаем страницу, но не посреди ввода записи или обучения
   sw.addEventListener('controllerchange',()=>{
     if(!hadCtl||reloading||performance.now()<15000)return;reloading=true;
-    const go=()=>{const t=document.getElementById('tour');
-      if((typeof isModalOpen==='function'&&isModalOpen())||(t&&t.classList.contains('on')))return;
-      clearInterval(iv);location.reload()};
-    const iv=setInterval(go,1200);go()});
+    // v180: новая версия перезагружает страницу только когда приложение свёрнуто — не на глазах
+    const go=()=>{if(!document.hidden)return;document.removeEventListener('visibilitychange',go);location.reload()};
+    document.addEventListener('visibilitychange',go);try{TGW&&TGW.onEvent('deactivated',()=>location.reload())}catch(e){}go()});
   window.addEventListener('load',()=>{
     sw.register('sw.js?v='+(typeof IB_VER!=='undefined'?IB_VER:'v0'),{updateViaCache:'none'}).then(reg=>{
       const chk=()=>{try{reg.update()}catch(e){}};
@@ -5913,10 +5998,9 @@ if('serviceWorker' in navigator&&location.protocol!=='file:'){
   let done=false;
   function leave(){if(done)return;done=true;
     try{
-      document.querySelectorAll('#body .dg').forEach((d,i)=>d.style.setProperty('--gi',Math.min(i,5)));
-      document.querySelectorAll('#body .dg .sw:not(.sd)').forEach((r,i)=>r.style.setProperty('--ri',Math.min(i,9)));
+      window.__introIdx();
     }catch(e){}
-    de.classList.add('intro');de.classList.remove('splh');s.classList.add('out');
+    window.__introT=performance.now();de.classList.add('intro');de.classList.remove('splh');s.classList.add('out');
     // цифры остатка заново «набегают» уже на глазах, а не за заставкой
     setTimeout(()=>{try{_animN.delete(month);_nP=null;runNums()}catch(e){}},rm?0:260);
     setTimeout(()=>{de.classList.remove('intro')},rm?400:2800);
