@@ -2465,7 +2465,13 @@ function weeksOf(m){const D=pDates(m),out=[];let a=0;while(a<D.length){const dt=
 function woFor(m){const W=weeksOf(m),td=ymd(new Date()),i=W.findIndex(w=>td>=w.from&&td<=w.to);return i>=0?i:0}
 const MS=['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
 const prevM=m=>{const[y,mo]=m.split('-').map(Number);return mk(new Date(y,mo-2,1))};
-const sumBy=(m,type,cat)=>tx.filter(t=>t.type===type&&mOf(t.date)===m&&(!cat||t.category===cat)).reduce((s,t)=>s+t.amount,0);
+// v178: пока строится страница (buildPage), операции разложены по месяцам один раз — суммы по категориям не перебирают весь tx заново.
+// Вне построения (например, предупреждение о лимите сразу после добавления) — как раньше, по всему tx. Порядок операций сохраняется — суммы те же до копейки.
+let TXM=null,TXMd=0;
+function txOfM(m){if(!TXM)return tx.filter(t=>mOf(t.date)===m);
+  if(!TXM.size){for(const t of tx){const k=mOf(t.date);let a=TXM.get(k);if(!a)TXM.set(k,a=[]);a.push(t)}TXM.set('',[])}
+  return TXM.get(m)||TXM.get('')}
+const sumBy=(m,type,cat)=>txOfM(m).filter(t=>t.type===type&&(!cat||t.category===cat)).reduce((s,t)=>s+t.amount,0);
 const sgn=d=>(d>=0?'+':'−')+Math.abs(Math.round(d))+'%';
 
 
@@ -2476,7 +2482,7 @@ const pn=v=>Math.min(1e12,parseFloat(String(v==null?'':v).replace(/\s/g,'').repl
 const cap=x=>x?x[0].toUpperCase()+x.slice(1):x;
 // сравнение с прошлым месяцем: для текущего месяца — за тот же период (первые N дней)
 function cmpBase(){const now=new Date(),cur=month===curM(),upTo=cur?pDay(ymd(now),month):40,pm=prevM(month),[py,pmo]=pm.split('-').map(Number);return{pm,upTo,pup:Math.min(upTo,pLen(pm)),partial:cur}}
-const sumTo=(m,type,cat,upTo)=>tx.filter(t=>t.type===type&&mOf(t.date)===m&&(!cat||t.category===cat)&&pDay(t.date,m)<=upTo).reduce((s,t)=>s+t.amount,0);
+const sumTo=(m,type,cat,upTo)=>txOfM(m).filter(t=>t.type===type&&(!cat||t.category===cat)&&pDay(t.date,m)<=upTo).reduce((s,t)=>s+t.amount,0);
 function cmpCat(type,id){const b=cmpBase(),cur=sumTo(month,type,id,b.upTo),prev=sumTo(b.pm,type,id,b.pup);return{cur,prev,d:prev>0?(cur-prev)/prev*100:null,partial:b.partial}}
 // прогноз конца месяца (только для текущего месяца)
 function forecast(){const now=new Date();if(month!==curM())return null;
@@ -2860,11 +2866,18 @@ function pie(items,tot,rs,an){
   return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;display:block;margin:8px 0" role="img" aria-label="Диаграмма по категориям">${body}</svg>`}
 const TABS=['list','stats','tags','settings'];
 function buildTabs(){const tb=$('#tabs');if(!tb.querySelector('.ind')){tb.insertAdjacentHTML('afterbegin','<i class="ind"></i>'+[['list','Операции','<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>'],['stats','Аналитика','<path d="M5 20V11M12 20V4M19 20v-6"/>'],['tags','Планы','<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>'],['settings','Настройки','<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>']].map(([k,l,ic])=>`<button data-t="${k}"${k==='settings'?' id="gear"':''} class="${tab===k?'on':''}"${tab===k?' aria-current="page"':''}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ic}</svg><span>${l}</span></button>`).join(''))}moveInd()}
-function moveInd(){const tb=$('#tabs'),ind=tb.querySelector('.ind'),b=tb.querySelector(`[data-t="${tab}"]`);if(!ind||!b)return;
+// v178: места кнопок нижней панели запоминаются (меняются только при изменении размеров окна) — иначе чтение размеров
+// сразу после смены подсветки заставляло браузер пересчитывать раскладку всей страницы ещё до того, как построена новая
+let _indG=null;
+function moveInd(e){const tb=$('#tabs'),ind=tb.querySelector('.ind'),b=tb.querySelector(`[data-t="${tab}"]`);if(!ind||!b)return;
+  if(e&&e.type)_indG=null;
+  if(!_indG||_indG.w!==innerWidth){const g={w:innerWidth};let ok=true;tb.querySelectorAll('[data-t]').forEach(x=>{if(!x.offsetWidth)ok=false;g[x.dataset.t]=[x.offsetWidth,x.offsetHeight,x.offsetLeft,x.offsetTop]});_indG=ok?g:null;var G=g}else G=_indG;
   tb.querySelectorAll('[data-t]').forEach(x=>{const on=x===b;x.classList.toggle('on',on);if(on)x.setAttribute('aria-current','page');else x.removeAttribute('aria-current')});
-  ind.style.width=b.offsetWidth+'px';ind.style.height=b.offsetHeight+'px';ind.style.transform=`translate(${b.offsetLeft}px,${b.offsetTop}px)`;
+  const q=G[tab]||[b.offsetWidth,b.offsetHeight,b.offsetLeft,b.offsetTop];
+  ind.style.width=q[0]+'px';ind.style.height=q[1]+'px';ind.style.transform=`translate(${q[2]}px,${q[3]}px)`;
   if(!ind.classList.contains('rdy'))requestAnimationFrame(()=>requestAnimationFrame(()=>ind.classList.add('rdy')))}
-addEventListener('resize',moveInd);
+addEventListener('resize',moveInd);try{document.fonts&&document.fonts.ready.then(()=>{_indG=null;moveInd()})}catch(e){}
+try{['safeAreaChanged','contentSafeAreaChanged','fullscreenChanged'].forEach(ev=>TGW.onEvent(ev,()=>{_indG=null;moveInd()}))}catch(e){}
 const RM=matchMedia('(prefers-reduced-motion:reduce)').matches;
 // выезд/въезд содержимого в стиле iOS: dir=+1 вперёд (уходит влево), -1 назад
 /* ---- v90: движение целыми пикселями ----
@@ -3079,7 +3092,8 @@ function render(){
   buildPage(tab,$('#body'),false);hoistBar();
   if(y0>0&&Math.abs((window.scrollY||0)-y0)>2&&document.documentElement.scrollHeight>=y0+innerHeight)window.scrollTo(0,y0);   // перерисовка (бот, облако) не сбрасывает прокрутку
   flipRun(fs);fitSoon()}
-function buildPage(pg,B,peek){
+function buildPage(pg,B,peek){if(!TXMd++)TXM=new Map();try{return buildPage0(pg,B,peek)}finally{if(!--TXMd)TXM=null}}
+function buildPage0(pg,B,peek){
   const [y,mo]=month.split('-').map(Number);
   const mt=tx.filter(t=>mOf(t.date)===month).sort((a,b)=>b.date.localeCompare(a.date));
   if(pg==='list'){
@@ -3849,24 +3863,34 @@ topEl.addEventListener('click',e=>{if(msBlock){e.stopPropagation();e.preventDefa
 // v155: закреплённая шапка «Аналитики» и «Планов» и размытая подложка под ней
 (function(){const R=document.documentElement,bg=document.createElement('div');bg.id='stkbg';document.body.appendChild(bg);let raf=0,dirty=true;
   // v157: места шапки без прокрутки: на миг снимаем закрепление и меряем (в одном кадре, на экране не видно)
+  // v178: снятие «stk» с корня — пересчёт стилей всей страницы, поэтому меряем заново, только если изменилось то, от чего зависят места:
+  // высоты и классы блоков над содержимым, классы страницы, вкладка, ширина экрана; после resize и событий Telegram (безопасная зона) — всегда.
+  // Пока на блоках идёт анимация (появление, выезд шапки), замер не запоминается — иначе запомнилось бы смещённое положение.
+  let mk='',hard=true;const s0=[null,null,null];
+  const mkey=()=>{const w=document.getElementById('w'),hd=w&&w.querySelector('.hd'),els=[hd,document.getElementById('lt0'),document.getElementById('tps'),topEl,document.getElementById('sp'),sbwEl()];
+    if(els.some(e=>e&&e.getAnimations&&e.getAnimations().length))return '';
+    return [tab,R.className.replace(/\bstk\b/g,''),document.body.className,w?w.className:'',innerWidth].concat(els.map(e=>e?e.offsetHeight+':'+e.className:'-')).join('|')};
   function meas(){const y=window.scrollY||0,lt=document.getElementById('lt0'),sb=sbwEl();R.classList.remove('stk');
     const at=e=>e&&e.offsetHeight?Math.round(e.getBoundingClientRect().top+y):null,a=at(lt),b=at(topEl),c=at(sb);R.classList.add('stk');
-    if(a!=null)R.style.setProperty('--stk0',a+'px');if(b!=null)R.style.setProperty('--stk1',b+'px');if(c!=null)R.style.setProperty('--stk2',c+'px');dirty=false}
+    [a,b,c].forEach((v,i)=>{if(v!=null&&v!==s0[i]){s0[i]=v;R.style.setProperty('--stk'+i,v+'px')}});dirty=false}
   // v163: переменные пишутся только при изменении, высота подложки — на самой подложке. Раньше каждый кадр прокрутки менялись переменные корня документа —
   // браузер пересчитывал стили всей страницы, прокрутка в «Аналитике» и «Планах» шла через кадр
   let lh=-1,lk=-1,lon=null;const sv=(el,k,v,o)=>{if(v!==o)el.style.setProperty(k,v+'px');return v};
   function upd(){raf=0;let on=false;try{on=((tab==='stats'||tab==='tags')||(tab==='list'&&R.classList.contains('rvl')))&&!!topEl.offsetHeight}catch(e){}
     if(!on){if(lon!==false){R.classList.remove('stk');bg.classList.remove('on');lon=false}dirty=true;return}
-    if(lon!==true){R.classList.add('stk');lon=true}if(dirty)meas();
-    lh=sv(R,'--toph',topEl.offsetHeight,lh);
-    const tr=topEl.getBoundingClientRect(),sb=sbwEl(),sr=sb&&sb.offsetHeight?sb.getBoundingClientRect():tr;
+    if(lon!==true){R.classList.add('stk');lon=true;hard=true}
+    if(dirty){const k=mkey();if(hard||!k||k!==mk){meas();mk=k;hard=false}dirty=false}
+    // сначала читаем, потом пишем: если высота блока не изменилась, переменная не трогается и второго пересчёта нет
+    const th=topEl.offsetHeight,sb=sbwEl(),rd=()=>[topEl.getBoundingClientRect(),sb&&sb.offsetHeight?sb.getBoundingClientRect():null];
+    let [tr,sr]=rd();if(th!==lh){lh=sv(R,'--toph',th,lh);[tr,sr]=rd()}if(!sr)sr=tr;
     lk=sv(bg,'--stkh',Math.round(Math.max(tr.bottom,sr.bottom)+10),lk);window.__stkh=lk;
     const bo=(window.scrollY||0)>2;if(bo!==bg.classList.contains('on'))bg.classList.toggle('on',bo)}
   window.__stkKick=()=>{dirty=true;kick()};window.__stkNow=()=>{dirty=true;upd()};
-  const kick=()=>{if(!raf)raf=requestAnimationFrame(upd)},re=()=>{dirty=true;kick()};
-  addEventListener('scroll',kick,{passive:true});addEventListener('resize',re);
+  const kick=()=>{if(!raf)raf=requestAnimationFrame(upd)},re=()=>{dirty=true;kick()},reH=()=>{hard=true;re()};
+  addEventListener('scroll',kick,{passive:true});addEventListener('resize',reH);
   try{const r0=render;render=function(){const v=r0.apply(this,arguments);re();if(window.__totopKick)window.__totopKick();return v}}catch(e){}
-  try{['safeAreaChanged','contentSafeAreaChanged','fullscreenChanged'].forEach(ev=>TGW.onEvent(ev,re))}catch(e){}
+  try{['safeAreaChanged','contentSafeAreaChanged','fullscreenChanged'].forEach(ev=>TGW.onEvent(ev,reH))}catch(e){}
+  try{document.fonts&&document.fonts.ready.then(reH)}catch(e){}
   new MutationObserver(re).observe(sbwEl(),{childList:true,subtree:true});new MutationObserver(re).observe(topEl,{childList:true,subtree:true});kick();
 })();
 // v163: «Операции»: когда главный блок ушёл из вида, сверху выезжает маленький язычок со стрелкой. Нажатие опускает заголовок (с «+» и лампочкой)
@@ -5378,7 +5402,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v177';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v178';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}   // номер сборки виден внизу экрана: по нему понятно, обновился ли Telegram до новой версии
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
