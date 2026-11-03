@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v180';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v181';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -396,7 +396,7 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:calc(110px 
 #nc #ncn,#nc #ncw{width:100%;text-align:left;color:var(--t);font-size:16px;border-bottom:.5px solid var(--l);padding:4px 0}
 #nc .ncb{display:flex;gap:8px;margin-top:18px}
 #nc .ncb .sm{flex:1;padding:10px 12px;font-size:14px;text-align:center}
-#sh.on.sub,#ed.on.sub,#gd.on.sub,#cf.on.sub,#cp.on.sub,#rc.on.sub{transform:scale(.96);opacity:.5}
+
 #cp{position:fixed;left:16px;right:16px;max-width:420px;margin:0 auto;top:calc(var(--sat) + 72px + var(--vvt,0px));translate:0 calc(var(--ky,0px) + var(--fx,0px));z-index:44;border-radius:24px;padding:16px 14px 14px;display:block;visibility:hidden;opacity:0;pointer-events:none;transform:translateY(40px) scale(.95);transition:transform .3s cubic-bezier(.4,0,.2,1),opacity .2s ease,visibility 0s .3s,translate .45s cubic-bezier(.22,1,.36,1)}
 #cp.on{visibility:visible;opacity:1;pointer-events:auto;transform:none;transition:transform .5s cubic-bezier(.2,.95,.25,1.06),opacity .2s ease,visibility 0s,translate .45s cubic-bezier(.22,1,.36,1)}
 #cp .cpt0{font-size:15px;font-weight:500;margin:0 2px 12px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
@@ -611,7 +611,7 @@ html.ncv .dg{content-visibility:visible}
 :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc).on{transition:transform .8s var(--spring),opacity .28s ease-out,visibility 0s,translate .5s var(--ease)}
 #sh.on.fxl{transition:transform .8s var(--spring),opacity .28s ease-out,visibility 0s,translate 0s}
 /* окно под вторым окном (например, категория поверх операции) */
-#sh.on.sub,#ed.on.sub,#gd.on.sub,#cf.on.sub,#cp.on.sub,#rc.on.sub{transform:scale(.95);opacity:.55}
+/* v181: нижнее окно не уменьшается и не тускнеет — только затемнение ::after */
 /* панель фильтров */
 #fp{transition:transform .4s var(--ease),opacity .26s ease .02s,visibility 0s .4s}
 #fp.open{transition:transform .8s var(--spring),opacity .26s ease-out,visibility 0s}
@@ -1487,9 +1487,9 @@ html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#r
   transition:transform .246s cubic-bezier(0,0,.17,1),visibility 0s,padding-bottom var(--kt)!important}
 html:root :is(#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#ed,#gd,#cf,#bq,#nc,#cp,#rc){touch-action:pan-y}
 /* вложенное окно сверху: нижнее не принимает касания и затемняется слоем ::after (касание уходит в затемнение и закрывает верхнее окно) */
-html:root :is(#sh,#ed,#gd,#cf,#rc):is(#sh,#ed,#gd,#cf,#rc):is(#sh,#ed,#gd,#cf,#rc).sub{pointer-events:none!important}
-html:root :is(#sh,#ed,#gd,#cf,#cp,#rc)::after{content:"";position:absolute;inset:0;border-radius:inherit;background:#000;opacity:0;pointer-events:none;transition:opacity .25s cubic-bezier(.26,.24,.25,1)}
-html:root :is(#sh,#ed,#gd,#cf,#cp,#rc).sub::after{opacity:.42}
+html:root :is(#sh,#ed,#gd,#cf,#rc,#bq,#cp,#nc):is(#sh,#ed,#gd,#cf,#rc,#bq,#cp,#nc):is(#sh,#ed,#gd,#cf,#rc,#bq,#cp,#nc).sub{pointer-events:none!important}
+html:root :is(#sh,#ed,#gd,#cf,#cp,#rc,#bq,#nc)::after{content:"";position:absolute;inset:0;border-radius:inherit;background:#000;opacity:0;pointer-events:none;transition:opacity .25s cubic-bezier(.26,.24,.25,1)}
+html:root :is(#sh,#ed,#gd,#cf,#cp,#rc,#bq,#nc).sub::after{opacity:.42}
 html:root #cp{z-index:46}   /* v150: плитки категорий открываются и поверх окна повтора/шаблона */
 /* v143: окно операции — внизу две кнопки: «Удалить» слева (мягкий красный, как «Удалить» в других окнах) и «Сохранить» справа (основная, как выбранная «Расх.») */
 html:root #ed .shf.shf{display:flex!important;align-items:center;justify-content:space-between;gap:10px;margin-top:18px;order:9}
@@ -2416,6 +2416,11 @@ ov.addEventListener('touchmove',e=>{e.preventDefault()},{passive:false});
 // v69: одно место, которое знает, какое окно сейчас верхнее (nc 50 > bq 45 > rc/cp 44 > cf/gd/ed/sh 40). Раньше оверлей и Escape имели каждый свою цепочку, в которой
 // bq стоял ниже rc/cp, а окно массовых правок (gd._bk) не учитывалось вовсе — клик по затемнению снимал оверлей и блокировку фона, оставляя окно открытым.
 function closeTopModal(){
+  // v181: сначала — окно, открытое последним
+  {const t=typeof topWin==='function'?topWin():'',on=t&&document.getElementById(t).classList.contains('on');
+    if(on){if(t==='nc')closeNc(false);else if(t==='bq')closeBq();else if(t==='cp')closeCp();else if(t==='rc')closeRc();else if(t==='cf')closeCf();
+      else if(t==='gd'){if(gd._bk&&window.bkClose)window.bkClose();else closeGoal()}else if(t==='ed')closeEdit();else if(t==='sh'){inp.value='';closeSheet()}
+      return true}}
   if($('#nc').classList.contains('on'))closeNc(false);
   else if(bqT||bq.classList.contains('on'))closeBq();
   else if(cpS||cpEl.classList.contains('on'))closeCp();   // v150: плитки бывают поверх окна повтора/шаблона, но не под ним
@@ -3062,8 +3067,8 @@ function budgetLine(X){const Bd=budgetOf(month);if(!(Bd>0))return'';const left=M
 function gaugeHtml(X){const Bd=budgetOf(month);if(!(Bd>0))return'';const p=X/Bd*100,col=p>=100?'var(--rd)':p>=80?'#f2c14e':'var(--g)';
   return `<div class="gg" id="gg" data-p="${p}" role="img" aria-label="Израсходовано ${Math.round(p)}% бюджета"><svg width="96" height="96" viewBox="0 0 80 80" aria-hidden="true"><circle class="gt" cx="40" cy="40" r="36" fill="none" stroke-width="6"/><circle class="gc" cx="40" cy="40" r="36" fill="none" stroke-width="6" stroke-linecap="round" stroke="${col}" stroke-dasharray="${G_C}" stroke-dashoffset="${G_C}" style="opacity:0"/></svg><div class="gn"><b${p>=100?' style="color:var(--rd)"':''}>0%</b><small>бюджета</small></div></div>`}
 const CHV='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>';
-// плавная кривая «smootherstep»: мягкий старт и мягкая остановка; speedOf — её скорость (0…1) для эффекта «смазывания»
-const smoother=k=>k*k*k*(k*(6*k-15)+10),speedOf=k=>30*k*k*(1-k)*(1-k)/1.875;
+// v181: кривая для цифр — резкий старт и плавное торможение (ease-out quart); speedOf — её скорость (0…1) для эффекта «смазывания»
+const smoother=k=>1-Math.pow(1-k,4),speedOf=k=>Math.pow(1-k,3);
 const blurOf=s=>s>.05?'blur('+(s*1.1).toFixed(2)+'px)':'';
 function swallowClick(){const f=ev=>{ev.stopPropagation();ev.preventDefault()};document.addEventListener('click',f,{capture:true,once:true});setTimeout(()=>document.removeEventListener('click',f,true),450)}
 function setBlur(el,s){const px=s>.05?s*1.5:0;
@@ -3078,7 +3083,7 @@ function runGauge(){const el=document.getElementById('gg');cancelAnimationFrame(
   const set=v=>{c.style.strokeDashoffset=G_C*(1-Math.min(100,Math.max(0,v))/100);c.style.opacity=Math.min(1,Math.max(0,(v-1.5)/6)).toFixed(3);nb.textContent=Math.min(999,Math.round(v))+'%'};
   const fin=()=>{set(to);c.style.opacity=to>=1.5?1:0;_gP=to;setBlur(nb,0)};
   if(Math.abs(from-to)<.05||RM){fin();return}
-  const d=!seen?1700:1000,t0=performance.now();
+  const d=!seen?850:500,t0=performance.now();   // v181: вдвое быстрее
   const step=n=>{const k=Math.min(1,(n-t0)/d),v=from+(to-from)*smoother(k);set(v);_gP=v;setBlur(nb,speedOf(k));if(k<1)_gRaf=requestAnimationFrame(step);else fin()};
   set(from);_gRaf=requestAnimationFrame(step)}
 const numSz=t=>t.length<=7?46:t.length<=9?38:30;
@@ -3090,13 +3095,13 @@ function runNums(){[...document.querySelectorAll('#sbal,#sinc,#sexp')].forEach(e
   const set=(p,fin)=>{const cur={};els.forEach(([el,k])=>{const v=fin?to[k]:fr[k]+(to[k]-fr[k])*p;cur[k]=v;show(el,k,v)});_nP=cur};
   const blur=s=>els.forEach(([el])=>setBlur(el,s));
   if(Object.keys(to).every(k=>Math.abs(to[k]-fr[k])<.5)||RM){set(1,true);blur(0);return}
-  const d=!seen?1800:1000,t0=performance.now();set(0);
+  const d=!seen?900:500,t0=performance.now();set(0);   // v181: вдвое быстрее
   const step=n=>{const k=Math.min(1,(n-t0)/d);if(k<1){set(smoother(k));blur(speedOf(k));_nRaf=requestAnimationFrame(step)}else{set(1,true);blur(0)}};
   _nRaf=requestAnimationFrame(step)}
 // счётчики внутри страниц (календарь): число плавно «перетекает» от прежнего значения к новому
 const _cv={};
 function animNums(root){if(RM||PRV)return;root.querySelectorAll('[data-cn]').forEach(el=>{const to=+el.dataset.cn,key=el.dataset.ck,suf=el.dataset.cs||'',from=_cv[key]==null?0:_cv[key];_cv[key]=to;cancelAnimationFrame(el._r);
-  if(from===to)return;const t0=performance.now(),d=1000;el.textContent=fmt(Math.round(from))+suf;
+  if(from===to)return;const t0=performance.now(),d=500;el.textContent=fmt(Math.round(from))+suf;
   const step=n=>{const k=Math.min(1,(n-t0)/d);if(k<1){el.textContent=fmt(Math.round(from+(to-from)*smoother(k)))+suf;setBlur(el,speedOf(k));el._r=requestAnimationFrame(step)}else{el.textContent=fmt(Math.round(to))+suf;setBlur(el,0)}};
   el._r=requestAnimationFrame(step)})}
 
@@ -4840,8 +4845,19 @@ function openCp(type,cur,cb,chg){if(cpS||isCpBusy())return;
 const isCpBusy=()=>$('#nc').classList.contains('on')||bq.classList.contains('on');
 function closeCp(){if(!cpS&&!cpEl.classList.contains('on'))return;cpEl.classList.remove('on');cpS=null;syncSub();if(unlockIfIdle())cancelGestures()}
 // родительские окна затемняем, пока поверх них открыто вложенное (категории, новая категория, повторы); снимаем только когда вложенных не осталось
-function syncSub(){const ncOn=$('#nc').classList.contains('on'),nest=!!cpS||ncOn||rcEl.classList.contains('on');{const sb=(!!cpS||ncOn)&&rcEl.classList.contains('on');rcEl.classList.toggle('sub',sb);rcEl.inert=sb}   // v150: плитки категорий могут открываться поверх окна повтора/шаблона
-['sh','ed','gd','cf'].forEach(id=>{const e=$('#'+id);if(!e)return;const sb=nest&&e.classList.contains('on');e.classList.toggle('sub',sb);e.inert=sb})}   // v137: окно под вложенным не принимает ни касаний, ни фокуса
+// v181: открыто несколько окон — все, кроме верхнего (наибольший z-index), «под низом»: не принимают касаний и фокуса, на них ложится затемнение;
+// сами нижние окна не двигаются и не меняют прозрачность. Касание мимо верхнего окна закрывает только его (closeTopModal), нижнее снова доступно.
+// Верхнее — открытое последним (стек WST): ему ставится слой выше остальных открытых, даже если по умолчанию его слой ниже
+// (например, подтверждение поверх выбора категории).
+const SUBW=['sh','ed','gd','cf','rc','bq','cp','nc'],WST=[],WZ={};
+function syncSub(){const W=SUBW.map(id=>document.getElementById(id)).filter(Boolean);
+  W.forEach(e=>{if(!(e.id in WZ)){const o=e.style.zIndex;e.style.zIndex='';WZ[e.id]=+getComputedStyle(e).zIndex||40;e.style.zIndex=o}
+    const on=e.classList.contains('on'),i=WST.indexOf(e.id);if(on&&i<0)WST.push(e.id);else if(!on&&i>=0)WST.splice(i,1)});
+  let z=0;WST.forEach(id=>{const e=document.getElementById(id);z=Math.max(WZ[id],z+1);if(e.style.zIndex!==String(z))e.style.zIndex=String(z)});
+  const top=WST[WST.length-1];
+  W.forEach(e=>{const sb=!!top&&e.id!==top&&e.classList.contains('on');if(e.classList.contains('sub')!==sb)e.classList.toggle('sub',sb);if(e.inert!==sb)e.inert=sb})}
+const topWin=()=>WST[WST.length-1]||'';
+try{const mo=new MutationObserver(()=>syncSub());SUBW.forEach(id=>{const e=document.getElementById(id);if(e)mo.observe(e,{attributes:true,attributeFilter:['class']})});syncSub()}catch(e){}
 function cpSave(){const s=cpS,c=cd(s.id),nm=($('#cpn').value||'').trim();if(!nm){toast('Введите название');return}
   const em=leadEmo($('#cpem').value||''),col=$('#cpc').value,ov=cfg.catOv[s.id]=cfg.catOv[s.id]||{};
   ov.l=(em?em+' ':'')+nm.slice(0,40);
@@ -5583,7 +5599,10 @@ async function ibLoop(){
   // проверка новой версии приложения: GitHub Pages и Telegram любят держать старую копию страницы
   let vcAt=0,vPend='';
   const vGo=()=>{if(!vPend)return;try{sessionStorage.setItem('finapp.vr',vPend)}catch{}const u=new URL(location.href);u.searchParams.set('v',vPend);vPend='';location.replace(u.toString())};
-  document.addEventListener('visibilitychange',()=>{if(document.hidden)vGo()});try{TGW.onEvent('deactivated',vGo)}catch{}
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)vGo()});
+  // v181: событие Telegram «deactivated» — только если не открыто окно и не было касаний последние 3 с (иначе перезагрузка могла прийтись на работу с окном)
+  try{TGW.onEvent('deactivated',()=>{if(!document.hidden&&((typeof isModalOpen==='function'&&isModalOpen())||Date.now()-(window.__lastTouch||0)<3000))return;vGo()})}catch{}
+  document.addEventListener('pointerdown',()=>{window.__lastTouch=Date.now()},{capture:true,passive:true});
   const verCheck=async()=>{
     if(Date.now()-vcAt<10*60e3)return;vcAt=Date.now();
     try{
@@ -5982,7 +6001,7 @@ if('serviceWorker' in navigator&&location.protocol!=='file:'){
     if(!hadCtl||reloading||performance.now()<15000)return;reloading=true;
     // v180: новая версия перезагружает страницу только когда приложение свёрнуто — не на глазах
     const go=()=>{if(!document.hidden)return;document.removeEventListener('visibilitychange',go);location.reload()};
-    document.addEventListener('visibilitychange',go);try{TGW&&TGW.onEvent('deactivated',()=>location.reload())}catch(e){}go()});
+    document.addEventListener('visibilitychange',go);try{TGW&&TGW.onEvent('deactivated',()=>{if(!document.hidden&&((typeof isModalOpen==='function'&&isModalOpen())||Date.now()-(window.__lastTouch||0)<3000))return;location.reload()})}catch(e){}go()});
   window.addEventListener('load',()=>{
     sw.register('sw.js?v='+(typeof IB_VER!=='undefined'?IB_VER:'v0'),{updateViaCache:'none'}).then(reg=>{
       const chk=()=>{try{reg.update()}catch(e){}};
