@@ -1091,18 +1091,27 @@ html.plk #lk,#lk.on{display:flex}
 #lk .lkc,#lk .lkq{width:100%;max-width:300px;flex-direction:column;align-items:center}
 #lk .lkc{display:flex}#lk .lkq{display:none}
 #lk.cf .lkc{display:none}#lk.cf .lkq{display:flex}
-#lk .lkt{font-size:20px;font-weight:500;text-align:center}
-#lk .lks{min-height:34px;margin-top:8px;font-size:13px;color:var(--m2);text-align:center;line-height:1.35}
+/* v160: экран PIN-кода как в банковских приложениях */
+#lk .lki{width:58px;height:58px;border-radius:19px;display:flex;align-items:center;justify-content:center;margin-bottom:18px;background:rgba(var(--wr),.08);color:var(--t)}
+#lk .lkt{font-size:21px;font-weight:600;letter-spacing:-.01em;text-align:center}
+#lk .lks{min-height:38px;margin-top:4px;font-size:13.5px;color:var(--m2);text-align:center;line-height:1.35;max-width:280px}
 #lk .lks.er{color:var(--rd)}
-#lk .lkd{display:flex;gap:16px;margin:12px 0 26px}
-#lk .lkd i{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--m2);transition:background-color .15s ease,border-color .15s ease}
-#lk .lkd i.on{background:var(--t);border-color:var(--t)}
-#lk .lkd.sh{animation:lkshake .4s}
+#lk .lkd{display:flex;align-items:center;gap:18px;height:18px;margin:22px 0 10px}
+#lk .lkd i{width:13px;height:13px;border-radius:50%;background:rgba(var(--wr),.2);transition:transform .2s cubic-bezier(.3,1.7,.5,1),background-color .15s ease}
+#lk .lkd i.on{background:var(--t);transform:scale(1.15)}
+#lk .lkd.er i{background:var(--rd)}
+#lk .lkd.ok i{background:var(--g);transform:scale(1.15)}
+#lk .lkd.sh{animation:lkshake .42s}
 @keyframes lkshake{20%{transform:translateX(-9px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(4px)}}
-#lk .lkp{display:grid;grid-template-columns:repeat(3,72px);gap:14px 22px;justify-content:center}
-#lk .lkp button{width:72px;height:72px;border-radius:50%;border:.5px solid var(--b1);font-size:26px;display:flex;align-items:center;justify-content:center;background:rgba(var(--wr),.04)}
-#lk .lkp button:active{background:rgba(var(--wr),.16)}
-#lk .lkf{margin-top:20px;font-size:13px;color:var(--m2);padding:8px 12px}
+#lk .lkp{display:grid;grid-template-columns:repeat(3,78px);gap:16px 26px;justify-content:center;margin-top:4px;transition:opacity .2s ease}
+#lk .lkp.off{opacity:.35;pointer-events:none}
+#lk .lkp button{width:78px;height:78px;border-radius:50%;border:0;font-size:31px;font-weight:400;font-variant-numeric:tabular-nums;color:var(--t);display:flex;align-items:center;justify-content:center;background:rgba(var(--wr),.09);-webkit-tap-highlight-color:transparent;transition:background-color .28s ease}
+#lk .lkp button:active{background:rgba(var(--wr),.24);transition:none}
+#lk .lkp .lkbio,#lk .lkp .lkdel{background:none!important;border:0!important;color:var(--t)}
+#lk .lkp .hid{visibility:hidden}
+#lk .lkl{display:flex;justify-content:center;gap:6px;min-height:40px;margin-top:22px}
+#lk .lkf{font-size:14px;color:var(--m2);padding:10px 12px;background:none;border:0}
+@media (prefers-reduced-motion:reduce){#lk .lkd i,#lk .lkp{transition:none}#lk .lkd.sh{animation:none}}
 #lk .lkb{display:flex;gap:10px;margin-top:18px}
 #lk .lkb .sm{padding:10px 16px;font-size:14px}
 #lk .del,#bq .del{color:var(--rd)}
@@ -1776,7 +1785,7 @@ const budgetOf=m=>bmOwn(m)?Number(cfg.bm[m]):((carryBudOn()||m<budOffFrom())?(Nu
 function setCarryBud(on){cfg.carryBud=!!on;if(!on)cfg.budOffFrom=shiftMonth(curM(),1);save()}
 function setCarryBal(on){cfg.carry=!!on;if(on)cfg.carryFrom=curM();save()}
 const linkSum=()=>{const g=linkGoalOn(),d=linkDebtOn();return g&&d?'Вкл':g?'Цели':d?'Долги':'Выкл'};
-const carrySum=()=>{const r=!!cfg.carry,b=carryBudOn();return r&&b?'Вкл':r?'Остаток':b?'Бюджет':'Выкл'};
+const carrySum=()=>carryBudOn()?'Вкл':'Выкл';   // v160: в настройках — только перенос бюджета; перенос остатка — переключатель в главном блоке
 // долги и взносы в цели → настоящие расходы (видны бюджету, прогнозу, лимитам); включается галочкой «Записать как расход»
 try{localStorage.removeItem('finapp.lock')}catch{}
 // «записывать в расходы» — два отдельных переключателя: на странице «Долги» и на странице «Цели» (старая общая настройка cfg.link — запасное значение)
@@ -4228,7 +4237,7 @@ ${row('cub','#2f6df6','<path d="M12 3.5v17M16.2 7.6c0-1.6-1.9-2.8-4.2-2.8s-4.2 1
 <div class="sgh">Безопасность</div>
 <div class="sc">${row('pin','','','PIN-код',pinOn()?'Вкл':'Выкл')}${row('prv','','','Скрытие сумм',PRV?'Вкл':'Выкл')}</div>
 <div class="sgh">Категории и учёт</div>
-<div class="sc">${row('cin','#22a845','<path d="M12 4.5v10M7.8 10.6l4.2 4.2 4.2-4.2M5 19.5h14"/>','Категория доходов')}${row('cex','#f39a1f','<path d="M12 19.5v-10M7.8 13.4l4.2-4.2 4.2 4.2M5 4.5h14"/>','Категория расходов')}${row('lkr','','','Записывать в расходы')}${row('crs','','','Перенос на следующий месяц')}${row('rcs','','','Повторяющиеся операции',(cfg.rec||[]).length?String(cfg.rec.length):'Нет')}${row('mst','','','Начало месяца',mStart()+' число')}</div>
+<div class="sc">${row('cin','#22a845','<path d="M12 4.5v10M7.8 10.6l4.2 4.2 4.2-4.2M5 19.5h14"/>','Категория доходов')}${row('cex','#f39a1f','<path d="M12 19.5v-10M7.8 13.4l4.2-4.2 4.2 4.2M5 4.5h14"/>','Категория расходов')}${row('lkr','','','Записывать в расходы')}${row('crs','','','Перенос бюджета')}${row('rcs','','','Повторяющиеся операции',(cfg.rec||[]).length?String(cfg.rec.length):'Нет')}${row('mst','','','Начало месяца',mStart()+' число')}</div>
 <div class="sgh">Резервная копия</div>
 <div class="sc">${row('bki','#3b8fd4','<path d="M12 4v10M8 10.2l4 4 4-4M5 19.5h14"/>','Импорт')}${row('bke','#2f6df6','<path d="M12 15V5M8 8.8l4-4 4 4M5 19.5h14"/>','Экспорт')}${row('bkr','#e5484d','<path d="M5 7h14M10 7V4.8h4V7M7 7l.8 12h8.4L17 7M10.3 11v5M13.7 11v5"/>','Сброс','','rd')}</div>`}
 function bindSt(){
@@ -4258,15 +4267,15 @@ function saveCb(){const inp=$('#cbam'),v=pn(inp&&inp.value);if(!(v>0)){toast('У
 function bqHtml(kind){
   if(kind==='prv')return `<div class="bqt">Скрытие сумм</div>${bqTg('tgprv','Скрывать суммы','Вместо цифр показывается •••',PRV)}${bqTg('tgprf','Включать поворотом экрана','Переворот телефона экраном вниз',FLP.want)}<div class="bqs" style="font-size:11px;line-height:1.45;margin-top:12px;opacity:.8">Положите телефон экраном вниз примерно на секунду — суммы скроются, и вы почувствуете короткую вибрацию. Переверните экраном вниз ещё раз — суммы снова появятся. Телефон должен лежать почти горизонтально: наклон или положение в руке не считаются. Работает, пока приложение открыто.</div><div class="bqb"><button class="sm pr auto" data-bq="cancel">Готово</button></div>`;
   if(kind==='mstart')return `<div class="bqt">Начало месяца</div><div class="bqs">С какого числа начинается ваш месяц — например, день зарплаты.</div><div class="bqm"><button type="button" class="sm" data-bq="msm" aria-label="Раньше">−</button><span class="mn" id="msn">${msV} число</span><button type="button" class="sm" data-bq="msp" aria-label="Позже">+</button></div><div class="bqs" id="msh">${E(msHint())}</div><div class="bqb"><button class="sm" data-bq="cancel">Отмена</button><button class="sm pr" data-bq="mssave">Сохранить</button></div>`;
-  if(kind==='pin'||kind==='pinlen'){
-    const lb=(a,n)=>`<button type="button" class="sm" data-bq="${a}" data-v="${n}">${n} цифры</button>`;
-    if(kind==='pinlen')return `<div class="bqt">Новый PIN-код</div><div class="bqs">Сколько цифр должно быть в PIN-коде?</div><div class="bqm bqa">${[4,6].map(n=>lb('pinchg',n)).join('')}</div><div class="bqb"><button class="sm" data-bq="pinback">Назад</button></div>`;
-    if(!pinOn())return `<div class="bqt">PIN-код выключен</div><div class="bqs">Защитите приложение PIN-кодом. Выберите, сколько в нём будет цифр:</div><div class="bqm bqa">${[2,4,6].map(n=>lb('pinset',n)).join('')}</div><div class="bqb"><button class="sm auto" data-bq="cancel">Закрыть</button></div>`;
-    const n=pinLen();
-    return `<div class="bqt">PIN-код включён</div><div class="bqs">Сейчас: ${n} цифры. Он спрашивается при открытии приложения и после того, как вы его сворачиваете.</div><div class="bqb"><button class="sm" data-bq="pinchm">Сменить PIN</button><button class="sm del" data-bq="pinoff">Отключить</button></div><div class="bqb"><button class="sm auto" data-bq="cancel">Закрыть</button></div>`}
+  if(kind==='pin'){   // v160
+    if(!pinOn())return `<div class="bqt">PIN-код</div><div class="bqs">Код спрашивается при входе в приложение и защищает операции и суммы, если телефон окажется в чужих руках.</div><div class="bqb"><button class="sm" data-bq="cancel">Закрыть</button><button class="sm pr" data-bq="pinset">Включить код</button></div>`;
+    const o=pinOpt();
+    return `<div class="bqt">PIN-код</div><div class="bqs">Код из ${pinLen()} цифр.</div>${BIO.ok?bqTg('pinbio','Вход по '+bioName(),'',o.bio&&BIO.ok):''}<div class="bqs" id="pinbh"></div>
+<div class="bqs" style="margin-top:10px">Запрашивать код после выхода из приложения</div><div class="bqm bqa">${LOCKS.map(([v,l])=>`<button type="button" class="sm${o.lock===v?' pr':''}" data-bq="pinlock" data-v="${v}">${l}</button>`).join('')}</div>
+<div class="bqb"><button class="sm" data-bq="pinchg">Сменить код</button><button class="sm del" data-bq="pinoff">Выключить код</button></div><div class="bqb"><button class="sm auto" data-bq="cancel">Закрыть</button></div>`}
   if(kind==='link')return `<div class="bqt">Записывать в расходы</div><div class="bqs">Взносы в цели и долги будут записываться как расходы — их учтут бюджет, лимиты и прогноз.</div>${bqTg('tglg','Цели','',linkGoalOn())}${bqTg('tgld','Долги','',linkDebtOn())}<div class="bqb"><button class="sm pr auto" data-bq="cancel">Готово</button></div>`;
   if(kind==='carry'){const own=bmOwn(cbM),eff=budgetOf(cbM);
-    return `<div class="bqt">Перенос на следующий месяц</div>${bqTg('tgcb','Переносить остаток','Остаток прошлых месяцев добавляется к текущему',!!cfg.carry)}${bqTg('tgcr','Переносить бюджет','Бюджет действует и в следующих месяцах',carryBudOn())}<div class="bqm"><button type="button" class="sm" data-bq="cmp" aria-label="Предыдущий месяц">‹</button><span class="mn">${E(MN[+cbM.slice(5,7)-1]+' '+cbM.slice(0,4))}</span><button type="button" class="sm" data-bq="cmn" aria-label="Следующий месяц">›</button></div><label class="bqf"><span>Бюджет, ${E(cfg.cur)}</span><input class="bqi" id="cbam" inputmode="decimal" value="${eff||''}" placeholder="20 000" autocomplete="off"></label><div class="bqs" id="cbh">${E(cbHint())}</div><div class="bqb">${own?'<button class="sm del" data-bq="cbdel">Убрать</button>':''}<button class="sm pr" data-bq="cbsave">Сохранить</button></div><div class="bqb"><button class="sm auto" data-bq="cancel">Закрыть</button></div>`}
+    return `<div class="bqt">Перенос бюджета</div>${bqTg('tgcr','Переносить бюджет','Бюджет действует и в следующих месяцах',carryBudOn())}<div class="bqm"><button type="button" class="sm" data-bq="cmp" aria-label="Предыдущий месяц">‹</button><span class="mn">${E(MN[+cbM.slice(5,7)-1]+' '+cbM.slice(0,4))}</span><button type="button" class="sm" data-bq="cmn" aria-label="Следующий месяц">›</button></div><label class="bqf"><span>Бюджет, ${E(cfg.cur)}</span><input class="bqi" id="cbam" inputmode="decimal" value="${eff||''}" placeholder="20 000" autocomplete="off"></label><div class="bqs" id="cbh">${E(cbHint())}</div><div class="bqb">${own?'<button class="sm del" data-bq="cbdel">Убрать</button>':''}<button class="sm pr" data-bq="cbsave">Сохранить</button></div><div class="bqb"><button class="sm auto" data-bq="cancel">Закрыть</button></div>`}
   return bqHtml0(kind)}
 function bqHtml0(kind){  if(kind==='contact')return `<div class="bqt">Написать нам</div><div class="bqb"><button class="sm pr" data-bq="cttg">Написать в Telegram</button><a class="sm pr" id="ctem" href="${E(mailUrl())}">Написать на e-mail</a></div>`;
   if(kind==='save')return `<div class="bqt">Сохранить данные</div><div class="bqs">Выберите формат. JSON — полная копия для восстановления (операции, цели, долги, настройки). Excel (.xlsx) — таблица с листами по категориям и месяцам.</div><div class="bqb"><button class="sm pr" data-bq="json">Сохранить в JSON</button><button class="sm pr" data-bq="xlsx">Сохранить в Excel</button></div><div class="bqb"><button class="sm" data-bq="cancel">Не сейчас</button></div>`;
@@ -4310,48 +4319,95 @@ bq.addEventListener('click',e=>{
   else if(a==='impj'){$('#fi').accept='.json,application/json';$('#fi').click();closeBq()}
   else if(a==='tglg'){cfg.linkGoal=!linkGoalOn();save();tgSet(b,linkGoalOn());stRows()}
   else if(a==='tgld'){cfg.linkDebt=!linkDebtOn();save();tgSet(b,linkDebtOn());stRows()}
-  else if(a==='tgcb'){setCarryBal(!cfg.carry);tgSet(b,cfg.carry);stRows()}
   else if(a==='tgcr'){setCarryBud(!carryBudOn());tgSet(b,carryBudOn());stRows();const h=$('#cbh');if(h)h.textContent=cbHint()}
   else if(a==='cmp'||a==='cmn'){cbM=shiftMonth(cbM,a==='cmn'?1:-1);bq.innerHTML=bqHtml('carry')}
   else if(a==='msm'||a==='msp'){msV=a==='msm'?(msV<=1?28:msV-1):(msV>=28?1:msV+1);$('#msn').textContent=msV+' число';$('#msh').textContent=msHint()}
   else if(a==='mssave'){cfg.mStart=msV>=2?msV:1;save();closeBq();month=curM();render();stRows();toast(msV>=2?'Месяц начинается с '+msV+' числа':'Месяц начинается с 1 числа')}
-  else if(a==='pinset'){const n=+b.dataset.v;closeBq();setTimeout(()=>lkShow('set1',()=>{stRows();toast('PIN-код включён')},n),250)}
-  else if(a==='pinchm'){bq.innerHTML=bqHtml('pinlen')}
-  else if(a==='pinback'){bq.innerHTML=bqHtml('pin')}
-  else if(a==='pinchg'){const n=+b.dataset.v;closeBq();setTimeout(()=>lkShow('verify',()=>setTimeout(()=>lkShow('set1',()=>toast('PIN-код изменён'),n),60)),250)}
-  else if(a==='pinoff'){closeBq();setTimeout(()=>lkShow('verify',()=>{try{localStorage.removeItem('finapp.pin')}catch(e){}stRows();toast('PIN-код отключён')}),250)}
+  else if(a==='pinset'){closeBq();setTimeout(()=>lkShow('set1',()=>{stRows();setTimeout(()=>openBq('pin'),300)},4),250)}   // v160: после создания кода — его настройки (Face ID, блокировка)
+  else if(a==='pinchg'){closeBq();setTimeout(()=>lkShow('verify',()=>setTimeout(()=>lkShow('set1',()=>{stRows();setTimeout(()=>openBq('pin'),300)},pinLen()===6?6:4),60)),250)}
+  else if(a==='pinoff'){closeBq();setTimeout(()=>lkShow('verify',()=>{bioOff();pinClear();stRows()}),250)}
+  else if(a==='pinlock'){pinOptSet({lock:+b.dataset.v});bq.innerHTML=bqHtml('pin')}
+  else if(a==='pinbio'){const h=$('#pinbh');if(pinOpt().bio){bioOff();tgSet(b,false);if(h)h.textContent='';return}
+    bioEnable((ok,why)=>{tgSet(b,ok);if(h)h.textContent=ok?'':why==='denied'?'Доступ к '+bioName()+' запрещён — разрешите его в настройках Telegram.':'Не удалось включить '+bioName()+'.';
+      if(!ok&&why==='denied'){try{const m=BM();if(m&&m.openSettings)m.openSettings()}catch(e){}}})}
   else if(a==='tgprv'){prvSet(!PRV)}
   else if(a==='tgprf'){flToggle(b)}
   else if(a==='cbsave')saveCb()
   else if(a==='cbdel'){if(_obj(cfg.bm))delete cfg.bm[cbM];save();bq.innerHTML=bqHtml('carry');toast('Бюджет месяца убран')}});
 bq.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target&&e.target.id==='cbam'){e.preventDefault();saveCb()}});
-// ================= PIN-код: экран блокировки =================
-const LKE=$('#lk');const LK={mode:'',buf:'',first:'',len:4,cb:null,tries:0,busy:false,until:0,msg:'',err:false};
+// ================= v160: PIN-код как в банковских приложениях =================
+// 4 или 6 цифр (2 — только старые коды: после входа просим задать новый), вход по Face ID / Touch ID через Telegram,
+// пауза после ошибок растёт и переживает перезапуск, время блокировки после выхода — в настройках. Всё хранится только на этом устройстве.
+const LKE=$('#lk');const LK={mode:'',buf:'',first:'',len:4,cb:null,busy:false,msg:'',err:false,mig:false,tick:0};
 function pinRec(){try{return JSON.parse(localStorage.getItem('finapp.pin')||'null')}catch(e){return null}}
 function pinSave(r){try{localStorage.setItem('finapp.pin',JSON.stringify(r))}catch(e){}}
 function pinLen(){const r=pinRec();return r&&[2,4,6].indexOf(r.n)>=0?r.n:4}
 async function pinHash(p,salt){const t=salt+':'+p;try{const d=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return Array.from(new Uint8Array(d)).map(x=>x.toString(16).padStart(2,'0')).join('')}catch(e){let h=5381;for(let k=0;k<4000;k++)for(let i=0;i<t.length;i++)h=((h<<5)+h+t.charCodeAt(i))|0;return 'f'+h}}
-
-// старые ключи биометрии (функция удалена)
+const LOCKS=[[0,'Сразу'],[60,'1 мин'],[300,'5 мин'],[900,'15 мин']];
+function pinOpt(){let o={};try{o=JSON.parse(localStorage.getItem('finapp.pinopt')||'{}')||{}}catch(e){}return{lock:LOCKS.some(x=>x[0]===+o.lock)?+o.lock:60,bio:!!o.bio,bt:o.bt||''}}
+function pinOptSet(p){try{localStorage.setItem('finapp.pinopt',JSON.stringify({...pinOpt(),...p}))}catch(e){}}
+function pinClear(){['finapp.pin','finapp.pinopt','finapp.pinlk'].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}})}
+// ошибки: после каждых 5 неверных — пауза 30 с, затем 1, 5, 15 мин
+const LK_WAIT=[30,60,300,900];
+function lkSt(){try{return JSON.parse(localStorage.getItem('finapp.pinlk')||'{}')||{}}catch(e){return{}}}
+function lkStSet(o){try{localStorage.setItem('finapp.pinlk',JSON.stringify(o))}catch(e){}}
+const lkWait=()=>Math.max(0,(lkSt().until||0)-Date.now());
+// --- Face ID / Touch ID через Telegram (BiometricManager, Bot API 7.2+)
+const BIO={ok:false,type:'',inited:false,busy:false,t:0};
+const BM=()=>{try{return TGW&&TGW.BiometricManager&&(!TGW.isVersionAtLeast||TGW.isVersionAtLeast('7.2'))?TGW.BiometricManager:null}catch(e){return null}};
+function bioInit(cb){const m=BM(),fin=()=>{BIO.inited=true;BIO.ok=!!(m&&m.isBiometricAvailable);BIO.type=(m&&m.biometricType)||'';if(cb)cb()};if(!m){fin();return}if(m.isInited){fin();return}try{m.init(fin)}catch(e){fin()}}
+const bioName=()=>BIO.type==='face'?'Face ID':BIO.type==='finger'?'Touch ID':'биометрии';
+const bioOn=()=>pinOn()&&pinOpt().bio&&BIO.ok;
+function bioCall(fn){BIO.busy=true;fn(()=>{BIO.busy=false;BIO.t=Date.now()})}
+function bioAuth(cb){const m=BM();if(!m||!BIO.ok){cb(false);return}
+  bioCall(done=>{try{m.authenticate({reason:'Вход в приложение'},(ok,tok)=>{done();const t=pinOpt().bt;cb(!!ok&&(!t||!tok||tok===t))})}catch(e){done();cb(false)}})}
+function bioEnable(cb){const m=BM();if(!m||!BIO.ok){cb(false);return}
+  const go=()=>bioCall(done=>{try{m.authenticate({reason:'Включить вход по '+bioName()},ok=>{done();if(!ok){cb(false);return}
+      const t=String(Math.random()).slice(2)+Date.now();try{m.updateBiometricToken(t,u=>{pinOptSet({bio:true,bt:u?t:''});cb(true)})}catch(e){pinOptSet({bio:true,bt:''});cb(true)}})}catch(e){done();cb(false)}});
+  if(m.isAccessGranted){go();return}
+  if(m.isAccessRequested){cb(false,'denied');return}   // уже отказали — включить можно только в настройках Telegram
+  bioCall(done=>{try{m.requestAccess({reason:'Чтобы входить в приложение по '+bioName()},g=>{done();if(g)go();else cb(false,'denied')})}catch(e){done();cb(false)}})}
+function bioOff(){pinOptSet({bio:false,bt:''});try{const m=BM();if(m&&m.isBiometricTokenSaved)m.updateBiometricToken('',()=>{})}catch(e){}}
+// старые ключи биометрии (до v160)
 try{localStorage.removeItem('finapp.bio');localStorage.removeItem('finapp.bioc')}catch(e){}
 // облако Telegram включено, ошибок нет и хотя бы одна успешная сверка была — после сброса данные вернутся из облака
 function pinCloudOk(){try{return !!(IN_TG&&CL.on&&!CL.lastErr&&(CL.sb||CL.lastSync))}catch(e){return false}}
-function lkBuild(){if(!LKE)return;LKE.innerHTML=`<button type="button" class="lkx" data-k="x" aria-label="Отмена">×</button><div class="lkc"><div class="lkt"></div><div class="lks"></div><div class="lkd"></div><div class="lkp">${[1,2,3,4,5,6,7,8,9,'',0,'<'].map(k=>k===''?'<span aria-hidden="true"></span>':`<button type="button" data-k="${k}" aria-label="${k==='<'?'Удалить':k}">${k==='<'?'⌫':k}</button>`).join('')}</div><button type="button" class="lkf" data-k="f">Забыли PIN?</button></div><div class="lkq"><div class="lkt">Сбросить PIN?</div><div class="lks" style="max-width:290px">Чтобы сбросить PIN, нужно удалить все данные приложения на этом устройстве: операции, цели, долги и настройки. Это нельзя отменить.</div><div class="lkb"><button type="button" class="sm" data-k="fn">Отмена</button><button type="button" class="sm del" data-k="fy">Удалить данные</button></div></div>`}
-function lkDraw(){if(!LKE)return;const T={unlock:'Введите PIN',verify:'Введите текущий PIN',set1:'Придумайте PIN',set2:'Повторите PIN'};
-  LKE.querySelector('.lkt').textContent=T[LK.mode]||'';const s=LKE.querySelector('.lks');s.textContent=LK.msg||(LK.mode==='set1'?LK.len+' цифры':'');s.classList.toggle('er',!!LK.err);
+const IC_LOCK='<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.6"/><path d="M8.5 10.5V7.8a3.5 3.5 0 0 1 7 0v2.7"/><circle cx="12" cy="15.5" r="1.2" fill="currentColor"/></svg>';
+const IC_FACE='<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M9 9.5v1M15 9.5v1M12 9.5v3.5h-1M9.5 16c1.4 1.1 3.6 1.1 5 0"/></svg>';
+const IC_FING='<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M7 5.5A8 8 0 0 1 20 12v1.5M4 9.5A8 8 0 0 0 4 12v3M8.5 19.5c1-1.8 1.5-4 1.5-7a2 2 0 0 1 4 0c0 2.4-.3 4.6-1 6.6M16.5 17.5c.4-1.6.5-3.3.5-5.5a5 5 0 0 0-8.6-3.5"/></svg>';
+const IC_DEL='<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 5H20a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H8.5L3 12z"/><path d="M11 9.5l5 5M16 9.5l-5 5"/></svg>';
+function lkBuild(){if(!LKE)return;LKE.innerHTML=`<button type="button" class="lkx" data-k="x" aria-label="Отмена">×</button><div class="lkc"><div class="lki">${IC_LOCK}</div><div class="lkt"></div><div class="lkd"></div><div class="lks"></div><div class="lkp">${[1,2,3,4,5,6,7,8,9].map(k=>`<button type="button" data-k="${k}">${k}</button>`).join('')}<button type="button" class="lkbio" data-k="b" aria-label="Вход по биометрии"></button><button type="button" data-k="0">0</button><button type="button" class="lkdel" data-k="<" aria-label="Удалить">${IC_DEL}</button></div><div class="lkl"><button type="button" class="lkf" data-k="f">Забыли код?</button><button type="button" class="lkf" data-k="len"></button></div></div><div class="lkq"><div class="lkt">Сбросить PIN?</div><div class="lks" style="max-width:290px"></div><div class="lkb"><button type="button" class="sm" data-k="fn">Отмена</button><button type="button" class="sm del" data-k="fy">Удалить данные</button></div></div>`}
+function lkDraw(){if(!LKE)return;const T={unlock:'Введите код',verify:'Введите текущий код',set1:LK.mig?'Придумайте новый код':'Придумайте код',set2:'Повторите код'};
+  const w=lkWait(),wait=(LK.mode==='unlock'||LK.mode==='verify')&&w>0;
+  LKE.querySelector('.lkt').textContent=T[LK.mode]||'';
+  const s=LKE.querySelector('.lks');s.textContent=wait?'Слишком много попыток. Повторите через '+(t=>Math.floor(t/60)+':'+String(t%60).padStart(2,'0'))(Math.ceil(w/1000)):(LK.msg||(LK.mode==='set1'&&LK.mig?'Код из 2 цифр больше не поддерживается':''));s.classList.toggle('er',!!LK.err||wait);
   const dd=LKE.querySelector('.lkd');if(dd.children.length!==LK.len)dd.innerHTML='<i></i>'.repeat(LK.len);
   dd.querySelectorAll('i').forEach((d,i)=>d.classList.toggle('on',i<LK.buf.length));
-  LKE.querySelector('.lkx').style.display=LK.mode==='unlock'?'none':'';LKE.querySelector('.lkf').style.display=(LK.mode==='unlock'||LK.mode==='verify')?'':'none'}
-function lkShow(mode,cb,len){if(!LKE)return;if(!LKE.firstChild)lkBuild();LK.len=(mode==='unlock'||mode==='verify')?pinLen():([2,4,6].indexOf(len)>=0?len:4);LK.mode=mode;LK.buf='';LK.first='';LK.cb=cb||null;LK.msg='';LK.err=false;LKE.classList.remove('cf');LKE.classList.add('on');lkDraw();}
-function lkHide(){if(!LKE)return;LKE.classList.remove('on','cf');document.documentElement.classList.remove('plk');LK.mode='';LK.buf=''}
-function lkFail(msg){LK.buf='';LK.msg=msg;LK.err=true;const d=LKE.querySelector('.lkd');d.classList.remove('sh');void d.offsetWidth;d.classList.add('sh');if(navigator.vibrate)try{navigator.vibrate(60)}catch(e){}lkDraw()}
+  LKE.querySelector('.lkp').classList.toggle('off',wait);
+  const bb=LKE.querySelector('.lkbio'),bio=LK.mode==='unlock'&&bioOn();bb.classList.toggle('hid',!bio);if(bio)bb.innerHTML=BIO.type==='finger'?IC_FING:IC_FACE;
+  LKE.querySelector('.lkdel').classList.toggle('hid',!LK.buf.length);
+  LKE.querySelector('.lkx').style.display=LK.mode==='unlock'?'none':'';
+  LKE.querySelector('[data-k="f"]').style.display=(LK.mode==='unlock'||LK.mode==='verify')?'':'none';
+  const ln=LKE.querySelector('[data-k="len"]');ln.style.display=LK.mode==='set1'&&!LK.buf.length?'':'none';ln.textContent=LK.len===4?'Код из 6 цифр':'Код из 4 цифр';
+  clearTimeout(LK.tick);if(wait)LK.tick=setTimeout(lkDraw,500)}
+function lkShow(mode,cb,len){if(!LKE)return;if(!LKE.firstChild)lkBuild();LK.len=(mode==='unlock'||mode==='verify')?pinLen():(len===6?6:4);LK.mode=mode;LK.buf='';LK.first='';LK.cb=cb||null;LK.msg='';LK.err=false;LK.mig=false;
+  LKE.querySelector('.lkd').classList.remove('ok','er');LKE.classList.remove('cf');LKE.classList.add('on');lkDraw();if(mode==='unlock')lkBio(false)}
+function lkHide(){if(!LKE)return;clearTimeout(LK.tick);LKE.classList.remove('on','cf');document.documentElement.classList.remove('plk');LK.mode='';LK.buf=''}
+function lkFail(msg){LK.buf='';LK.msg=msg;LK.err=true;const d=LKE.querySelector('.lkd');d.classList.remove('sh','er');void d.offsetWidth;d.classList.add('sh','er');setTimeout(()=>d.classList.remove('er'),450);
+  try{hap('heavy',{k:'pin'})}catch(e){}if(navigator.vibrate)try{navigator.vibrate([40,40,40])}catch(e){}lkDraw()}
+function lkOk(){const d=LKE.querySelector('.lkd');d.classList.add('ok');try{hap('medium',{k:'pin'})}catch(e){}lkStSet({});
+  const r=pinRec();if(LK.mode==='unlock'&&r&&r.n===2){setTimeout(()=>{d.classList.remove('ok');LK.mig=true;LK.mode='set1';LK.len=4;LK.buf='';LK.msg='';LK.err=false;lkDraw()},260);return}   // старый код из 2 цифр — задать новый
+  const cb=LK.cb;setTimeout(()=>{lkHide();if(cb)cb()},200)}
+function lkBio(user){if(LK.mode!=='unlock'||BIO.busy)return;if(!BIO.inited){bioInit(()=>{lkDraw();lkBio(user)});return}if(!bioOn())return;
+  setTimeout(()=>bioAuth(ok=>{if(ok&&LK.mode==='unlock')lkOk()}),user?0:350)}
 async function lkDone(){LK.busy=true;const v=LK.buf;
   try{
-    if(LK.mode==='unlock'||LK.mode==='verify'){const r=pinRec();if(r&&await pinHash(v,r.s)===r.h){LK.tries=0;const cb=LK.cb;lkHide();if(cb)cb();return}
-      LK.tries++;if(LK.tries>=5){LK.tries=0;LK.until=Date.now()+30000;lkFail('Слишком много попыток. Подождите 30 секунд')}else lkFail('Неверный PIN')}
+    if(LK.mode==='unlock'||LK.mode==='verify'){const r=pinRec();if(r&&await pinHash(v,r.s)===r.h){lkOk();return}
+      const st=lkSt(),f=(st.f||0)+1;if(f%5===0){const w=LK_WAIT[Math.min(LK_WAIT.length-1,f/5-1)];lkStSet({f,until:Date.now()+w*1000});lkFail('')}
+      else{lkStSet({f,until:st.until||0});const left=5-f%5;lkFail(left<=2?'Неверный код. Осталось попыток: '+left:'Неверный код')}}
     else if(LK.mode==='set1'){LK.first=v;LK.mode='set2';LK.buf='';LK.msg='';LK.err=false;lkDraw()}
-    else if(LK.mode==='set2'){if(v===LK.first){const s=String(Math.random()).slice(2)+Date.now();pinSave({s,h:await pinHash(v,s),n:LK.len});const cb=LK.cb;lkHide();if(cb)cb()}
-      else{LK.mode='set1';lkFail('PIN-коды не совпали. Попробуйте ещё раз')}}
+    else if(LK.mode==='set2'){if(v===LK.first){const s=String(Math.random()).slice(2)+Date.now();pinSave({s,h:await pinHash(v,s),n:LK.len});lkStSet({});const d=LKE.querySelector('.lkd');d.classList.add('ok');const cb=LK.cb;setTimeout(()=>{lkHide();if(cb)cb()},220)}
+      else{LK.mode='set1';LK.first='';lkFail('Коды не совпали. Попробуйте ещё раз')}}
   }finally{LK.busy=false}}
 if(LKE)LKE.addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;const k=b.dataset.k;
   if(k==='x'){lkHide();return}
@@ -4360,18 +4416,26 @@ if(LKE)LKE.addEventListener('click',async e=>{const b=e.target.closest('button')
     if(y)y.textContent=cl?'Сбросить PIN':'Удалить данные';
     LKE.classList.add('cf');return}
   if(k==='fn'){LKE.classList.remove('cf');return}
-  if(k==='fy'){const cl=pinCloudOk();try{Object.keys(localStorage).filter(x=>x.indexOf('finapp.')===0).forEach(x=>localStorage.removeItem(x));if(cl)localStorage.setItem('finapp.rst','1')}catch(e){}location.reload();return}
+  if(k==='fy'){const cl=pinCloudOk();bioOff();try{Object.keys(localStorage).filter(x=>x.indexOf('finapp.')===0).forEach(x=>localStorage.removeItem(x));if(cl)localStorage.setItem('finapp.rst','1')}catch(e){}location.reload();return}
+  if(k==='len'){LK.len=LK.len===4?6:4;LK.buf='';lkDraw();return}
+  if(k==='b'){lkBio(true);return}
   if(LK.busy)return;
-  if(Date.now()<LK.until){LK.msg='Подождите '+Math.ceil((LK.until-Date.now())/1000)+' сек';LK.err=true;lkDraw();return}
+  if((LK.mode==='unlock'||LK.mode==='verify')&&lkWait()>0){lkDraw();return}
   if(k==='<'){LK.buf=LK.buf.slice(0,-1);lkDraw();return}
-  if(LK.buf.length>=LK.len)return;LK.buf+=k;if(LK.err||LK.hint){LK.err=false;LK.hint=0;LK.msg=''}lkDraw();if(LK.buf.length===LK.len)await lkDone()});
+  if(!/^\d$/.test(k)||LK.buf.length>=LK.len)return;
+  try{hap('light',{k:'pk'})}catch(x){}
+  LK.buf+=k;if(LK.err){LK.err=false;LK.msg=''}lkDraw();if(LK.buf.length===LK.len){LK.busy=true;setTimeout(()=>{LK.busy=false;lkDone()},110)}});
 document.addEventListener('keydown',e=>{if(!LKE||!LKE.classList.contains('on')||LKE.classList.contains('cf'))return;
   const k=/^\d$/.test(e.key)?e.key:e.key==='Backspace'?'<':e.key==='Escape'&&LK.mode!=='unlock'?'x':'';if(!k)return;const b=LKE.querySelector('[data-k="'+k+'"]');if(b){e.preventDefault();b.click()}});
+// блокировка после выхода из приложения: «Сразу» — экран кода закрывает содержимое ещё при уходе (в переключателе приложений его не видно)
 let _lkHid=0;
-function lkAway(){if(pinOn()&&!_lkHid)_lkHid=Date.now()}
-function lkBack(){if(!_lkHid)return;const away=(Date.now()-_lkHid)/1000;_lkHid=0;if(pinOn()&&away>=60&&!(LKE&&LKE.classList.contains('on')))lkShow('unlock')}
+const lkOn=()=>!!(LKE&&LKE.classList.contains('on'));
+const bioQuiet=()=>BIO.busy||Date.now()-BIO.t<1500;   // окно Face ID само сворачивает приложение — это не уход
+function lkAway(){if(!pinOn()||lkOn()||bioQuiet())return;if(!_lkHid)_lkHid=Date.now();if(pinOpt().lock===0)lkShow('unlock')}
+function lkBack(){if(!_lkHid)return;const away=(Date.now()-_lkHid)/1000;_lkHid=0;if(pinOn()&&!lkOn()&&away>=pinOpt().lock)lkShow('unlock');else if(LK.mode==='unlock')lkBio(false)}
 document.addEventListener('visibilitychange',()=>{if(document.hidden)lkAway();else lkBack()});
 try{TGW.onEvent('deactivated',lkAway);TGW.onEvent('activated',lkBack)}catch(e){}
+bioInit(()=>{if(LK.mode)lkDraw()});
 if(pinOn()){lkBuild();lkShow('unlock')}
 
 // ================= Режим приватности и переворот экраном вниз =================
@@ -5050,7 +5114,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v159';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v160';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}   // номер сборки виден внизу экрана: по нему понятно, обновился ли Telegram до новой версии
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
