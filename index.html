@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v187';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v188';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -1491,6 +1491,19 @@ html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#r
   transition:transform .192s cubic-bezier(.58,-.03,1,.5),visibility 0s .192s,padding-bottom var(--kt)!important;
   overflow-x:hidden!important;overscroll-behavior-x:none}   /* v145: окно не сдвигается пальцем вбок (iOS давал пружинящую прокрутку по горизонтали) */
 html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){--rest:0px;border-bottom-left-radius:0!important;border-bottom-right-radius:0!important;border-bottom:0!important}   /* v185: окна прилегают к нижнему краю экрана (как шторка, выезжающая снизу): без зазора, нижние углы прямые. v186: снизу — тот же отступ, что и по бокам (18 px), без отдельного места под полоску «Домой»: она ложится в этот отступ */
+/* v188: все окна — по одному эталону. Окно «+»: отступы как у остальных (18 px по бокам и снизу).
+   «Советы»: та же шторка, что и остальные окна — бока 12 px, скругление сверху 28 px, стекло, отступы 18 px, кнопка × как в окнах,
+   затемнение с размытием как у окон, открытие 0,246 с и закрытие 0,192 с по тем же кривым */
+html:root #sh#sh{padding-left:18px!important;padding-right:18px!important;padding-bottom:18px!important}
+html:root #tpv .tvs{left:12px;right:12px;border-radius:28px 28px 0 0;background:var(--gloss),var(--gfill);-webkit-backdrop-filter:var(--gblur);backdrop-filter:var(--gblur);border:.5px solid var(--gbd);border-bottom:0;box-shadow:var(--gsh);
+  transition:transform .192s cubic-bezier(.58,-.03,1,.5)}
+html:root #tpv.on .tvs{transition:transform .246s cubic-bezier(0,0,.17,1)}
+html:root #tpv .tvs.drag{transition:none}
+html:root #tpv .tvc{padding:4px 18px 18px}
+html:root #tpv .tvx{background:none;width:auto;height:auto;padding:4px 6px;font-size:20px;line-height:1;color:var(--m2)}
+html:root #tpv .tvb{background:rgba(0,0,0,.3);-webkit-backdrop-filter:blur(22px) saturate(1.15);backdrop-filter:blur(22px) saturate(1.15);transition:opacity .198s cubic-bezier(.75,.09,.67,1)}
+html:root #tpv.on .tvb{transition:opacity .249s cubic-bezier(.26,.24,.25,1)}
+@media (prefers-reduced-motion:reduce){html:root #tpv .tvs,html:root #tpv.on .tvs,html:root #tpv .tvb{transition:none}}
 
 html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc).on{
   transform:none!important;visibility:visible;pointer-events:auto;
@@ -6753,7 +6766,7 @@ window.openTips=function(){
   const body=list.length?list.map((t,i)=>`<div class="tvk" style="--i:${i}"><i class="tvn">${i+1}</i><div><b>${E(t.h)}</b><span>${E(t.b)}</span>${t.s?`<small>${E(t.s)}</small>`:''}</div></div>`).join('')
    :`<div class="tve"><div class="tvo">${BULB}</div><h3>Здесь появятся советы</h3><p>Добавьте первые траты — и я подскажу, куда уходят деньги, где можно сэкономить и как уложиться в бюджет.</p><div class="tvch"><span style="--i:0">🔍 Куда уходят деньги</span><span style="--i:1">✂️ Где можно сэкономить</span><span style="--i:2">🎯 Как дойти до цели</span></div><button type="button" class="tva">Добавить трату</button></div>`;
   el=document.createElement('div');el.id='tpv';
-  el.innerHTML=`<div class="tvb"></div><div class="tvs" role="dialog" aria-label="Советы"><i class="tvh"></i><div class="tvt"><b>Советы</b><span>${MN[+m.slice(5,7)-1]}</span><button type="button" class="tvx" aria-label="Закрыть">✕</button></div><div class="tvc">${body}</div></div>`;
+  el.innerHTML=`<div class="tvb"></div><div class="tvs" role="dialog" aria-label="Советы"><i class="tvh"></i><div class="tvt"><b>Советы</b><span>${MN[+m.slice(5,7)-1]}</span><button type="button" class="tvx" aria-label="Закрыть">×</button></div><div class="tvc">${body}</div></div>`;
   document.body.appendChild(el);requestAnimationFrame(()=>requestAnimationFrame(()=>el&&el.classList.add('on')));hp('light');
   const sh=el.querySelector('.tvs');el.querySelector('.tvb').onclick=close;el.querySelector('.tvx').onclick=close;
   const add=el.querySelector('.tva');if(add)add.onclick=()=>{close();setTimeout(()=>{const f=document.getElementById('fab');if(f)f.click()},300)};
