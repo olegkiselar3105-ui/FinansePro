@@ -936,6 +936,15 @@ html.selm #tabs,html.selm #fab{opacity:0;pointer-events:none;transform:translate
 #selmore{right:var(--rx);width:62px;height:62px;border-radius:50%;display:flex;align-items:center;justify-content:center;padding:0}
 html.selm #selbar,html.selm #selmore{opacity:1;pointer-events:auto;transform:none}
 #selmore:active{transform:scale(.9)}
+/* v174: итоги на странице «Долги» — две колонки текста: тонкая подпись и крупная сумма */
+.dsum{display:flex;gap:28px;margin:12px 2px 4px}.dsum>div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.dsum small{font-size:13px;font-weight:400;color:var(--m2)}.dsum b{font-size:24px;font-weight:700;letter-spacing:-.01em;line-height:1.15;white-space:nowrap}
+/* v173: три отдельные плашки — «Отмена» слева, «Выбрано: N» по центру своей плашки, «⋯» справа; общий контейнер прозрачный */
+#selbar{background:none;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;padding:0;justify-content:flex-start}
+#selbar>#selx,#selbar>#selc{height:62px;border-radius:32px;display:flex;align-items:center;background:var(--gloss),var(--gbar);-webkit-backdrop-filter:var(--gblur);backdrop-filter:var(--gblur);border:.5px solid var(--gbd);box-shadow:var(--gshb);color:var(--t)}
+#selbar>#selx{flex:none;padding:0 22px;font-size:15px;font-weight:500;transition:transform .3s var(--spring)}
+#selbar>#selx:active{transform:scale(.94)}
+#selbar>#selc{flex:1;min-width:0;justify-content:center;padding:0 14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 </style><style id="v27">
 /* v27: номер версии виден поверх нижнего градиента (раньше его закрывал body::after с таким же z-index) */
 #vb{left:8px;right:auto;z-index:12;opacity:.6;color:var(--m2)}
@@ -1174,6 +1183,9 @@ button,a,label,select,summary{touch-action:manipulation}
 :root #rc .rcr .rcp:active{opacity:.4}
 /* плашки («Удалено · Отмена», «Сохранено» и т.п.) всплывают ПОВЕРХ кнопки «+»: по высоте — на уровне самой кнопки, слой выше неё (z-index 300) */
 :root #toast{bottom:calc(14px + var(--tbh) + var(--fabg) + 7px + var(--sab))}
+/* v172: при открытом окне «+» уведомление — сверху: снизу оно ложилось на строки черновиков, и следующее нажатие на корзину попадало в «Отмена» */
+html:root:has(#sh.on) #toast{top:calc(var(--sat) + 12px);bottom:auto}
+html:root:has(#sh.on) #toast:not(.on){transform:translate3d(0,-34px,0) scale(.94)}
 /* экран PIN: одна и та же анимация и при появлении, и при уходе после ввода PIN (плавное проявление с лёгким масштабом; при запуске приложения экран закрыт сразу, без вспышки содержимого) */
 #lk{display:flex;visibility:hidden;opacity:0;transform:scale(1.04);pointer-events:none;transition:opacity .34s cubic-bezier(.4,0,.2,1),transform .5s cubic-bezier(.22,1,.36,1),visibility 0s .5s}
 html.plk #lk,#lk.on{visibility:visible;opacity:1;transform:none;pointer-events:auto;transition:opacity .34s cubic-bezier(.4,0,.2,1),transform .5s cubic-bezier(.22,1,.36,1),visibility 0s}
@@ -1224,7 +1236,10 @@ html:root #ed .sgm button.on{background:var(--t);color:var(--on)}html:root #ed .
 html:root :is(#ed,#gd,#rc,#cp) .shf{display:flex;align-items:center;gap:12px;margin-top:18px}
 html:root :is(#ed,#gd,#rc,#cp,#bq,#nc,#cf) .sm.pr{order:-1;flex:1;height:52px;border-radius:999px;border:0;background:var(--sa);color:var(--son);font-size:15px;font-weight:600}
 html:root :is(#ed,#gd,#rc,#cp) .sm.del{flex:none;width:52px;height:52px;background-color:var(--stn);padding:0;border-radius:50%;border:1px solid rgba(128,128,140,.55);color:transparent;font-size:0;background:transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e5484d' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 7h14M10 7V4.8h4V7M7 7l.8 12h8.4L17 7M10.3 11v5M13.7 11v5'/%3E%3C/svg%3E") no-repeat center/22px}
-html:root :is(#ed #esv,#gd #gsvb.auto,#bq .sm.pr.auto,#ecl,#gcl){display:none!important}
+html:root :is(#ed #esv,#bq .sm.pr.auto,#ecl,#gcl){display:none!important}
+/* v169: окна плиток (долг, цель, бюджет, лимит): «Удалить» текстом слева, «Сохранить» справа — вместо круглой иконки */
+html:root #gd .shf .sm.del{flex:1;width:auto;height:52px;padding:0 16px;border-radius:999px;background:transparent;border:1px solid rgba(229,72,77,.5);color:#e5484d;font-size:15px;font-weight:600}
+html:root #gd .shf:has(>.sm.del) .sm.pr{order:0}
 html:root #bq .bqb:has(>.sm.pr.auto:only-child){display:none}
 html:root #ed .shf{justify-content:flex-end}
 html:root #bq .sm.auto{display:none!important}
@@ -1784,7 +1799,7 @@ function buildAll(){const ov=cfg.catOv||{};
   INC=new Set(ALL.filter(c=>c.inc).map(c=>c.id))}
 const cd=id=>ALL.find(c=>c.id===id)||{id,l:'Прочее',n:'Прочее',e:'',c:'#777',k:[]};
 const INCW=/(^|\s)(зарплат|аванс|преми[яиюей]|кэшбэк|кешбэк|кэшбек|кешбек|cashback|стипенди|пенси[яиюей]|пособи|дивиденд|гонорар|подработк|фриланс)/;   // v165: общие слова дохода (раньше доход узнавался по ключевым словам категорий)
-const INCRE=/(^|\s)(получил|получила|заработал|заработала|пришл[оаи]|доход|перевели|зачислил|вернул|начислил|зп|выручка|выручку|прибыль|заработок|выплатили|начислили|поступило|поступили|капнуло|капнули)(?=\s|$)/;
+const INCRE=/(^|\s)(получил|получила|заработал|заработала|пришл[оаи]|доход|перевели|зачислил|вернул|вернула|вернули|начислил|зп|выручка|выручку|прибыль|заработок|выплатили|начислили|поступило|поступили|капнуло|капнули)(?=\s|$)/;
 const FILL=/(^|\s)(потратил[аи]?|купил[аи]?|заплатил[аи]?|оплатил[аи]?|получил[аи]?|заработал[аи]?|вчера|позавчера|сегодня|на|за|в|по|мне|пришло|пришли|еще|ещё)(?=\s|$)/g;
 const _obj=v=>v&&typeof v==='object'&&!Array.isArray(v),_okArr=(a,f)=>Array.isArray(a)?a.filter(f||_obj):[];
 let tx=_okArr(S.get('finapp.tx',[]),t=>_obj(t)),_cs=S.get('finapp.settings',{}),cfg={cur:'MDL',budget:0,auto:false,rates:{},custom:[],catOv:{},...(_obj(_cs)?_cs:{})},learn=S.get('finapp.learn',{});
@@ -2101,33 +2116,65 @@ function voiceCmds(raw){
   const payDebt=(m,a,ws,dir,strict)=>{const d=findDebt(ws,dir,strict);
     if(!d){if(strict&&ws.length&&!/^(?:мне|ему|ей|им|нам)$/.test(ws.join(' '))){const nm=cap(ws.join(' ')),o=findDebt(ws);
       say(o?'С «'+o.who+'» долг в другую сторону: '+(o.dir==='out'?'вы должны. Если это вы вернули — скажите «вернул '+o.who+' 100»':'вам должны. Если вам вернули — скажите «'+o.who+' вернул 100»'):'Долга «'+nm+'» нет. Сначала запишите: «'+nm+(isFem(nm)?' должна':' должен')+' мне 500»');return true}return false}
-    const v=val(m,a);if(!(v>0))return false;
+    const v=val(m,a);if(!(v>0))return false;return payOne(d,v)};
+  const payOne=(d,v)=>{
     const add=Math.min(v,DR(d));d.paid=Math.min(d.amount,d.paid+v);d.log=(d.log||[]).concat({d:ymd(new Date()),a:add}).slice(-200);if(DR(d)<=0&&!d.closed)d.closed=ymd(new Date());
     const lk=debtMove(d.dir,'pay',add,d.who),lkI=lk&&lk.type==='income';
     say('Долг «'+d.who+'»: '+(d.dir==='in'?'вернули ':'вы вернули ')+fmt(add)+(DR(d)<=0?' · закрыт ✓':' · осталось '+fmt(Math.round(DR(d)*100)/100))+(lk?(lkI?' · доход':' · расход'):''),
       (d.dir==='in'?'💵 '+d.who+(isFem(d.who)?' вернула ':' вернул ')+BM_(add):'💵 Вы вернули долг · '+d.who+': '+BM_(add))+(DR(d)<=0?'\n✅ Долг закрыт полностью':'\nОсталось вернуть: '+BM_(DR(d))+' из '+BM_(d.amount))+(lk?(lkI?'\nЗаписано в доходы':'\nЗаписано в расходы'):''));return true};
-  const mkDebt=(name,v,dir)=>{name=name.trim().replace(/^(у|для|перед|от)\s+/,'').replace(/^долг\S*\s+/,'');if(!name||!(v>0)||/^(?:я|мы|мне|нам|меня|мной|ему|ей|им)$/.test(name)||/^(?:по|за|на|в|с|со|из|к|о|об|при|про|под|над)\s/.test(name))return false;
+  // v171: возврат по смыслу фразы. dir 'in' — деньги пришли вам («Ксюша вернула долг 500»), 'out' — ушли от вас («вернул Ксюше 500»).
+  // Есть долг в эту сторону — гасим его. Нет — деньги всё равно записываем (доход/расход «Долг»), если в фразе есть «долг»/«мне» или с человеком есть долг в другую сторону (он не меняется, бот подскажет)
+  const pay=(m,a,ws,dir,me,one)=>{if(!ws.length||ws.some(w=>/^(?:мне|ему|ей|им|нам|меня|у|от|я|мы|долг\S*|за|на|в|с)$/.test(w)))return false;
+    const d=findDebt(ws,dir,true);if(d)return payOne(d,val(m,a));
+    const v=val(m,a);if(!(v>0))return false;const o=findDebt(ws,dir==='in'?'out':'in',true);
+    if(!o&&(!one||!(dW||me||ws.every(w=>NAMES.includes(nomName(w))))))return false;
+    const nm=o?o.who:ws.map(nomName).map(cap).join(' '),fm=isFem(nm),inn=dir==='in';
+    const lk=linkDebtOn()?(inn?addLinkedIncome(v,nm):addLinkedExpense('debt',v,nm)):null;
+    const head=inn?'💵 '+nm+(fm?' вернула ':' вернул ')+BM_(v):'💵 Вы вернули · '+nm+': '+BM_(v);
+    const wr=lk?(inn?'Записано в доходы':'Записано в расходы'):'Не записано: запись долгов в доходы и расходы выключена (Планы → Долги)';
+    const tip=o?(o.dir==='out'?'С «'+o.who+'» записан ваш долг (вы должны '+BM_(DR(o))+') — он не изменился. Если это вы вернули, напишите: «вернул '+o.who+' 100»':'«'+o.who+'» должен вам '+BM_(DR(o))+' — долг не изменился. Если это вам вернули, напишите: «'+o.who+(isFem(o.who)?' вернула':' вернул')+' 100»')
+      :'Долга с «'+nm+'» в приложении нет. Чтобы следить за долгом, запишите: '+(inn?'«'+nm+(fm?' должна':' должен')+' мне 500»':'«я должен '+nm+' 500»');
+    say((inn?nm+(fm?' вернула ':' вернул ')+fmt(v):'Вы вернули · '+nm+': '+fmt(v))+(lk?(inn?' · доход':' · расход'):''),head+'\n'+wr+'\n'+tip);return true};
+  // глагол в начале: «вернула Ксюша 200» — Ксюша (именительный) вернула вам; «вернул Ксюше 200» — вы ей; «вернули/отдали …» — вам
+  const vdir=(m0,nm)=>/^[\s,;.]*(?:вернули|отдали)(?![а-я])/.test(m0)||words(nm).every(w=>nomName(w)===w)?'in':'out';
+  const payV=(m,a,nm)=>{const ws=words(nm),dr=vdir(m[0],nm);if(dr==='in'&&!findDebt(ws,'in',true)&&findDebt(ws,'out',true)&&!/^[\s,;.]*(?:вернули|отдали)/.test(m[0]))return payOne(findDebt(ws,'out',true),val(m,a));return pay(m,a,ws,dr,0,1)};
+  const mkDebt=(name,v,dir)=>{name=name.trim();if(dir==='in'&&/^(?:у|от|мне)\s/.test(name))return false;name=name.replace(/^(у|для|перед|от)\s+/,'').replace(/^долг\S*\s+/,'');if(!name||!(v>0)||/^(?:я|мы|мне|нам|меня|мной|ему|ей|им)$/.test(name)||/^(?:по|за|на|в|с|со|из|к|о|об|при|про|под|над)\s/.test(name))return false;
     const nm=name.split(/\s+/).map(nomName).map(cap).join(' ').slice(0,40),ex=(cfg.debts||[]).find(d=>DR(d)>0&&d.dir===dir&&words(d.who).length===words(nm).length&&words(nm).every(w=>words(d.who).some(x=>stemEq(w,x))));
     let dd=ex;if(ex)ex.amount=Math.round((ex.amount+v)*100)/100;else{dd={id:uid(),who:nm,dir,amount:v,paid:0,due:'',created:ymd(new Date()),log:[]};cfg.debts.push(dd)}
     newDebts.push(dd);
     const lk=debtMove(dir,'open',v,nm),lkI=lk&&lk.type==='income';
     say((dir==='in'?'Долг: '+dd.who+(isFem(dd.who)?' должна':' должен')+' вам '+fmt(dd.amount):'Долг: вы должны '+dd.who+' '+fmt(dd.amount))+(lk?(lkI?' · доход':' · расход'):''),
       '🤝 '+(ex?'Долг увеличен на '+BM_(v):'Новый долг')+'\n'+(dir==='in'?dd.who+(isFem(dd.who)?' должна':' должен')+' вам '+BM_(DR(dd))+'\nКогда вернёт, напишите: «'+dd.who+(isFem(dd.who)?' вернула':' вернул')+' 100»':'Вы должны · '+dd.who+': '+BM_(DR(dd))+'\nКогда вернёте, напишите: «вернул '+dd.who+' 100»')+(lk?(lkI?'\nЗаписано в доходы':'\nЗаписано в расходы'):''));return true};
-  const RV='(?:вернул[аи]?|отдал[аи]?|погасил[аи]?|выплатил[аи]?|вернули|отдали)';
+  const RV='(?:вернул[аи]?|отдал[аи]?|погасил[аи]?|выплатил[аи]?|вернули|отдали)',dW=/долг|взаймы/.test(t);
+  // v171: «часть долга», «вернула долг 500», «вернул Ксюше долг 500», «вернула 500 долга», «перевела/скинула долг» → без слова «долг»; «Ксюша мне вернула» → «Ксюша вернула мне»
+  t=t.replace(/(^|[\s,;.])часть\s+долга(?=\s)/g,'$1долг')
+   .replace(/(^|[\s,;.])(?:перевел|перечислил|скинул|прислал|закрыл|отправил)([аи]?)((?:\s+мне)?)\s+(?=долг)/g,'$1вернул$2$3 ')
+   .replace(/(^|[\s,;.])(?:перевел|перечислил|скинул|прислал|отправил)([аи]?)((?:\s+мне)?\s+[а-яa-z-]+\s+)(?=долг)/g,'$1вернул$2$3')
+   .replace(new RegExp('('+RV+')((?:\\s+мне)?)\\s+(?:весь\\s+)?долг(?:а|у)?(?=\\s)','g'),'$1$2')
+   .replace(new RegExp('('+RV+'(?:\\s+мне)?\\s+[а-яa-z-]+)\\s+(?:весь\\s+)?долг(?:а|у)?(?=\\s)','g'),'$1')
+   .replace(new RegExp('('+RV+'[^,;.]*?\\d[\\d.,]*(?:\\s*(?:тыс\\S*|к|лей|леев|mdl))?)\\s+(?:в\\s+счет\\s+)?долга?(?=[\\s,;.]|$)','g'),'$1')
+   .replace(new RegExp('(^|[\\s,;.])([а-яa-z-]+)\\s+мне\\s+('+RV+'|одолжил[аи]?|ссудил[аи]?|дал[аи]?|должен|должна|занял[аи]?)(?=\\s)','g'),(x,a,w,v)=>/^(?:кто|он|она|они|не|и|а|тоже|еще|уже|долг\S*)$/.test(w)?x:a+w+' '+v+' мне');
   for(const n of [2,1]){const NM=Array(n).fill(W).join('\\s+'),S=n===1;
     // «мне вернули 50 Ивана», «мне вернул Иван 100», «Иван вернул мне 100» — деньги вернули вам (долг «мне должны»)
-    take(new RegExp(B+'мне\\s+'+RV+'\\s+'+AMT+'\\s+(?:долг\\s+)?(?:от\\s+)?('+NM+')(?![а-яa-z-])','g'),m=>payDebt(m,1,words(m[4]),'in',S));
-    take(new RegExp(B+'мне\\s+'+RV+'\\s+('+NM+')\\s+'+AMT,'g'),m=>payDebt(m,2,words(m[1]),'in',S));
-    take(new RegExp(B+'('+NM+')\\s+'+RV+'\\s+мне\\s+(?:долг\\s+)?(?:на\\s+)?'+AMT,'g'),m=>payDebt(m,2,words(m[1]),'in',S));
-    // «вернул Марии 200», «вернул 200 Марии» — вы возвращаете (вы должны)
-    take(new RegExp(B+RV+'\\s+(?:долг\\s+)?(?:(?:ему|ей|у)\\s+)?('+NM+')\\s+(?:на\\s+)?'+AMT,'g'),m=>payDebt(m,2,words(m[1]),'out'));
-    take(new RegExp(B+RV+'\\s+'+AMT+'\\s+(?:долга?\\s+)?('+NM+')(?![а-яa-z-])','g'),m=>payDebt(m,1,words(m[4]),'out'));
-    take(new RegExp(B+'('+NM+')\\s+(?:вернул[аи]?|отдал[аи]?|погасил[аи]?)\\s+'+AMT,'g'),m=>payDebt(m,2,words(m[1]),'in'));
+    take(new RegExp(B+'мне\\s+'+RV+'\\s+'+AMT+'\\s+(?:от\\s+)?('+NM+')(?![а-яa-z-])','g'),m=>pay(m,1,words(m[4]),'in',1,S));
+    take(new RegExp(B+'мне\\s+'+RV+'\\s+('+NM+')\\s+(?:на\\s+)?'+AMT,'g'),m=>pay(m,2,words(m[1]),'in',1,S));
+    take(new RegExp(B+'('+NM+')\\s+'+RV+'\\s+мне\\s+(?:на\\s+)?'+AMT,'g'),m=>pay(m,2,words(m[1]),'in',1,S));
+    // «Ксюша вернула 500» — вернули вам (никогда не гасит ваш долг Ксюше)
+    take(new RegExp(B+'('+NM+')\\s+'+RV+'\\s+(?:на\\s+)?'+AMT,'g'),m=>{const ws=words(m[1]);return pay(m,2,ws,ws.every(w=>nomName(w)===w)?'in':'out',0,S)});
+    // «получил от Ксюши 200», «получил долг от Ксюши 200», «получил 200 от Ксюши» — вам (без долга с ней — обычный доход)
+    take(new RegExp(B+'получил[аи]?\\s+(?:долг\\S*\\s+)?от\\s+('+NM+')\\s+(?:долг\\S*\\s+)?'+AMT,'g'),m=>pay(m,2,words(m[1]),'in',0,S));
+    take(new RegExp(B+'получил[аи]?\\s+(?:долг\\S*\\s+)?'+AMT+'\\s+от\\s+('+NM+')(?![а-яa-z-])','g'),m=>pay(m,1,words(m[4]),'in',0,S));
+    // «вернул Ксюше 200», «вернул 200 Ксюше» — вы вернули; «вернула Ксюша 200», «вернули 200 Ксюша» — вернули вам
+    take(new RegExp(B+RV+'\\s+(?:(?:ему|ей|у)\\s+)?('+NM+')\\s+(?:на\\s+)?'+AMT,'g'),m=>payV(m,2,m[1]));
+    take(new RegExp(B+RV+'\\s+'+AMT+'\\s+('+NM+')(?![а-яa-z-])','g'),m=>payV(m,1,m[4]));
     take(new RegExp(B+'долг\\S*\\s+('+NM+')\\s+'+AMT+'\\s*\\+(?=\\s|$|[,;.])','g'),m=>payDebt(m,2,words(m[1])));
-    take(new RegExp(B+'(?:занял[аи]?|одолжил[аи]?|взял[аи]?\\s+в\\s+долг|взял[аи]?)\\s+'+AMT+'\\s+у\\s+('+NM+')(?![а-яa-z-])','g'),m=>mkDebt(m[4],val(m,1),'out'));
-    take(new RegExp(B+'(?:я\\s+должен|я\\s+должна|занял[аи]?\\s+у|одолжил[аи]?\\s+у|взял[аи]?\\s+(?:в\\s+долг\\s+)?у|долг\\s+перед)\\s+('+NM+')\\s+(?:на\\s+)?'+AMT,'g'),m=>mkDebt(m[1],val(m,2),'out'));
+    take(new RegExp(B+'(?:занял[аи]?|одолжил[аи]?|взял[аи]?\\s+в\\s+долг|взял[аи]?\\s+взаймы|взял[аи]?)\\s+'+AMT+'\\s+(?:в\\s+долг\\s+|взаймы\\s+)?у\\s+('+NM+')(?![а-яa-z-])','g'),m=>mkDebt(m[4],val(m,1),'out'));
+    // «одолжила мне Ксюша 500», «дала мне в долг Ксюша 500» — вы должны
+    take(new RegExp(B+'(?:одолжил[аи]?|ссудил[аи]?|дал[аи]?)\\s+мне\\s+(?:в\\s+долг\\s+|взаймы\\s+)?('+NM+')\\s+(?:в\\s+долг\\s+|взаймы\\s+)?(?:на\\s+)?'+AMT,'g'),m=>mkDebt(m[1],val(m,2),'out'));
+    take(new RegExp(B+'(?:я\\s+должен|я\\s+должна|занял[аи]?\\s+(?:денег\\s+)?у|одолжил[аи]?\\s+у|взял[аи]?\\s+(?:в\\s+долг\\s+|взаймы\\s+|денег\\s+)?у|долг\\s+перед)\\s+('+NM+')\\s+(?:на\\s+)?'+AMT,'g'),m=>mkDebt(m[1],val(m,2),'out'));
     take(new RegExp(B+'(?:одолжил[аи]?|дал[аи]?\\s+в\\s+долг|дал[аи]?\\s+взаймы)\\s+'+AMT+'\\s+('+NM+')(?![а-яa-z-])','g'),m=>mkDebt(m[4],val(m,1),'in'));
     take(new RegExp(B+'(?:одолжил[аи]?|дал[аи]?\\s+в\\s+долг|дал[аи]?\\s+взаймы)\\s+('+NM+')\\s+(?:на\\s+)?'+AMT,'g'),m=>mkDebt(m[1],val(m,2),'in'));
+    take(new RegExp(B+'('+NM+')\\s+(?:одолжил[аи]?|дал[аи]?\\s+в\\s+долг|дал[аи]?\\s+взаймы)\\s+(?:на\\s+)?'+AMT,'g'),m=>words(m[1]).every(w=>nomName(w)!==w)&&!/^(?:мне|ему|ей|им|нам)$/.test(m[1].trim())?mkDebt(words(m[1]).map(nomName).join(' '),val(m,2),'in'):false);
     // «дал Ивану в долг 500», «дал Ивану 500 в долг»
     take(new RegExp(B+'дал[аи]?\\s+('+NM+')\\s+(?:в\\s+долг|взаймы)\\s+'+AMT,'g'),m=>mkDebt(m[1],val(m,2),'in'));
     take(new RegExp(B+'дал[аи]?\\s+('+NM+')\\s+'+AMT+'\\s+(?:в\\s+долг|взаймы)','g'),m=>mkDebt(m[1],val(m,2),'in'));
@@ -2135,7 +2182,7 @@ function voiceCmds(raw){
     take(new RegExp(B+'('+NM+')\\s+(?:одолжил[аи]?|ссудил[аи]?)\\s+мне\\s+(?:на\\s+)?'+AMT,'g'),m=>mkDebt(m[1],val(m,2),'out'));
     take(new RegExp(B+'('+NM+')\\s+дал[аи]?\\s+мне\\s+(?:в\\s+долг\\s+|взаймы\\s+)?'+AMT+'(?:\\s+(?:в\\s+долг|взаймы))?','g'),m=>mkDebt(m[1],val(m,2),'out'));
     // «Игорь занял у меня 500», «Игорь занял 500», «Игорь взял в долг 500» — он должен вам
-    take(new RegExp(B+'('+NM+')\\s+(?:занял[аи]?|взял[аи]?)\\s+(?:у\\s+меня\\s+)?(?:в\\s+долг\\s+)?'+AMT,'g'),m=>/(?:занял|взял[аи]?\s+(?:у\s+меня|в\s+долг))/.test(m[0])?mkDebt(m[1],val(m,2),'in'):false);
+    take(new RegExp(B+'('+NM+')\\s+(?:занял[аи]?|взял[аи]?|одолжил[аи]?)\\s+(?:у\\s+меня\\s+)?(?:в\\s+долг\\s+|взаймы\\s+)?'+AMT+'(?:\\s+(?:в\\s+долг|взаймы))?','g'),m=>/(?:занял|взял[аи]?\s+(?:у\s+меня|в\s+долг|взаймы)|одолжил[аи]?\s+у\s+меня)/.test(m[0])?mkDebt(m[1],val(m,2),'in'):false);
     take(new RegExp(B+'(?:мне\\s+должен\\s+|мне\\s+должна\\s+)('+NM+')\\s+(?:на\\s+)?'+AMT,'g'),m=>mkDebt(m[1],val(m,2),'in'));
     take(new RegExp(B+'('+NM+')\\s+(?:должен|должна)\\s+(?:мне\\s+)?(?:на\\s+)?'+AMT,'g'),m=>mkDebt(m[1],val(m,2),'in'));
     // «должен Ивану 500», «задолжал Ивану 500» — вы должны
@@ -2288,7 +2335,6 @@ ov.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault()});
 ov.addEventListener('touchmove',e=>{e.preventDefault()},{passive:false});
 // v69: одно место, которое знает, какое окно сейчас верхнее (nc 50 > bq 45 > rc/cp 44 > cf/gd/ed/sh 40). Раньше оверлей и Escape имели каждый свою цепочку, в которой
 // bq стоял ниже rc/cp, а окно массовых правок (gd._bk) не учитывалось вовсе — клик по затемнению снимал оверлей и блокировку фона, оставляя окно открытым.
-function autoGd(){if(!gT||!$('#gsvb.auto'))return;const f={debt:'#dam',goal:'#gtg',lim:'#lam',bud:'#bam'}[gT.mode],el=f&&$(f);if(el&&pn(el.value)>0)saveGoal()}
 function closeTopModal(){
   if($('#nc').classList.contains('on'))closeNc(false);
   else if(bqT||bq.classList.contains('on'))closeBq();
@@ -2296,7 +2342,7 @@ function closeTopModal(){
   else if(rcS||rcEl.classList.contains('on'))closeRc();
   else if(cfT||cf.classList.contains('on'))closeCf();
   else if(gd._bk&&window.bkClose)window.bkClose();
-  else if(gT||gd.classList.contains('on')){try{autoGd()}catch(e){}if(gd.classList.contains('on'))closeGoal()}
+  else if(gT||gd.classList.contains('on')){if(gd.classList.contains('on'))closeGoal()}   // v170: окна плиток закрываются БЕЗ сохранения — сохраняет только «Сохранить» или Enter
   else if(eT||$('#ed').classList.contains('on')){if($('#ed').classList.contains('on'))closeEdit()}   // v143: окно операции закрывается БЕЗ сохранения — сохраняет только кнопка «Сохранить» или Enter
   else if(sh.classList.contains('on')){inp.value='';closeSheet()}
   else return false;
@@ -2349,7 +2395,7 @@ function renderRev(quiet){const el=$('#rev');$('#fab').classList.toggle('has',dr
   if(!drafts.length){cancelAuto();el.classList.remove('anim','clearing');el.innerHTML='';syncBtn();return}
   const sm=drafts.reduce((a,d)=>a+(d.type==='income'?d.amount:-d.amount),0);
   el.classList.remove('anim','clearing');
-  el.innerHTML=`<div class="rh"><span>${drafts.length} ${plural(drafts.length,'операция','операции','операций')} · ${sm<0?'−':'+'}${fmt(Math.abs(sm))} ${cfg.cur}</span><button class="clx" data-a="cancel" aria-label="Очистить" title="Очистить"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>`+drafts.map((d,i)=>row(d,1,i)).join('');
+  el.innerHTML=`<div class="rh"><span>${drafts.length} ${plural(drafts.length,'операция','операции','операций')} · ${sm<0?'−':'+'}${fmt(Math.abs(sm))} ${cfg.cur}</span><button class="clx" data-a="cancel" aria-label="Очистить" title="Очистить"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>`+drafts.map((d,i)=>row(d,1,i,1)).join('');   // v172: у каждого черновика корзина — удалить по одному
   if(!quiet)requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('anim')));
   else el.classList.add('anim');
   syncBtn()}
@@ -2403,7 +2449,7 @@ function bind(root,list,isDraft){
   root.addEventListener('click',e=>{const dp=e.target.closest('.dp');if(dp){const i=dp.querySelector('input');try{if(i.showPicker)i.showPicker()}catch{}return}
     const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,r=b.closest('[data-id]'),L=list();
     if(a==='x'){const id=r.dataset.id;const i=L.findIndex(x=>x.id===id);if(i<0)return;const it=L[i];
-      if(isDraft){removeDraftAnim(id)}else{L.splice(i,1);tx=L;tomb(it.id);save();toastDel(1,()=>{untomb(it.id);tx.splice(Math.min(i,tx.length),0,it);save();fxCV();render();fxIn([it.id])});render()}}
+      if(isDraft){const w=b.closest('.sw');if(w&&typeof commitSw==='function')commitSw(w);else removeDraftAnim(id)}else{L.splice(i,1);tx=L;tomb(it.id);save();toastDel(1,()=>{untomb(it.id);tx.splice(Math.min(i,tx.length),0,it);save();fxCV();render();fxIn([it.id])});render()}}
     if(a==='cal'){openRow=openRow===r.dataset.id?null:r.dataset.id;if(isDraft)renderRev(true);else render()}
     if(a==='sg'){const t=L.find(x=>x.id===r.dataset.id);t.type=t.type==='income'?'expense':'income';t.category=detect(t.note,t.note,t.type);if(isDraft)renderRev(true);else{save();render()}}
     if(a==='tgx'){const t=L.find(x=>x.id===r.dataset.id);if(t){t.tags=(t.tags||[]).filter(g=>g!==b.dataset.tag);if(!t.tags.length)delete t.tags;if(isDraft)renderRev(true);else{save();render()}}}
@@ -2570,7 +2616,7 @@ function debtsHtml(){const ds=cfg.debts||[];
   let h=`<div class="gsec"><div class="gsh">${mtg('ld',linkDebtOn(),'Записывать в доходы и расходы')}<button class="gp" data-da="new" aria-label="Добавить долг">+</button></div>`;
   if(!ds.length)return h+`<div class="cd" style="color:var(--m);font-size:13px;line-height:1.45">Например: «Игорь одолжил 500, вернёт до 20 числа». Нажмите «+» — напомню, когда подойдёт срок.</div></div>`;
   const sumD=dir=>ds.filter(d=>d.dir===dir).reduce((s,d)=>s+dRem(d),0);
-  h+=`<div class="stg" style="margin:12px 0 0"><div class="stt"><small>Мне должны</small><b style="color:var(--g)">${fmt(Math.round(sumD('in')))} ${cfg.cur}</b><span>&nbsp;</span></div><div class="stt"><small>Я должен</small><b style="color:var(--rd)">${fmt(Math.round(sumD('out')))} ${cfg.cur}</b><span>&nbsp;</span></div></div>`;
+  h+=`<div class="dsum"><div><small>Мне должны</small><b style="color:var(--g)">${fmt(Math.round(sumD('in')))} ${cfg.cur}</b></div><div><small>Я должен</small><b style="color:var(--rd)">${fmt(Math.round(sumD('out')))} ${cfg.cur}</b></div></div>`;   // v174: итоги долгов — текстом, без плиток
   const act=ds.filter(d=>dRem(d)>0).sort((a,b)=>(a.due||'9999').localeCompare(b.due||'9999')),done=ds.filter(d=>dRem(d)<=0);
   return h+act.concat(done).map(debtCard).join('')+`</div>`}
 function debtAct(el){const a=el.dataset.da,d=(cfg.debts||[]).find(x=>x.id===el.dataset.did);
@@ -5328,7 +5374,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v168';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v174';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}   // номер сборки виден внизу экрана: по нему понятно, обновился ли Telegram до новой версии
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
