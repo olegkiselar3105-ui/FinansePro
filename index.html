@@ -482,6 +482,7 @@ button{transition:opacity .15s ease,color .2s ease,background-color .2s ease,bor
 .pgl{opacity:0;animation:fi .7s ease .85s forwards}
 @media (prefers-reduced-motion:reduce){.pmk{animation:none;stroke-dashoffset:0}.pgs{animation:none}.pgl{animation:none;opacity:1}}@keyframes fi{to{opacity:1}}
 .tlg{display:flex;gap:12px;font-size:12px;color:var(--m2)}.tlg span{display:inline-flex;align-items:center;gap:6px}.tlg i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.smr{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:.5px solid var(--l)}.smr:first-of-type{border-top:0;padding-top:2px}.sme{font-size:18px;width:24px;text-align:center;flex:none}.sml{flex:1;min-width:0;font-size:13px}.sml small{display:block;font-size:11px;color:var(--m2);margin-top:1px}.smr b{font-weight:500;font-size:15px;text-align:right;white-space:nowrap}
 .stg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .stt{border:.5px solid var(--l);border-radius:12px;padding:10px 12px;background:rgba(var(--wr),.025);min-width:0}
 .stt small{display:block;font-size:11px;color:var(--m)}.stt b{display:block;font-weight:500;font-size:16px;margin:2px 0 1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.stt span{display:block;font-size:11px;color:var(--m2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -2498,9 +2499,8 @@ function forecast(){const now=new Date();if(month!==curM())return null;
       short='Экономьте: до '+fmt(al)+' в день '+label}}
   return{lines,short,warn,proj}}
 const fcHtml=()=>{const f=forecast();return f?`<div class="fc${f.warn?' w':''}">${f.sub?`<b style="font-weight:500${f.warn?'':';color:var(--t)'}">${E(f.short)}</b><br>${E(f.sub)}`:E(f.short)}</div>`:''};
-// карточки статистики: прогноз, лимиты, сравнение
-function extraCards(it){let h='';const f=forecast();
-  if(f)h+=`<div class="cd fcl"><h4>Прогноз месяца</h4>${f.lines.map(l=>`<p>${E(l)}</p>`).join('')}</div>`;
+// карточки статистики: лимиты, сравнение
+function extraCards(it){let h='';
   const lims=Object.entries(limOf(month)).filter(([id,v])=>v>0&&ALL.some(c=>c.id===id&&!c.inc)).map(([id,v])=>{const sp=sumBy(month,'expense',id);return{id,v,sp,p:sp/v*100}}).sort((a,b)=>b.p-a.p);
   if(lims.length)h+=`<div class="cd"><h4>Лимиты · ${MN[+month.slice(5,7)-1]}</h4>`+lims.map(l=>{const c=cd(l.id),col=l.p>=100?'#ff6b6b':l.p>=80?'#f2c14e':'var(--g)';return `<div class="lr" data-cat="${l.id}" role="button" tabindex="0"><div class="lh"><span>${dot(l.id)}${E(c.l)}</span><span style="color:${l.p>=80?col:'var(--m2)'}">${fmt(l.sp)} / ${fmt(l.v)}${l.p>=100?' · +'+fmt(l.sp-l.v):''}</span></div><div class="lb"><i style="width:${Math.min(100,l.p)}%;background:${col}"></i></div></div>`}).join('')+`</div>`;
   const cs=it.map(([id])=>({id,...cmpCat('expense',id)})).filter(x=>x.d!=null&&Math.abs(x.d)>=10&&Math.abs(x.cur-x.prev)>=1).sort((a,b)=>Math.abs(b.cur-b.prev)-Math.abs(a.cur-a.prev)).slice(0,4);
@@ -2547,20 +2547,20 @@ function trendHtml(peek){
   ms.forEach((m,i)=>{s+=`<rect data-mo="${m}" x="${(px(i)-cw/2).toFixed(1)}" y="0" width="${cw.toFixed(1)}" height="${H}" fill="transparent" style="cursor:pointer"/>`});
   s+='</svg>';
   const nz=Math.max(1,ms.filter(m=>agg[m]).length),aI=I.reduce((a,c)=>a+c,0)/nz,aX=X.reduce((a,c)=>a+c,0)/nz;
-  const st=monthStats(sel),mn=MN[st.mo-1]+' '+st.y;
   let h=`<div style="display:flex;justify-content:space-between;align-items:center;margin:12px 0 4px"><div class="tlg"><span><i style="background:var(--g)"></i>Доходы</span><span><i style="background:var(--rd)"></i>Расходы</span></div>${seg('tn',[['6','6 мес'],['12','12 мес']],String(TN))}</div><div class="cd" style="padding:10px 8px 8px">${s}<div class="gx" style="margin:2px 6px 2px">В среднем за месяц: доход ${fmt(Math.round(aI))} · расход ${fmt(Math.round(aX))} ${cfg.cur}</div></div>`;
-  h+=`<div class="cd"><h4>Итоги · ${mn}</h4>`;
-  if(!st.ex.length&&!st.I)return h+`<div class="gx">В этом месяце операций нет.</div></div>`;
-  const sv=st.I>0?st.I-st.X:(budgetOf(sel)>0?budgetOf(sel)-st.X:null),svl=st.I>0?'Сэкономили':'Сэкономили от бюджета';
-  const tile=(a,b2,c,col)=>`<div class="stt"><small>${a}</small><b${col?` style="color:${col}"`:''}>${b2}</b><span>${c||'&nbsp;'}</span></div>`;
-  h+=`<div class="stg">`+
-   tile('Расходы',fmt(Math.round(st.X))+' '+cfg.cur,st.dlt==null?'':E(sgn(st.dlt)+' к прошлому месяцу'),null)+
-   (sv==null?tile('Сэкономили','—','нет доходов и бюджета',null):tile(svl,(sv<0?'−':'')+fmt(Math.abs(Math.round(sv)))+' '+cfg.cur,sv>=0?(st.I>0?Math.round(sv/st.I*100)+'% дохода':'в рамках бюджета'):(st.I>0?'расходы выше доходов':'бюджет превышен'),sv>=0?'var(--g)':'var(--rd)'))+
-   tile('Самая большая трата',st.big?fmt(st.big.amount)+' '+cfg.cur:'—',st.big?E((st.big.note||cd(st.big.category).l).slice(0,22))+' · '+dayLbl(st.big.date):'',null)+
-   tile('Самый дорогой день',st.hv?fmt(Math.round(st.hv))+' '+cfg.cur:'—',st.hd?dLbl(pDates(st.m)[st.hd-1]):'',null)+
-   tile('Лучшие дни · без трат',st.zero+' из '+st.el,st.streak>1?'серия до '+dayWord(st.streak)+' подряд':'',st.zero>0?'var(--g)':null)+
-   tile('В среднем в день',fmt(Math.round(st.X/Math.max(1,st.el)))+' '+cfg.cur,'за '+dayWord(st.el),null)+`</div></div>`;
-  return h+`<div class="hint">Нажмите на месяц на графике — итоги ниже обновятся.</div>`}
+  return h}
+// итоги периода текстом: [эмодзи, подпись, значение, пояснение, цвет]
+const sRows=rows=>rows.map(([e,l,v,sb,col])=>`<div class="smr"><span class="sme">${e}</span><span class="sml">${l}${sb?`<small>${sb}</small>`:''}</span><b${col?` style="color:${col}"`:''}>${v}</b></div>`).join('');
+// итоги месяца — внизу вкладки «Общая» при «Мес»
+function monthSum(m){const st=monthStats(m);if(!st.ex.length&&!st.I)return'';
+  const sv=st.I>0?st.I-st.X:(budgetOf(m)>0?budgetOf(m)-st.X:null),C=' '+cfg.cur;
+  return `<div class="cd"><h4>Итоги · ${MN[st.mo-1]} ${st.y}</h4>`+sRows([
+   ['💸','Расходы',fmt(Math.round(st.X))+C,st.dlt==null?'':E(sgn(st.dlt)+' к прошлому месяцу'),'var(--rd)'],
+   sv==null?['🐷','Сэкономили','—','нет доходов и бюджета',null]:['🐷',st.I>0?'Сэкономили':'Сэкономили от бюджета',(sv<0?'−':'')+fmt(Math.abs(Math.round(sv)))+C,sv>=0?(st.I>0?Math.round(sv/st.I*100)+'% дохода':'в рамках бюджета'):(st.I>0?'расходы выше доходов':'бюджет превышен'),sv>=0?'var(--g)':'var(--rd)'],
+   ['🧾','Самая большая трата',st.big?fmt(st.big.amount)+C:'—',st.big?E((st.big.note||cd(st.big.category).l).slice(0,30))+' · '+dayLbl(st.big.date):'',null],
+   ['📅','Самый дорогой день',st.hv?fmt(Math.round(st.hv))+C:'—',st.hd?dLbl(pDates(st.m)[st.hd-1]):'',null],
+   ['🌿','Дни без трат',st.zero+' из '+st.el,st.streak>1?'серия до '+dayWord(st.streak)+' подряд':'',st.zero>0?'var(--g)':null],
+   ['📊','В среднем в день',fmt(Math.round(st.X/Math.max(1,st.el)))+C,'за '+dayWord(st.el),null]])+`</div>`}
 let _calK='',_calT=0;const _calSeen=new Set();
 // анимация календаря: один раз при первом заходе в каждый месяц; не во время свайпа (там страница-превью), а после остановки;
 // перерисовка посреди анимации продолжает её, а не запускает заново; при повторных заходах в месяц анимации нет
@@ -3122,14 +3122,13 @@ function buildPage(pg,B,peek){
     if(AS==='tags'){B.innerHTML=head+tagsAnalytics(L,tot);return}
     const by={};L.forEach(t=>by[t.category]=(by[t.category]||0)+t.amount);
     const it=Object.entries(by).sort((a,b)=>b[1]-a[1]);
-    const bdg=budgetOf(month),pct=bdg>0?Math.min(100,tot/bdg*100):0;
-    B.innerHTML=head+pie(it,tot,null,pieAn(!peek,month))+(RG!=='month'?sumCard(from,to):'')+(RG==='year'?yearReview(from.slice(0,4)):'')+`<div class="cd" style="padding:2px 14px">`+it.map(([id,v])=>{const c=cd(id),p=v/tot*100,cm=RG==='month'?cmpCat(KD,id):null,bd=cm&&cm.d!=null&&Math.abs(cm.d)>=1?`<small class="dd" style="color:${(cm.d>0)===(KD==='expense')?'var(--rd)':'var(--g)'}">${sgn(cm.d)}</small>`:'';return `<div class="pl" data-cat="${id}" role="button" tabindex="0"><span class="pc" style="background:${c.c}">${p<1?'<1':Math.round(p)}%</span><span>${E(c.l)}${bd}</span><span>${fmt(v)}</span></div>`}).join('')+`</div>`+
-    (!inc&&RG==='month'?extraCards(it):'')+
-    (!inc&&RG==='month'&&bdg>0?`<div class="cd"><h4>Бюджет · ${fmt(tot)} / ${fmt(bdg)}</h4><div class="bb"><s><u style="width:${pct}%;color:${pct>=100?'#ff6b6b':'var(--t)'};background:currentColor"></u></s></div></div>`:'')}
+    B.innerHTML=head+pie(it,tot,null,pieAn(!peek,month))+`<div class="cd" style="padding:2px 14px">`+it.map(([id,v])=>{const c=cd(id),p=v/tot*100,cm=RG==='month'?cmpCat(KD,id):null,bd=cm&&cm.d!=null&&Math.abs(cm.d)>=1?`<small class="dd" style="color:${(cm.d>0)===(KD==='expense')?'var(--rd)':'var(--g)'}">${sgn(cm.d)}</small>`:'';return `<div class="pl" data-cat="${id}" role="button" tabindex="0"><span class="pc" style="background:${c.c}">${p<1?'<1':Math.round(p)}%</span><span>${E(c.l)}${bd}</span><span>${fmt(v)}</span></div>`}).join('')+`</div>`+
+    (RG!=='month'?sumCard(from,to):'')+(RG==='year'?yearReview(from.slice(0,4)):'')+
+    (!inc&&RG==='month'?extraCards(it):'')+(RG==='month'?monthSum(month):'')}
   else if(pg==='tags'){B.innerHTML=subPl()+(ps==='budget'?budgetHtml():ps==='debts'?debtsHtml():goalsHtml())}
   else if(pg==='settings'){B.innerHTML=`<div id="st">${stHtml()}</div>`;if(!peek)bindSt();if(window.pfSync)window.pfSync()}
   else B.innerHTML=tips(month).map(t=>`<div class="tip">${E(t)}</div>`).join('')}
-// короткие итоги недели / года: сколько потратили, на что больше всего, что изменилось к прошлому периоду
+// короткие итоги недели / года: доходы, расходы, на что больше всего, дни без трат
 function yearReview(y){const rows=tx.filter(t=>String(t.date).slice(0,4)===y);if(!rows.length)return'';
   const sm=a=>a.reduce((q,t)=>q+t.amount,0),ex=rows.filter(t=>t.type!=='income'),inc=rows.filter(t=>t.type==='income'),X=sm(ex),I=sm(inc);
   const ms=Array.from({length:12},(_,i)=>{const k=y+'-'+String(i+1).padStart(2,'0');return{i,x:sm(ex.filter(t=>String(t.date).startsWith(k))),n:rows.some(t=>String(t.date).startsWith(k))}});
@@ -3171,16 +3170,16 @@ function sumCard(from,to){const wk=RG==='week',td=ymd(new Date()),P=x=>new Date(
   if(!X&&!I)return'';
   const by={},pby={};tx.forEach(t=>{if(t.type!=='expense')return;if(t.date>=from&&t.date<=to)by[t.category]=(by[t.category]||0)+t.amount;else if(t.date>=pf&&t.date<=pt)pby[t.category]=(pby[t.category]||0)+t.amount});
   const top=Object.entries(by).sort((a,b)=>b[1]-a[1])[0];
-  let mv=null;new Set([...Object.keys(by),...Object.keys(pby)]).forEach(id=>{const d=(by[id]||0)-(pby[id]||0);if(!mv||Math.abs(d)>Math.abs(mv.d))mv={id,d}});
-  const vs=wk?'прошлой неделе':'прошлому году',tail=part?' (за те же дни)':'';
-  const tile=(a,b,c,col)=>`<div class="stt"><small>${a}</small><b${col?` style="color:${col}"`:''}>${b}</b><span>${c||'&nbsp;'}</span></div>`;
+  // дни без трат: от начала периода до сегодня (или до конца прошедшего периода)
+  const xd=new Set(tx.filter(t=>t.type==='expense'&&t.date>=from&&t.date<=to).map(t=>t.date)),end=to<td?to:td;
+  let el=0,zero=0,run=0,streak=0;for(const d=P(from);ymd(d)<=end;d.setDate(d.getDate()+1)){el++;if(xd.has(ymd(d))){run=0}else{zero++;run++;if(run>streak)streak=run}}
+  const vs=wk?'прошлой неделе':'прошлому году',tail=part?' (за те же дни)':'',C=' '+cfg.cur;
   const dX=pX>0?(X-pX)/pX*100:null,dI=pI>0?(I-pI)/pI*100:null;
-  return `<div class="cd"><h4>Итоги ${wk?'недели':'года'}</h4><div class="stg">`+
-   tile('Доходы',fmt(Math.round(I))+' '+cfg.cur,dI==null?'':E(sgn(dI)+' к '+vs+tail),'var(--g)')+
-   tile('Расходы',fmt(Math.round(X))+' '+cfg.cur,dX==null?(pX?'':'в прошлом периоде трат не было'):E(sgn(dX)+' к '+vs+tail),'var(--rd)')+
-   tile('Больше всего на',top?E(cd(top[0]).l):'—',top?fmt(Math.round(top[1]))+' '+cfg.cur+' · '+Math.round(top[1]/X*100)+'%':'',null)+
-   tile('Что изменилось',mv&&Math.abs(mv.d)>=1?E(cd(mv.id).l):'—',mv&&Math.abs(mv.d)>=1?(mv.d>0?'+':'−')+fmt(Math.round(Math.abs(mv.d)))+' '+cfg.cur+' к '+vs:'без заметных изменений',mv&&Math.abs(mv.d)>=1?(mv.d>0?'var(--rd)':'var(--g)'):null)+
-   `</div></div>`}
+  return `<div class="cd"><h4>Итоги ${wk?'недели':'года'}</h4>`+sRows([
+   ['💰','Доходы',fmt(Math.round(I))+C,dI==null?'':E(sgn(dI)+' к '+vs+tail),'var(--g)'],
+   ['💸','Расходы',fmt(Math.round(X))+C,dX==null?(pX?'':'в прошлом периоде трат не было'):E(sgn(dX)+' к '+vs+tail),'var(--rd)'],
+   top?['🏆','Больше всего — '+E(cd(top[0]).l),fmt(Math.round(top[1]))+C,Math.round(top[1]/X*100)+'% расходов',null]:['🏆','Больше всего','—','',null],
+   ['🌿','Дни без трат',el?zero+' из '+el:'—',streak>1?'серия до '+dayWord(streak)+' подряд':'',zero>0?'var(--g)':null]])+`</div>`}
 function tagsAnalytics(L,tot){const inc=KD==='income',by={},cnt={},cat={};let tagged=0;
   L.forEach(t=>{const g=t.tags||[];if(g.length)tagged+=t.amount;g.forEach(x=>{by[x]=(by[x]||0)+t.amount;cnt[x]=(cnt[x]||0)+1;const c=cat[x]=cat[x]||{};c[t.category]=(c[t.category]||0)+t.amount})});
   const it=Object.entries(by).sort((a,b)=>b[1]-a[1]);
@@ -5374,7 +5373,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v174';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v175';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}   // номер сборки виден внизу экрана: по нему понятно, обновился ли Telegram до новой версии
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
