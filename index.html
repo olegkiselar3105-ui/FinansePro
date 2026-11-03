@@ -2292,7 +2292,7 @@ function setOrigin(el,src){
   el.style.setProperty('--o',(x-el.offsetLeft)+'px '+(y-(el.offsetTop+ty))+'px')}
 // v153: курсор в поле при открытии окна — только на компьютере. На телефоне фокус из таймера не открывает клавиатуру (iOS), а окно поднималось под неё и висело посередине
 const autoF=(sel,ms)=>{if(matchMedia('(pointer:coarse)').matches)return;setTimeout(()=>{const a=$(sel);if(a)a.focus({preventScroll:true})},ms)};
-const isModalOpen=()=>sh.classList.contains('on')||($('#ed')&&$('#ed').classList.contains('on'))||($('#gd')&&$('#gd').classList.contains('on'))||($('#cf')&&$('#cf').classList.contains('on'))||($('#bq')&&$('#bq').classList.contains('on'))||($('#nc')&&$('#nc').classList.contains('on'))||($('#cp')&&$('#cp').classList.contains('on'))||($('#rc')&&$('#rc').classList.contains('on'))||!!document.querySelector('#tpv:not(.cl),#wr:not(.cl)');
+const isModalOpen=()=>sh.classList.contains('on')||($('#ed')&&$('#ed').classList.contains('on'))||($('#gd')&&$('#gd').classList.contains('on'))||($('#cf')&&$('#cf').classList.contains('on'))||($('#bq')&&$('#bq').classList.contains('on'))||($('#nc')&&$('#nc').classList.contains('on'))||($('#cp')&&$('#cp').classList.contains('on'))||($('#rc')&&$('#rc').classList.contains('on'))||!!document.querySelector('#tpv:not(.cl),#wr:not(.cl),#shv');
 function cancelGestures(){
   try{if(typeof openSw!=='undefined'&&openSw)closeSw(openSw)}catch{}
   try{sd=null}catch{}
@@ -2362,7 +2362,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&isModalOpen()){e.pr
  const mtOff=()=>{if(mtOn){mtOn=false;document.removeEventListener('touchmove',modalTM)}};
  document.addEventListener('touchstart',()=>{mtOff();if(isModalOpen()){mtOn=true;document.addEventListener('touchmove',modalTM,{passive:false})}},{passive:true,capture:true});
  document.addEventListener('touchend',mtOff,{passive:true,capture:true});document.addEventListener('touchcancel',mtOff,{passive:true,capture:true})}
-document.addEventListener('pointerdown',e=>{if(isModalOpen()&&!e.target.closest('#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc,#ov,#toast,#tour,#tpv,#wr')){e.stopPropagation();e.preventDefault()}},true);
+document.addEventListener('pointerdown',e=>{if(isModalOpen()&&!e.target.closest('#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc,#ov,#toast,#tour,#tpv,#wr,#shv')){e.stopPropagation();e.preventDefault()}},true);
 
 
 // ---------- строки ----------
@@ -3183,7 +3183,7 @@ function sumCard(from,to){const wk=RG==='week',td=ymd(new Date()),P=x=>new Date(
   return sumBox(wk?'w':'y',wk?'Итоги недели':'Итоги года',per,[
    ['💰','Доходы',fmt(Math.round(I))+C,dI==null?'':sgn(dI)+' к '+vs+tail,'var(--g)'],
    ['💸','Расходы',fmt(Math.round(X))+C,dX==null?(pX?'':'в прошлом периоде трат не было'):sgn(dX)+' к '+vs+tail,'var(--rd)'],
-   top?['🏆','Больше всего — '+cd(top[0]).l,fmt(Math.round(top[1]))+C,Math.round(top[1]/X*100)+'% расходов',null]:['🏆','Больше всего','—','',null],
+   top?['🏆','Больше всего',fmt(Math.round(top[1]))+C,cd(top[0]).l+' · '+Math.round(top[1]/X*100)+'% расходов',null]:['🏆','Больше всего','—','',null],
    ['🌿','Дни без трат',el?zero+' из '+el:'—',streak>1?'серия до '+dayWord(streak)+' подряд':'',zero>0?'var(--g)':null]])}
 function tagsAnalytics(L,tot){const inc=KD==='income',by={},cnt={},cat={};let tagged=0;
   L.forEach(t=>{const g=t.tags||[];if(g.length)tagged+=t.amount;g.forEach(x=>{by[x]=(by[x]||0)+t.amount;cnt[x]=(cnt[x]||0)+1;const c=cat[x]=cat[x]||{};c[t.category]=(c[t.category]||0)+t.amount})});
@@ -5378,7 +5378,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v176';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v177';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}   // номер сборки виден внизу экрана: по нему понятно, обновился ли Telegram до новой версии
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
@@ -6600,47 +6600,116 @@ function open(kind){if(el)return;let d;try{d=build(kind)}catch(e){console.error(
   ['touchstart','touchmove','click'].forEach(n=>el.addEventListener(n,e=>e.stopPropagation(),{passive:true}));
   el.querySelector('.wx').onclick=close;el.querySelector('.wsh').onclick=share;document.addEventListener('keydown',key);
   last=performance.now();show(0);raf=requestAnimationFrame(tick)}
-// v176: «Поделиться» из карточек «Итоги месяца / недели / года» — картинка 3:4 (1080×1440), строки как в карточке,
-// внизу значок + FinancePro и ник; окно просмотра — как в историях
+// v177: «Поделиться» из карточек «Итоги месяца / недели / года» — картинка 3:4 (1080×1440) в пяти стилях,
+// стиль листается свайпом в окне просмотра; выбранный запоминается (localStorage, только удобство)
+const SST=[['std','Обычный'],['min','Минимализм'],['film','Плёнка'],['rcpt','Чек'],['png','Без фона']];
+const noEm=s=>String(s).replace(/(\p{Extended_Pictographic}|\p{Regional_Indicator})[️‍\p{Extended_Pictographic}]*\s*/gu,'').trim();
 function ell(x,s,w){if(x.measureText(s).width<=w)return s;while(s.length>1&&x.measureText(s+'…').width>w)s=s.slice(0,-1);return s.trimEnd()+'…'}
-function drawSum(d){const W=1080,H=1440,light=document.documentElement.getAttribute('data-theme')==='light',FG=light?'20,21,26':'255,255,255',A=a=>'rgba('+FG+','+a+')';
-  const rs=getComputedStyle(document.documentElement),fam=getComputedStyle(document.body).fontFamily||'sans-serif';
-  const col=c=>{if(!c)return A(1);const m=/var\((--[\w-]+)\)/.exec(c);return m?(rs.getPropertyValue(m[1]).trim()||A(1)):c};
-  const cv=document.createElement('canvas');cv.width=W;cv.height=H;const x=cv.getContext('2d');
-  x.fillStyle=light?'#f4f5f9':'#0b0b10';x.fillRect(0,0,W,H);
-  {x.save();x.translate(W/2,0);x.scale(1.25*W,.62*H);const gr=x.createRadialGradient(0,0,0,0,0,1);gr.addColorStop(0,'#5b8cff');gr.addColorStop(.75,hexA('#5b8cff',0));gr.addColorStop(1,hexA('#5b8cff',0));x.globalAlpha=light?.35:.7;x.fillStyle=gr;x.fillRect(-1,0,2,1/.62+.01);x.restore()}
+function drawSum(d,st){const W=1080,H=1440,cv=document.createElement('canvas');cv.width=W;cv.height=H;const x=cv.getContext('2d');
+  const fam=getComputedStyle(document.body).fontFamily||'sans-serif';
+  if(st==='rcpt')return drawRcpt(d,cv,x);
+  const appLight=document.documentElement.getAttribute('data-theme')==='light',rs=getComputedStyle(document.documentElement);
+  // параметры стиля: фон, цвет текста, свечение сверху, плашки строк, эмодзи, тень (для «Без фона»), цвета значений
+  const S={
+    std:{bg:appLight?'#f4f5f9':'#0b0b10',fg:appLight?'20,21,26':'255,255,255',glow:true,panel:true,em:true},
+    film:{bg:'#0b0b10',fg:'255,255,255',glow:true,panel:true,em:true},
+    min:{bg:'#f7f6f2',fg:'17,17,17',line:true,em:false,c:{'--g':'#2e7d4f','--rd':'#b8433a'}},
+    png:{bg:null,fg:'255,255,255',em:true,shadow:true,c:{'--g':'#6ff0a8','--rd':'#ff8a8a'}}}[st]||{};
+  const A=a=>'rgba('+S.fg+','+a+')';
+  const col=c=>{if(!c)return A(1);const m=/var\((--[\w-]+)\)/.exec(c);if(!m)return c;if(S.c&&S.c[m[1]])return S.c[m[1]];if(st==='film')return A(1);return rs.getPropertyValue(m[1]).trim()||A(1)};
+  if(S.bg){x.fillStyle=S.bg;x.fillRect(0,0,W,H)}
+  if(S.glow){x.save();x.translate(W/2,0);x.scale(1.25*W,.62*H);const gr=x.createRadialGradient(0,0,0,0,0,1);gr.addColorStop(0,'#5b8cff');gr.addColorStop(.75,hexA('#5b8cff',0));gr.addColorStop(1,hexA('#5b8cff',0));x.globalAlpha=appLight&&st==='std'?.35:.7;x.fillStyle=gr;x.fillRect(-1,0,2,1/.62+.01);x.restore()}
+  if(S.shadow){x.shadowColor='rgba(0,0,0,.5)';x.shadowBlur=22;x.shadowOffsetY=3}
   const mx=72;x.textBaseline='middle';x.textAlign='left';
-  x.fillStyle=A(.7);x.font='600 34px '+fam;try{x.letterSpacing='4px'}catch(e){}x.fillText(d.title.toUpperCase(),mx,140);try{x.letterSpacing='0px'}catch(e){}
-  x.fillStyle=A(1);x.font='800 84px '+fam;x.fillText(ell(x,d.period,W-mx*2),mx,232);
-  const top=330,bot=H-200,n=d.rows.length,gap=20,rh=Math.min(190,(bot-top-gap*(n-1))/n),h0=top;
-  d.rows.forEach(([e,l,v,sb,c],i)=>{const y=h0+i*(rh+gap),cy=y+rh/2;
-    x.fillStyle=A(light?.06:.09);rrect(x,mx-16,y,W-(mx-16)*2,rh,36);x.fill();
-    x.globalAlpha=1;x.textAlign='center';x.font='56px '+fam;x.fillStyle=A(1);x.fillText(e,mx+44,cy+2);
-    x.textAlign='right';x.font='700 46px '+fam;x.fillStyle=col(c);const vw=Math.min(x.measureText(v).width,440),vx=W-mx-16;x.fillText(ell(x,v,440),vx,cy);
-    const lx=mx+104,lw=vx-vw-32-lx;x.textAlign='left';x.fillStyle=A(1);x.font='500 38px '+fam;
-    if(sb){x.fillText(ell(x,l,lw),lx,cy-22);x.fillStyle=A(.6);x.font='400 28px '+fam;x.fillText(ell(x,sb,lw),lx,cy+24)}else x.fillText(ell(x,l,lw),lx,cy)});
-  {const nk=nick(),isz=64,cy=H-100;x.save();x.globalAlpha=.75;x.textBaseline='middle';
-    wallet(x,mx,cy-isz/2,isz,'rgb('+FG+')');x.fillStyle=A(1);x.textAlign='left';x.font='700 36px '+fam;x.fillText('FinancePro',mx+isz+18,cy);
-    if(nk){x.textAlign='right';x.font='500 30px '+fam;x.globalAlpha=.65;x.fillText(ell(x,nk,W/2-mx),W-mx,cy)}x.restore()}
+  x.fillStyle=A(st==='min'?.55:.7);x.font='600 34px '+fam;try{x.letterSpacing='4px'}catch(e){}x.fillText(d.title.toUpperCase(),mx,140);try{x.letterSpacing='0px'}catch(e){}
+  x.fillStyle=A(1);x.font=(st==='min'?'300 92px ':'800 84px ')+fam;x.fillText(ell(x,d.period,W-mx*2),mx,232);
+  const top=st==='min'?350:330,bot=H-200,n=d.rows.length,gap=S.panel?20:0,rh=Math.min(S.panel?190:170,(bot-top-gap*(n-1))/n);
+  d.rows.forEach(([e,l,v,sb,c],i)=>{const y=top+i*(rh+gap),cy=y+rh/2;if(!S.em)sb=sb&&noEm(sb);
+    if(S.panel){x.save();x.shadowColor='transparent';x.fillStyle=A(appLight&&st==='std'?.06:.09);rrect(x,mx-16,y,W-(mx-16)*2,rh,36);x.fill();x.restore()}
+    if(S.line&&i){x.fillStyle=A(.14);x.fillRect(mx,y,W-mx*2,2)}
+    const pad=S.panel?16:0;let lx=mx+pad;
+    if(S.em){x.textAlign='center';x.font='56px '+fam;x.fillStyle=A(1);x.fillText(e,mx+44,cy+2);lx=mx+104}
+    x.textAlign='right';x.font=(st==='min'?'500 46px ':'700 46px ')+fam;x.fillStyle=col(c);const vw=Math.min(x.measureText(v).width,440),vx=W-mx-pad;x.fillText(ell(x,v,440),vx,cy);
+    const lw=vx-vw-32-lx;x.textAlign='left';x.fillStyle=A(1);x.font=(st==='min'?'400 38px ':'500 38px ')+fam;
+    if(sb){x.fillText(ell(x,l,lw),lx,cy-22);x.fillStyle=A(st==='png'?.8:.55);x.font='400 28px '+fam;x.fillText(ell(x,sb,lw),lx,cy+24)}else x.fillText(ell(x,l,lw),lx,cy)});
+  {const nk=nick(),isz=64,cy=H-100;x.save();x.globalAlpha=st==='png'?.95:.75;x.textBaseline='middle';
+    wallet(x,mx,cy-isz/2,isz,'rgb('+S.fg+')');x.fillStyle=A(1);x.textAlign='left';x.font='700 36px '+fam;x.fillText('FinancePro',mx+isz+18,cy);
+    if(nk){x.textAlign='right';x.font='500 30px '+fam;x.globalAlpha=st==='png'?.9:.65;x.fillText(ell(x,nk,W/2-mx),W-mx,cy)}x.restore()}
+  if(st==='film')filmFx(x,W,H);
   return cv}
-const scss=document.createElement('style');scss.textContent=`#shv{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.88);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:calc(max(env(safe-area-inset-top,0px),var(--sat,0px)) + 20px) 24px calc(max(env(safe-area-inset-bottom,0px),var(--sab,0px)) + 20px);text-align:center;opacity:0;transition:opacity .25s ease}
-#shv.on{opacity:1}#shv img{max-width:100%;max-height:68%;width:auto;object-fit:contain;border-radius:16px;-webkit-touch-callout:default;-webkit-user-select:auto;user-select:auto}
+// «Плёнка»: ч/б, приподнятые чёрные, зерно, виньетка, пылинки и царапины — как на фото экрана в ч/б-фильтре
+function filmFx(x,W,H){const im=x.getImageData(0,0,W,H),p=im.data;
+  for(let i=0;i<p.length;i+=4){let l=.299*p[i]+.587*p[i+1]+.114*p[i+2];l=(l-128)*1.12+128;l=l*.86+26+(Math.random()-.5)*42;l=l<0?0:l>255?255:l;p[i]=p[i+1]=p[i+2]=l}
+  x.putImageData(im,0,0);
+  const v=x.createRadialGradient(W/2,H*.45,W*.35,W/2,H*.5,H*.78);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,.6)');x.fillStyle=v;x.fillRect(0,0,W,H);
+  x.save();for(let i=0;i<160;i++){x.globalAlpha=.08+Math.random()*.3;x.fillStyle=Math.random()<.7?'#fff':'#000';const r=Math.random()*2.2+.4;x.beginPath();x.arc(Math.random()*W,Math.random()*H,r,0,Math.PI*2);x.fill()}
+  for(let i=0;i<4;i++){x.globalAlpha=.05+Math.random()*.06;x.fillStyle='#fff';x.fillRect(Math.random()*W,0,1+Math.random()*1.5,H)}x.restore()}
+// «Чек»: бумажный чек с зубчатыми краями, моноширинный шрифт, пунктир, штрихкод
+function drawRcpt(d,cv,x){const W=cv.width,H=cv.height,mono='"SF Mono",ui-monospace,Menlo,Consolas,"Roboto Mono","Courier New",monospace',ink='#1d1d1f',gr='#77767a';
+  const bg=x.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#e4e1da');bg.addColorStop(1,'#cfcbc2');x.fillStyle=bg;x.fillRect(0,0,W,H);
+  const L=140,R=W-140,T=70,B=H-70,z=14;
+  x.save();x.shadowColor='rgba(0,0,0,.22)';x.shadowBlur=40;x.shadowOffsetY=14;x.beginPath();x.moveTo(L,T+z);
+  for(let px=L;px<R;px+=z*2){x.lineTo(px+z,T);x.lineTo(Math.min(R,px+z*2),T+z)}x.lineTo(R,B-z);
+  for(let px=R;px>L;px-=z*2){x.lineTo(px-z,B);x.lineTo(Math.max(L,px-z*2),B-z)}x.closePath();x.fillStyle='#fbfaf6';x.fill();x.restore();
+  const cx=W/2,pl=L+60,pr=R-60,tw=pr-pl;x.textBaseline='middle';x.fillStyle=ink;
+  const dash=y=>{x.save();x.strokeStyle=gr;x.lineWidth=2;x.setLineDash([10,8]);x.beginPath();x.moveTo(pl,y);x.lineTo(pr,y);x.stroke();x.restore()};
+  wallet(x,cx-30,T+46,60,ink);
+  x.textAlign='center';x.font='700 44px '+mono;try{x.letterSpacing='6px'}catch(e){}x.fillText('FINANCEPRO',cx,T+150);try{x.letterSpacing='0px'}catch(e){}
+  x.font='500 28px '+mono;x.fillText(d.title.toUpperCase(),cx,T+205);x.fillStyle=gr;x.font='400 26px '+mono;x.fillText(noEm(d.period),cx,T+245);
+  const now=new Date(),p2=n=>String(n).padStart(2,'0');x.font='400 22px '+mono;x.textAlign='left';x.fillText(p2(now.getDate())+'.'+p2(now.getMonth()+1)+'.'+now.getFullYear()+' '+p2(now.getHours())+':'+p2(now.getMinutes()),pl,T+300);
+  x.textAlign='right';x.fillText('ЧЕК №'+String(Math.abs(hashS(d.title+d.period))%9000+1000),pr,T+300);dash(T+335);
+  const top=T+365,bot=B-330,n=d.rows.length,rh=Math.min(130,(bot-top)/n);
+  d.rows.forEach(([e,l,v,sb],i)=>{const cy=top+i*rh+rh/2,lb=noEm(l).toUpperCase(),s2=sb&&noEm(sb);
+    x.font='700 34px '+mono;x.textAlign='right';x.fillStyle=ink;const vv=ell(x,v,tw*.5),vw=x.measureText(vv).width;x.fillText(vv,pr,s2?cy-18:cy);
+    x.font='500 31px '+mono;x.textAlign='left';x.fillText(ell(x,lb,tw-vw-24),pl,s2?cy-18:cy);
+    if(s2){x.fillStyle=gr;x.font='400 25px '+mono;x.fillText(ell(x,s2,tw),pl,cy+24)}});
+  dash(B-300);
+  x.fillStyle=ink;x.textAlign='center';x.font='500 24px '+mono;x.fillText('СПАСИБО, ЧТО СЧИТАЕТЕ ДЕНЬГИ',cx,B-262);
+  {let s=hashS(d.title+d.period+d.rows.length)>>>0;const rnd=()=>(s=(s*1664525+1013904223)>>>0)/4294967296;let bx=pl+40;const by=B-225,bh=100;
+    while(bx<pr-40){const w=[3,3,5,7][Math.floor(rnd()*4)];if(rnd()>.35)x.fillRect(bx,by,w,bh);bx+=w+[3,4,6][Math.floor(rnd()*3)]}}
+  const nk=nick();x.fillStyle=gr;x.font='400 24px '+mono;x.fillText(nk||'financepro',cx,B-85);
+  return cv}
+const hashS=s=>{let h=0;for(const ch of String(s))h=(h*31+ch.codePointAt(0))|0;return h};
+const scss=document.createElement('style');scss.textContent=`#shv{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.9);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:calc(max(env(safe-area-inset-top,0px),var(--sat,0px)) + 16px) 20px calc(max(env(safe-area-inset-bottom,0px),var(--sab,0px)) + 16px);text-align:center;opacity:0;transition:opacity .25s ease}
+#shv.on{opacity:1}
+#shv .svw{width:100%;flex:0 1 auto;height:62vh;display:flex;align-items:center;justify-content:center;touch-action:none;overflow:hidden}
+#shv img{max-width:100%;max-height:100%;width:auto;object-fit:contain;border-radius:16px;-webkit-touch-callout:default;-webkit-user-select:auto;user-select:auto;transition:transform .25s cubic-bezier(.2,.8,.2,1),opacity .2s ease}
+#shv img.cb{background:repeating-conic-gradient(#8a8a8a 0 25%,#5c5c5c 0 50%) 0 0/28px 28px}
+#shv .sdt{display:flex;gap:8px;align-items:center}#shv .sdt i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.3);transition:background .2s,transform .2s;cursor:pointer}#shv .sdt i.on{background:#fff;transform:scale(1.25)}
+#shv .snm{font-size:15px;font-weight:600;min-height:20px}#shv .snm small{display:block;font-size:12px;font-weight:400;opacity:.6;margin-top:2px}
 #shv p{margin:0;font-size:14px;opacity:.8;max-width:300px;line-height:1.4}
 #shv button{border:0;border-radius:14px;padding:0 26px;height:48px;min-width:220px;background:#fff;color:#111;font:600 16px/1 inherit;font-family:inherit}
 #shv .wcl{height:38px;background:none;color:#fff;opacity:.7;font-weight:500;font-size:15px}`;document.head.appendChild(scss);
-function shareSum(k){const d=typeof SHR!=='undefined'&&SHR[k];if(!d||document.getElementById('shv'))return;let cv;
-  try{cv=drawSum(d)}catch(e){console.error(e);toast('Не удалось собрать картинку');return}
-  cv.toBlob(b=>{if(!b){toast('Не удалось собрать картинку');return}
-    const u=URL.createObjectURL(b),v=document.createElement('div');v.id='shv';
-    v.innerHTML='<img alt="'+E(d.title)+'"><button type="button" class="wgo">Поделиться</button><button type="button" class="wcl">Закрыть</button><p hidden>Нажмите и удерживайте картинку, чтобы сохранить или отправить</p>';
-    v.querySelector('img').src=u;
-    const done=()=>{document.removeEventListener('keydown',kd);v.classList.remove('on');setTimeout(()=>{URL.revokeObjectURL(u);v.remove()},260)},kd=e=>{if(e.key==='Escape')done()};
-    v.querySelector('.wcl').onclick=done;document.addEventListener('keydown',kd);
-    v.querySelector('.wgo').onclick=async()=>{const f=new File([b],'itogi.png',{type:'image/png'});
-      try{if(navigator.share&&(!navigator.canShare||navigator.canShare({files:[f]}))){await navigator.share({files:[f]});return}}catch(e){if(e&&e.name==='AbortError')return}
-      v.querySelector('p').hidden=false};
-    ['pointerdown','touchstart','touchmove','click'].forEach(n=>v.addEventListener(n,e=>e.stopPropagation(),{passive:true}));
-    document.body.appendChild(v);requestAnimationFrame(()=>v.classList.add('on'));hp('light')},'image/png')}
+function shareSum(k){const d=typeof SHR!=='undefined'&&SHR[k];if(!d||document.getElementById('shv'))return;
+  let si=0;try{si=Math.max(0,SST.findIndex(s=>s[0]===localStorage.getItem('finapp.shst')))}catch(e){}
+  const cache={},urls=[];
+  const make=i=>cache[i]||(cache[i]=new Promise((ok,no)=>{let cv;try{cv=drawSum(d,SST[i][0])}catch(e){no(e);return}cv.toBlob(b=>b?ok(b):no(new Error('blob')),'image/png')}));
+  const v=document.createElement('div');v.id='shv';
+  v.innerHTML='<div class="svw"><img draggable="false" alt="'+E(d.title)+'"></div><div class="sdt">'+SST.map(()=>'<i></i>').join('')+'</div><div class="snm"></div><button type="button" class="wgo">Поделиться</button><button type="button" class="wcl">Закрыть</button><p hidden>Нажмите и удерживайте картинку, чтобы сохранить или отправить</p>';
+  const img=v.querySelector('img'),dots=[].slice.call(v.querySelectorAll('.sdt i')),nm=v.querySelector('.snm');let tok=0;
+  const show=(i,dir)=>{si=(i+SST.length)%SST.length;const my=++tok;try{localStorage.setItem('finapp.shst',SST[si][0])}catch(e){}
+    dots.forEach((o,j)=>o.classList.toggle('on',j===si));nm.innerHTML=E(SST[si][1])+(SST[si][0]==='png'?'<small>прозрачный фон — наложите на своё фото</small>':'<small>листайте, чтобы выбрать стиль</small>');
+    if(dir){img.style.transition='none';img.style.opacity='0';img.style.transform='translateX('+(dir*40)+'px)'}
+    make(si).then(b=>{if(my!==tok)return;const u=URL.createObjectURL(b);urls.push(u);img.src=u;img.classList.toggle('cb',SST[si][0]==='png');
+      requestAnimationFrame(()=>{img.style.transition='';img.style.opacity='1';img.style.transform=''})}).catch(e=>{console.error(e);toast('Не удалось собрать картинку')});
+    if(dir)hp('light')};
+  // свайп влево/вправо по картинке — другой стиль
+  {const w=v.querySelector('.svw');let sx=0,sy=0,on=false;
+    w.addEventListener('dragstart',e=>e.preventDefault());
+    w.addEventListener('pointerdown',e=>{sx=e.clientX;sy=e.clientY;on=true});
+    w.addEventListener('pointermove',e=>{if(!on)return;const dx=e.clientX-sx;if(Math.abs(dx)>Math.abs(e.clientY-sy)){img.style.transition='none';img.style.transform='translateX('+dx*.6+'px)'}});
+    const up=e=>{if(!on)return;on=false;const dx=e.clientX-sx;if(e.type!=='pointercancel'&&Math.abs(dx)>45&&Math.abs(dx)>Math.abs(e.clientY-sy))show(si+(dx<0?1:-1),dx<0?1:-1);else{img.style.transition='';img.style.transform=''}};
+    w.addEventListener('pointerup',up);w.addEventListener('pointercancel',up)}
+  dots.forEach((o,j)=>o.onclick=()=>{if(j!==si)show(j,j>si?1:-1)});
+  const done=()=>{document.removeEventListener('keydown',kd);v.classList.remove('on');setTimeout(()=>{urls.forEach(u=>URL.revokeObjectURL(u));v.remove()},260)},
+    kd=e=>{if(e.key==='Escape')done();else if(e.key==='ArrowRight')show(si+1,1);else if(e.key==='ArrowLeft')show(si-1,-1)};
+  v.querySelector('.wcl').onclick=done;document.addEventListener('keydown',kd);
+  v.querySelector('.wgo').onclick=async()=>{let b;try{b=await make(si)}catch(e){toast('Не удалось собрать картинку');return}
+    const f=new File([b],'itogi-'+SST[si][0]+'.png',{type:'image/png'});
+    try{if(navigator.share&&(!navigator.canShare||navigator.canShare({files:[f]}))){await navigator.share({files:[f]});return}}catch(e){if(e&&e.name==='AbortError')return}
+    v.querySelector('p').hidden=false};
+  ['pointerdown','touchstart','touchmove','click'].forEach(n=>v.addEventListener(n,e=>e.stopPropagation(),{passive:true}));
+  document.body.appendChild(v);requestAnimationFrame(()=>v.classList.add('on'));show(si,0);hp('light')}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-shr]');if(!b)return;e.preventDefault();e.stopPropagation();shareSum(b.dataset.shr)},true);
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-wrap]');if(!b)return;e.preventDefault();e.stopPropagation();open(b.dataset.wrap)},true);
 })();
