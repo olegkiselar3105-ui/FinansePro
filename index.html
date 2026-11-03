@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v185';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v186';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -1490,9 +1490,8 @@ html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#r
   opacity:1!important;visibility:hidden;pointer-events:none;
   transition:transform .192s cubic-bezier(.58,-.03,1,.5),visibility 0s .192s,padding-bottom var(--kt)!important;
   overflow-x:hidden!important;overscroll-behavior-x:none}   /* v145: окно не сдвигается пальцем вбок (iOS давал пружинящую прокрутку по горизонтали) */
-html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){--rest:0px;border-bottom-left-radius:0!important;border-bottom-right-radius:0!important;border-bottom:var(--sab,0px) solid transparent!important}   /* v185: окна прилегают к нижнему краю экрана (как шторка, выезжающая снизу): без зазора, нижние углы прямые; снизу внутри — место под полоску «Домой» */
-html:root.kbo :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){border-bottom-width:0!important}   /* при клавиатуре окно прилегает к ней, место под полоску не нужно */
-html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc)::after{bottom:calc(-1 * var(--sab,0px))}   /* затемнение нижнего окна закрывает и это место */
+html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){--rest:0px;border-bottom-left-radius:0!important;border-bottom-right-radius:0!important;border-bottom:0!important}   /* v185: окна прилегают к нижнему краю экрана (как шторка, выезжающая снизу): без зазора, нижние углы прямые. v186: снизу — тот же отступ, что и по бокам (18 px), без отдельного места под полоску «Домой»: она ложится в этот отступ */
+
 html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc).on{
   transform:none!important;visibility:visible;pointer-events:auto;
   transition:transform .246s cubic-bezier(0,0,.17,1),visibility 0s,padding-bottom var(--kt)!important}
@@ -5761,13 +5760,13 @@ async function ibLoop(){
   const measure=()=>{const V=Math.min(window.innerHeight,vv?vv.offsetTop+vv.height:window.innerHeight);return Math.max(0,baseH-V)};
   // --- движение (у каждого окна своё)
   function apply(el){const x=S(el);el.style.setProperty('--lift',Math.round(x.lift*10)/10+'px');
-    {const bo=FLT[el.id]?sab+12:0,km=Math.max(160,Math.round(baseH-x.lift-sat-8-bo));if(km!==x.km){x.km=km;el.style.setProperty('--kmax',km+'px')}}   // v145: высота окна меняется вместе с подъёмом — верх не выезжает за экран
+    {const bo=0,km=Math.max(160,Math.round(baseH-x.lift-sat-8-bo));if(km!==x.km){x.km=km;el.style.setProperty('--kmax',km+'px')}}   // v145: высота окна меняется вместе с подъёмом — верх не выезжает за экран
     const o=owner&&st.get(owner),k=!!o&&(o.target>0||o.lift>1);if(k!==kbo){kbo=k;root.classList.toggle('kbo',k)}}
   // v156: подъём окна ведёт системный аниматор (Web Animations, свойство translate) — он идёт отдельно от JavaScript, синхронно с экраном, как клавиатура.
   // Раньше --lift менялся из JS каждый кадр: если кадр не успевал (в момент появления клавиатуры), окно стояло, а следующим кадром прыгало вдвое (видео: 19, 44, 8, 18, 6, 12…).
   // Высокие окна, у которых при подъёме меняется высота (--kmax), по-прежнему ведутся по кадрам.
   const WA=!!Element.prototype.animate;
-  const kmOf=(el,L)=>Math.max(160,Math.round(baseH-L-sat-8-(FLT[el.id]?sab+12:0)));
+  const kmOf=(el,L)=>Math.max(160,Math.round(baseH-L-sat-8));   // v186: окна стоят вплотную к низу (--rest 0) — запаса снизу больше нет
   function restPx(el){const p=document.createElement('i');p.style.cssText='position:absolute;left:0;top:0;width:0;visibility:hidden;pointer-events:none;height:var(--rest,0px)';el.appendChild(p);const h=p.offsetHeight;p.remove();return h}
   function cur(x){const w=x.tw;if(!w)return x.lift;if(w.wa){const u=Math.min(1,Math.max(0,(w.wa.currentTime||0)/w.c[4]));return w.from+(w.to-w.from)*ease(w.c,u)}return x.lift}
   function halt(el){const x=S(el),w=x.tw;if(!w)return;const v=cur(x);if(w.wa){try{w.wa.cancel()}catch(e){}}x.tw=null;x.lift=v;x.target=v;apply(el)}   // остановить подъём там, где окно сейчас
@@ -6711,7 +6710,7 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 (function(){'use strict';
 const css=`#tpv{position:fixed;inset:0;z-index:150}
 #tpv .tvb{position:absolute;inset:0;background:rgba(0,0,0,.42);opacity:0;transition:opacity .3s ease}#tpv.on .tvb{opacity:1}
-#tpv .tvs{position:absolute;left:0;right:0;bottom:0;max-height:84%;display:flex;flex-direction:column;border-radius:26px 26px 0 0;background:var(--bg);color:var(--t);border:.5px solid var(--l);border-bottom:0;box-shadow:0 -12px 40px rgba(0,0,0,.35);transform:translateY(105%);transition:transform .45s cubic-bezier(.32,.72,0,1);padding-bottom:max(env(safe-area-inset-bottom,0px),var(--sab,0px),14px)}
+#tpv .tvs{position:absolute;left:0;right:0;bottom:0;max-height:84%;display:flex;flex-direction:column;border-radius:26px 26px 0 0;background:var(--bg);color:var(--t);border:.5px solid var(--l);border-bottom:0;box-shadow:0 -12px 40px rgba(0,0,0,.35);transform:translateY(105%);transition:transform .45s cubic-bezier(.32,.72,0,1);padding-bottom:0}
 #tpv.on .tvs{transform:none}#tpv .tvs.drag{transition:none}
 #tpv .tvh{display:block;width:38px;height:5px;border-radius:3px;background:rgba(127,127,127,.4);margin:8px auto 4px}
 #tpv .tvt{display:flex;align-items:baseline;gap:8px;padding:6px 18px 10px;touch-action:none}#tpv .tvt b{font-size:20px;font-weight:700}#tpv .tvt span{font-size:13px;color:var(--m)}
