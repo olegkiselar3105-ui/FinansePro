@@ -936,6 +936,12 @@ html.selm #tabs,html.selm #fab{opacity:0;pointer-events:none;transform:translate
 #selmore{right:var(--rx);width:62px;height:62px;border-radius:50%;display:flex;align-items:center;justify-content:center;padding:0}
 html.selm #selbar,html.selm #selmore{opacity:1;pointer-events:auto;transform:none}
 #selmore:active{transform:scale(.9)}
+/* v173: три отдельные плашки — «Отмена» слева, «Выбрано: N» по центру своей плашки, «⋯» справа; общий контейнер прозрачный */
+#selbar{background:none;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;padding:0;justify-content:flex-start}
+#selbar>#selx,#selbar>#selc{height:62px;border-radius:32px;display:flex;align-items:center;background:var(--gloss),var(--gbar);-webkit-backdrop-filter:var(--gblur);backdrop-filter:var(--gblur);border:.5px solid var(--gbd);box-shadow:var(--gshb);color:var(--t)}
+#selbar>#selx{flex:none;padding:0 22px;font-size:15px;font-weight:500;transition:transform .3s var(--spring)}
+#selbar>#selx:active{transform:scale(.94)}
+#selbar>#selc{flex:1;min-width:0;justify-content:center;padding:0 14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 </style><style id="v27">
 /* v27: номер версии виден поверх нижнего градиента (раньше его закрывал body::after с таким же z-index) */
 #vb{left:8px;right:auto;z-index:12;opacity:.6;color:var(--m2)}
@@ -5365,7 +5371,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v172';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v173';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}   // номер сборки виден внизу экрана: по нему понятно, обновился ли Telegram до новой версии
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
