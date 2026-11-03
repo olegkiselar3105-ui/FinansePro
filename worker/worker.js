@@ -40,7 +40,7 @@ export default {
         const ids = Array.isArray(body.ids) ? body.ids.slice(0, 200) : [];
         const bad = Array.isArray(body.bad) ? body.bad.map(String).slice(0, 200) : [];   // записи, которые приложение не смогло разобрать
         const notes = {};                                                                  // что именно сделало приложение: {id: «Долг: Иван должен вам 500»}
-        if (body.notes && typeof body.notes === 'object') for (const k of Object.keys(body.notes).slice(0, 200)) notes[String(k)] = String(body.notes[k]).slice(0, 300);
+        if (body.notes && typeof body.notes === 'object') for (const k of Object.keys(body.notes).slice(0, 200)) notes[String(k)] = String(body.notes[k]).slice(0, 1200);   // v166: подробный ответ (старое приложение шлёт ≤300 — совместимо)
         const box = store(env, uid), out = await box.ack(ids);
         ctx.waitUntil(finishReceipts(env, box, ids, bad, notes).catch(e => console.error('receipts', e && e.stack || e)));
         return cors(json(out));
@@ -229,7 +229,7 @@ async function finishReceipts(env, box, ids, bad, notes = {}) {
   const badSet = new Set(bad.map(String));
   const list = await box.rc.take(ids);
   await Promise.all(list.map(r => tg(env, 'editMessageText', { chat_id: r.chat, message_id: r.mid,
-    text: badSet.has(r.id) ? `⚠ Приложение не поняло: «${r.text}»\nНапишите, например: «такси 120».` : `✅ Записано в приложении: «${r.text}»` + (notes[r.id] ? `\n${notes[r.id]}` : '') }).catch(() => {})));
+    text: badSet.has(r.id) ? `⚠ Приложение не поняло: «${r.text}»\n\nНапишите, например:\n• «кофе 30, категория продукты»\n• «бюджет 20000»\n• «Иван должен 500»` : `✅ Записано: «${r.text}»` + (notes[r.id] ? `\n\n${notes[r.id]}` : '') }).catch(() => {})));   // v166: подробный ответ из приложения отдельным абзацем
 }
 
 async function transcribe(fileId, env) {
