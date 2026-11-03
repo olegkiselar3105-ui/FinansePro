@@ -1224,7 +1224,10 @@ html:root #ed .sgm button.on{background:var(--t);color:var(--on)}html:root #ed .
 html:root :is(#ed,#gd,#rc,#cp) .shf{display:flex;align-items:center;gap:12px;margin-top:18px}
 html:root :is(#ed,#gd,#rc,#cp,#bq,#nc,#cf) .sm.pr{order:-1;flex:1;height:52px;border-radius:999px;border:0;background:var(--sa);color:var(--son);font-size:15px;font-weight:600}
 html:root :is(#ed,#gd,#rc,#cp) .sm.del{flex:none;width:52px;height:52px;background-color:var(--stn);padding:0;border-radius:50%;border:1px solid rgba(128,128,140,.55);color:transparent;font-size:0;background:transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e5484d' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 7h14M10 7V4.8h4V7M7 7l.8 12h8.4L17 7M10.3 11v5M13.7 11v5'/%3E%3C/svg%3E") no-repeat center/22px}
-html:root :is(#ed #esv,#gd #gsvb.auto,#bq .sm.pr.auto,#ecl,#gcl){display:none!important}
+html:root :is(#ed #esv,#bq .sm.pr.auto,#ecl,#gcl){display:none!important}
+/* v169: окна плиток (долг, цель, бюджет, лимит): «Удалить» текстом слева, «Сохранить» справа — вместо круглой иконки */
+html:root #gd .shf .sm.del{flex:1;width:auto;height:52px;padding:0 16px;border-radius:999px;background:transparent;border:1px solid rgba(229,72,77,.5);color:#e5484d;font-size:15px;font-weight:600}
+html:root #gd .shf:has(>.sm.del) .sm.pr{order:0}
 html:root #bq .bqb:has(>.sm.pr.auto:only-child){display:none}
 html:root #ed .shf{justify-content:flex-end}
 html:root #bq .sm.auto{display:none!important}
@@ -5328,7 +5331,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v168';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v169';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}   // номер сборки виден внизу экрана: по нему понятно, обновился ли Telegram до новой версии
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
