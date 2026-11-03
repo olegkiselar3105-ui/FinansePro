@@ -11,6 +11,7 @@
 |---|---|---|
 | `index.html` | Всё приложение: интерфейс, разбор фраз, хранение, синхронизация с ботом | GitHub Pages (из корня) |
 | `sw.js`, `manifest.webmanifest`, `icons/` | Офлайн-режим и установка как приложение | GitHub Pages |
+| `mail.html` | Мост для письма в поддержку: внутри Telegram `mailto:` не открывается, приложение открывает эту страницу через `Telegram.WebApp.openLink`, она открывает почту телефона. Адрес зашит в ней — при смене почты менять и здесь, и `SUPPORT.email` в `index.html` | GitHub Pages |
 | `_headers` | Заголовки безопасности (CSP). GitHub Pages этот файл игнорирует, он для Cloudflare Pages/Netlify | — |
 | `worker/worker.js` | Бот: webhook Telegram, расшифровка голоса (Groq Whisper), очередь сообщений, API для приложения | Cloudflare Workers |
 | `worker/wrangler.toml` | Настройки деплоя воркера: имя, compatibility_date, привязки KV/D1 | Cloudflare Workers Builds |
