@@ -140,12 +140,13 @@ option{background:var(--s);color:var(--t)}
 .sum .sht{display:flex;justify-content:space-between;align-items:center}
 /* v158: переключатель переноса остатка — сразу после «Остаток» */
 #sum .sht{justify-content:flex-start;gap:8px}
-#carry{position:relative;flex:none;width:32px;height:19px;padding:0;border:0;border-radius:10px;background:rgba(var(--wr),.2);transition:background .2s ease;-webkit-tap-highlight-color:transparent;cursor:pointer}
-#carry::before{content:"";position:absolute;inset:-12px -10px}
-#carry i{position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .24s cubic-bezier(.3,1.35,.5,1)}
-#carry.on{background:var(--g)}
-#carry.on i{transform:translateX(13px)}
-@media (prefers-reduced-motion:reduce){#carry,#carry i{transition:none}}
+#carry,.mtg{position:relative;flex:none;width:32px;height:19px;padding:0;border:0;border-radius:10px;background:rgba(var(--wr),.2);transition:background .2s ease;-webkit-tap-highlight-color:transparent;cursor:pointer}
+#carry::before,.mtg::before{content:"";position:absolute;inset:-12px -10px}
+#carry i,.mtg i{position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .24s cubic-bezier(.3,1.35,.5,1)}
+#carry.on,.mtg.on{background:var(--g)}
+#carry.on i,.mtg.on i{transform:translateX(13px)}
+.gsh .gtg{display:inline-flex;align-items:center;gap:8px;min-width:0}.gsh .gtg>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.gsh .mtg{flex:none}
+@media (prefers-reduced-motion:reduce){#carry,#carry i,.mtg,.mtg i{transition:none}}
 .sum .cry{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--m);cursor:pointer}
 .sum .tot{white-space:nowrap;display:block;font-size:40px;font-weight:500;line-height:1.1;letter-spacing:-.02em;margin:4px 0 10px}
 .io{display:flex;gap:20px;font-size:15px;color:var(--m)}.io b{font-weight:500;color:var(--t);margin-left:4px;display:inline-block;font-variant-numeric:tabular-nums}
@@ -1588,14 +1589,17 @@ html:root :is(#sh #rev,#gd #bvl) .rv2 :is(.rch,.sg):active{opacity:.6}
   -webkit-backdrop-filter:blur(12px) saturate(1.4);backdrop-filter:blur(12px) saturate(1.4);box-shadow:0 3px 10px rgba(0,0,0,.22),inset 0 0 0 .5px rgba(var(--wr),.14);
   -webkit-tap-highlight-color:transparent;touch-action:none;opacity:0;visibility:hidden;transform:translate3d(0,-16px,0) scale(.6);
   transition:transform .26s cubic-bezier(.4,0,.2,1),opacity .2s ease,width .36s cubic-bezier(.2,.9,.25,1),height .36s cubic-bezier(.2,.9,.25,1),margin .36s cubic-bezier(.2,.9,.25,1),border-radius .36s ease,background-color .3s ease,box-shadow .3s ease,visibility 0s .26s}
-#hdrv::before{content:"";position:absolute;inset:-12px -22px}
+#hdrv::before{content:"";position:absolute;inset:-14px -26px}
+/* v167: и в свёрнутом виде — полоска, как у шторки, вместо кружка со стрелкой */
+#hdrv:not(.up){top:calc(var(--sat) + 8px);width:40px;height:5px;margin-left:-20px;border-radius:3px;background:rgba(var(--wr),.42);box-shadow:0 1px 6px rgba(0,0,0,.18);-webkit-backdrop-filter:none;backdrop-filter:none}
+#hdrv:not(.up) svg{opacity:0}
 #hdrv.on{opacity:1;visibility:visible;transform:translate3d(0,var(--hy,0px),0);
   transition:transform .38s cubic-bezier(.2,.9,.25,1),opacity .2s ease,width .36s cubic-bezier(.2,.9,.25,1),height .36s cubic-bezier(.2,.9,.25,1),margin .36s cubic-bezier(.2,.9,.25,1),border-radius .36s ease,background-color .3s ease,box-shadow .3s ease,visibility 0s}
 #hdrv svg{transition:opacity .16s ease}
 #hdrv.up{width:40px;height:5px;margin-left:-20px;border-radius:3px;background:rgba(var(--wr),.4);box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
 #hdrv.up svg{opacity:0}
 #hdrv.on.tuck{transform:translate3d(0,calc(var(--hy,0px) - 16px),0);opacity:0;transition:transform .3s cubic-bezier(.4,0,.2,1),opacity .22s ease,visibility 0s}
-#hdrv.on:not(.up):active{transform:translate3d(0,var(--hy,0px),0) scale(.9)}
+#hdrv.on:active{opacity:.6}
 html.selm #hdrv{display:none}
 @media (prefers-reduced-motion:reduce){#hdrv,#hdrv.on,#hdrv svg,#hdrv.on.tuck{transition:none}}
 /* v151: кнопка «наверх» — над вкладкой «Настройки», появляется, когда главный блок ушёл из вида */
@@ -2550,7 +2554,7 @@ function debtCard(d){const rem=dRem(d),p=d.amount>0?Math.min(100,d.paid/d.amount
   const dueS=done?'<span style="color:var(--g)">Погашен ✓</span>':d.due?`<span style="color:${n<0?'#ff6b6b':n<=3?'#f2c14e':'var(--m2)'}">до ${dueShort(d.due)} · ${dueTxt(n)}</span>`:'<span>без срока</span>';
   return `<div class="cd"${done?' style="opacity:.6"':''}><div class="gh"><b><i class="dtd ${d.dir}"></i>${E(d.who)}</b><span>${fmt(d.paid)} / ${fmt(d.amount)} ${cfg.cur}</span></div><div class="lb"><i style="width:${p}%;background:${done?'var(--g)':'var(--t)'}"></i></div><div class="gx">${d.dir==='in'?'Должен мне':'Я должен'}${done?'':' · осталось '+fmt(Math.round(rem))+' '+cfg.cur} · ${dueS}</div>${done?'':debtFc(d)}<div class="gb">${done?'':`<button class="sm" data-da="pay" data-did="${d.id}">${d.dir==='in'?'+ Получил':'+ Вернул'}</button>`}<button class="sm" data-da="edit" data-did="${d.id}">Изменить</button></div></div>`}
 function debtsHtml(){const ds=cfg.debts||[];
-  let h=`<div class="gsec"><div class="gsh"><span>Долги:</span><button class="gp" data-da="new" aria-label="Добавить долг">+</button></div>`;
+  let h=`<div class="gsec"><div class="gsh">${mtg('ld',linkDebtOn(),'Записывать в доходы и расходы')}<button class="gp" data-da="new" aria-label="Добавить долг">+</button></div>`;
   if(!ds.length)return h+`<div class="cd" style="color:var(--m);font-size:13px;line-height:1.45">Например: «Игорь одолжил 500, вернёт до 20 числа». Нажмите «+» — напомню, когда подойдёт срок.</div></div>`;
   const sumD=dir=>ds.filter(d=>d.dir===dir).reduce((s,d)=>s+dRem(d),0);
   h+=`<div class="stg" style="margin:12px 0 0"><div class="stt"><small>Мне должны</small><b style="color:var(--g)">${fmt(Math.round(sumD('in')))} ${cfg.cur}</b><span>&nbsp;</span></div><div class="stt"><small>Я должен</small><b style="color:var(--rd)">${fmt(Math.round(sumD('out')))} ${cfg.cur}</b><span>&nbsp;</span></div></div>`;
@@ -2601,7 +2605,7 @@ function goalInfo(g){const left=g.target-g.saved,p=g.target>0?Math.min(100,g.sav
   const n=Math.ceil(left/pace),d=new Date();d.setDate(1);d.setMonth(d.getMonth()+n);
   return{p,txt:`Осталось ${fmt(left)} ${cfg.cur}. ${src} (≈${fmt(Math.round(pace))} в мес.) `+(n<=1?'накопите уже в ближайший месяц.':n>600?'это очень нескоро.':`накопите к ${MND[d.getMonth()]} ${d.getFullYear()}.`)+dl}}
 function goalsHtml(){const gs=cfg.goals||[];
-  let h=`<div class="gsh"><span>Цели накопления:</span><button class="gp" data-ga="new" aria-label="Добавить цель">+</button></div>`;
+  let h=`<div class="gsh">${mtg('lg',linkGoalOn(),'Взносы — в расходы')}<button class="gp" data-ga="new" aria-label="Добавить цель">+</button></div>`;
   if(!gs.length)h+=`<div class="cd" style="color:var(--m);font-size:13px;line-height:1.45">Например: «Отпуск 20 000, отложено 6 500». Нажмите зелёный «+» — покажу прогресс и когда накопите.</div>`;
   else h+=gs.map(g=>{const i=goalInfo(g),sp=g.tag?tx.filter(t=>t.type==='expense'&&(t.tags||[]).includes(g.tag)).reduce((s,t)=>s+t.amount,0):0;
     return `<div class="cd"><div class="gh"><b>${E(g.name)}</b><span>${fmt(g.saved)} / ${fmt(g.target)} ${cfg.cur}</span></div><div class="lb"><i style="width:${i.p}%;background:${i.p>=100?'var(--g)':'var(--t)'}"></i></div><div class="gx">${Math.round(i.p)}% · ${E(i.txt)}</div>${g.tag?`<div class="gb"><button class="tgc sg2" data-ga="tag" data-gid="${g.id}">#${E(g.tag)} · потрачено ${fmt(sp)}</button></div>`:''}<div class="gb"><button class="sm" data-ga="dep" data-gid="${g.id}">+ Взнос</button><button class="sm" data-ga="edit" data-gid="${g.id}">Изменить</button></div></div>`}).join('');
@@ -2612,9 +2616,10 @@ function goalAct(el){const a=el.dataset.ga,g=(cfg.goals||[]).find(x=>x.id===el.d
 const subBar=(items,cur,at)=>`<div class="sbt" role="tablist">`+items.map(([k,l])=>`<button data-${at}="${k}" class="${cur===k?'on':''}" role="tab" aria-selected="${cur===k}">${l}</button>`).join('')+`</div>`;
 const subPl=()=>subBar([['goals','Цели'],['budget','Бюджет и лимиты'],['debts','Долги']],ps,'ps');
 const subAn=()=>subBar([['all','Общая'],['trend','Динамика'],['cal','Календарь'],['tags','Теги']],AS,'as')+(typeof wrapBtn==='function'?wrapBtn():'');
+const mtg=(k,on,label)=>`<span class="gtg"><span>${label}</span><button type="button" class="mtg${on?' on':''}" data-mt="${k}" role="switch" aria-checked="${!!on}" aria-label="${label}"><i></i></button></span>`;   // v167: переключатель в заголовке раздела (как «Остаток» в главном блоке)
 const limCol=p=>p>=100?'#ff6b6b':p>=80?'#f2c14e':'var(--t)';
 function budgetHtml(){const X=sumBy(month,'expense'),Bd=budgetOf(month),mn=MN[+month.slice(5,7)-1],own=bmOwn(month);
-  let h=`<div class="gsec"><div class="gsh"><span>Бюджет на месяц:</span><span></span></div>`;
+  let h=`<div class="gsec"><div class="gsh">${mtg('cb',carryBudOn(),'Переносить бюджет на следующие месяцы')}<span></span></div>`;
   if(!(Bd>0))h+=`<div class="cd" style="color:var(--m);font-size:13px;line-height:1.45">Задайте сумму, которую хотите тратить за месяц, — покажу, сколько осталось.<div class="gb"><button class="sm pr" data-la="bud">Задать бюджет</button></div></div>`;
   else{const p=X/Bd*100;
     h+=`<div class="cd"><div class="gh"><b>Бюджет · ${mn}</b><span>${fmt(X)} / ${fmt(Bd)} ${cfg.cur}</span></div><div class="lb"><i style="width:${Math.min(100,p)}%;background:${limCol(p)}"></i></div><div class="gx">${Math.round(p)}% · ${p>=100?'Превышен на '+fmt(Math.round(X-Bd)):'Осталось '+fmt(Math.round(Bd-X))} ${cfg.cur}</div><div class="gx" style="margin-top:2px">${own?'Только для этого месяца':'Общий бюджет — для месяцев без своего'}</div><div class="gb"><button class="sm" data-la="bud">Изменить</button></div></div>`}
@@ -3832,22 +3837,34 @@ topEl.addEventListener('click',e=>{if(msBlock){e.stopPropagation();e.preventDefa
 })();
 
 
-// v165: окно «Из бота»: операции, записанные по сообщениям боту, — карточками; правки сохраняются сразу. Открывается, когда приложение на экране и ничего не открыто
-const BV={ids:[],t:0};
-function bvList(){return BV.ids.map(id=>tx.find(t=>t.id===id)).filter(Boolean)}
-function bvDraw(){const L=bvList(),el=$('#bvl'),h=$('#bvt');if(!el)return;if(!L.length){bvClose();return}
-  if(h)h.textContent='Из бота · '+L.length+' '+plural(L.length,'операция','операции','операций');
-  el.innerHTML=L.map((t,i)=>row(t,0,i,1)).join('')}
-function bvClose(){BV.ids=[];if(gd._bv){gd._bv=false;closeGoal()}}
-function botReview(ids){BV.ids=[...new Set([...BV.ids,...(ids||[])])];clearTimeout(BV.t);if(!bvList().length)return;
-  if(gd._bv&&gd.classList.contains('on')){bvDraw();return}
+// v167: записи из бота — на проверку в окне «+» (черновики), в общий список — только после «Записать».
+// Ожидающие подтверждения сообщения бота (BH) хранятся на телефоне; после «Записать» или удаления бот получает второй ack:
+// «✅ Записано» с итогами или «🗑 Не записано». Черновики тоже хранятся на телефоне — не пропадают при закрытии
+const BH={get(){try{const o=JSON.parse(localStorage.getItem('finapp.bhold')||'{}');return _obj(o)?o:{}}catch(e){return {}}},set(o){try{localStorage.setItem('finapp.bhold',JSON.stringify(o))}catch(e){}}};
+function botDraftLine(d){const c=cd(d.category);return (d.type==='income'?'💰 +':'💸 −')+BM_(d.amount||0)+' · '+c.l+(d.note&&d.note!==c.n?' · '+d.note:'')+' · '+dChip(d.date).toLowerCase()}
+function bhFinish(committed){const h=BH.get(),ids=Object.keys(h);if(!ids.length){(committed||[]).forEach(d=>{delete d.bsid});return}
+  const done={},notes={},fin=[],drop=[];(committed||[]).forEach(d=>{if(d.bsid)(done[d.bsid]=done[d.bsid]||[]).push(d)});
+  ids.forEach(sid=>{if(drafts.some(d=>d.bsid===sid))return;   // часть ещё на проверке — ждём
+    const ops=(done[sid]||[]).filter(d=>d.amount>0);fin.push(sid);delete h[sid];
+    if(ops.length){try{notes[sid]=[...ops.map(botOpLine),botBudLine(ops)].filter(Boolean).join('\n\n').slice(0,1200)}catch(e){}}else drop.push(sid)});
+  (committed||[]).forEach(d=>{delete d.bsid});BH.set(h);
+  if(fin.length)ibCall('/api/ack',{ids:fin,notes,drop}).catch(()=>{const b=BH.get();fin.forEach(i=>{b[i]=1});BH.set(b)})}   // нет связи — повторим при следующей записи
+// окно «+» с проверкой открывается само, когда приложение на экране и ничего не открыто
+let revT=0;function revOpen(){clearTimeout(revT);if(!drafts.length)return;
   const busy=document.hidden||isModalOpen()||document.getElementById('spl')||(LKE&&LKE.classList.contains('on'))||(typeof tourOn==='function'&&tourOn());
-  if(busy){BV.t=setTimeout(()=>botReview([]),1500);return}
-  cancelGestures();lockBg(true);gT=null;gd._bv=true;
-  gd.innerHTML=`<div class="eh"><b id="bvt"></b><button class="x" id="bvx" type="button" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div><div class="bvs">Записано по сообщениям боту. Поправьте, если нужно, — изменения сохраняются сразу.</div><div id="bvl"></div><div class="shf"><span></span><button class="sm pr" id="bvok" type="button">Готово</button></div>`;
-  bind($('#bvl'),()=>tx,false);bvDraw();$('#bvx').onclick=$('#bvok').onclick=()=>bvClose();showGd(fab)}
-{const _cg=closeGoal;closeGoal=function(){gd._bv=false;BV.ids=[];return _cg.apply(this,arguments)}}
-{const _r=render;render=function(){const v=_r.apply(this,arguments);try{if(gd._bv&&gd.classList.contains('on')&&!(document.activeElement&&document.activeElement.closest&&document.activeElement.closest('#bvl')))bvDraw()}catch(e){}return v}}
+  if(busy){if(!sh.classList.contains('on'))revT=setTimeout(revOpen,1500);return}
+  if(!sh.classList.contains('on'))openSheet();if(cfg.auto&&!needRate.size)startAuto()}
+// черновики на телефоне
+const draftsSave=()=>{try{localStorage.setItem('finapp.drafts',JSON.stringify(drafts.slice(0,100)))}catch(e){}};
+try{const dv=JSON.parse(localStorage.getItem('finapp.drafts')||'[]');if(Array.isArray(dv)&&dv.length&&!drafts.length){drafts=dv.filter(d=>_obj(d)&&d.id&&d.date);if(drafts.length){renderRev(true);setTimeout(revOpen,2600)}}}catch(e){}
+{const _rr=renderRev;renderRev=function(){const v=_rr.apply(this,arguments);draftsSave();return v}}
+$('#rev').addEventListener('change',()=>setTimeout(draftsSave,0),true);
+{const _c=commit;commit=function(list,withUndo){const tg=(list||[]).filter(d=>d.bsid).map(d=>({...d}));(list||[]).forEach(d=>{delete d.bsid});   // метка бота в операции не сохраняется
+  const v=_c.apply(this,arguments);if(withUndo||tg.length)try{bhFinish(tg)}catch(e){}draftsSave();return v}}
+{const _rd=removeDraftAnim;removeDraftAnim=function(){const v=_rd.apply(this,arguments);try{bhFinish([])}catch(e){}draftsSave();return v}}
+{const _cd=clearDraftsAnim;clearDraftsAnim=function(){const v=_cd.apply(this,arguments);setTimeout(()=>{try{bhFinish([])}catch(e){}draftsSave()},700);return v}}
+// при старте: подтверждения, которые не дошли (нет связи) или ждут удалённых черновиков
+setTimeout(()=>{try{if(Object.keys(BH.get()).length)bhFinish([])}catch(e){}},4000);
 
 // v165: окно «Что нового». Новый выпуск — новый объект ПЕРВЫМ в списке WN (id — уникальная строка, лучше дата). Показывается один раз каждому:
 // отметка cfg.wnSeen уходит в облако Telegram, на других устройствах окно не повторяется. Новым пользователям — после обучения
@@ -4396,7 +4413,7 @@ ${row('cub','#2f6df6','<path d="M12 3.5v17M16.2 7.6c0-1.6-1.9-2.8-4.2-2.8s-4.2 1
 <div class="sgh">Безопасность</div>
 <div class="sc">${row('pin','','','PIN-код',pinOn()?'Вкл':'Выкл')}${row('prv','','','Скрытие сумм',PRV?'Вкл':'Выкл')}</div>
 <div class="sgh">Категории и учёт</div>
-<div class="sc">${row('cin','#22a845','<path d="M12 4.5v10M7.8 10.6l4.2 4.2 4.2-4.2M5 19.5h14"/>','Категория доходов')}${row('cex','#f39a1f','<path d="M12 19.5v-10M7.8 13.4l4.2-4.2 4.2 4.2M5 4.5h14"/>','Категория расходов')}${row('lkr','','','Записывать в расходы')}${row('crs','','','Перенос бюджета')}${row('rcs','','','Повторяющиеся операции',(cfg.rec||[]).length?String(cfg.rec.length):'Нет')}${row('mst','','','Начало месяца',mStart()+' число')}</div>
+<div class="sc">${row('cin','#22a845','<path d="M12 4.5v10M7.8 10.6l4.2 4.2 4.2-4.2M5 19.5h14"/>','Категория доходов')}${row('cex','#f39a1f','<path d="M12 19.5v-10M7.8 13.4l4.2-4.2 4.2 4.2M5 4.5h14"/>','Категория расходов')}${row('rcs','','','Повторяющиеся операции',(cfg.rec||[]).length?String(cfg.rec.length):'Нет')}${row('mst','','','Начало месяца',mStart()+' число')}</div>
 <div class="sgh">Резервная копия</div>
 <div class="sc">${row('bki','#3b8fd4','<path d="M12 4v10M8 10.2l4 4 4-4M5 19.5h14"/>','Импорт')}${row('bke','#2f6df6','<path d="M12 15V5M8 8.8l4-4 4 4M5 19.5h14"/>','Экспорт')}${row('bkr','#e5484d','<path d="M5 7h14M10 7V4.8h4V7M7 7l.8 12h8.4L17 7M10.3 11v5M13.7 11v5"/>','Сброс','','rd')}</div>`}
 function bindSt(){
@@ -4997,6 +5014,9 @@ document.addEventListener('transitionend',fitSoon,true);document.addEventListene
 setInterval(recTick,300000);
 render();
 if(_recN)setTimeout(()=>toast('Повторяющиеся операции добавлены: '+_recN),debtList().some(x=>x.n<=3)?5800:500);
+$('#body').addEventListener('click',e=>{const b=e.target.closest('.mtg[data-mt]');if(!b)return;e.preventDefault();e.stopPropagation();const k=b.dataset.mt;let on;
+  if(k==='ld'){on=!linkDebtOn();cfg.linkDebt=on;save()}else if(k==='lg'){on=!linkGoalOn();cfg.linkGoal=on;save()}else if(k==='cb'){on=!carryBudOn();setCarryBud(on)}else return;
+  b.classList.toggle('on',on);b.setAttribute('aria-checked',on);try{hap('light',{k:'mt'})}catch(x){}setTimeout(render,230)},true);
 $('#sum').addEventListener('click',e=>{{const cb=e.target.closest('#carry');if(cb){e.stopPropagation();
   // v158: переключатель переноса остатка рядом с «Остаток»: вкл — остаток переносится начиная с открытого месяца (раньше месяцы не считаются), выкл — перенос отключён
   const on=!(cfg.carry&&month>=cfg.carryFrom);if(on){cfg.carry=true;cfg.carryFrom=month}else cfg.carry=false;save();
@@ -5288,7 +5308,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v166';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v167';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}   // номер сборки виден внизу экрана: по нему понятно, обновился ли Telegram до новой версии
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
@@ -5340,21 +5360,23 @@ async function inboxPull(fast,wait){
         if(needRate.size){try{await ratesRefresh(true)}catch{}needRate.clear();ibAt(it.ts,()=>{r=parse(cm.rest)})}
         if(cm.msgs.length)cmd=true;
         if(!r.length&&!cm.msgs.length){bad.push(text);badIds.push(sid);continue}
-        r.forEach(d=>{delete d.addCat;if(d.amount>0)added.push(d);else left.push(d)});
+        r.forEach(d=>{delete d.addCat;d.bsid=sid;if(d.amount>0)added.push(d);else left.push(d)});   // v167: операции из бота — на проверку (черновики)
         nbuild[sid]={rich:cm.rich||cm.msgs,ops:r.filter(d=>d.amount>0)};   // v166: ответ бота собирается после записи — с итогами бюджета и лимитов
       }catch(e){bad.push(text);badIds.push(sid)}}                           // одна «битая» запись не должна блокировать остальные
     for(let w=0;w<30&&typeof CL==='object'&&CL.busy;w++)await new Promise(r=>setTimeout(r,200));
     let saved=true;
     try{
-      if(added.length){commit(added,false);try{botReview(added.map(d=>d.id))}catch(e){}}   // v165: записанное из бота — окно проверки
-      else if(cmd){save();render()}
-      if(left.length){drafts.push(...left);renderRev();setTimeout(()=>{try{if(!document.getElementById('spl')&&!isModalOpen())openSheet()}catch{}},2200)}
+      if(cmd){save();render()}
+      if(added.length||left.length){drafts.push(...added,...left);renderRev();revOpen()}   // v167: в общий список — только после «Записать» в окне «+»
     }catch(e){saved=false;IB.dbg={t:Date.now(),n:0,lp:IB.lp,err:'запись: '+String(e&&e.message||e).slice(0,50)}}
     if(!saved)return;                       // не сохранилось — в очереди запись остаётся, следующий опрос повторит (ничего не теряется)
-    Object.entries(nbuild).forEach(([sid,o])=>{try{const nt=[...o.rich,...o.ops.map(botOpLine),botBudLine(o.ops)].filter(Boolean);if(nt.length)notes[sid]=nt.join('\n\n').slice(0,1200)}catch(e){}});
+    const hold=[],bh=BH.get();
+    Object.entries(nbuild).forEach(([sid,o])=>{try{const ops=drafts.filter(d=>d.bsid===sid);if(ops.length){hold.push(sid);bh[sid]=1}
+      const nt=[...o.rich,...(ops.length?['📝 На проверке в приложении:\n'+ops.map(botDraftLine).join('\n')+'\n\nПроверьте и нажмите «Записать».']:[])].filter(Boolean);if(nt.length)notes[sid]=nt.join('\n\n').slice(0,1200)}catch(e){}});
+    BH.set(bh);
     fresh.forEach(i=>seen.add(i));ibSeenSave([...seen]);
     if(bad.length)toast('Бот: не понял — «'+bad.slice(0,2).join('», «').slice(0,120)+'»');
-    await ibCall('/api/ack',{ids:okIds,bad:badIds,notes})}finally{IB.proc=false}}
+    await ibCall('/api/ack',{ids:okIds,bad:badIds,notes,hold})}finally{IB.proc=false}}
   catch(e){if(IB.wakeAbort){IB.wakeAbort=false}else if(wait)IB.fail=(IB.fail||0)+1;IB.dbg={t:Date.now(),n:0,lp:IB.lp,err:String(e&&e.message||e).slice(0,60)};/* нет связи — тихо, повторим; а вот просроченную подпись Telegram показываем один раз */
     if(/HTTP 401/.test(String(e&&e.message))&&!IB.authWarned){IB.authWarned=true;try{toast('Бот: закрой и заново открой приложение')}catch{}}}
   finally{if(wait){IB.lpBusy=false;IB.ctl=null}else IB.busy=false;window.__ibBusy=false}}
