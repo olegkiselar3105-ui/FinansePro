@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v184';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v188';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -1252,7 +1252,7 @@ html:root #ed .sgm button{flex:1;display:flex;align-items:center;justify-content
 html:root #ed .sgm button::before{content:"\2295";font-size:17px}
 html:root #ed .sgm button.on{background:var(--t);color:var(--on)}html:root #ed .sgm button.on::before{content:"\2713"}
 html:root :is(#ed,#gd,#rc,#cp) .shf{display:flex;align-items:center;gap:12px;margin-top:18px}
-html:root :is(#ed,#gd,#rc,#cp,#bq,#nc,#cf) .sm.pr{order:-1;flex:1;height:52px;border-radius:999px;border:0;background:var(--sa);color:var(--son);font-size:15px;font-weight:600}
+html:root :is(#ed,#gd,#rc,#cp,#bq,#nc,#cf) .sm.pr{order:9;flex:1;height:52px;border-radius:999px;border:0;background:var(--sa);color:var(--son);font-size:15px;font-weight:600}
 html:root :is(#ed,#gd,#rc,#cp) .sm.del{flex:none;width:52px;height:52px;background-color:var(--stn);padding:0;border-radius:50%;border:1px solid rgba(128,128,140,.55);color:transparent;font-size:0;background:transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e5484d' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 7h14M10 7V4.8h4V7M7 7l.8 12h8.4L17 7M10.3 11v5M13.7 11v5'/%3E%3C/svg%3E") no-repeat center/22px}
 html:root :is(#ed #esv,#bq .sm.pr.auto,#ecl,#gcl){display:none!important}
 /* v169: окна плиток (долг, цель, бюджет, лимит): «Удалить» текстом слева, «Сохранить» справа — вместо круглой иконки */
@@ -1490,7 +1490,21 @@ html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#r
   opacity:1!important;visibility:hidden;pointer-events:none;
   transition:transform .192s cubic-bezier(.58,-.03,1,.5),visibility 0s .192s,padding-bottom var(--kt)!important;
   overflow-x:hidden!important;overscroll-behavior-x:none}   /* v145: окно не сдвигается пальцем вбок (iOS давал пружинящую прокрутку по горизонтали) */
-html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){--rest:calc(var(--sab,0px) + 12px)}   /* v153: все окна стоят на 12 px выше нижнего края, как окно операции */
+html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc){--rest:0px;border-bottom-left-radius:0!important;border-bottom-right-radius:0!important;border-bottom:0!important}   /* v185: окна прилегают к нижнему краю экрана (как шторка, выезжающая снизу): без зазора, нижние углы прямые. v186: снизу — тот же отступ, что и по бокам (18 px), без отдельного места под полоску «Домой»: она ложится в этот отступ */
+/* v188: все окна — по одному эталону. Окно «+»: отступы как у остальных (18 px по бокам и снизу).
+   «Советы»: та же шторка, что и остальные окна — бока 12 px, скругление сверху 28 px, стекло, отступы 18 px, кнопка × как в окнах,
+   затемнение с размытием как у окон, открытие 0,246 с и закрытие 0,192 с по тем же кривым */
+html:root #sh#sh{padding-left:18px!important;padding-right:18px!important;padding-bottom:18px!important}
+html:root #tpv .tvs{left:12px;right:12px;border-radius:28px 28px 0 0;background:var(--gloss),var(--gfill);-webkit-backdrop-filter:var(--gblur);backdrop-filter:var(--gblur);border:.5px solid var(--gbd);border-bottom:0;box-shadow:var(--gsh);
+  transition:transform .192s cubic-bezier(.58,-.03,1,.5)}
+html:root #tpv.on .tvs{transition:transform .246s cubic-bezier(0,0,.17,1)}
+html:root #tpv .tvs.drag{transition:none}
+html:root #tpv .tvc{padding:4px 18px 18px}
+html:root #tpv .tvx{background:none;width:auto;height:auto;padding:4px 6px;font-size:20px;line-height:1;color:var(--m2)}
+html:root #tpv .tvb{background:rgba(0,0,0,.3);-webkit-backdrop-filter:blur(22px) saturate(1.15);backdrop-filter:blur(22px) saturate(1.15);transition:opacity .198s cubic-bezier(.75,.09,.67,1)}
+html:root #tpv.on .tvb{transition:opacity .249s cubic-bezier(.26,.24,.25,1)}
+@media (prefers-reduced-motion:reduce){html:root #tpv .tvs,html:root #tpv.on .tvs,html:root #tpv .tvb{transition:none}}
+
 html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc).on{
   transform:none!important;visibility:visible;pointer-events:auto;
   transition:transform .246s cubic-bezier(0,0,.17,1),visibility 0s,padding-bottom var(--kt)!important}
@@ -2508,15 +2522,17 @@ function revTagsPatch(id){const d=drafts.find(x=>x.id===id),r=document.querySele
 $('#rev').addEventListener('focusout',e=>{const sw=e.target.closest&&e.target.closest('.sw[data-id]');if(!sw||!sw._dirty)return;
   setTimeout(()=>{if(sw.isConnected&&!sw.contains(document.activeElement)){sw._dirty=0;revRowPatch(sw.dataset.id)}},0)});
 function draftToast(id){const di=drafts.findIndex(d=>d.id===id),dit=drafts[di];if(!dit)return null;const st={undone:false};
-  toastDel(1,()=>{st.undone=true;const was=drafts.some(d=>d.id===dit.id);if(!was)drafts.splice(Math.min(di,drafts.length),0,dit);renderRev(true);if(!was)fxInDrafts([dit.id],drafts.length===1)});return st}
+  toastDel(1,()=>{st.undone=true;const was=drafts.some(d=>d.id===dit.id);if(!was)drafts.splice(Math.min(di,drafts.length),0,dit);if(was)renderRev(true);else revBack([dit.id],drafts.length===1)});return st}
+// v187: вернуть черновики «Отменой»: если список был пуст (видны шаблоны) — окно плавно перетекает обратно; иначе строки раскрываются, как раньше
+function revBack(ids,all){const rv=$('#rev');if(rv&&!rv.childElementCount){shMorph(()=>renderRev(true));return}renderRev(true);fxInDrafts(ids,all)}
 function removeDraftAnim(id,quiet){const di=drafts.findIndex(d=>d.id===id),dit=drafts[di];drafts=drafts.filter(d=>d.id!==id);
-  if(dit&&!quiet)toastDel(1,()=>{drafts.splice(Math.min(di,drafts.length),0,dit);renderRev(true);fxInDrafts([dit.id],drafts.length===1)});
+  if(dit&&!quiet)toastDel(1,()=>{drafts.splice(Math.min(di,drafts.length),0,dit);revBack([dit.id],drafts.length===1)});
   const dl=document.querySelector(`#rev .dl[data-id="${id}"]`);
   if(dl)dl.remove();
   if(!drafts.length){cancelAuto();$('#rev').getAnimations().forEach(a=>{try{a.cancel()}catch{}});$('#rev').classList.remove('anim','clearing');$('#rev').innerHTML='';syncBtn();$('#fab').classList.remove('has');return}
   updateRevHeader()}
 function clearDraftsAnim(){const el=$('#rev');if(!drafts.length)return;
-  cancelAuto();const dsv=drafts.slice();toastDel(dsv.length,()=>{drafts=dsv;renderRev(true);fxInDrafts(dsv.map(d=>d.id),true)});
+  cancelAuto();const dsv=drafts.slice();toastDel(dsv.length,()=>{drafts=dsv;revBack(dsv.map(d=>d.id),true)});
   const rows=[...el.querySelectorAll('.sw,.dl,.rh')];
   const done=()=>{el.getAnimations&&el.getAnimations().forEach(a=>{try{a.cancel()}catch{}});drafts=[];el.classList.remove('anim','clearing');el.style.overflow='';el.innerHTML='';fxLk(-1);syncBtn();$('#fab').classList.remove('has')};
   if(!rows.length||RM||!el.animate){fxLk(1);done();return}
@@ -2526,9 +2542,7 @@ function clearDraftsAnim(){const el=$('#rev');if(!drafts.length)return;
   rows.slice().reverse().forEach((r,i)=>{r.getAnimations&&r.getAnimations().forEach(a=>{try{a.cancel()}catch{}});
     r.animate([{opacity:1,transform:'scale(1)'},{opacity:0,transform:'scale(.94)'}],{duration:260,delay:i*30,easing:'cubic-bezier(.4,0,.6,1)',fill:'forwards'})});
   const t0=Math.max(120,260+(n-1)*30-150);
-  setTimeout(()=>{el.style.overflow='hidden';
-    const cs=getComputedStyle(el),a=el.animate([{height:el.offsetHeight+'px',marginTop:cs.marginTop,marginBottom:cs.marginBottom},{height:'0px',marginTop:'0px',marginBottom:'0px'}],{duration:460,easing:FX_C,fill:'forwards'});
-    a.finished.then(done,done)},t0)}
+  setTimeout(()=>shMorph(done),t0)}   // v187: строки растаяли — окно одним движением переходит к шаблонам
 // v183: перед записью — значения из полей черновиков: на iPhone кнопка «Записать» не забирает фокус, поле не успевает отдать значение (change),
 // и допечатанное в заметке или сумме терялось
 function revSyncInputs(){document.querySelectorAll('#rev .sw[data-id]').forEach(sw=>{const d=drafts.find(x=>x.id===sw.dataset.id);if(!d)return;
@@ -3382,6 +3396,18 @@ function fxInDrafts(ids,all){
   rev.querySelectorAll('.sw[data-id],.dl[data-id]').forEach(e=>{const n=idx[e.dataset.id];if(n==null)return;
     ps.push(fxExpand(e,600,n*70+(e.classList.contains('dl')?30:0)))});
   Promise.all(ps).then(()=>fxLk(-1),()=>fxLk(-1))}
+// v187: окно «+» меняет содержимое (ушёл последний черновик → появились шаблоны, и обратно) одним плавным движением:
+// высота перетекает от старой к новой (низ окна стоит на месте), появившийся блок проявляется. Раньше окно сначала сжималось, потом рывком вырастало
+function shMorph(change){const el=document.getElementById('sh');
+  if(RM||!el||!el.animate||!el.classList.contains('on')){change();return}
+  el.getAnimations().forEach(a=>{if(a.__shm)try{a.cancel()}catch(e){}});
+  const h0=el.getBoundingClientRect().height,rv=$('#rev'),had=!!(rv&&rv.childElementCount);change();
+  const h1=el.getBoundingClientRect().height,has=!!(rv&&rv.childElementCount);fxLk(1);
+  const ov=el.style.overflow;el.style.overflow='hidden';
+  const a=el.animate([{height:h0+'px'},{height:h1+'px'}],{duration:Math.abs(h1-h0)<2?1:460,easing:'cubic-bezier(.22,1,.36,1)'});a.__shm=1;
+  const end=()=>{el.style.overflow=ov;fxLk(-1)};a.onfinish=end;a.oncancel=end;
+  const show=has&&!had?[...rv.querySelectorAll('.rh,.sw,.dl')]:(!has&&had?[$('#tpls')].filter(x=>x&&getComputedStyle(x).display!=='none'):[]);
+  show.forEach((x,i)=>x.animate([{opacity:0,transform:'translate3d(0,12px,0)'},{opacity:1,transform:'none'}],{duration:480,delay:90+i*45,easing:'cubic-bezier(.22,1,.36,1)',fill:'backwards'}))}
 window._fxLock=0;
 function fxLk(d){window._fxLock=Math.max(0,(window._fxLock||0)+d);const s=document.getElementById('sh');if(s)s.classList.toggle('fxl',window._fxLock>0);if(!window._fxLock)try{window.dispatchEvent(new Event('resize'))}catch{}}
 function commitSw(w){
@@ -3399,7 +3425,8 @@ function commitSw(w){
     setTimeout(()=>{
       if(st&&st.undone){fxLk(-1);return}
       if(drafts.length>1)updateRevHeader(drafts.filter(d=>d.id!==w.dataset.id));
-      const rv=rh?$('#rev'):null;if(rv&&rv.animate&&!RM){const cs=getComputedStyle(rv);rv.animate([{marginTop:cs.marginTop,marginBottom:cs.marginBottom},{marginTop:'0px',marginBottom:'0px'}],{duration:460,easing:FX_C,fill:'forwards'})}
+      // v187: последний черновик — без схлопывания строки: окно одним движением переходит к шаблонам
+      if(rh){fxLk(-1);if(st&&st.undone)return;shMorph(()=>{w.remove();if(dl)dl.remove();removeDraftAnim(w.dataset.id,!!st)});return}
       Promise.all([fxCollapse(w),fxCollapse(dl),fxCollapse(rh)]).then(()=>{
         fxLk(-1);if(st&&st.undone)return;
         w.remove();if(dl)dl.remove();removeDraftAnim(w.dataset.id,!!st)})},GAP);
@@ -5759,13 +5786,13 @@ async function ibLoop(){
   const measure=()=>{const V=Math.min(window.innerHeight,vv?vv.offsetTop+vv.height:window.innerHeight);return Math.max(0,baseH-V)};
   // --- движение (у каждого окна своё)
   function apply(el){const x=S(el);el.style.setProperty('--lift',Math.round(x.lift*10)/10+'px');
-    {const bo=FLT[el.id]?sab+12:0,km=Math.max(160,Math.round(baseH-x.lift-sat-8-bo));if(km!==x.km){x.km=km;el.style.setProperty('--kmax',km+'px')}}   // v145: высота окна меняется вместе с подъёмом — верх не выезжает за экран
+    {const bo=0,km=Math.max(160,Math.round(baseH-x.lift-sat-8-bo));if(km!==x.km){x.km=km;el.style.setProperty('--kmax',km+'px')}}   // v145: высота окна меняется вместе с подъёмом — верх не выезжает за экран
     const o=owner&&st.get(owner),k=!!o&&(o.target>0||o.lift>1);if(k!==kbo){kbo=k;root.classList.toggle('kbo',k)}}
   // v156: подъём окна ведёт системный аниматор (Web Animations, свойство translate) — он идёт отдельно от JavaScript, синхронно с экраном, как клавиатура.
   // Раньше --lift менялся из JS каждый кадр: если кадр не успевал (в момент появления клавиатуры), окно стояло, а следующим кадром прыгало вдвое (видео: 19, 44, 8, 18, 6, 12…).
   // Высокие окна, у которых при подъёме меняется высота (--kmax), по-прежнему ведутся по кадрам.
   const WA=!!Element.prototype.animate;
-  const kmOf=(el,L)=>Math.max(160,Math.round(baseH-L-sat-8-(FLT[el.id]?sab+12:0)));
+  const kmOf=(el,L)=>Math.max(160,Math.round(baseH-L-sat-8));   // v186: окна стоят вплотную к низу (--rest 0) — запаса снизу больше нет
   function restPx(el){const p=document.createElement('i');p.style.cssText='position:absolute;left:0;top:0;width:0;visibility:hidden;pointer-events:none;height:var(--rest,0px)';el.appendChild(p);const h=p.offsetHeight;p.remove();return h}
   function cur(x){const w=x.tw;if(!w)return x.lift;if(w.wa){const u=Math.min(1,Math.max(0,(w.wa.currentTime||0)/w.c[4]));return w.from+(w.to-w.from)*ease(w.c,u)}return x.lift}
   function halt(el){const x=S(el),w=x.tw;if(!w)return;const v=cur(x);if(w.wa){try{w.wa.cancel()}catch(e){}}x.tw=null;x.lift=v;x.target=v;apply(el)}   // остановить подъём там, где окно сейчас
@@ -6709,7 +6736,7 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 (function(){'use strict';
 const css=`#tpv{position:fixed;inset:0;z-index:150}
 #tpv .tvb{position:absolute;inset:0;background:rgba(0,0,0,.42);opacity:0;transition:opacity .3s ease}#tpv.on .tvb{opacity:1}
-#tpv .tvs{position:absolute;left:0;right:0;bottom:0;max-height:84%;display:flex;flex-direction:column;border-radius:26px 26px 0 0;background:var(--bg);color:var(--t);border:.5px solid var(--l);border-bottom:0;box-shadow:0 -12px 40px rgba(0,0,0,.35);transform:translateY(105%);transition:transform .45s cubic-bezier(.32,.72,0,1);padding-bottom:max(env(safe-area-inset-bottom,0px),var(--sab,0px),14px)}
+#tpv .tvs{position:absolute;left:0;right:0;bottom:0;max-height:84%;display:flex;flex-direction:column;border-radius:26px 26px 0 0;background:var(--bg);color:var(--t);border:.5px solid var(--l);border-bottom:0;box-shadow:0 -12px 40px rgba(0,0,0,.35);transform:translateY(105%);transition:transform .45s cubic-bezier(.32,.72,0,1);padding-bottom:0}
 #tpv.on .tvs{transform:none}#tpv .tvs.drag{transition:none}
 #tpv .tvh{display:block;width:38px;height:5px;border-radius:3px;background:rgba(127,127,127,.4);margin:8px auto 4px}
 #tpv .tvt{display:flex;align-items:baseline;gap:8px;padding:6px 18px 10px;touch-action:none}#tpv .tvt b{font-size:20px;font-weight:700}#tpv .tvt span{font-size:13px;color:var(--m)}
@@ -6739,7 +6766,7 @@ window.openTips=function(){
   const body=list.length?list.map((t,i)=>`<div class="tvk" style="--i:${i}"><i class="tvn">${i+1}</i><div><b>${E(t.h)}</b><span>${E(t.b)}</span>${t.s?`<small>${E(t.s)}</small>`:''}</div></div>`).join('')
    :`<div class="tve"><div class="tvo">${BULB}</div><h3>Здесь появятся советы</h3><p>Добавьте первые траты — и я подскажу, куда уходят деньги, где можно сэкономить и как уложиться в бюджет.</p><div class="tvch"><span style="--i:0">🔍 Куда уходят деньги</span><span style="--i:1">✂️ Где можно сэкономить</span><span style="--i:2">🎯 Как дойти до цели</span></div><button type="button" class="tva">Добавить трату</button></div>`;
   el=document.createElement('div');el.id='tpv';
-  el.innerHTML=`<div class="tvb"></div><div class="tvs" role="dialog" aria-label="Советы"><i class="tvh"></i><div class="tvt"><b>Советы</b><span>${MN[+m.slice(5,7)-1]}</span><button type="button" class="tvx" aria-label="Закрыть">✕</button></div><div class="tvc">${body}</div></div>`;
+  el.innerHTML=`<div class="tvb"></div><div class="tvs" role="dialog" aria-label="Советы"><i class="tvh"></i><div class="tvt"><b>Советы</b><span>${MN[+m.slice(5,7)-1]}</span><button type="button" class="tvx" aria-label="Закрыть">×</button></div><div class="tvc">${body}</div></div>`;
   document.body.appendChild(el);requestAnimationFrame(()=>requestAnimationFrame(()=>el&&el.classList.add('on')));hp('light');
   const sh=el.querySelector('.tvs');el.querySelector('.tvb').onclick=close;el.querySelector('.tvx').onclick=close;
   const add=el.querySelector('.tva');if(add)add.onclick=()=>{close();setTimeout(()=>{const f=document.getElementById('fab');if(f)f.click()},300)};
