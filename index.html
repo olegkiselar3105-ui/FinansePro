@@ -2291,7 +2291,6 @@ ov.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault()});
 ov.addEventListener('touchmove',e=>{e.preventDefault()},{passive:false});
 // v69: одно место, которое знает, какое окно сейчас верхнее (nc 50 > bq 45 > rc/cp 44 > cf/gd/ed/sh 40). Раньше оверлей и Escape имели каждый свою цепочку, в которой
 // bq стоял ниже rc/cp, а окно массовых правок (gd._bk) не учитывалось вовсе — клик по затемнению снимал оверлей и блокировку фона, оставляя окно открытым.
-function autoGd(){if(!gT||!$('#gsvb.auto'))return;const f={debt:'#dam',goal:'#gtg',lim:'#lam',bud:'#bam'}[gT.mode],el=f&&$(f);if(el&&pn(el.value)>0)saveGoal()}
 function closeTopModal(){
   if($('#nc').classList.contains('on'))closeNc(false);
   else if(bqT||bq.classList.contains('on'))closeBq();
@@ -2299,7 +2298,7 @@ function closeTopModal(){
   else if(rcS||rcEl.classList.contains('on'))closeRc();
   else if(cfT||cf.classList.contains('on'))closeCf();
   else if(gd._bk&&window.bkClose)window.bkClose();
-  else if(gT||gd.classList.contains('on')){try{autoGd()}catch(e){}if(gd.classList.contains('on'))closeGoal()}
+  else if(gT||gd.classList.contains('on')){if(gd.classList.contains('on'))closeGoal()}   // v170: окна плиток закрываются БЕЗ сохранения — сохраняет только «Сохранить» или Enter
   else if(eT||$('#ed').classList.contains('on')){if($('#ed').classList.contains('on'))closeEdit()}   // v143: окно операции закрывается БЕЗ сохранения — сохраняет только кнопка «Сохранить» или Enter
   else if(sh.classList.contains('on')){inp.value='';closeSheet()}
   else return false;
@@ -5331,7 +5330,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v169';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v170';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}   // номер сборки виден внизу экрана: по нему понятно, обновился ли Telegram до новой версии
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
