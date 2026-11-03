@@ -41,8 +41,10 @@ export default {
         const bad = Array.isArray(body.bad) ? body.bad.map(String).slice(0, 200) : [];   // записи, которые приложение не смогло разобрать
         const notes = {};                                                                  // что именно сделало приложение: {id: «Долг: Иван должен вам 500»}
         if (body.notes && typeof body.notes === 'object') for (const k of Object.keys(body.notes).slice(0, 200)) notes[String(k)] = String(body.notes[k]).slice(0, 1200);   // v166: подробный ответ (старое приложение шлёт ≤300 — совместимо)
+        const hold = Array.isArray(body.hold) ? body.hold.map(String).slice(0, 200) : [];
+        const drop = Array.isArray(body.drop) ? body.drop.map(String).slice(0, 200) : [];   // v167: удалены в приложении, не записаны   // v167: записи на проверке в приложении — квитанцию не удаляем, «✅ Записано» придёт вторым ack
         const box = store(env, uid), out = await box.ack(ids);
-        ctx.waitUntil(finishReceipts(env, box, ids, bad, notes).catch(e => console.error('receipts', e && e.stack || e)));
+        ctx.waitUntil(finishReceipts(env, box, ids, bad, notes, hold, drop).catch(e => console.error('receipts', e && e.stack || e)));
         return cors(json(out));
       }
       return new Response('finance bot', { status: 200 });
@@ -76,10 +78,10 @@ const d1Store = (env, uid) => {
     async has(id) { await d1Init(env); return !!(await q('SELECT 1 AS x FROM msgs WHERE uid = ? AND id = ?', uid, String(id)).first()); },
     rc: {
       async add(id, chat, mid, text) { await d1Init(env); await q('INSERT OR REPLACE INTO rcpt (uid, id, chat, mid, text, at) VALUES (?, ?, ?, ?, ?, ?)', uid, String(id), chat, mid, text, Date.now()).run(); },
-      async take(ids) {
+      async take(ids, keep) {
         await d1Init(env); const out = [];
         for (const id of ids.slice(0, 20)) { const r = await q('SELECT chat, mid, text FROM rcpt WHERE uid = ? AND id = ?', uid, String(id)).first(); if (r) out.push({ id: String(id), ...r }); }
-        if (out.length) await env.DB.batch(out.map(o => q('DELETE FROM rcpt WHERE uid = ? AND id = ?', uid, o.id)));
+        if (out.length && !keep) await env.DB.batch(out.map(o => q('DELETE FROM rcpt WHERE uid = ? AND id = ?', uid, o.id)));
         return out;
       }
     },
@@ -224,12 +226,16 @@ async function handleUpdate(upd, env) {
   }
 }
 
-async function finishReceipts(env, box, ids, bad, notes = {}) {
+async function finishReceipts(env, box, ids, bad, notes = {}, hold = [], drop = []) {
   if (!box.rc || !ids.length) return;
-  const badSet = new Set(bad.map(String));
-  const list = await box.rc.take(ids);
+  const badSet = new Set(bad.map(String)), holdSet = new Set(hold.map(String)), dropSet = new Set(drop.map(String));
+  // v167: «на проверке» — сообщение меняется, квитанция остаётся (после подтверждения в приложении придёт второй ack → «✅ Записано»)
+  const held = await box.rc.take(ids.map(String).filter(i => holdSet.has(i)), true);
+  await Promise.all(held.map(r => tg(env, 'editMessageText', { chat_id: r.chat, message_id: r.mid,
+    text: `📝 Получено: «${r.text}»` + (notes[r.id] ? `\n\n${notes[r.id]}` : '') }).catch(() => {})));
+  const list = await box.rc.take(ids.map(String).filter(i => !holdSet.has(i)));
   await Promise.all(list.map(r => tg(env, 'editMessageText', { chat_id: r.chat, message_id: r.mid,
-    text: badSet.has(r.id) ? `⚠ Приложение не поняло: «${r.text}»\n\nНапишите, например:\n• «кофе 30, категория продукты»\n• «бюджет 20000»\n• «Иван должен 500»` : `✅ Записано: «${r.text}»` + (notes[r.id] ? `\n\n${notes[r.id]}` : '') }).catch(() => {})));   // v166: подробный ответ из приложения отдельным абзацем
+    text: dropSet.has(r.id) ? `🗑 Не записано: «${r.text}»\nЗапись удалена в приложении.` : badSet.has(r.id) ? `⚠ Приложение не поняло: «${r.text}»\n\nНапишите, например:\n• «кофе 30, категория продукты»\n• «бюджет 20000»\n• «Иван должен 500»` : `✅ Записано: «${r.text}»` + (notes[r.id] ? `\n\n${notes[r.id]}` : '') }).catch(() => {})));   // v166: подробный ответ из приложения отдельным абзацем
 }
 
 async function transcribe(fileId, env) {
