@@ -482,6 +482,7 @@ button{transition:opacity .15s ease,color .2s ease,background-color .2s ease,bor
 .pgl{opacity:0;animation:fi .7s ease .85s forwards}
 @media (prefers-reduced-motion:reduce){.pmk{animation:none;stroke-dashoffset:0}.pgs{animation:none}.pgl{animation:none;opacity:1}}@keyframes fi{to{opacity:1}}
 .tlg{display:flex;gap:12px;font-size:12px;color:var(--m2)}.tlg span{display:inline-flex;align-items:center;gap:6px}.tlg i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.shh{display:flex;align-items:center;justify-content:space-between;gap:8px}.shb{flex:none;width:30px;height:30px;margin:-6px -4px -6px 0;border:0;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;background:rgba(127,127,127,.14);color:var(--t)}.shb:active{opacity:.6}
 .smr{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:.5px solid var(--l)}.smr:first-of-type{border-top:0;padding-top:2px}.sme{font-size:18px;width:24px;text-align:center;flex:none}.sml{flex:1;min-width:0;font-size:13px}.sml small{display:block;font-size:11px;color:var(--m2);margin-top:1px}.smr b{font-weight:500;font-size:15px;text-align:right;white-space:nowrap}
 .stg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .stt{border:.5px solid var(--l);border-radius:12px;padding:10px 12px;background:rgba(var(--wr),.025);min-width:0}
@@ -2550,17 +2551,20 @@ function trendHtml(peek){
   let h=`<div style="display:flex;justify-content:space-between;align-items:center;margin:12px 0 4px"><div class="tlg"><span><i style="background:var(--g)"></i>Доходы</span><span><i style="background:var(--rd)"></i>Расходы</span></div>${seg('tn',[['6','6 мес'],['12','12 мес']],String(TN))}</div><div class="cd" style="padding:10px 8px 8px">${s}<div class="gx" style="margin:2px 6px 2px">В среднем за месяц: доход ${fmt(Math.round(aI))} · расход ${fmt(Math.round(aX))} ${cfg.cur}</div></div>`;
   return h}
 // итоги периода текстом: [эмодзи, подпись, значение, пояснение, цвет]
-const sRows=rows=>rows.map(([e,l,v,sb,col])=>`<div class="smr"><span class="sme">${e}</span><span class="sml">${l}${sb?`<small>${sb}</small>`:''}</span><b${col?` style="color:${col}"`:''}>${v}</b></div>`).join('');
+const sRows=rows=>rows.map(([e,l,v,sb,col])=>`<div class="smr"><span class="sme">${e}</span><span class="sml">${E(l)}${sb?`<small>${E(sb)}</small>`:''}</span><b${col?` style="color:${col}"`:''}>${E(v)}</b></div>`).join('');
+// карточка итогов: заголовок + кнопка «Поделиться» (картинка 3:4 собирается из тех же строк, см. shareSum)
+const SHR={};
+const sumBox=(k,title,period,rows)=>{SHR[k]={title,period,rows};return `<div class="cd"><h4 class="shh"><span>${E(title)} · ${E(period)}</span><button type="button" class="shb" data-shr="${k}" aria-label="Поделиться"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3.5M8.2 7.3 12 3.5l3.8 3.8M8 10.5H7a2 2 0 0 0-2 2V18a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5.5a2 2 0 0 0-2-2h-1"/></svg></button></h4>`+sRows(rows)+`</div>`};
 // итоги месяца — внизу вкладки «Общая» при «Мес»
 function monthSum(m){const st=monthStats(m);if(!st.ex.length&&!st.I)return'';
   const sv=st.I>0?st.I-st.X:(budgetOf(m)>0?budgetOf(m)-st.X:null),C=' '+cfg.cur;
-  return `<div class="cd"><h4>Итоги · ${MN[st.mo-1]} ${st.y}</h4>`+sRows([
-   ['💸','Расходы',fmt(Math.round(st.X))+C,st.dlt==null?'':E(sgn(st.dlt)+' к прошлому месяцу'),'var(--rd)'],
+  return sumBox('m','Итоги месяца',MN[st.mo-1]+' '+st.y,[
+   ['💸','Расходы',fmt(Math.round(st.X))+C,st.dlt==null?'':sgn(st.dlt)+' к прошлому месяцу','var(--rd)'],
    sv==null?['🐷','Сэкономили','—','нет доходов и бюджета',null]:['🐷',st.I>0?'Сэкономили':'Сэкономили от бюджета',(sv<0?'−':'')+fmt(Math.abs(Math.round(sv)))+C,sv>=0?(st.I>0?Math.round(sv/st.I*100)+'% дохода':'в рамках бюджета'):(st.I>0?'расходы выше доходов':'бюджет превышен'),sv>=0?'var(--g)':'var(--rd)'],
-   ['🧾','Самая большая трата',st.big?fmt(st.big.amount)+C:'—',st.big?E((st.big.note||cd(st.big.category).l).slice(0,30))+' · '+dayLbl(st.big.date):'',null],
+   ['🧾','Самая большая трата',st.big?fmt(st.big.amount)+C:'—',st.big?(st.big.note||cd(st.big.category).l).slice(0,30)+' · '+dayLbl(st.big.date):'',null],
    ['📅','Самый дорогой день',st.hv?fmt(Math.round(st.hv))+C:'—',st.hd?dLbl(pDates(st.m)[st.hd-1]):'',null],
    ['🌿','Дни без трат',st.zero+' из '+st.el,st.streak>1?'серия до '+dayWord(st.streak)+' подряд':'',st.zero>0?'var(--g)':null],
-   ['📊','В среднем в день',fmt(Math.round(st.X/Math.max(1,st.el)))+C,'за '+dayWord(st.el),null]])+`</div>`}
+   ['📊','В среднем в день',fmt(Math.round(st.X/Math.max(1,st.el)))+C,'за '+dayWord(st.el),null]])}
 let _calK='',_calT=0;const _calSeen=new Set();
 // анимация календаря: один раз при первом заходе в каждый месяц; не во время свайпа (там страница-превью), а после остановки;
 // перерисовка посреди анимации продолжает её, а не запускает заново; при повторных заходах в месяц анимации нет
@@ -2679,7 +2683,7 @@ function goalAct(el){const a=el.dataset.ga,g=(cfg.goals||[]).find(x=>x.id===el.d
 // ---- подразделы страницы «Планы»: Теги · Цели · Бюджет и лимиты ----
 const subBar=(items,cur,at)=>`<div class="sbt" role="tablist">`+items.map(([k,l])=>`<button data-${at}="${k}" class="${cur===k?'on':''}" role="tab" aria-selected="${cur===k}">${l}</button>`).join('')+`</div>`;
 const subPl=()=>subBar([['goals','Цели'],['budget','Бюджет и лимиты'],['debts','Долги']],ps,'ps');
-const subAn=()=>subBar([['all','Общая'],['trend','Динамика'],['cal','Календарь'],['tags','Теги']],AS,'as')+(typeof wrapBtn==='function'?wrapBtn():'');
+const subAn=()=>subBar([['all','Общая'],['trend','Динамика'],['cal','Календарь'],['tags','Теги']],AS,'as');
 const mtg=(k,on,label)=>`<span class="gtg"><span>${label}</span><button type="button" class="mtg${on?' on':''}" data-mt="${k}" role="switch" aria-checked="${!!on}" aria-label="${label}"><i></i></button></span>`;   // v167: переключатель в заголовке раздела (как «Остаток» в главном блоке)
 const limCol=p=>p>=100?'#ff6b6b':p>=80?'#f2c14e':'var(--t)';
 function budgetHtml(){const X=sumBy(month,'expense'),Bd=budgetOf(month),mn=MN[+month.slice(5,7)-1],own=bmOwn(month);
@@ -3175,11 +3179,12 @@ function sumCard(from,to){const wk=RG==='week',td=ymd(new Date()),P=x=>new Date(
   let el=0,zero=0,run=0,streak=0;for(const d=P(from);ymd(d)<=end;d.setDate(d.getDate()+1)){el++;if(xd.has(ymd(d))){run=0}else{zero++;run++;if(run>streak)streak=run}}
   const vs=wk?'прошлой неделе':'прошлому году',tail=part?' (за те же дни)':'',C=' '+cfg.cur;
   const dX=pX>0?(X-pX)/pX*100:null,dI=pI>0?(I-pI)/pI*100:null;
-  return `<div class="cd"><h4>Итоги ${wk?'недели':'года'}</h4>`+sRows([
-   ['💰','Доходы',fmt(Math.round(I))+C,dI==null?'':E(sgn(dI)+' к '+vs+tail),'var(--g)'],
-   ['💸','Расходы',fmt(Math.round(X))+C,dX==null?(pX?'':'в прошлом периоде трат не было'):E(sgn(dX)+' к '+vs+tail),'var(--rd)'],
-   top?['🏆','Больше всего — '+E(cd(top[0]).l),fmt(Math.round(top[1]))+C,Math.round(top[1]/X*100)+'% расходов',null]:['🏆','Больше всего','—','',null],
-   ['🌿','Дни без трат',el?zero+' из '+el:'—',streak>1?'серия до '+dayWord(streak)+' подряд':'',zero>0?'var(--g)':null]])+`</div>`}
+  const fy=from.slice(0,4),f1=+from.slice(5,7)-1,t1=+to.slice(5,7)-1,per=wk?(f1===t1?(+from.slice(8))+'–'+(+to.slice(8))+' '+MGN[f1]:(+from.slice(8))+' '+MSH[f1]+' – '+(+to.slice(8))+' '+MSH[t1])+' '+fy:fy+' год';
+  return sumBox(wk?'w':'y',wk?'Итоги недели':'Итоги года',per,[
+   ['💰','Доходы',fmt(Math.round(I))+C,dI==null?'':sgn(dI)+' к '+vs+tail,'var(--g)'],
+   ['💸','Расходы',fmt(Math.round(X))+C,dX==null?(pX?'':'в прошлом периоде трат не было'):sgn(dX)+' к '+vs+tail,'var(--rd)'],
+   top?['🏆','Больше всего — '+cd(top[0]).l,fmt(Math.round(top[1]))+C,Math.round(top[1]/X*100)+'% расходов',null]:['🏆','Больше всего','—','',null],
+   ['🌿','Дни без трат',el?zero+' из '+el:'—',streak>1?'серия до '+dayWord(streak)+' подряд':'',zero>0?'var(--g)':null]])}
 function tagsAnalytics(L,tot){const inc=KD==='income',by={},cnt={},cat={};let tagged=0;
   L.forEach(t=>{const g=t.tags||[];if(g.length)tagged+=t.amount;g.forEach(x=>{by[x]=(by[x]||0)+t.amount;cnt[x]=(cnt[x]||0)+1;const c=cat[x]=cat[x]||{};c[t.category]=(c[t.category]||0)+t.amount})});
   const it=Object.entries(by).sort((a,b)=>b[1]-a[1]);
@@ -5373,7 +5378,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v175';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v176';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}   // номер сборки виден внизу экрана: по нему понятно, обновился ли Telegram до новой версии
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
@@ -6595,6 +6600,48 @@ function open(kind){if(el)return;let d;try{d=build(kind)}catch(e){console.error(
   ['touchstart','touchmove','click'].forEach(n=>el.addEventListener(n,e=>e.stopPropagation(),{passive:true}));
   el.querySelector('.wx').onclick=close;el.querySelector('.wsh').onclick=share;document.addEventListener('keydown',key);
   last=performance.now();show(0);raf=requestAnimationFrame(tick)}
+// v176: «Поделиться» из карточек «Итоги месяца / недели / года» — картинка 3:4 (1080×1440), строки как в карточке,
+// внизу значок + FinancePro и ник; окно просмотра — как в историях
+function ell(x,s,w){if(x.measureText(s).width<=w)return s;while(s.length>1&&x.measureText(s+'…').width>w)s=s.slice(0,-1);return s.trimEnd()+'…'}
+function drawSum(d){const W=1080,H=1440,light=document.documentElement.getAttribute('data-theme')==='light',FG=light?'20,21,26':'255,255,255',A=a=>'rgba('+FG+','+a+')';
+  const rs=getComputedStyle(document.documentElement),fam=getComputedStyle(document.body).fontFamily||'sans-serif';
+  const col=c=>{if(!c)return A(1);const m=/var\((--[\w-]+)\)/.exec(c);return m?(rs.getPropertyValue(m[1]).trim()||A(1)):c};
+  const cv=document.createElement('canvas');cv.width=W;cv.height=H;const x=cv.getContext('2d');
+  x.fillStyle=light?'#f4f5f9':'#0b0b10';x.fillRect(0,0,W,H);
+  {x.save();x.translate(W/2,0);x.scale(1.25*W,.62*H);const gr=x.createRadialGradient(0,0,0,0,0,1);gr.addColorStop(0,'#5b8cff');gr.addColorStop(.75,hexA('#5b8cff',0));gr.addColorStop(1,hexA('#5b8cff',0));x.globalAlpha=light?.35:.7;x.fillStyle=gr;x.fillRect(-1,0,2,1/.62+.01);x.restore()}
+  const mx=72;x.textBaseline='middle';x.textAlign='left';
+  x.fillStyle=A(.7);x.font='600 34px '+fam;try{x.letterSpacing='4px'}catch(e){}x.fillText(d.title.toUpperCase(),mx,140);try{x.letterSpacing='0px'}catch(e){}
+  x.fillStyle=A(1);x.font='800 84px '+fam;x.fillText(ell(x,d.period,W-mx*2),mx,232);
+  const top=330,bot=H-200,n=d.rows.length,gap=20,rh=Math.min(190,(bot-top-gap*(n-1))/n),h0=top;
+  d.rows.forEach(([e,l,v,sb,c],i)=>{const y=h0+i*(rh+gap),cy=y+rh/2;
+    x.fillStyle=A(light?.06:.09);rrect(x,mx-16,y,W-(mx-16)*2,rh,36);x.fill();
+    x.globalAlpha=1;x.textAlign='center';x.font='56px '+fam;x.fillStyle=A(1);x.fillText(e,mx+44,cy+2);
+    x.textAlign='right';x.font='700 46px '+fam;x.fillStyle=col(c);const vw=Math.min(x.measureText(v).width,440),vx=W-mx-16;x.fillText(ell(x,v,440),vx,cy);
+    const lx=mx+104,lw=vx-vw-32-lx;x.textAlign='left';x.fillStyle=A(1);x.font='500 38px '+fam;
+    if(sb){x.fillText(ell(x,l,lw),lx,cy-22);x.fillStyle=A(.6);x.font='400 28px '+fam;x.fillText(ell(x,sb,lw),lx,cy+24)}else x.fillText(ell(x,l,lw),lx,cy)});
+  {const nk=nick(),isz=64,cy=H-100;x.save();x.globalAlpha=.75;x.textBaseline='middle';
+    wallet(x,mx,cy-isz/2,isz,'rgb('+FG+')');x.fillStyle=A(1);x.textAlign='left';x.font='700 36px '+fam;x.fillText('FinancePro',mx+isz+18,cy);
+    if(nk){x.textAlign='right';x.font='500 30px '+fam;x.globalAlpha=.65;x.fillText(ell(x,nk,W/2-mx),W-mx,cy)}x.restore()}
+  return cv}
+const scss=document.createElement('style');scss.textContent=`#shv{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.88);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:calc(max(env(safe-area-inset-top,0px),var(--sat,0px)) + 20px) 24px calc(max(env(safe-area-inset-bottom,0px),var(--sab,0px)) + 20px);text-align:center;opacity:0;transition:opacity .25s ease}
+#shv.on{opacity:1}#shv img{max-width:100%;max-height:68%;width:auto;object-fit:contain;border-radius:16px;-webkit-touch-callout:default;-webkit-user-select:auto;user-select:auto}
+#shv p{margin:0;font-size:14px;opacity:.8;max-width:300px;line-height:1.4}
+#shv button{border:0;border-radius:14px;padding:0 26px;height:48px;min-width:220px;background:#fff;color:#111;font:600 16px/1 inherit;font-family:inherit}
+#shv .wcl{height:38px;background:none;color:#fff;opacity:.7;font-weight:500;font-size:15px}`;document.head.appendChild(scss);
+function shareSum(k){const d=typeof SHR!=='undefined'&&SHR[k];if(!d||document.getElementById('shv'))return;let cv;
+  try{cv=drawSum(d)}catch(e){console.error(e);toast('Не удалось собрать картинку');return}
+  cv.toBlob(b=>{if(!b){toast('Не удалось собрать картинку');return}
+    const u=URL.createObjectURL(b),v=document.createElement('div');v.id='shv';
+    v.innerHTML='<img alt="'+E(d.title)+'"><button type="button" class="wgo">Поделиться</button><button type="button" class="wcl">Закрыть</button><p hidden>Нажмите и удерживайте картинку, чтобы сохранить или отправить</p>';
+    v.querySelector('img').src=u;
+    const done=()=>{document.removeEventListener('keydown',kd);v.classList.remove('on');setTimeout(()=>{URL.revokeObjectURL(u);v.remove()},260)},kd=e=>{if(e.key==='Escape')done()};
+    v.querySelector('.wcl').onclick=done;document.addEventListener('keydown',kd);
+    v.querySelector('.wgo').onclick=async()=>{const f=new File([b],'itogi.png',{type:'image/png'});
+      try{if(navigator.share&&(!navigator.canShare||navigator.canShare({files:[f]}))){await navigator.share({files:[f]});return}}catch(e){if(e&&e.name==='AbortError')return}
+      v.querySelector('p').hidden=false};
+    ['pointerdown','touchstart','touchmove','click'].forEach(n=>v.addEventListener(n,e=>e.stopPropagation(),{passive:true}));
+    document.body.appendChild(v);requestAnimationFrame(()=>v.classList.add('on'));hp('light')},'image/png')}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-shr]');if(!b)return;e.preventDefault();e.stopPropagation();shareSum(b.dataset.shr)},true);
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-wrap]');if(!b)return;e.preventDefault();e.stopPropagation();open(b.dataset.wrap)},true);
 })();
 </script>
