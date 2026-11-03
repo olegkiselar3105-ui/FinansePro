@@ -1532,6 +1532,19 @@ html.stk #sbw{position:sticky;top:var(--stk2,calc(var(--sat) + 8px + var(--toph,
   opacity:0;visibility:hidden;transition:opacity .22s ease,visibility 0s .22s}
 #stkbg.on{opacity:1;visibility:visible;transition:opacity .22s ease,visibility 0s}
 html:not(.stk) #stkbg{display:none}
+#stkbg{height:var(--stkh,0px)}
+/* v163: язычок со стрелкой сверху на «Операциях» — опускает заголовок и главный блок поверх списка (режим html.rvl = как закреплённая шапка) */
+#hdrv{position:fixed;z-index:9;left:50%;top:var(--sat);width:58px;height:24px;margin-left:-29px;padding:0;border:0;border-radius:0 0 14px 14px;display:flex;align-items:center;justify-content:center;
+  color:var(--t);background:var(--gloss,none),var(--gbarT,rgba(34,34,38,.7));-webkit-backdrop-filter:blur(12px) saturate(1.4);backdrop-filter:blur(12px) saturate(1.4);
+  box-shadow:0 4px 14px rgba(0,0,0,.22),inset 0 -.5px 0 rgba(var(--wr),.14);-webkit-tap-highlight-color:transparent;touch-action:manipulation;
+  visibility:hidden;transform:translate3d(0,-110%,0);transition:transform .22s cubic-bezier(.4,0,1,1),visibility 0s .22s}
+#hdrv::before{content:"";position:absolute;inset:-10px -16px}
+#hdrv.on{visibility:visible;transform:translate3d(0,var(--hy,0px),0);transition:transform .36s cubic-bezier(.3,1.3,.5,1),visibility 0s}
+#hdrv svg{transition:transform .3s cubic-bezier(.3,1.3,.5,1)}
+#hdrv.up{border-radius:0 0 14px 14px}#hdrv.up svg{transform:rotate(180deg)}
+#hdrv.on:active{opacity:.7}
+html.selm #hdrv{display:none}
+@media (prefers-reduced-motion:reduce){#hdrv,#hdrv.on,#hdrv svg{transition:none}}
 /* v151: кнопка «наверх» — над вкладкой «Настройки», появляется, когда главный блок ушёл из вида */
 #totop{position:fixed;z-index:9;right:calc(var(--rx,16px) + 8px);bottom:calc(14px + var(--sab) + var(--tbh,63px) + 12px);width:48px;height:48px;padding:0;border:0;border-radius:50%;
   display:flex;align-items:center;justify-content:center;color:var(--t);background:var(--gloss,none),var(--gbarT,rgba(34,34,38,.6));
@@ -3271,7 +3284,7 @@ function slideTo(t){document.documentElement.classList.remove('intro');   // v51
   if(tab==='list'){fcat=null;ftag=null;fday=null}
   tab=t;const ind=tabInd();if(ind)ind.style.transition='';moveInd();$('#ttl').textContent=ttlOf(t);
   if(clamp){
-    swapAnim(s,()=>{render();pgApply()},stSw?[bodyEl,$('#top'),$('#sbw')]:[bodyEl],0,1,stSw);return}   // v159: заголовок не уезжает вместе со страницей
+    setLt0(t);render();pgApply();softIn(false);return}   // v163: «Настройки» открываются сразу, с коротким проявлением (было: старая страница 0,25 с гасла, новая 0,5 с проявлялась)
   // между «Операциями», «Аналитикой» и «Планами» страница меняется сразу, без сдвига; анимируются только заголовок и нижняя плашка
   setLt0(t);ltPop(s);render();pgApply()}
 function snapBack(){
@@ -3469,7 +3482,15 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
   // и каждый становился слоем посреди анимации — кадры «залипали». Шапка (в «Аналитике» и «Планах» она закреплена) стоит на месте.
   const stClear=()=>{if(bodyEl.style.transform)bodyEl.style.transform=''};
   const paint=y=>{if(!y){stClear();return}bodyEl.style.transform='translate3d(0,'+y.toFixed(2)+'px,0)'};
-  const stop=()=>{cancelAnimationFrame(OS.raf);OS.raf=0};
+  // v163: пружина возврата считается заранее (кадры через 1/60 с) и играется системным аниматором (Web Animations) — идёт ровно,
+  // даже если JavaScript занят. Раньше каждый кадр считался в JS, и отскок шёл через кадр (на видео 0, −4, 0, −4…)
+  const curY=()=>{if(!OS.wa)return OS.y;const f=OS.fr,i=Math.min(f.length-1,Math.max(0,(OS.wa.currentTime||0)*60/1000)),i0=Math.floor(i),i1=Math.min(f.length-1,i0+1);return f[i0]+(f[i1]-f[i0])*(i-i0)};
+  const stop=()=>{if(OS.wa){const a=OS.wa;OS.y=curY();OS.wa=null;paint(OS.y);try{a.cancel()}catch(e){}}cancelAnimationFrame(OS.raf);OS.raf=0};
+  function spring(){const k=OS.k||169,c=2*Math.sqrt(k),fr=[];let y=OS.y,v=OS.v;const n=4,d=1/60/n;
+    for(let f=0;f<300;f++){fr.push(Math.round(y*100)/100);for(let i=0;i<n;i++){v+=(-k*y-c*v)*d;y+=v*d}if(Math.abs(y)<.05&&Math.abs(v)<5)break}fr.push(0);
+    if(!bodyEl.animate||fr.length<3){OS.last=performance.now();OS.raf=requestAnimationFrame(tick);return}
+    stClear();const a=bodyEl.animate(fr.map(y=>({transform:y?'translate3d(0,'+y+'px,0)':'none'})),{duration:(fr.length-1)*1000/60,easing:'linear'});
+    OS.wa=a;OS.fr=fr;OS.raf=-1;a.onfinish=()=>{if(OS.wa===a){OS.wa=null;OS.raf=0;rest()}};a.oncancel=()=>{if(OS.wa===a){OS.wa=null;OS.raf=0;OS.y=0;OS.v=0}}}   // отменил кто-то другой — состояние не зависает
   let rcT=0;
   // слой страницы снимаем не сразу после остановки, а когда всё затихло: иначе в момент снятия строки чуть «щёлкают» на долю пикселя
   const rest=()=>{stop();OS.k=0;OS.y=0;OS.v=0;clearTimeout(rcT);stClear()};
@@ -3482,7 +3503,7 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
     if(Math.abs(y)<.05&&Math.abs(v)<5){rest();return}
     paint(y);OS.raf=requestAnimationFrame(tick)}
   function release(y,v){stop();OS.k=0;OS.y=y;OS.v=y>0?Math.max(v,-WN*y):Math.min(v,-WN*y);   // скорость не даёт перелететь через ноль
-    OS.last=performance.now();0;OS.raf=requestAnimationFrame(tick)}
+    spring()}
   const spOpen=()=>sp.classList.contains('open');
   const canCollapse=()=>spOpen()&&!q&&!fOn()&&!fpEl.classList.contains('open');
   // v49: ручная инерция — нужна, когда палец поймал отскок и продолжил листать: страница не должна «застревать» на краю
@@ -3497,7 +3518,7 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
     if(p<=0||p>=mx){
       const top=p<=0,v0=Math.min(4200,Math.abs(MM.v));momStop();MM.skip=performance.now()+200;
       window.scrollTo(0,top?0:mx);
-      if(v0>=260){OS.k=121;OS.y=0;OS.v=top?v0:-v0;OS.last=performance.now();0;OS.raf=requestAnimationFrame(tick)}
+      if(v0>=260){OS.k=121;OS.y=0;OS.v=top?v0:-v0;spring()}
       return}
     MM.p=p;window.scrollTo(0,p);
     if(Math.abs(MM.v)<24){momStop();return}
@@ -3510,11 +3531,13 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
   document.addEventListener('touchstart',e=>{tmOff();g=null;
     if(e.touches.length!==1||isModalOpen())return;
     const el=e.target;if(el.closest&&el.closest(skip))return;
-    const grab=OS.raf?OS.y:0;if(OS.raf){stop();OS.drag=1;0}   // страница ещё возвращается — можно поймать пальцем
+    if(OS.wa)OS.y=curY();const grab=OS.raf?OS.y:0;if(OS.raf){stop();OS.drag=1;0}   // страница ещё возвращается — можно поймать пальцем
     const mom=!!MM.raf;if(mom){momStop();OS.drag=1}                                       // v49: ручная инерция тоже ловится пальцем
     const sy0=window.scrollY||0,anim=mom||grab!==0||performance.now()-lastSc<140,tz=!!(el.closest&&el.closest('#top,#lt0,#chip,#st .lt,#st .pf0')),canS=tab==='list'&&!tz&&!spOpen();
     g={top:tz,cvs:canS&&grab>0,cvm:canS&&mom&&sy0<=48,t0:(sy0<=0&&!mom)||(anim&&sy0<=48),mode:mom?'scroll':grab?'stretch':'',on:!!grab||mom,p0:window.scrollY||0,lp:window.scrollY||0,vp:0,vy:0,base:e.touches[0].clientY,bx:e.touches[0].clientX,y0:grab,sgn:grab<0?-1:1,D0:grab?rbi(Math.abs(grab)):0,h0:0,h:0,v:0,lt:performance.now(),ly:grab};
-    tmArm();   // растяжение у края работает и для жеста, начатого в середине списка
+    // v163: блокирующий touchmove — только если жест начался у края (или во время отскока/инерции). В середине списка прокрутку целиком ведёт iOS:
+    // пока висел блокирующий обработчик, каждый сдвиг пальца ждал JavaScript, и прокрутка шла рывками
+    {const mx=Math.max(0,document.documentElement.scrollHeight-innerHeight);if(grab||mom||sy0<=48||sy0>=mx-48)tmArm()}
   },{passive:true});
   const onTM=e=>{if(!g)return;
     if(e.touches.length!==1||isModalOpen()){finish(false);return}
@@ -3597,7 +3620,7 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
     if(!hitTop&&!hitBot)return;
     if(MM.raf||performance.now()<MM.skip)return;                  // v49: край в ручной инерции обрабатывает она сама
     const v0=Math.min(4200,Math.abs(pv));if(v0<260)return;         // v49: выход за край = скорость/(ω·e): 3000 px/с ≈ 90 px, как на видео
-    stop();OS.k=121;OS.y=0;OS.v=hitTop?v0:-v0;OS.last=performance.now();0;OS.raf=requestAnimationFrame(tick)},{passive:true});
+    stop();OS.k=121;OS.y=0;OS.v=hitTop?v0:-v0;spring()},{passive:true});
   // v49: касание во время движения (пружина, инерция) только ловит список — строка при этом не нажимается
   let guard=false,gT=0;
   const moving=()=>!!(OS.raf||OS.y||MM.raf||(!touching&&performance.now()-pt<110&&Math.abs(pv)>180));
@@ -3685,18 +3708,53 @@ topEl.addEventListener('click',e=>{if(msBlock){e.stopPropagation();e.preventDefa
   function meas(){const y=window.scrollY||0,lt=document.getElementById('lt0'),sb=sbwEl();R.classList.remove('stk');
     const at=e=>e&&e.offsetHeight?Math.round(e.getBoundingClientRect().top+y):null,a=at(lt),b=at(topEl),c=at(sb);R.classList.add('stk');
     if(a!=null)R.style.setProperty('--stk0',a+'px');if(b!=null)R.style.setProperty('--stk1',b+'px');if(c!=null)R.style.setProperty('--stk2',c+'px');dirty=false}
-  function upd(){raf=0;let on=false;try{on=(tab==='stats'||tab==='tags')&&!!topEl.offsetHeight}catch(e){}
-    if(!on){R.classList.remove('stk');bg.classList.remove('on');dirty=true;return}
-    R.classList.add('stk');if(dirty)meas();
-    R.style.setProperty('--toph',topEl.offsetHeight+'px');
+  // v163: переменные пишутся только при изменении, высота подложки — на самой подложке. Раньше каждый кадр прокрутки менялись переменные корня документа —
+  // браузер пересчитывал стили всей страницы, прокрутка в «Аналитике» и «Планах» шла через кадр
+  let lh=-1,lk=-1,lon=null;const sv=(el,k,v,o)=>{if(v!==o)el.style.setProperty(k,v+'px');return v};
+  function upd(){raf=0;let on=false;try{on=((tab==='stats'||tab==='tags')||(tab==='list'&&R.classList.contains('rvl')))&&!!topEl.offsetHeight}catch(e){}
+    if(!on){if(lon!==false){R.classList.remove('stk');bg.classList.remove('on');lon=false}dirty=true;return}
+    if(lon!==true){R.classList.add('stk');lon=true}if(dirty)meas();
+    lh=sv(R,'--toph',topEl.offsetHeight,lh);
     const tr=topEl.getBoundingClientRect(),sb=sbwEl(),sr=sb&&sb.offsetHeight?sb.getBoundingClientRect():tr;
-    R.style.setProperty('--stkh',Math.round(Math.max(tr.bottom,sr.bottom)+10)+'px');
-    bg.classList.toggle('on',(window.scrollY||0)>2)}
+    lk=sv(bg,'--stkh',Math.round(Math.max(tr.bottom,sr.bottom)+10),lk);window.__stkh=lk;
+    const bo=(window.scrollY||0)>2;if(bo!==bg.classList.contains('on'))bg.classList.toggle('on',bo)}
+  window.__stkKick=()=>{dirty=true;kick()};window.__stkNow=()=>{dirty=true;upd()};
   const kick=()=>{if(!raf)raf=requestAnimationFrame(upd)},re=()=>{dirty=true;kick()};
   addEventListener('scroll',kick,{passive:true});addEventListener('resize',re);
   try{const r0=render;render=function(){const v=r0.apply(this,arguments);re();if(window.__totopKick)window.__totopKick();return v}}catch(e){}
   try{['safeAreaChanged','contentSafeAreaChanged','fullscreenChanged'].forEach(ev=>TGW.onEvent(ev,re))}catch(e){}
   new MutationObserver(re).observe(sbwEl(),{childList:true,subtree:true});new MutationObserver(re).observe(topEl,{childList:true,subtree:true});kick();
+})();
+// v163: «Операции»: когда главный блок ушёл из вида, сверху выезжает маленький язычок со стрелкой. Нажатие опускает заголовок (с «+» и лампочкой)
+// и главный блок поверх списка — место прокрутки не меняется. Стрелка встаёт под блоком и переворачивается: нажатие прячет его.
+// Прокрутка дальше вниз тоже прячет, прокрутка к самому верху — всё на своих местах.
+(function(){const R=document.documentElement,b=document.createElement('button');b.id='hdrv';b.type='button';b.tabIndex=-1;b.setAttribute('aria-label','Показать верхний блок');
+  b.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9.5l6 6 6-6"/></svg>';
+  document.body.appendChild(b);
+  let raf=0,sat=0,y0=0,busy=false;
+  const satM=()=>{const d=document.createElement('div');d.style.cssText='position:fixed;height:var(--sat,0px)';document.body.appendChild(d);sat=d.offsetHeight;d.remove()};
+  const isR=()=>R.classList.contains('rvl');
+  const els=()=>[document.getElementById('lt0'),topEl,document.getElementById('topact'),document.getElementById('stkbg')].filter(e=>e&&e.animate);
+  const H=()=>(window.__stkh||Math.round(topEl.getBoundingClientRect().bottom)+10)+6;
+  function show(){if(isR()||busy)return;y0=window.scrollY||0;R.classList.add('rvl');try{window.__stkNow()}catch(e){}
+    const h=H();b.classList.add('up');b.style.setProperty('--hy',(h-sat)+'px');b.setAttribute('aria-label','Спрятать верхний блок');
+    if(RM)return;busy=true;const kf=[{transform:`translate3d(0,${-h}px,0)`},{transform:'none'}],o={duration:360,easing:'cubic-bezier(.2,.9,.25,1)'};
+    const as=els().map(e=>e.animate(kf,o));if(as[0])as[0].onfinish=as[0].oncancel=()=>{busy=false};else busy=false}
+  function hide(instant){if(!isR())return;b.classList.remove('up');b.style.removeProperty('--hy');b.setAttribute('aria-label','Показать верхний блок');
+    const off=()=>{R.classList.remove('rvl');try{window.__stkNow()}catch(e){}busy=false;kick()};
+    if(instant||RM){off();return}busy=true;const h=H(),as=els().map(e=>e.animate([{transform:'none'},{transform:`translate3d(0,${-h}px,0)`}],{duration:230,easing:'cubic-bezier(.4,0,1,1)',fill:'forwards'}));
+    if(!as.length){off();return}as[0].onfinish=()=>{off();requestAnimationFrame(()=>requestAnimationFrame(()=>as.forEach(a=>{try{a.cancel()}catch(e){}})))}}
+  function check(){raf=0;const y=window.scrollY||0;let list=false;try{list=tab==='list'&&!searchOn()&&!isModalOpen()&&!R.classList.contains('selm')}catch(e){}
+    if(isR()){if(!list||y<=2){hide(true)}else if(!busy){if(y>y0+40)hide(false);else if(y<y0)y0=y}}
+    const want=list&&(isR()||(!!topEl.offsetHeight&&topEl.getBoundingClientRect().bottom<sat+4));
+    if(want!==b.classList.contains('on'))b.classList.toggle('on',want)}
+  const kick=()=>{if(!raf)raf=requestAnimationFrame(check)};
+  addEventListener('scroll',kick,{passive:true});addEventListener('resize',()=>{satM();kick()});
+  try{['safeAreaChanged','contentSafeAreaChanged','fullscreenChanged'].forEach(ev=>TGW.onEvent(ev,()=>{satM();kick()}))}catch(e){}
+  new MutationObserver(kick).observe(ov,{attributes:true,attributeFilter:['class']});new MutationObserver(kick).observe(R,{attributes:true,attributeFilter:['class']});
+  try{const r0=render;render=function(){const v=r0.apply(this,arguments);kick();return v}}catch(e){}
+  b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();try{hap('light',{k:'hd'})}catch(x){}if(isR())hide(false);else show()});
+  satM();kick();
 })();
 
 
@@ -5112,7 +5170,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v162';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v163';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}   // номер сборки виден внизу экрана: по нему понятно, обновился ли Telegram до новой версии
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
@@ -5388,8 +5446,9 @@ async function ibLoop(){
     // постоянная высота экрана = текущая. Раньше такое изменение принималось за клавиатуру, и окно открывалось ниже видимой части — было видно только затемнение
     if(!foc()&&Date.now()-lastBlur>400)syncBase()}
   function syncBase(){const h=window.innerHeight;if(Math.abs(h-baseH)>1){baseH=h;root.style.setProperty('--baseh',baseH+'px')}sat=probe.offsetHeight;sab=probeB.offsetHeight}
-  function onView(){const sh=baseH-window.innerHeight,vt=vv?Math.max(0,vv.offsetTop):0;
-    root.style.setProperty('--lay',(sh>120?sh:0)+'px');root.style.setProperty('--vvt',vt+'px');   // нижние панели страницы остаются на месте, пока webview уменьшен клавиатурой
+  let lLay=-1,lVvt=-1;
+  function onView(){const sh=baseH-window.innerHeight,vt=vv?Math.max(0,vv.offsetTop):0,ly=sh>120?sh:0;
+    if(ly!==lLay){lLay=ly;root.style.setProperty('--lay',ly+'px')}if(vt!==lVvt){lVvt=vt;root.style.setProperty('--vvt',vt+'px')}   // v163: корень трогаем только при изменении   // нижние панели страницы остаются на месте, пока webview уменьшен клавиатурой
     clearTimeout(measT);measT=setTimeout(settle,90)}
   if(vv){vv.addEventListener('resize',onView);vv.addEventListener('scroll',onView)}
   window.addEventListener('resize',onView);
