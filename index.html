@@ -3231,7 +3231,7 @@ const TP_SKIP='#totop,#lk,#lt0,#st .lt,#st .pf0,.swb,#top,#tabs,#fab,#thlp,#topa
 const setLt0=t=>{const e=document.getElementById('lt0');if(!e)return;e.style.display=t==='settings'?'none':'';e.textContent=ttlOf(t)};
 const ttlOf=t=>t==='list'?(ftag?'#'+ftag+(fcat?' › '+cd(fcat.id).l:''):fcat?cd(fcat.id).l:fday?dayLbl(fday):'Операции'):t==='stats'?'Аналитика':t==='tags'?'Планы':t==='settings'?'Настройки':'Советы';
 const tabInd=()=>$('#tabs').querySelector('.ind');
-function ltPop(s){const e=document.getElementById('lt0');if(RM||!e||!e.animate)return;pxAnim(e,{x:s*28,op:0},{x:0,op:1},{duration:380,easing:'cubic-bezier(.22,1,.36,1)'})}
+function ltPop(s){}   // v159: заголовок при смене вкладки просто меняется, без сдвига
 // ---------- v55: у каждой страницы своя позиция прокрутки ----------
 // Прокручивается всё окно, поэтому позицию каждой страницы (вкладка / раздел / отфильтрованный список) запоминаем сами
 // и возвращаем при возврате. Если у соседних страниц позиция совпадает — переход чисто горизонтальный;
@@ -3261,7 +3261,7 @@ function slideTo(t){document.documentElement.classList.remove('intro');   // v51
   if(tab==='list'){fcat=null;ftag=null;fday=null}
   tab=t;const ind=tabInd();if(ind)ind.style.transition='';moveInd();$('#ttl').textContent=ttlOf(t);
   if(clamp){
-    swapAnim(s,()=>{render();pgApply()},stSw?[bodyEl,$('#top'),$('#lt0'),$('#sbw')]:[bodyEl,$('#lt0')],0,1,stSw);return}
+    swapAnim(s,()=>{render();pgApply()},stSw?[bodyEl,$('#top'),$('#sbw')]:[bodyEl],0,1,stSw);return}   // v159: заголовок не уезжает вместе со страницей
   // между «Операциями», «Аналитикой» и «Планами» страница меняется сразу, без сдвига; анимируются только заголовок и нижняя плашка
   setLt0(t);ltPop(s);render();pgApply()}
 function snapBack(){
@@ -3374,39 +3374,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden&&tp&&tp.on)
 document.addEventListener('click',e=>{if(tpBlock){e.stopPropagation();e.preventDefault()}},true);
 
 
-// ---------- v46: свайп по крупному заголовку листает вкладки ----------
-(function(){
-  const SEL='#lt0,#st .lt,#st .pf0';let g=null;
-  const nbT=s=>TABS[TABS.indexOf(tab)+s]||null;
-  function reset(h,anim){if(!h)return;if(anim&&!RM){h.style.transition='transform .34s cubic-bezier(.22,1,.36,1),opacity .34s ease';setTimeout(()=>{h.style.transition=''},380)}h.style.transform='';h.style.opacity=''}
-  document.addEventListener('pointerdown',e=>{
-    if(e.pointerType==='mouse'&&e.button!==0)return;
-    if(!e.isPrimary||isModalOpen()||tbd||ms)return;
-    const h=e.target.closest&&e.target.closest(SEL);if(!h)return;
-    settleAll();
-    g={id:e.pointerId,x:e.clientX,y:e.clientY,on:false,dx:0,lx:e.clientX,lt:performance.now(),v:0,h}});
-  document.addEventListener('pointermove',e=>{
-    if(!g||e.pointerId!==g.id)return;
-    const dx=e.clientX-g.x,dy=e.clientY-g.y;
-    if(!g.on){
-      if(Math.abs(dx)>=6&&Math.abs(dx)>Math.abs(dy)*1.1){g.on=true;g.x=e.clientX;try{g.h.setPointerCapture(e.pointerId)}catch{}g.h.style.transition='none';return}
-      if(Math.abs(dy)>10)g=null;return}
-    const d=e.clientX-g.x,n=performance.now(),dt=n-g.lt;
-    if(dt>0)g.v=lpf(g.v,(g.lx-e.clientX)/dt,dt,24);g.lx=e.clientX;g.lt=n;g.dx=d;
-    const ok=nbT(d<0?1:-1),x=ok?d*.5:rubber(d);
-    g.h.style.transform=`translate3d(${x}px,0,0)`;g.h.style.opacity=ok?String(1-Math.min(.55,Math.abs(d)/240)):''});
-  function end(e,cancel){
-    if(!g||e.pointerId!==g.id)return;const p=g;g=null;
-    if(!p.on)return;
-    tpBlock=true;setTimeout(()=>tpBlock=false,120);
-    const dx=p.dx,s=dx<0?1:-1,t=nbT(s),fwd=s*p.v>0;
-    const go=!cancel&&!!t&&!(s*p.v<-.35)&&(Math.abs(dx)>=44||(fwd&&Math.abs(p.v)>.3&&Math.abs(dx)>=16));
-    if(go){reset(p.h,false);try{hap.sw('select')}catch(_){}settleAll();slideTo(t)}
-    else reset(p.h,true)}
-  document.addEventListener('pointerup',e=>end(e,false));
-  document.addEventListener('pointercancel',e=>end(e,true));
-  addEventListener('blur',()=>{if(g&&g.on)end({pointerId:g.id},true)});
-})();
+// v159: свайп по крупному заголовку («Операции», «Аналитика», «Планы», «Настройки») больше не листает вкладки — вкладки меняются только нижней панелью
 // drag a finger across the bottom tab bar: the glass indicator follows the finger
 let tbd=null,tbdBlock=false;const tbEl=$('#tabs');
 function tabBtnAt(x){const bs=[...tbEl.querySelectorAll('[data-t]')];let best=bs[0],bd=1e9;
@@ -5082,7 +5050,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v158';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v159';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}   // номер сборки виден внизу экрана: по нему понятно, обновился ли Telegram до новой версии
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
