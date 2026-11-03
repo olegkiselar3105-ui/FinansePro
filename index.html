@@ -1174,6 +1174,9 @@ button,a,label,select,summary{touch-action:manipulation}
 :root #rc .rcr .rcp:active{opacity:.4}
 /* плашки («Удалено · Отмена», «Сохранено» и т.п.) всплывают ПОВЕРХ кнопки «+»: по высоте — на уровне самой кнопки, слой выше неё (z-index 300) */
 :root #toast{bottom:calc(14px + var(--tbh) + var(--fabg) + 7px + var(--sab))}
+/* v172: при открытом окне «+» уведомление — сверху: снизу оно ложилось на строки черновиков, и следующее нажатие на корзину попадало в «Отмена» */
+html:root:has(#sh.on) #toast{top:calc(var(--sat) + 12px);bottom:auto}
+html:root:has(#sh.on) #toast:not(.on){transform:translate3d(0,-34px,0) scale(.94)}
 /* экран PIN: одна и та же анимация и при появлении, и при уходе после ввода PIN (плавное проявление с лёгким масштабом; при запуске приложения экран закрыт сразу, без вспышки содержимого) */
 #lk{display:flex;visibility:hidden;opacity:0;transform:scale(1.04);pointer-events:none;transition:opacity .34s cubic-bezier(.4,0,.2,1),transform .5s cubic-bezier(.22,1,.36,1),visibility 0s .5s}
 html.plk #lk,#lk.on{visibility:visible;opacity:1;transform:none;pointer-events:auto;transition:opacity .34s cubic-bezier(.4,0,.2,1),transform .5s cubic-bezier(.22,1,.36,1),visibility 0s}
@@ -2383,7 +2386,7 @@ function renderRev(quiet){const el=$('#rev');$('#fab').classList.toggle('has',dr
   if(!drafts.length){cancelAuto();el.classList.remove('anim','clearing');el.innerHTML='';syncBtn();return}
   const sm=drafts.reduce((a,d)=>a+(d.type==='income'?d.amount:-d.amount),0);
   el.classList.remove('anim','clearing');
-  el.innerHTML=`<div class="rh"><span>${drafts.length} ${plural(drafts.length,'операция','операции','операций')} · ${sm<0?'−':'+'}${fmt(Math.abs(sm))} ${cfg.cur}</span><button class="clx" data-a="cancel" aria-label="Очистить" title="Очистить"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>`+drafts.map((d,i)=>row(d,1,i)).join('');
+  el.innerHTML=`<div class="rh"><span>${drafts.length} ${plural(drafts.length,'операция','операции','операций')} · ${sm<0?'−':'+'}${fmt(Math.abs(sm))} ${cfg.cur}</span><button class="clx" data-a="cancel" aria-label="Очистить" title="Очистить"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>`+drafts.map((d,i)=>row(d,1,i,1)).join('');   // v172: у каждого черновика корзина — удалить по одному
   if(!quiet)requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('anim')));
   else el.classList.add('anim');
   syncBtn()}
@@ -2437,7 +2440,7 @@ function bind(root,list,isDraft){
   root.addEventListener('click',e=>{const dp=e.target.closest('.dp');if(dp){const i=dp.querySelector('input');try{if(i.showPicker)i.showPicker()}catch{}return}
     const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,r=b.closest('[data-id]'),L=list();
     if(a==='x'){const id=r.dataset.id;const i=L.findIndex(x=>x.id===id);if(i<0)return;const it=L[i];
-      if(isDraft){removeDraftAnim(id)}else{L.splice(i,1);tx=L;tomb(it.id);save();toastDel(1,()=>{untomb(it.id);tx.splice(Math.min(i,tx.length),0,it);save();fxCV();render();fxIn([it.id])});render()}}
+      if(isDraft){const w=b.closest('.sw');if(w&&typeof commitSw==='function')commitSw(w);else removeDraftAnim(id)}else{L.splice(i,1);tx=L;tomb(it.id);save();toastDel(1,()=>{untomb(it.id);tx.splice(Math.min(i,tx.length),0,it);save();fxCV();render();fxIn([it.id])});render()}}
     if(a==='cal'){openRow=openRow===r.dataset.id?null:r.dataset.id;if(isDraft)renderRev(true);else render()}
     if(a==='sg'){const t=L.find(x=>x.id===r.dataset.id);t.type=t.type==='income'?'expense':'income';t.category=detect(t.note,t.note,t.type);if(isDraft)renderRev(true);else{save();render()}}
     if(a==='tgx'){const t=L.find(x=>x.id===r.dataset.id);if(t){t.tags=(t.tags||[]).filter(g=>g!==b.dataset.tag);if(!t.tags.length)delete t.tags;if(isDraft)renderRev(true);else{save();render()}}}
@@ -5362,7 +5365,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v171';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v172';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}   // номер сборки виден внизу экрана: по нему понятно, обновился ли Telegram до новой версии
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
