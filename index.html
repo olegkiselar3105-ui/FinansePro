@@ -1077,6 +1077,7 @@ html.intro #lt0{animation:inLt .9s cubic-bezier(.22,1,.36,1) backwards}
 #bq .bqr>span{flex:1;min-width:0;font-size:15px;line-height:1.25}
 #bq .bqr small{display:block;font-size:11px;color:var(--m2);margin-top:2px}
 #bq .bqr .tg{flex:none}
+#bq .bqr.dis .tg{opacity:.4}   /* v161: Face ID недоступен — переключатель серый, нажатие показывает причину */
 #bq .bqm{display:flex;align-items:center;gap:8px;margin-top:12px}
 #bq .bqm .mn{flex:1;text-align:center;font-size:15px}
 #bq .bqm .sm{padding:7px 16px;font-size:18px;line-height:1}
@@ -4268,9 +4269,12 @@ function bqHtml(kind){
   if(kind==='prv')return `<div class="bqt">Скрытие сумм</div>${bqTg('tgprv','Скрывать суммы','Вместо цифр показывается •••',PRV)}${bqTg('tgprf','Включать поворотом экрана','Переворот телефона экраном вниз',FLP.want)}<div class="bqs" style="font-size:11px;line-height:1.45;margin-top:12px;opacity:.8">Положите телефон экраном вниз примерно на секунду — суммы скроются, и вы почувствуете короткую вибрацию. Переверните экраном вниз ещё раз — суммы снова появятся. Телефон должен лежать почти горизонтально: наклон или положение в руке не считаются. Работает, пока приложение открыто.</div><div class="bqb"><button class="sm pr auto" data-bq="cancel">Готово</button></div>`;
   if(kind==='mstart')return `<div class="bqt">Начало месяца</div><div class="bqs">С какого числа начинается ваш месяц — например, день зарплаты.</div><div class="bqm"><button type="button" class="sm" data-bq="msm" aria-label="Раньше">−</button><span class="mn" id="msn">${msV} число</span><button type="button" class="sm" data-bq="msp" aria-label="Позже">+</button></div><div class="bqs" id="msh">${E(msHint())}</div><div class="bqb"><button class="sm" data-bq="cancel">Отмена</button><button class="sm pr" data-bq="mssave">Сохранить</button></div>`;
   if(kind==='pin'){   // v160
-    if(!pinOn())return `<div class="bqt">PIN-код</div><div class="bqs">Код спрашивается при входе в приложение и защищает операции и суммы, если телефон окажется в чужих руках.</div><div class="bqb"><button class="sm" data-bq="cancel">Закрыть</button><button class="sm pr" data-bq="pinset">Включить код</button></div>`;
+    if(!BIO.inited)bioInit(()=>{if(bqT==='pin'&&bq.classList.contains('on'))bq.innerHTML=bqHtml('pin')});   // v161: биометрия ещё проверяется — окно обновится само
+    if(!pinOn())return `<div class="bqt">PIN-код</div><div class="bqs">Код спрашивается при входе в приложение и защищает операции и суммы, если телефон окажется в чужих руках. После включения кода можно включить вход по Face ID.</div><div class="bqb"><button class="sm" data-bq="cancel">Закрыть</button><button class="sm pr" data-bq="pinset">Включить код</button></div>`;
     const o=pinOpt();
-    return `<div class="bqt">PIN-код</div><div class="bqs">Код из ${pinLen()} цифр.</div>${BIO.ok?bqTg('pinbio','Вход по '+bioName(),'',o.bio&&BIO.ok):''}<div class="bqs" id="pinbh"></div>
+    // v161: строка Face ID видна всегда; если биометрия недоступна — объясняем почему (раньше строка просто пропадала)
+    const bioRow=BIO.ok?bqTg('pinbio','Вход по '+bioName(),'',o.bio):`<div class="bqr dis"><span>Вход по Face ID<small>${E(bioWhy())}</small></span><button type="button" class="tg" data-bq="pinbioq" role="switch" aria-checked="false" aria-disabled="true" aria-label="Вход по Face ID"></button></div>`;
+    return `<div class="bqt">PIN-код</div><div class="bqs">Код из ${pinLen()} цифр.</div>${bioRow}<div class="bqs" id="pinbh"></div>
 <div class="bqs" style="margin-top:10px">Запрашивать код после выхода из приложения</div><div class="bqm bqa">${LOCKS.map(([v,l])=>`<button type="button" class="sm${o.lock===v?' pr':''}" data-bq="pinlock" data-v="${v}">${l}</button>`).join('')}</div>
 <div class="bqb"><button class="sm" data-bq="pinchg">Сменить код</button><button class="sm del" data-bq="pinoff">Выключить код</button></div><div class="bqb"><button class="sm auto" data-bq="cancel">Закрыть</button></div>`}
   if(kind==='link')return `<div class="bqt">Записывать в расходы</div><div class="bqs">Взносы в цели и долги будут записываться как расходы — их учтут бюджет, лимиты и прогноз.</div>${bqTg('tglg','Цели','',linkGoalOn())}${bqTg('tgld','Долги','',linkDebtOn())}<div class="bqb"><button class="sm pr auto" data-bq="cancel">Готово</button></div>`;
@@ -4326,6 +4330,7 @@ bq.addEventListener('click',e=>{
   else if(a==='pinset'){closeBq();setTimeout(()=>lkShow('set1',()=>{stRows();setTimeout(()=>openBq('pin'),300)},4),250)}   // v160: после создания кода — его настройки (Face ID, блокировка)
   else if(a==='pinchg'){closeBq();setTimeout(()=>lkShow('verify',()=>setTimeout(()=>lkShow('set1',()=>{stRows();setTimeout(()=>openBq('pin'),300)},pinLen()===6?6:4),60)),250)}
   else if(a==='pinoff'){closeBq();setTimeout(()=>lkShow('verify',()=>{bioOff();pinClear();stRows()}),250)}
+  else if(a==='pinbioq'){const h=$('#pinbh');if(h)h.textContent=bioWhy();bioInit(()=>{if(bqT==='pin')bq.innerHTML=bqHtml('pin')})}
   else if(a==='pinlock'){pinOptSet({lock:+b.dataset.v});bq.innerHTML=bqHtml('pin')}
   else if(a==='pinbio'){const h=$('#pinbh');if(pinOpt().bio){bioOff();tgSet(b,false);if(h)h.textContent='';return}
     bioEnable((ok,why)=>{tgSet(b,ok);if(h)h.textContent=ok?'':why==='denied'?'Доступ к '+bioName()+' запрещён — разрешите его в настройках Telegram.':'Не удалось включить '+bioName()+'.';
@@ -4357,6 +4362,10 @@ const BIO={ok:false,type:'',inited:false,busy:false,t:0};
 const BM=()=>{try{return TGW&&TGW.BiometricManager&&(!TGW.isVersionAtLeast||TGW.isVersionAtLeast('7.2'))?TGW.BiometricManager:null}catch(e){return null}};
 function bioInit(cb){const m=BM(),fin=()=>{BIO.inited=true;BIO.ok=!!(m&&m.isBiometricAvailable);BIO.type=(m&&m.biometricType)||'';if(cb)cb()};if(!m){fin();return}if(m.isInited){fin();return}try{m.init(fin)}catch(e){fin()}}
 const bioName=()=>BIO.type==='face'?'Face ID':BIO.type==='finger'?'Touch ID':'биометрии';
+// v161: почему вход по Face ID недоступен
+function bioWhy(){if(!IN_TG)return 'Работает только в приложении Telegram на телефоне.';const m=BM();
+  if(!m)return 'Нужна новая версия Telegram — обновите приложение.';if(!BIO.inited)return 'Проверяем, поддерживает ли телефон Face ID…';
+  return 'Telegram не может использовать Face ID или Touch ID на этом телефоне. Проверьте: Настройки iPhone → Telegram → Face ID (включено), и что Face ID настроен на телефоне.'}
 const bioOn=()=>pinOn()&&pinOpt().bio&&BIO.ok;
 function bioCall(fn){BIO.busy=true;fn(()=>{BIO.busy=false;BIO.t=Date.now()})}
 function bioAuth(cb){const m=BM();if(!m||!BIO.ok){cb(false);return}
@@ -5114,7 +5123,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v160';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v161';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}   // номер сборки виден внизу экрана: по нему понятно, обновился ли Telegram до новой версии
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
