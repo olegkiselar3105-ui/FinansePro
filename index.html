@@ -380,7 +380,7 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:calc(110px 
 #nc input[type=color]{width:26px;height:26px;padding:0;border:0;border-radius:50%;background:none;cursor:pointer}
 #nc input[type=color]::-webkit-color-swatch-wrapper{padding:0}
 #nc input[type=color]::-webkit-color-swatch{border:0;border-radius:50%}
-#nc #ncw{display:block;margin-top:12px}
+#nc .ncs{margin-top:12px;font-size:12.5px;color:var(--m2);line-height:1.35}   /* v165: подсказка вместо ключевых слов */
 #nc #ncn,#nc #ncw{width:100%;text-align:left;color:var(--t);font-size:16px;border-bottom:.5px solid var(--l);padding:4px 0}
 #nc .ncb{display:flex;gap:8px;margin-top:18px}
 #nc .ncb .sm{flex:1;padding:10px 12px;font-size:14px;text-align:center}
@@ -1363,7 +1363,7 @@ html:root #sh .dp{position:relative;min-width:28px;width:28px;padding:0;justify-
 html:root #sh .dp span{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:-5px;font-size:9px;line-height:1;color:var(--m2);white-space:nowrap}
 
 /* ===== v110: между записями в окне добавления — одна линия (оставляем нижнюю у строки тегов) ===== */
-html:root #sh #rev .sw,html:root #sh #rev .sw .r{border-bottom:0!important}
+html:root :is(#sh #rev,#gd #bvl) .sw,html:root :is(#sh #rev,#gd #bvl) .sw .r{border-bottom:0!important}
 
 /* ===== v111: плавность для 120 Гц, без размытия под анимацией обучения; аватар без вспышки ===== */
 html:root #tour .tr-bd{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(var(--bgr),.72)}
@@ -1533,6 +1533,45 @@ html.stk #sbw{position:sticky;top:var(--stk2,calc(var(--sat) + 8px + var(--toph,
 #stkbg.on{opacity:1;visibility:visible;transition:opacity .22s ease,visibility 0s}
 html:not(.stk) #stkbg{display:none}
 #stkbg{height:var(--stkh,0px)}
+/* v165: окно «Что нового» */
+#bq .wnh{font-size:22px;font-weight:700;letter-spacing:-.01em;margin:2px 2px 12px}
+#bq .wnl{display:flex;flex-direction:column;gap:12px;max-height:min(62vh,520px);overflow-y:auto;overscroll-behavior:contain;margin:0 -2px;padding:0 2px 4px}
+#bq .wni{display:flex;gap:12px;align-items:flex-start}
+#bq .wni i{flex:none;width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:20px;background:rgba(var(--wr),.07)}
+#bq .wni b{display:block;font-size:15px;font-weight:600;margin-top:1px}
+#bq .wni span{display:block;font-size:13px;color:var(--m2);line-height:1.35;margin-top:3px}
+/* v165: черновики в окне «+» — карточки */
+html:root :is(#sh #rev,#gd #bvl) .sw{border:0!important;border-radius:18px;margin:0 0 8px;overflow:hidden;background:none}
+html:root :is(#sh #rev,#gd #bvl) .sw>.r.rv2{display:flex!important;flex-wrap:wrap;align-items:center;gap:8px;padding:11px 12px 12px!important;border:0!important;border-radius:18px;
+  background:rgba(var(--wr),.055);box-shadow:inset 0 0 0 .5px rgba(var(--wr),.08)}
+html:root :is(#sh #rev,#gd #bvl) .rv2 .sg{flex:none;order:1;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:600;line-height:1;padding:0;border:0;-webkit-tap-highlight-color:transparent}
+html:root :is(#sh #rev,#gd #bvl) .rv2 .sg.exp{background:color-mix(in srgb,var(--rd) 16%,transparent);color:var(--rd)}
+html:root :is(#sh #rev,#gd #bvl) .rv2 .sg.inc{background:color-mix(in srgb,var(--g) 18%,transparent);color:var(--g)}
+html:root :is(#sh #rev,#gd #bvl) .rv2 input[data-f=note]{order:2;flex:1 1 calc(100% - 150px);min-width:0;font-size:16px!important;font-weight:600;padding:4px 0;background:none;border:0;color:var(--t)}
+html:root :is(#sh #rev,#gd #bvl) .rv2 .am{order:3;flex:0 0 96px;width:96px!important;text-align:right;font-size:18px!important;font-weight:650;font-variant-numeric:tabular-nums;padding:4px 0;background:none;border:0}
+html:root :is(#sh #rev,#gd #bvl) .rv2 .rch{order:5;display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px;border-radius:14px;border:0;font-size:12.5px;line-height:1;white-space:nowrap;
+  background:rgba(var(--wr),.07);color:var(--m2);max-width:100%;overflow:hidden;text-overflow:ellipsis;-webkit-tap-highlight-color:transparent;position:relative}
+html:root :is(#sh #rev,#gd #bvl) .rv2 .cpb.rch{order:4;color:var(--cc,var(--t));background:color-mix(in srgb,var(--cc,#888) 15%,transparent);font-weight:600;width:auto;max-width:62%;text-align:left}
+html:root :is(#sh #rev,#gd #bvl) .rv2 .ac{order:5;display:contents}
+html:root :is(#sh #rev,#gd #bvl) .rv2 .dp.rch{width:auto!important;min-width:0!important;padding:0 10px!important;justify-content:flex-start;gap:5px!important;font-size:12.5px;color:var(--m2)}
+html:root :is(#sh #rev,#gd #bvl) .rv2 .dp.rch svg{width:14px;height:14px;flex:none}
+html:root :is(#sh #rev,#gd #bvl) .rv2 .dp.rch span{position:static;transform:none;margin:0;font-size:12.5px;line-height:1;color:inherit}
+html:root :is(#sh #rev,#gd #bvl) .rv2 .dp.rch input{position:absolute!important;inset:0;width:100%!important;height:100%!important;opacity:0}
+html:root :is(#sh #rev,#gd #bvl) .rv2 .tgc{order:6;height:28px;padding:0 10px;border-radius:14px;border:0;font-size:12.5px;background:rgba(var(--wr),.1);color:var(--t)}
+html:root :is(#sh #rev,#gd #bvl) .rv2 .tgp.rch{order:7}
+html:root :is(#sh #rev,#gd #bvl) .rv2 .tgi{order:7;display:none;height:28px;width:120px;padding:0 10px;border-radius:14px;border:0;background:rgba(var(--wr),.1);font-size:16px}
+html:root :is(#sh #rev,#gd #bvl) .rv2.tgo .tgi{display:block}html:root :is(#sh #rev,#gd #bvl) .rv2.tgo .tgp{display:none}
+html:root :is(#sh #rev,#gd #bvl) .rv2 .rcur{order:8}
+html:root :is(#sh #rev,#gd #bvl) .rv2 .rtl{order:9;color:var(--t)}
+html:root :is(#sh #rev,#gd #bvl) .rv2 .rtl .rtin{width:56px;font-size:16px;background:none;border:0;border-bottom:1px solid var(--b2);text-align:center}
+html:root :is(#sh #rev,#gd #bvl) .dl:empty{display:none}
+html:root #gd #bvl .swb{display:none}
+html:root #gd #bvl{max-height:min(58vh,var(--kmax,100vh));overflow-y:auto;overscroll-behavior:contain;margin:6px -2px 0;padding:0 2px}
+html:root #gd .bvs{font-size:13px;color:var(--m2);line-height:1.35;margin:2px 2px 10px}
+html:root :is(#sh #rev,#gd #bvl) .rv2 .rdel{order:10;margin-left:auto;padding:0 9px;color:var(--rd)}
+html:root :is(#sh #rev,#gd #bvl) .rv2 .rdel svg{width:15px;height:15px}
+html:root :is(#sh #rev,#gd #bvl) .rh{border:0!important;padding:2px 4px 8px;font-size:12.5px;color:var(--m2)}
+html:root :is(#sh #rev,#gd #bvl) .rv2 :is(.rch,.sg):active{opacity:.6}
 /* v163: язычок со стрелкой сверху на «Операциях» — опускает заголовок и главный блок поверх списка (режим html.rvl = как закреплённая шапка) */
 /* v164: маленький кружок со стрелкой; при опускании шапки он едет вниз вместе с ней и у нижнего края блока становится полоской, как у шторки iPhone;
    при прокрутке вверх полоска уходит под блок (z-index ниже шапки) */
@@ -1663,34 +1702,16 @@ function cloudTouch(){if(!IN_TG||!CL.on||CL.mute)return;
   CL.lt=Date.now();cloudPersist();cloudSoon()}
 function cloudPersist(){try{localStorage.setItem('finapp.mtime',String(CL.lt))}catch{}}
 // категории: id, название, цвет, ключевые слова (подстроки)
-const CAT={e:[
-['food','Питание','#39ff88','!ужин|!обед|!завтрак|продукт|линела|линелла|линель|локал|kaufland|кауфланд|nr1|nr.1|фрукт|овощ|вода|водичк|водой|воду|минералк|сосиск|колбас|клубник|виноград|банан|мандарин|яблок|апельсин|арбуз|груш|персик|черешн|вишн|абрикос|помидор|огурц|картошк|картофел|капуст|морков|зелень|молок|кефир|йогурт|творог|сметан|хлеб|булк|мясо|курица|курин|фарш|рыба|яйц|сыр|масло сливочн|макарон|круп|гречк|рис |ананас|пицц|суши|рогоб|нектарин|никтарин|кукуруз|цезарь|сардельк|квас|гранат|дыня|слив|курага|изюм|финик|каша|омлет|блин|сырник|пельмен|вареник|котлет|фри|плацинд|перекус|бизнес-ланч|столов|сок |соки|супермаркет|рынок|базар|бакале|мамалыг|мититей|салат|суп |борщ'],
-['transport','Транспортные','#35e0ff','!такси|!taxi|!bolt|болт|!uber|яндекс|!проездной|проезд|!маршрутк|автобус|троллейбус|электричк|поезд|вокзал|автовокзал|аэропорт|билет на|самокат|кишинев|бендер|тирасполь|абонемент|топлив|бензин|заправк|дизель|парковк|паркинг|мойка|автомойк|осаго|штраф|шиномонтаж|запчаст|техосмотр|замена масла|rca|каско|каршеринг|эвакуатор|доставка торб'],
-['fun','Развлечение','#4d8dff','!банька|!баня|!баню|посидели|посиделки|сауна|дендрарий|парк|туса|тусовк|потусил|вечеринк|музей|кино|театр|концерт|боулинг|квест|аквапарк|зоопарк|цирк|выставк|ресторан|гендер|лагерь|шашлык|пикник|караоке|клуб|кальян|игры|игр |steam|playstation|подписк|netflix|нетфликс|spotify|youtube|ютуб|кинопоиск|icloud|chatgpt|claude|отдых|отпуск|отель|гостиниц|хостел|booking|airbnb|авиабилет|путешеств|экскурси|поход|виза|база отдыха'],
-['phone','Телефон','#7aa2ff','телефон|инет|интернет|связь|мобильн|симк|сим |тариф|пополнение|пополнил|orange|оранж|moldcell|молдселл|moldtelecom|молдтелеком|starnet|старнет|vpn|впн|роуминг|мегабайт|гигабайт|защитное стекло|пленка на телефон|чехол на телефон|зарядка для телефон|wifi|роутер'],
-['byt','Бытовые','#1fb5d6','калипса|калипс|салфетк|полотенц|туалет|плед|порошок|порошек|ополаскиватель|губк|посуд|кондиционер|кондер|увлажнитель|комод|жалюзи|плита|индукц|матрас|свечк|свечи|лампочк|краска|валик|горшк|зарядк|картридж|болер|бойлер|чистилк|бритв|станк|гигиен|пакеты|пакет|мусор|тряпк|швабр|ведро|мыло|шампун|гель для душа|зубная паста|зубная щетк|телемаркет|фери|уборк|хозяйствен|моющ|стирк|отбеливател|чистящ|батарейк|удлинитель|вешалк|постельн|простын|одеял|подушк|кастрюл|сковород|тарелк|вилк|ложк|чайник|холодильник|стиральн|пылесос|микроволновк|мебел|диван|кроват|шкаф|штор|подставка|тоник|влажные салфетк|бумага туалетн'],
-['comm','Коммуналка','#3dd6a0','свет |света |свету |светом |коммунал|жкх|налог|квартир|аренд|отоплен|электричеств|газ |апа канал|апа-канал|термоэлектро|premier energy|энергокомп|квартплат|домофон|вывоз мусор|ипотек|водоснабж|канализац|лифт'],
-['tithe','Десятина','#b5c4c1','десятин|церковь|церкви|церковн|пожертвован|помощь семье|помощь|беременной|нуждающ|благотвор|служение|миссия|миссионер|служител|пастор|молитвенн'],
-['plush','Плюшки','#9aa8a6','!кофе|енерг|кофейн|кафе|!капучино|!cappuccino|!latte|!лате|!латте|американо|эспрессо|раф |кебаб|донер|шаурм|беляш|кола|пепси|спрайт|фанта|напитк|попить|чипсы|бургер|синабон|твистер|смузи|лимонад|пирожн|эклер|кекс|чизкейк|радлер|пиво|жвачк|сладк|сладост|мороженое|семк|сухарик|енергетик|энергетик|redbull|мохито|коктейл|глово|glovo|мак |макдональдс|макдак|mcdonald|kfc|круассан|булочк|пончик|шоколад|печенье|вафл|десерт|сырок|грейпфрут|прогулк|snack|орешки|орехи|марс|сникерс|баунти|твикс'],
-['rel','Отношения','#5fffd0','свидани|вдвоем|годовщин|романтик|любимой|любимому|поцелу'],
-['health','Здоровье','#4cc9f0','фолифер|фолиев|таблетк|аптек|витамин|анализ|узи|врач|прием врача|массаж|стоматолог|зуб|гинеколог|мазь|пластыр|цитрамон|парацетамол|дексаметазон|глюкоз|стрекоз|бородавк|массажер|тесты|наколенник|пояс|зал абонемент|абонемент зал|абонемент в зал|спортзал|вода зал|вода в зал|зал вода|тренер|протеин|креатин|боржоми|прокладк|смазк|больниц|поликлиник|лекарств|капли|сироп|бинт|тонометр|градусник|прививк|рецепт|малина листья|баночки'],
-['clothes','Одежда','#6aa6ff','одежд|носки|носков|шапк|кепк|сумк|сандал|тапк|тапочк|кроссы|кроссовк|штаны|трусы|капронк|колготк|платье|обувь|defacto|дефакто|пандашоп|рюкзак|джинс|футболк|куртк|ботинк|туфл|свитер|temu|тему|zara|ламода|h&m|бандаж|рубашк|шорты|юбк|белье|нижнее|пижам|толстовк|худи|ремень|перчатк|шнуры|заколк'],
-['beauty','Красота','#8ff0b8','стрижк|духи|миноксидил|косметик|патчи|маска|лак |парикмахер|маникюр|педикюр|барбер|помад|крем|парфюм|макияж|тушь|ресниц|бров|шугаринг|эпиляц|депиляц|скраб|одеколон|дезодорант|ногти|пилинг|косметолог'],
-['edu','Обучение','#8a9694','курс|диплом|вкр|библ|курьер диплом|обучен|учеб|книг|репетитор|универ|школ|семестр|экзамен|канцеляр|тетрад|ручк|лекци|вебинар|тренинг|богослов|семинар|словарь|олимпиад|кружок'],
-['gift','Подарки','#c2d0cd','подарок|подарк|подари|цветы|цветов|цветок|букет|!гостинц|торт|др |день рождения|днюх|юбилей|на свадьбу|подарок на свадьбу|маме|папе|бабушке|дедушке|сестре|брату|теще|свекрови|открытк|адвент|айпад|эплвоч|apple watch|часы|ремешк|кружк|свечка|сувенир|воздушн|поздравл|именин'],
-['fees','Комиссии','#7ee8c7','комисси|обмен|обмен валют|обмен евро|снятие|банкомат|перевод|курс обмена|обслуживан|эквайринг|банковск|сбор|плата за карт|кэшаут|cash out'],
-['hobby','Хобби Насти','#53a7ff','хобби насти|хобби настя|мастер-класс|мастеркласс|обертк|лента|ленты|лент |шпаг|шпажк|степлер|упаковк|скотч|флорист|коробк|рулон бумаги|бумага|конфеты для букет|картон|гофро'],
-['work','Работа','#39e0c0','инструмент|щетк|платформ|светильник|капкат|мастерам|мастер |оборудован|нож для|ножей|перчатк|спецовк|роба|рабочая|рабочие|рабочий|для работы|по работе|строй|материал|шпаклев|сетка|дюбел|саморез|болгарк|перфоратор|дрел|шуруповерт|лестниц|леса|каска|респиратор|штукатурк|утеплител|клинкер|плитк|затирк|грунт|кисть|шпатель|рулетк|цемент|раствор|монтажн'],
-['debt','Долг','#4d8dff','долг|займ|одолжил|взаймы|занял|в долг|кредит|рассрочк|возврат долга'],
-['kid','Ребенок','#2be4a0','ребен|малыш|малышк|дочк|дочур|коляск|ванночк|памперс|подгузник|пеленк|прикорм|детск|документ|гражданств|справк|уходовая косметика|уходовая|соск|бутылочк|присыпк|ползунк|манеж|автокресл|горшок|ливиу|погремушк|кроватк|игрушк|садик|ходунки'],
-['save','Накопления','#9bd7c5',''],
-['other','Прочее','#777','']],
-i:[
-['salary','Зарплата','#39ff88','зарплат|получк|оклад|расчет|зп |премия|премии|премию|премиальн|13-я|тринадцатая|отпускн|больничн|надбавк|сдельн'],
-['adv','Аванс','#35e0ff','аванс|предоплат|задаток|утеплени'],
-['hobbyin','Хобби Насти','#4d8dff','~хобби насти|~хобби настя|продала букет|продали букет|оплата за букет|оплата за мастер-класс|оплатили мастер-класс|заказ букет|заказали букет'],
-['wsal','Зарплата Насти','#2be4a0','зарплата насти|зарплату насти|зарплаты насти|зарплате насти|зарплата настя|зарплату настя|зарплата насте|зарплату насте|зп насти|зп настя|настина зарплата|насти зарплата|аванс насти|аванса насти|аванс насте'],
-['in_other','Другой доход','#777','кэшбэк|кешбэк|cashback|возмещен|стипенди|пособи|пенси|алимент|продал|продала|продажа|дивиденд']]};
+// v165: категории без ключевых слов. Категория операции — из фразы после слова «категория», иначе — память (что выбирали для такой же заметки), иначе «Прочее».
+// CAT2 — прежний набор: у всех, кто уже пользовался приложением, он остаётся (вместе с их переименованиями, своими категориями и порядком).
+const CAT2={e:[['food','Питание'],['transport','Транспортные'],['fun','Развлечение'],['phone','Телефон'],['byt','Бытовые'],['comm','Коммуналка'],['tithe','Десятина'],['plush','Плюшки'],['rel','Отношения'],['health','Здоровье'],['clothes','Одежда'],['beauty','Красота'],['edu','Обучение'],['gift','Подарки'],['fees','Комиссии'],['hobby','Хобби Насти'],['work','Работа'],['debt','Долг'],['kid','Ребенок'],['save','Накопления'],['other','Прочее']],i:[['salary','Зарплата'],['adv','Аванс'],['hobbyin','Хобби Насти'],['wsal','Зарплата Насти'],['in_other','Другой доход']]};
+// CAT3 — общий набор для новых пользователей (id «долг», «накопления», «прочее», «другой доход» общие: на них завязаны цели, долги и разбор)
+const CAT3={e:[['food','Продукты','🛒'],['cafe','Кафе и рестораны','🍽️'],['transport','Транспорт','🚌'],['comm','Жильё и коммуналка','🏠'],['phone','Связь и интернет','📱'],['health','Здоровье','💊'],['clothes','Одежда и обувь','👕'],['beauty','Красота','💄'],['fun','Развлечения','🎉'],['subs','Подписки','🔁'],['edu','Образование','📚'],['gift','Подарки','🎁'],['byt','Дом и быт','🪑'],['kid','Дети','🧸'],['pets','Питомцы','🐾'],['trip','Путешествия','✈️'],['sport','Спорт','💪'],['debt','Долг','💸'],['save','Накопления','🐖'],['other','Прочее','📦']],i:[['salary','Зарплата','💰'],['side','Подработка','💻'],['in_gift','Подарки','🎁'],['refund','Кэшбэк и возвраты','💳'],['in_other','Другой доход','💵']]};
+// какой набор у пользователя: прежний — если он уже пользовался приложением (отметка catV=2 есть у всех, в том числе в облаке), иначе общий.
+// Решение «общий» записывается только после сверки с облаком: новое устройство старого пользователя не должно затереть его категории
+function catSet(){if(cfg.catSet==='v2'||cfg.catSet==='v3')return cfg.catSet;if(cfg.catV===2){cfg.catSet='v2';return 'v2'}
+  let safe=!IN_TG;try{safe=safe||!!(CL.sb||CL.lastSync)}catch(e){}if(safe)cfg.catSet='v3';return 'v3'}
+let CAT=CAT2;
 // цвета категорий: у каждой свой оттенок (отдельно для расходов и для доходов), подбираются автоматически
 const NEUTRAL='#8a8a8a';
 function hsl2hex(h,sa,l){sa/=100;l/=100;const k=n=>(n+h/30)%12,a=sa*Math.min(l,1-l),f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));
@@ -1728,30 +1749,29 @@ const GUESS=[[/кофе|чай|латте|капучино/,'☕'],[/пиво|в
  [/зарплат|аванс|оклад|преми|получк/,'💰'],[/фриланс|подработк|гонорар|заказчик|проект/,'💻'],[/стипенди|пособи|грант|субсиди|выплат/,'🎓'],[/возврат|кэшбэк|кэшбек|компенсац/,'💳'],[/процент|дивиденд|инвестиц|вклад|акци[ия]/,'📈'],[/продаж|продал/,'🏷️'],[/подарили|дали\b/,'🎀']];
 function guessEmo(name,kw){const t=(String(name||'')+' '+String(kw||'')).toLowerCase().replace(/ё/g,'е');
   for(const[re,e]of GUESS)if(re.test(t))return e;
-  for(const arr of [CAT.e,CAT.i])for(const c of arr){if(c[3]&&c[3].split('|').some(k=>k.length>3&&t.includes(k)))return EMO[c[0]]||''}
   return ''}
 const leadEmo=t=>{const m=String(t==null?'':t).trim().match(/^(?:[\u{1F000}-\u{1FAFF}\u2600-\u27BF\u2B00-\u2BFF](?:\ufe0f|\u200d)*)+/u);return m?m[0]:''};
 function buildAll(){const ov=cfg.catOv||{};
   const kw=v=>String(v||'').toLowerCase().replace(/ё/g,'е').split(/[,|;]/).map(z=>z.trim()).filter(z=>z.length>1);
-  const base=[...CAT.e.map(x=>[...x,0]),...CAT.i.map(x=>[...x,1])].filter(x=>!(cfg.hide||[]).includes(x[0])),used=[[],[]];
-  ALL=base.map(([id,l,c,k,inc])=>{const g=inc?1:0,own=ov[id]&&ov[id].c,neutral=id==='other'||id==='in_other';
+  CAT=catSet()==='v2'?CAT2:CAT3;
+  const base=[...CAT.e.map(x=>[x[0],x[1],x[2]||'',0]),...CAT.i.map(x=>[x[0],x[1],x[2]||'',1])].filter(x=>!(cfg.hide||[]).includes(x[0])),used=[[],[]];
+  ALL=base.map(([id,l,e0,inc])=>{const g=inc?1:0,own=ov[id]&&ov[id].c,neutral=id==='other'||id==='in_other';
     const col=own||(neutral?NEUTRAL:pickColor(!!inc,used[g].concat(base.some(b=>(b[0]==='other'||b[0]==='in_other')&&!!b[4]===!!inc)?[NEUTRAL]:[])));
     used[g].push(col);
-    const rl=(ov[id]&&ov[id].l)||l,nm=noEmo(rl),em=leadEmo(rl)||((ov[id]&&ov[id].l)?guessEmo(nm,''):'')||(id in EMO?EMO[id]:'🔹');
-    const uw=kw(ov[id]&&ov[id].k);
-    const kk=(k?k.split('|'):[]).filter(Boolean),weak=new Set(kk.filter(x=>x[0]==='~').map(x=>x.slice(1))),strong=new Set(kk.filter(x=>x[0]==='!').map(x=>x.slice(1)));
-    return{id,l:(em?em+' ':'')+nm,n:nm,c:col,e:em,inc:!!inc,k:kk.map(x=>x[0]==='~'||x[0]==='!'?x.slice(1):x).concat(uw),uw,weak,strong}});
+    const rl=(ov[id]&&ov[id].l)||l,nm=noEmo(rl),em=leadEmo(rl)||((ov[id]&&ov[id].l)?guessEmo(nm,''):'')||e0||(CAT===CAT2&&id in EMO?EMO[id]:'🔹');
+    return{id,l:(em?em+' ':'')+nm,n:nm,c:col,e:em,inc:!!inc,k:[]}});
   (cfg.custom||[]).forEach(x=>{const inc=x.t==='income',g=inc?1:0,own=ov[x.id]&&ov[x.id].c;let col=own||x.c;
     if(!own&&(!okCol(inc,col)||used[g].some(u=>cdist(col,u)<40))){col=pickColor(inc,used[g]);x.c=col}
     used[g].push(col);
-    const rl=(ov[x.id]&&ov[x.id].l)||x.l,nm=noEmo(rl),em=leadEmo(rl)||guessEmo(nm,x.k)||(inc?'💸':'🏷️');
-    const uw=kw(x.k);ALL.push({id:x.id,l:em+' '+nm,n:nm,c:col,e:em,inc,custom:1,k:uw,uw})});
+    const rl=(ov[x.id]&&ov[x.id].l)||x.l,nm=noEmo(rl),em=leadEmo(rl)||guessEmo(nm,'')||(inc?'💸':'🏷️');
+    ALL.push({id:x.id,l:em+' '+nm,n:nm,c:col,e:em,inc,custom:1,k:[]})});
   {const od=cfg.ord;if(od&&typeof od==='object'){const g=[[],[]];ALL.forEach(c=>g[c.inc?1:0].push(c));
     [['expense',0],['income',1]].forEach(([k,i])=>{const a=Array.isArray(od[k])?od[k]:[];if(!a.length)return;const pos=c=>{const p=a.indexOf(c.id);return p<0?1e6:p};
       g[i]=g[i].map((c,n)=>[c,n]).sort((x,y)=>pos(x[0])-pos(y[0])||x[1]-y[1]).map(x=>x[0])});
     const q=[0,0];ALL=ALL.map(c=>{const i=c.inc?1:0;return g[i][q[i]++]})}}
   INC=new Set(ALL.filter(c=>c.inc).map(c=>c.id))}
 const cd=id=>ALL.find(c=>c.id===id)||{id,l:'Прочее',n:'Прочее',e:'',c:'#777',k:[]};
+const INCW=/(^|\s)(зарплат|аванс|преми[яиюей]|кэшбэк|кешбэк|кэшбек|кешбек|cashback|стипенди|пенси[яиюей]|пособи|дивиденд|гонорар|подработк|фриланс)/;   // v165: общие слова дохода (раньше доход узнавался по ключевым словам категорий)
 const INCRE=/(^|\s)(получил|получила|заработал|заработала|пришл[оаи]|доход|перевели|зачислил|вернул|начислил|зп|выручка|выручку|прибыль|заработок|выплатили|начислили|поступило|поступили|капнуло|капнули)(?=\s|$)/;
 const FILL=/(^|\s)(потратил[аи]?|купил[аи]?|заплатил[аи]?|оплатил[аи]?|получил[аи]?|заработал[аи]?|вчера|позавчера|сегодня|на|за|в|по|мне|пришло|пришли|еще|ещё)(?=\s|$)/g;
 const _obj=v=>v&&typeof v==='object'&&!Array.isArray(v),_okArr=(a,f)=>Array.isArray(a)?a.filter(f||_obj):[];
@@ -1816,10 +1836,10 @@ function addLinkedExpense(kind,amount,note){amount=Math.round((Number(amount)||0
   tx=[t,...tx];return t}
 
 // переход на новый список категорий (один раз): старые операции, лимиты и повторы переезжают в новые категории
-if(cfg.catV!==2){
+if(cfg.catV!==2&&tx.length){   // v165: только для старых данных (до catV=2); новому пользователю отметку не ставим — у него общий набор
   const M={food:'food',cafe:'plush',transport:'transport',auto:'transport',home:'comm',phone:'phone',health:'health',beauty:'beauty',clothes:'clothes',fun:'fun',subs:'fun',edu:'edu',kids:'kid',house:'byt',gift:'gift',pets:'byt',trip:'fun',salary:'salary',freelance:'salary',grant:'salary',giftin:'in_other',refund:'in_other'};
   const nm_=x=>String(x||'').toLowerCase().replace(/ё/g,'е').replace(/[^a-zа-я0-9 ]/g,'').replace(/\s+/g,' ').trim(),byName={};
-  [...CAT.e.map(c=>[c,0]),...CAT.i.map(c=>[c,1])].forEach(([c,g])=>{byName[g+'|'+nm_(c[1])]=c[0]});
+  [...CAT2.e.map(c=>[c,0]),...CAT2.i.map(c=>[c,1])].forEach(([c,g])=>{byName[g+'|'+nm_(c[1])]=c[0]});
   const cm={};(cfg.custom||[]).forEach(x=>{const g=x.t==='income'?1:0;cm[x.id]=byName[g+'|'+nm_(noEmo(x.l))]||(g?'in_other':'other')});
   const mp=id=>cm[id]||M[id]||id;
   tx.forEach(t=>{t.category=mp(t.category)});
@@ -1846,11 +1866,18 @@ function rangeOf(r){const now=new Date(),td=ymd(now),[y]=month.split('-').map(Nu
   return{from:'0000-01-01',to:'9999-12-31'}}
 
 function kwHit(t,k){const L=/[\p{L}\d]/u;let i=t.indexOf(k);while(i>=0){if(i===0||!L.test(t[i-1]))return true;i=t.indexOf(k,i+1)}return false}
+// v165: без ключевых слов: память (какую категорию выбирали для такой же заметки) → иначе «Прочее»/«Другой доход».
+// Явная категория («… категория плюшки») разбирается в parse и сюда не доходит
 function detect(piece,note,type){
   const L=learn[norm(note)];if(L&&ALL.some(c=>c.id===L)&&INC.has(L)===(type==='income'))return L;
-  const t=' '+piece.toLowerCase().replace(/ё/g,'е')+' ';let best=type==='income'?'in_other':'other',bl=0;
-  for(const c of ALL){if(INC.has(c.id)!==(type==='income'))continue;for(const k of c.k)if(kwHit(t,k)){const w=k.length+(c.uw&&c.uw.includes(k)?50:0)+(c.strong&&c.strong.has(k)?50:0);if(w>bl||(w===bl&&c.custom)){best=c.id;bl=w}}}
-  return best}
+  return type==='income'?'in_other':'other'}
+// v165: категория по названию после слова «категория»: «плюшки», «плюшку», «кафе и рестораны». Возвращает {c, n} — категорию и сколько слов заняло название
+const catWords=t=>String(t||'').toLowerCase().replace(/ё/g,'е').replace(/[^\p{L}\d\s]/gu,' ').split(/\s+/).filter(Boolean);
+const catStem=(a,b)=>{if(a===b)return true;const n=Math.min(a.length,b.length);if(n<3)return false;const k=Math.max(3,Math.min(n,Math.max(a.length,b.length)-2));return a.slice(0,k)===b.slice(0,k)};
+function catByWords(ws,pref){let best=null,bn=0;const sc=c=>(pref!=null&&!!c.inc===pref?2:0)+(c.custom?1:0);   // одинаковые названия: тип по знаку/словам дохода, затем своя категория
+  for(const c of ALL){const cw=catWords(c.n);if(!cw.length||cw.length>ws.length)continue;let ok=true;for(let i=0;i<cw.length;i++)if(!catStem(ws[i],cw[i])){ok=false;break}
+    if(ok&&(cw.length>bn||(cw.length===bn&&best&&sc(c)>sc(best)))){best=c;bn=cw.length}}
+  return best?{c:best,n:bn}:null}
 
 
 // Разбор: несколько операций в одной фразе → несколько записей
@@ -1904,12 +1931,17 @@ function parse(raw){
    .replace(DRE,(m,a,d,mo,y,off,str)=>{if(!y&&m.indexOf('/')<0&&!/\d/.test((str.slice(0,off)+' '+str.slice(off+m.length)).replace(/§[a-z]§/g,'')))return m;return a+(tokn(mkd(y?+y:now0.getFullYear(),+mo,+d,!!y))||m)})
    .replace(/(^|\s)(?:(?:в|во|на)\s+)?(?:прошл\S*\s+)?(понедельник|вторник|сред[уа]|четверг|пятниц[уа]|суббот[уа]|воскресень[ея])(?=\s|$|,|\.)/g,(m,a,w)=>{const k=Object.keys(WDI).find(x=>w.startsWith(x));return a+(tokn(ago((now0.getDay()-WDI[k]+7)%7||7))||m)});
   t=t.replace(/(^|[^\d.,])(\d{1,3}(?:\s\d{3})+)(?!\d)/g,(m,a,n)=>a+n.replace(/\s/g,''));
-  const segs=[];let pend='',pendT=[];const TG=/(^|\s)(?:#|(?:с\s+)?тег(?:ом|и|а)?\s+)([\p{L}][\p{L}\d_-]*)/gu;
+  const segs=[];let pend='',pendT=[],pendC;const TG=/(^|\s)(?:#|(?:с\s+)?тег(?:ом|и|а)?\s+)([\p{L}][\p{L}\d_-]*)/gu;
+  // v165: «категория плюшки» → метка ¤N¤ ещё до разбиения на части (название может быть из нескольких слов, в том числе с «и»)
+  const CT=[];t=t.replace(/(^|[\s,;])категори[а-яё]*\s*[:—-]?\s*([^,;.\n§\d]+)/gi,(m,a,rest)=>{const ws=catWords(rest),hit=catByWords(ws);const used=hit?hit.n:Math.min(1,ws.length);
+    CT.push(hit?ws.slice(0,hit.n):null);const tail=ws.slice(used).join(' ');return a+' ¤'+(CT.length-1)+'¤ '+tail+' '});
+  const takeC=s=>{let c;s=s.replace(/¤(\d+)¤/g,(m,n)=>{c=CT[+n];return ' '});return[s.replace(/\s+/g,' ').trim(),c]};
   t.split(/[;\n]+|,(?!\d)|\.(?!\d)|(?:^|\s)(?:и|а также|потом|затем|плюс)(?=\s)/).forEach(s=>{s=(s||'').trim();if(!s)return;
     const tg=[];s=s.replace(TG,(m,a,w)=>{tg.push(w);return a}).replace(/\s+/g,' ').trim();
-    if(!s){pendT.push(...tg);return}
-    if(!/\d/.test(s)){pend+=' '+s;pendT.push(...tg);return}
-    segs.push({s:(pend+' '+s).trim(),tg:[...pendT,...tg]});pend='';pendT=[]});
+    let c;[s,c]=takeC(s);
+    if(!s){if(c!==undefined){if(segs.length&&segs[segs.length-1].cat===undefined)segs[segs.length-1].cat=c;else pendC=c}pendT.push(...tg);return}
+    if(!/\d/.test(s)){if(c!==undefined){if(segs.length&&segs[segs.length-1].cat===undefined&&!pend)segs[segs.length-1].cat=c;else pendC=c}pend+=' '+s;pendT.push(...tg);return}
+    segs.push({s:(pend+' '+s).trim(),tg:[...pendT,...tg],cat:c!==undefined?c:pendC});pend='';pendT=[];pendC=undefined});
   const src='(\\d+(?:[.,]\\d{1,2})?)\\s*(тыс\\S*|к(?=\\s|$)|k(?=\\s|$))?(?:\\s*('+CW+')(?=\\s|$))?';
   const out=[],today=new Date();let carry=0;
   for(const sg of segs){const s0=sg.s;
@@ -1926,11 +1958,12 @@ function parse(raw){
       if(cc&&cc!==cfg.cur){oc=cc;oa=a;const rt=parseFloat(cfg.rates[cc])||0;rt0=rt;a=Math.round(a*rt*100)/100;if(!rt)needRate.add(cc)}
       let sgc=0;{const ch=s[mm.index-1];if(ch&&(mm.index<2||/\s/.test(s[mm.index-2]))){if(ch==='+')sgc=1;else if('-−–'.indexOf(ch)>=0)sgc=-1}}
       const low=' '+p.replace(/ё/g,'е')+' ';
-      const inc=sgc?sgc>0:INCRE.test(low)||ALL.some(c=>INC.has(c.id)&&c.k.some(k=>k.length>3&&!(c.weak&&c.weak.has(k))&&kwHit(low,k)));
+      const iw=INCRE.test(low)||INCW.test(low),xh=sg.cat?catByWords(sg.cat,sgc?sgc>0:(iw?true:null)):null,xc=xh?xh.c:null;   // v165: названа категория — тип по ней
+      const inc=sgc?sgc>0:xc?!!xc.inc:iw;
       const type=inc?'income':'expense';
       let note=p.replace(new RegExp(src,'g'),' ').replace(FILL,' ').replace(FILL,' ').replace(/\s+/g,' ').replace(/(^|\s)[+−–-]+(?=\s|$)/g,' ').replace(/\s+/g,' ').trim();
       if(!/[\p{L}\d]/u.test(note))note='';
-      const cat=detect(p,note,type);
+      const cat=sg.cat!==undefined?(xc&&!!xc.inc===inc?xc.id:(inc?'in_other':'other')):detect(p,note,type);   // названа, но не нашлась (или не того типа) — «Прочее»
       note=note?note[0].toUpperCase()+note.slice(1):cd(cat).n;
       const d=new Date(today);if(/позавчера/.test(p))d.setDate(d.getDate()-2);else if(/вчера/.test(p))d.setDate(d.getDate()-1);else if(rel0&&!/сегодня/.test(p))d.setDate(d.getDate()-rel0);
       const tags=[...new Set(sg.tg.map(normTag).filter(Boolean))].slice(0,8);
@@ -2244,17 +2277,20 @@ document.addEventListener('pointerdown',e=>{if(isModalOpen()&&!e.target.closest(
 function opts(type,sel){return ALL.filter(c=>c.inc===(type==='income')).map(c=>`<option value="${c.id}"${c.id===sel?' selected':''}>${E(c.l)}</option>`).join('')}
 const ICAL='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>';
 const ITR='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>';
-function row(t,dr,i=0){const c=cd(t.category),inc=t.type==='income',td=ymd(new Date());
-  const dv=dr&&t.date!==td?`<span>${t.date.slice(8)}.${t.date.slice(5,7)}${t.date.slice(0,4)!==td.slice(0,4)?'.'+t.date.slice(2,4):''}</span>`:'';
-  return `<div class="sw" data-id="${t.id}" style="--i:${i}"><button class="swb" tabindex="-1" aria-label="Удалить">${ITR}</button><div class="r" data-id="${t.id}">
-<button class="sg ${inc?'inc':'exp'}" data-a="sg" aria-label="Доход или расход">${inc?'+':'−'}</button>
-<button type="button" class="cpb" data-f="category" data-cpo="1" style="color:${c.c}">${E(c.l)}</button>
-<input data-f="note" value="${E(t.note)}" placeholder="Заметка">
-<input class="am ${inc?'inc':'exp'}" data-f="amount" inputmode="decimal" value="${t.amount||''}" placeholder="0">
-
-<button type="button" class="tgp">+ Тег</button><input class="tgi" data-f="tagadd" list="tgl" placeholder="#друзья" autocomplete="off" autocapitalize="none" enterkeyhint="done">
-<span class="ac"><label class="dp" aria-label="Изменить дату">${dv}${ICAL}<input type="date" data-f="date" value="${t.date}"></label></span></div></div>`+
-  `<div class="dl" data-id="${t.id}" style="--i:${i}">${t.oc?`<span class="dt">${fmt(t.oa)} ${E(t.oc)}</span>`:''}${dr&&t.oc&&!(parseFloat(cfg.rates[t.oc])>0)?`<label class="rtl">курс: 1 ${E(t.oc)} = <input class="rtin" data-f="rate" data-c="${E(t.oc)}" inputmode="decimal" placeholder="?" autocomplete="off"> ${E(cfg.cur)}</label>`:''}${tagChips(t)}</div>`}
+// v165: черновик — карточка: сверху «−/+», заметка и сумма; снизу чипы: категория (её цветом), дата, «+ тег», теги, сумма в валюте и курс
+function plural(n,a,b,c){n=Math.abs(n)%100;const m=n%10;return n>10&&n<20?c:m===1?a:m>=2&&m<=4?b:c}
+function dChip(d){const td=new Date(),y=new Date();y.setDate(y.getDate()-1);if(d===ymd(td))return 'Сегодня';if(d===ymd(y))return 'Вчера';
+  const [Y,M,D]=d.split('-').map(Number);return D+' '+MGN[M-1].slice(0,3)+(Y!==td.getFullYear()?' '+Y:'')}
+function row(t,dr,i=0,del){const c=cd(t.category),inc=t.type==='income';
+  return `<div class="sw" data-id="${t.id}" style="--i:${i}"><button class="swb" tabindex="-1" aria-label="Удалить">${ITR}</button><div class="r rv2" data-id="${t.id}">
+<button class="sg ${inc?'inc':'exp'}" data-a="sg" aria-label="${inc?'Доход — сделать расходом':'Расход — сделать доходом'}">${inc?'+':'−'}</button>
+<input data-f="note" value="${E(t.note)}" placeholder="Заметка" autocomplete="off">
+<input class="am ${inc?'inc':'exp'}" data-f="amount" inputmode="decimal" value="${t.amount||''}" placeholder="0" autocomplete="off">
+<button type="button" class="cpb rch" data-f="category" data-cpo="1" style="--cc:${c.c}">${E(c.l)}</button>
+<span class="ac"><label class="dp rch" aria-label="Изменить дату">${ICAL}<span>${dChip(t.date)}</span><input type="date" data-f="date" value="${t.date}"></label></span>
+${tagChips(t)}<button type="button" class="tgp rch">+ тег</button><input class="tgi" data-f="tagadd" list="tgl" placeholder="#друзья" autocomplete="off" autocapitalize="none" enterkeyhint="done">
+${t.oc?`<span class="rch rcur">${fmt(t.oa)} ${E(t.oc)}</span>`:''}${dr&&t.oc&&!(parseFloat(cfg.rates[t.oc])>0)?`<label class="rch rtl">1 ${E(t.oc)} = <input class="rtin" data-f="rate" data-c="${E(t.oc)}" inputmode="decimal" placeholder="?" autocomplete="off"> ${E(cfg.cur)}</label>`:''}${del?`<button type="button" class="rch rdel" data-a="x" aria-label="Удалить">${ITR}</button>`:''}</div></div>`+
+  `<div class="dl" data-id="${t.id}" style="--i:${i}"></div>`}
 let autoT=null,autoN=0,autoEnd=0;
 function cancelAuto(){if(autoT){clearInterval(autoT);autoT=null;syncBtn()}}
 function startAuto(){cancelAuto();autoEnd=Date.now()+3000;autoN=3;const b=$('#go');if(b){b.classList.remove('tm');void b.offsetWidth}
@@ -2264,12 +2300,12 @@ function rowMain(t){const c=cd(t.category),inc=t.type==='income';
 function syncBtn(){const b=$('#go');if(!b)return;const tm=!!autoT&&!inp.value.trim()&&drafts.length>0;b.classList.toggle('tm',tm);b.textContent=inp.value.trim()||!drafts.length?'Добавить':'Записать · '+drafts.length+(tm?' · '+autoN+' с':'')}
 function updateRevHeader(L){L=L||drafts;const el=$('#rev .rh span');if(!el||!L.length)return;
   const sm=L.reduce((a,d)=>a+(d.type==='income'?d.amount:-d.amount),0);
-  el.textContent=`${L.length} шт · ${sm<0?'−':'+'}${fmt(Math.abs(sm))} ${cfg.cur}`;if(L===drafts)syncBtn()}
+  el.textContent=`${L.length} ${plural(L.length,'операция','операции','операций')} · ${sm<0?'−':'+'}${fmt(Math.abs(sm))} ${cfg.cur}`;if(L===drafts)syncBtn()}
 function renderRev(quiet){const el=$('#rev');$('#fab').classList.toggle('has',drafts.length>0);
   if(!drafts.length){cancelAuto();el.classList.remove('anim','clearing');el.innerHTML='';syncBtn();return}
   const sm=drafts.reduce((a,d)=>a+(d.type==='income'?d.amount:-d.amount),0);
   el.classList.remove('anim','clearing');
-  el.innerHTML=`<div class="rh"><span>${drafts.length} шт · ${sm<0?'−':'+'}${fmt(Math.abs(sm))} ${cfg.cur}</span><button class="clx" data-a="cancel" aria-label="Очистить" title="Очистить"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>`+drafts.map((d,i)=>row(d,1,i)).join('');
+  el.innerHTML=`<div class="rh"><span>${drafts.length} ${plural(drafts.length,'операция','операции','операций')} · ${sm<0?'−':'+'}${fmt(Math.abs(sm))} ${cfg.cur}</span><button class="clx" data-a="cancel" aria-label="Очистить" title="Очистить"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>`+drafts.map((d,i)=>row(d,1,i)).join('');
   if(!quiet)requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('anim')));
   else el.classList.add('anim');
   syncBtn()}
@@ -3769,6 +3805,43 @@ topEl.addEventListener('click',e=>{if(msBlock){e.stopPropagation();e.preventDefa
 })();
 
 
+// v165: окно «Из бота»: операции, записанные по сообщениям боту, — карточками; правки сохраняются сразу. Открывается, когда приложение на экране и ничего не открыто
+const BV={ids:[],t:0};
+function bvList(){return BV.ids.map(id=>tx.find(t=>t.id===id)).filter(Boolean)}
+function bvDraw(){const L=bvList(),el=$('#bvl'),h=$('#bvt');if(!el)return;if(!L.length){bvClose();return}
+  if(h)h.textContent='Из бота · '+L.length+' '+plural(L.length,'операция','операции','операций');
+  el.innerHTML=L.map((t,i)=>row(t,0,i,1)).join('')}
+function bvClose(){BV.ids=[];if(gd._bv){gd._bv=false;closeGoal()}}
+function botReview(ids){BV.ids=[...new Set([...BV.ids,...(ids||[])])];clearTimeout(BV.t);if(!bvList().length)return;
+  if(gd._bv&&gd.classList.contains('on')){bvDraw();return}
+  const busy=document.hidden||isModalOpen()||document.getElementById('spl')||(LKE&&LKE.classList.contains('on'))||(typeof tourOn==='function'&&tourOn());
+  if(busy){BV.t=setTimeout(()=>botReview([]),1500);return}
+  cancelGestures();lockBg(true);gT=null;gd._bv=true;
+  gd.innerHTML=`<div class="eh"><b id="bvt"></b><button class="x" id="bvx" type="button" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div><div class="bvs">Записано по сообщениям боту. Поправьте, если нужно, — изменения сохраняются сразу.</div><div id="bvl"></div><div class="shf"><span></span><button class="sm pr" id="bvok" type="button">Готово</button></div>`;
+  bind($('#bvl'),()=>tx,false);bvDraw();$('#bvx').onclick=$('#bvok').onclick=()=>bvClose();showGd(fab)}
+{const _cg=closeGoal;closeGoal=function(){gd._bv=false;BV.ids=[];return _cg.apply(this,arguments)}}
+{const _r=render;render=function(){const v=_r.apply(this,arguments);try{if(gd._bv&&gd.classList.contains('on')&&!(document.activeElement&&document.activeElement.closest&&document.activeElement.closest('#bvl')))bvDraw()}catch(e){}return v}}
+
+// v165: окно «Что нового». Новый выпуск — новый объект ПЕРВЫМ в списке WN (id — уникальная строка, лучше дата). Показывается один раз каждому:
+// отметка cfg.wnSeen уходит в облако Telegram, на других устройствах окно не повторяется. Новым пользователям — после обучения
+const WN=[
+ {id:'2026-11-03',items:[
+  ['🏷️','Категория словом','Скажите боту или напишите: «кофе 30, категория плюшки» — запись попадёт в нужную категорию. Не нашлась — в «Прочее». Свои категории узнаются сразу.'],
+  ['🤖','Проверка записей из бота','После сообщения боту открывается список записанного — можно сразу поправить сумму, категорию, дату, заметку и теги.'],
+  ['🔁','Перенос остатка','Переключатель рядом с «Остаток» в главном блоке: остаток переносится начиная с открытого месяца.'],
+  ['🔐','PIN-код и Face ID','Код из 4 или 6 цифр, вход по Face ID, время блокировки — в «Настройки → PIN-код».'],
+  ['👆','Свайп по месяцам','На «Операциях» листайте список влево и вправо — меняется месяц.'],
+  ['⬇️','Блок сверху под рукой','Пролистали вниз — нажмите кружок со стрелкой вверху: главный блок опустится, не сбивая список.']]}];
+function wnShow(){const w=WN[0];if(!w||cfg.wnSeen===w.id)return;
+  const busy=document.hidden||isModalOpen()||document.getElementById('spl')||(LKE&&LKE.classList.contains('on'))||(typeof tourOn==='function'&&tourOn());
+  if(busy){setTimeout(wnShow,2000);return}
+  bqShow(`<div class="wnh">Что нового</div><div class="wnl">${w.items.map(([e,t,d])=>`<div class="wni"><i>${e}</i><div><b>${E(t)}</b><span>${E(d)}</span></div></div>`).join('')}</div><div class="bqb"><button class="sm pr" data-bq="wnok">Понятно</button></div>`,'wn')}
+function wnDone(){const w=WN[0];if(w){cfg.wnSeen=w.id;save()}}
+setTimeout(()=>{   // окно настроек (bq) объявлено ниже по коду — подключаемся после загрузки
+  bq.addEventListener('click',e=>{const b=e.target.closest('[data-bq="wnok"]');if(!b)return;e.stopPropagation();wnDone();closeBq()},true);
+  const _cb=closeBq;closeBq=function(){if(bqT==='wn')wnDone();return _cb.apply(this,arguments)}},0);
+setTimeout(wnShow,2500);
+
 // ---------- настройки ----------
 const PAL=['#8fc9a0','#e3a27c','#7fb8d9','#8c9ee0','#a597e0','#7fd0c4','#de8f8f','#e0a0c4','#c9a0e0','#d98fcf','#9fb4c9','#95b8f0','#e8c27a','#bfd98a','#c8b88a','#e8a6b8'];
 const nextColor=inc=>pickColor(!!inc,ALL.filter(c=>!!c.inc===!!inc).map(c=>c.c));
@@ -4543,8 +4616,7 @@ function cpHtml(){const s=cpS,inc=s.type==='income';
   if(s.view==='edit'){const c=cd(s.id),x=c.custom?cfg.custom.find(z=>z.id===c.id):null,col=/^#[0-9a-f]{6}$/i.test(c.c)?c.c:'#888888';
     return `<div class="cpt0"><span>Редактировать категорию</span></div>
 <div class="cpe"><input id="cpem" value="${E(c.e)}" maxlength="8" autocomplete="off" aria-label="Эмодзи"><input id="cpn" value="${E(c.n)}" maxlength="40" autocomplete="off" aria-label="Название"><input type="color" id="cpc" value="${col}" aria-label="Цвет"></div>
-<input id="cpk" value="${E(x?(x.k||''):((cfg.catOv[c.id]&&cfg.catOv[c.id].k)||''))}" placeholder="${x?'Ключевые слова: детск, игрушк':'Свои слова (к стандартным): кошелёк, копилка'}" autocomplete="off" aria-label="Ключевые слова">
-<div class="cpg0">Слова через запятую: по ним фраза «${E(c.n).slice(0,18)} 100» сама попадёт в эту категорию.</div>
+<div class="cpg0">Чтобы записать в эту категорию голосом или текстом, скажите: «… категория ${E(c.n).toLowerCase().slice(0,24)}».</div>
 <div class="cpf"><button class="sm" data-cp="back">Назад</button>${CPROT.includes(c.id)?'':'<button class="sm del" data-cp="del">Удалить</button>'}<button class="sm pr" data-cp="save">Сохранить</button></div>`}
   const list=ALL.filter(c=>c.inc===inc);
   return `<div class="cpt0"><span>Категория · ${inc?'доход':'расход'}</span><small>${s.edit?'Нажмите, чтобы изменить':''}</small></div>
@@ -4571,8 +4643,7 @@ function cpSave(){const s=cpS,c=cd(s.id),nm=($('#cpn').value||'').trim();if(!nm)
   const em=leadEmo($('#cpem').value||''),col=$('#cpc').value,ov=cfg.catOv[s.id]=cfg.catOv[s.id]||{};
   ov.l=(em?em+' ':'')+nm.slice(0,40);
   if(col&&col.toLowerCase()!==String(c.c).toLowerCase())ov.c=col;
-  const x=c.custom?cfg.custom.find(z=>z.id===c.id):null,kv=($('#cpk')?$('#cpk').value:'').trim();
-  if(x)x.k=kv;else if(kv)ov.k=kv;else delete ov.k;
+  delete ov.k;   // v165: ключевых слов больше нет — категорию называют словами «категория …»
   buildAll();save();render();
   if(s.direct){closeCp();if(s.chg)s.chg();return}
   s.view='grid';cpRender();if(s.chg)s.chg()}
@@ -4599,7 +4670,7 @@ cpEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPU
 // ---- маленькое окошко «Новая категория» (поверх любого окна) ----
 let ncCb=null,ncCancel=null,ncType='expense';
 function openNc(type,done,cancel){const el=$('#nc');ncType=type==='income'?'income':'expense';ncCb=done;ncCancel=cancel||null;
-  el.innerHTML=`<div class="nct">Новая категория · ${ncType==='income'?'доход':'расход'}</div><div class="ncr"><input type="color" id="ncc" value="${nextColor(ncType==='income')}" aria-label="Цвет"><input id="ncn" placeholder="Название" maxlength="40" autocomplete="off" aria-label="Название новой категории" enterkeyhint="next"></div><input id="ncw" placeholder="Ключевые слова: детск, игрушк" autocomplete="off" aria-label="Слова для голосового ввода"><div class="ncb"><button class="sm" id="ncx">Отмена</button><button class="sm pr" id="nca">Добавить</button></div>`;
+  el.innerHTML=`<div class="nct">Новая категория · ${ncType==='income'?'доход':'расход'}</div><div class="ncr"><input type="color" id="ncc" value="${nextColor(ncType==='income')}" aria-label="Цвет"><input id="ncn" placeholder="Название" maxlength="40" autocomplete="off" aria-label="Название новой категории" enterkeyhint="next"></div><div class="ncs">Записать в неё: «… категория <span id="ncsn">название</span>»</div><div class="ncb"><button class="sm" id="ncx">Отмена</button><button class="sm pr" id="nca">Добавить</button></div>`;
   ['sh','ed','gd','cf'].forEach(id=>{const e=$('#'+id);if(e&&e.classList.contains('on'))e.classList.add('sub')});
   try{setOrigin(el)}catch(e){}el.classList.add('on');ov.className='on';
   autoF('#ncn',140)}
@@ -4607,10 +4678,11 @@ function closeNc(ok){const el=$('#nc');if(!el.classList.contains('on'))return;el
   syncSub();
   const cancel=ncCancel;ncCb=null;ncCancel=null;if(!ok&&cancel)cancel()}
 function ncAdd(){const l=($('#ncn').value||'').trim();if(!l){toast('Введите название категории');return}
-  const id='c_'+uid();cfg.custom.push({id,l:l.slice(0,40),c:$('#ncc').value,t:ncType,k:($('#ncw').value||'').trim()});buildAll();save();
+  const id='c_'+uid();cfg.custom.push({id,l:l.slice(0,40),c:$('#ncc').value,t:ncType});buildAll();save();
   const cb=ncCb;closeNc(true);if(cb)cb(id);toast('Категория добавлена')}
 $('#nc').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.id==='ncx')closeNc(false);else if(b.id==='nca')ncAdd()});
-$('#nc').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.target.id==='ncn'||e.target.id==='ncw')){e.preventDefault();ncAdd()}});
+$('#nc').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='ncn'){e.preventDefault();ncAdd()}});
+$('#nc').addEventListener('input',e=>{if(e.target.id==='ncn'){const s=$('#ncsn');if(s)s.textContent=e.target.value.trim().toLowerCase().slice(0,30)||'название'}});
 function openSettings(){setTab('settings')}
 function closeSettings(){if(tab==='settings')setTab('list')}
 let tt;const TIC={del:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>',
@@ -5109,7 +5181,9 @@ function ratesRefresh(force){
   if(!force&&fresh&&!needRate.size)return Promise.resolve(false);
   // уже идёт запрос: обычный вызов ждёт его; принудительный (новая валюта) — после него запускает свой, иначе новая валюта выпала бы из списка
   if(_ratesBusy)return force?_ratesBusy.then(()=>ratesRefresh(true)):_ratesBusy;
-  _ratesBusy=(async()=>{
+  // v165: метку «запрос идёт» ставим до запуска и снимаем только свою. Раньше при пустом списке валют функция завершалась сразу,
+  // finally снимал метку раньше, чем она ставилась, — метка оставалась навсегда, и следующий запрос курса («20 евро») зацикливал приложение
+  const pr=(async()=>{await null;
     try{
       const want=ratesWanted();
       if(!want.length){cfg.ratesErr='';return true}
@@ -5132,9 +5206,9 @@ function ratesRefresh(force){
       cfg.ratesErr=(e&&e.name==='AbortError')?'таймаут':(navigator.onLine===false?'нет интернета':String((e&&e.message)||e).slice(0,40));
       try{ratesUi()}catch{}
       return false
-    }finally{_ratesBusy=null}
+    }finally{if(_ratesBusy===pr)_ratesBusy=null}
   })();
-  return _ratesBusy}
+  _ratesBusy=pr;return pr}
 // строка ввода: валюта без курса → берём автокурс (или просим ввести руками)
 function needRateFlow(){
   const nr=[...needRate],manual=()=>toast('Укажите курс '+nr.join(', ')+' в строке записи — сумма пока 0');
@@ -5181,7 +5255,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v164';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v165';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}   // номер сборки виден внизу экрана: по нему понятно, обновился ли Telegram до новой версии
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
@@ -5239,7 +5313,7 @@ async function inboxPull(fast,wait){
     for(let w=0;w<30&&typeof CL==='object'&&CL.busy;w++)await new Promise(r=>setTimeout(r,200));
     let saved=true;
     try{
-      if(added.length)commit(added,false);
+      if(added.length){commit(added,false);try{botReview(added.map(d=>d.id))}catch(e){}}   // v165: записанное из бота — окно проверки
       else if(cmd){save();render()}
       if(left.length){drafts.push(...left);renderRev();setTimeout(()=>{try{if(!document.getElementById('spl')&&!isModalOpen())openSheet()}catch{}},2200)}
     }catch(e){saved=false;IB.dbg={t:Date.now(),n:0,lp:IB.lp,err:'запись: '+String(e&&e.message||e).slice(0,50)}}
