@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v181';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v182';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -4640,6 +4640,10 @@ function mailUrl(){
   const m=String(SUPPORT.email||'').trim(),
     body='\r\n\r\n—\r\nВерсия приложения: '+(typeof APP_VER!=='undefined'?APP_VER:'')+(IN_TG?' · Telegram':'');
   return 'mailto:'+m+'?subject='+encodeURIComponent('Finance Pro — обращение')+'&body='+encodeURIComponent(body)}
+// v182: внутри Telegram ссылки mailto: не открываются (встроенный браузер их молча игнорирует) — открываем через Telegram страницу mail.html
+// на нашем сайте, а она открывает почту телефона с готовыми адресом и темой. Вне Telegram работает обычная ссылка mailto:.
+function mailBridge(){const u=new URL(mailUrl()),base=location.origin+location.pathname.replace(/[^/]*$/,'');
+  return base+'mail.html?s='+encodeURIComponent(u.searchParams.get('subject')||'')+'&b='+encodeURIComponent(u.searchParams.get('body')||'')}
 function openBq(kind){if(isModalOpen())return;bqShow(bqHtml(kind),kind)}
 // свои окна вместо системных alert/confirm (на телефоне системные могут не показываться)
 function bqAsk(title,text,ok,cb){if(bq.classList.contains('on'))closeBq();bqCb=cb;
@@ -4648,7 +4652,9 @@ function bqInfo(title,text){if(bq.classList.contains('on'))closeBq();bqCb=null;
   bqShow(`<div class="bqt">${E(title)}</div><div class="bqs pre">${E(text)}</div><div class="bqb"><button class="sm pr" data-bq="cancel">Понятно</button></div>`,'info')}
 function closeBq(){if(!bqT&&!bq.classList.contains('on'))return;bq.classList.remove('on');bqT=null;unlockIfIdle();cancelGestures();if(!isModalOpen())stCover(false)}
 bq.addEventListener('click',e=>{
-  if(e.target.closest('a[href^="mailto:"]')){setTimeout(closeBq,350);return}   // ссылку не трогаем — её откроет система
+  if(e.target.closest('a[href^="mailto:"]')){
+    if(IN_TG&&TGW&&typeof TGW.openLink==='function'){e.preventDefault();try{TGW.openLink(mailBridge())}catch(x){location.href=mailUrl()}}   // v182
+    setTimeout(closeBq,350);return}   // вне Telegram ссылку не трогаем — её откроет система
   if(bqT==='contact'&&!e.target.closest('button')){closeBq();return}              // «Написать нам»: касание любой другой части окна закрывает его
   const b=e.target.closest('button');if(!b)return;const a=b.dataset.bq;
   if(a==='cancel'){bqCb=null;closeBq()}
