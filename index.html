@@ -1174,7 +1174,7 @@ html.plk #lk,#lk.on{visibility:visible;opacity:1;transform:none;pointer-events:a
 /* v68: главный блок (месяц + остаток/доход/расход) неподвижный, список заезжает под него; блок полупрозрачный, сквозь него виден размытый список */
 #top{position:relative;z-index:8;   /* v151: блок не прилипает к верху — уезжает вместе со списком (см. кнопку «наверх», #totop) */
   background:linear-gradient(180deg,color-mix(in srgb,var(--tp1) 62%,transparent),color-mix(in srgb,var(--tp2) 54%,transparent));
-  -webkit-backdrop-filter:blur(22px) saturate(1.7);backdrop-filter:blur(22px) saturate(1.7);
+  /* v162: без размытия фона: на «Операциях» под блоком ничего не проезжает, в «Аналитике» и «Планах» размывает подложка #stkbg — размытие пересчитывалось каждый кадр прокрутки */
   box-shadow:inset 0 .5px 0 rgba(var(--wr),.16),0 8px 24px rgba(0,0,0,.20)}
 :root[data-theme=light] #top{box-shadow:inset 0 .5px 0 rgba(var(--wr),.14),0 8px 24px rgba(30,30,50,.10)}
 </style>
@@ -1527,7 +1527,7 @@ html.stk #topact{position:fixed;z-index:9}
 html.stk #top{position:sticky;top:var(--stk1,calc(var(--sat) + 8px))}
 html.stk #sbw{position:sticky;top:var(--stk2,calc(var(--sat) + 8px + var(--toph,0px)));z-index:8}
 #stkbg{position:fixed;left:0;right:0;top:0;height:var(--stkh,0px);z-index:7;pointer-events:none;background:rgba(var(--bgr),.62);
-  -webkit-backdrop-filter:blur(22px) saturate(1.6);backdrop-filter:blur(22px) saturate(1.6);
+  -webkit-backdrop-filter:blur(16px) saturate(1.5);backdrop-filter:blur(16px) saturate(1.5);
   -webkit-mask-image:linear-gradient(#000 calc(100% - 22px),transparent);mask-image:linear-gradient(#000 calc(100% - 22px),transparent);
   opacity:0;visibility:hidden;transition:opacity .22s ease,visibility 0s .22s}
 #stkbg.on{opacity:1;visibility:visible;transition:opacity .22s ease,visibility 0s}
@@ -3465,21 +3465,10 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
     skip='#lk,#tabs,#fab,#thlp,#topact,.hd,#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc,#ov,#toast,#tour,#cm,#fp,input,select,textarea,.swb';
   // v84: шапка и верхний блок (месяц, остаток) стоят на месте; при упоре в край пружинит и растягивается только список под ними.
   // Каждый блок списка смещается тем сильнее, чем дальше он от якоря (верхнего блока у начала, нижнего края у конца) — блоки «раздвигаются».
-  const ST={els:[],w:[],side:0};
-  const stClear=()=>{for(let i=0;i<ST.els.length;i++)ST.els[i].style.transform='';ST.els=[];ST.w=[];ST.side=0};
-  function stBuild(side){
-    const vh=Math.max(320,innerHeight||640),bt=bodyEl.getBoundingClientRect().top,els=[],ws=[];
-    let kids=[...bodyEl.children];if(kids.length===1&&kids[0].children.length>1)kids=[...kids[0].children];   // «Настройки» — один контейнер, двигаем его части
-    for(const e of kids){
-      if(e.matches('.sbt')||e.querySelector('.sbt'))continue;
-      const r=e.getBoundingClientRect();if(!r.height||r.bottom<-vh||r.top>vh*2)continue;
-      const c=(r.top+r.bottom)/2,w=side>0?(c-bt)/(.75*vh):(vh-c)/(.75*vh);
-      els.push(e);ws.push(Math.max(0,Math.min(1,w)))}
-    ST.els=els;ST.w=ws;ST.side=side}
-  const paint=y=>{
-    if(!y){if(ST.els.length)stClear();return}
-    const side=y>0?1:-1;if(ST.side!==side){stClear();stBuild(side)}
-    for(let i=0;i<ST.els.length;i++){const d=y*ST.w[i];ST.els[i].style.transform=d?'translate3d(0,'+d.toFixed(2)+'px,0)':''}};
+  // v162: растяжение и отскок двигают только список (#body, у него уже есть свой слой). Раньше двигались несколько блоков страницы с разными весами,
+  // и каждый становился слоем посреди анимации — кадры «залипали». Шапка (в «Аналитике» и «Планах» она закреплена) стоит на месте.
+  const stClear=()=>{if(bodyEl.style.transform)bodyEl.style.transform=''};
+  const paint=y=>{if(!y){stClear();return}bodyEl.style.transform='translate3d(0,'+y.toFixed(2)+'px,0)'};
   const stop=()=>{cancelAnimationFrame(OS.raf);OS.raf=0};
   let rcT=0;
   // слой страницы снимаем не сразу после остановки, а когда всё затихло: иначе в момент снятия строки чуть «щёлкают» на долю пикселя
@@ -5123,7 +5112,7 @@ hsInit();
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,
 // забирает очередь, разбирает каждую запись обычным разбором строки ввода и добавляет в операции.
-const IB_VER='v161';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
+const IB_VER='v162';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 try{document.getElementById('vb').textContent=IB_VER}catch(e){}   // номер сборки виден внизу экрана: по нему понятно, обновился ли Telegram до новой версии
 const IB={busy:false,last:0,n:0,lt:Date.now(),burst:Date.now()+20000,ok:Date.now()};
@@ -5470,6 +5459,15 @@ async function ibLoop(){
   // а не по точке касания: в v153 касание рядом с полем тегов прятало клавиатуру, а iOS тут же ставила курсор в поле — клавиатура уезжала и выезжала
   const fieldIn=t=>{if(t.closest('input,textarea,select,[contenteditable]'))return true;const lb=t.closest('label');return !!(lb&&lb.querySelector('input:not([type=date]):not([type=hidden]),textarea'))};
   const near=(x,y)=>{for(const [dx,dy] of [[0,0],[-14,0],[14,0],[0,-14],[0,14]]){const n=document.elementFromPoint(x+dx,y+dy);if(n&&n.closest&&n.closest(WIN)&&(fieldIn(n)||active(n)))return true}return false};
+  // v162: касание поля с текстом в окне выделяет весь текст — первый же символ его заменяет (стирать по букве не нужно).
+  // Повторное касание уже активного поля ставит курсор как обычно.
+  const selAll=f=>{if(document.activeElement!==f||!f.value)return;try{f.setSelectionRange(0,f.value.length)}catch(e){try{f.select()}catch(x){}}};
+  document.addEventListener('focusin',e=>{const f=e.target;if(!f||!f.closest||!f.closest(WIN))return;
+    if(!(f.tagName==='TEXTAREA'||(f.tagName==='INPUT'&&/^(text|search|tel|number|url|email|)$/.test(f.type||''))))return;
+    if(!f.value)return;f._sa=Date.now();selAll(f);setTimeout(()=>selAll(f),0);setTimeout(()=>{if(f._sa&&Date.now()-f._sa<400)selAll(f)},90)},true);
+  // касание само ставит курсор после фокуса (mouseup/click) — в первые 400 мс после фокуса возвращаем выделение
+  ['mouseup','click'].forEach(ev=>document.addEventListener(ev,e=>{const f=e.target;if(!f||!f._sa)return;if(Date.now()-f._sa<400){if(ev==='mouseup')e.preventDefault();selAll(f)}else f._sa=0},true));
+  document.addEventListener('input',e=>{if(e.target&&e.target._sa)e.target._sa=0},true);
   let tp=null;
   document.addEventListener('mousedown',e=>{const t=e.target,p=tp;if(p){clearTimeout(p.timer);tp=null}
     if(!typing()||!t.closest||!t.closest(WIN))return;
