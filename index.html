@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v192';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v193';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -1332,7 +1332,7 @@ html:root #ed .tgf .tgw{display:flex;flex-wrap:wrap;align-items:center;gap:4px 1
 html:root #ed .tgf input{flex:1 1 120px;width:auto;min-width:100px;font-size:16px!important;text-align:left!important;padding:2px 0;border:0!important;background:none}
 /* v191: строка тегов — как строка заметки: подпись «Теги» слева, чипы и поле справа */
 html:root #ed .ef.tgf{display:flex!important;align-items:center;justify-content:space-between;gap:12px}
-html:root #ed .ef.tgf>.tgl{position:static;top:auto;left:auto;flex:none;padding:0;background:none;font-size:13px;line-height:inherit;color:var(--m2)}
+html:root #ed .ef.tgf>span.tgl{position:static;top:auto;left:auto;flex:none;padding:0;background:none;font-size:13px;line-height:inherit;color:var(--m2)}
 html:root #ed .tgf .tgw{flex:1;min-width:0;justify-content:flex-end}
 html:root #ed .tgf .tgw input{flex:1 1 80px;min-width:70px;text-align:right!important;text-align-last:right!important}
 input[list]::-webkit-calendar-picker-indicator,input[list]::-webkit-list-button{display:none!important;opacity:0!important;width:0!important}   /* v191: у полей со списком тегов нет системной стрелки — текст и подсказка до самого края */
@@ -1619,6 +1619,23 @@ html:root :is(#sh #rev,#gd #bvl) .rv2 .sg.exp{background:color-mix(in srgb,var(-
 html:root :is(#sh #rev,#gd #bvl) .rv2 .sg.inc{background:color-mix(in srgb,var(--g) 18%,transparent);color:var(--g)}
 html:root :is(#sh #rev,#gd #bvl) .rv2 input[data-f=note]{order:2;flex:1 1 calc(100% - 150px);min-width:0;font-size:16px!important;font-weight:600;padding:4px 0;background:none;border:0;color:var(--t)}
 html:root :is(#sh #rev,#gd #bvl) .rv2 .am{order:3;flex:0 0 96px;width:96px!important;text-align:right;font-size:18px!important;font-weight:650;font-variant-numeric:tabular-nums;padding:4px 0;background:none;border:0}
+/* v193: поля черновика обёрнуты в label (касание неактивного поля идёт через подпись — см. блок v193) — роль в строке переходит к обёртке */
+html:root :is(#sh #rev,#gd #bvl) .rv2>.rvf{display:flex;min-width:0;margin:0}
+html:root :is(#sh #rev,#gd #bvl) .rv2>.rvn{order:2;flex:1 1 calc(100% - 150px)}
+html:root :is(#sh #rev,#gd #bvl) .rv2>.rva{order:3;flex:0 0 96px}
+html:root :is(#sh #rev,#gd #bvl) .rv2>.rvf>input{flex:1 1 auto;min-width:0;width:100%!important}
+html:root #ed>.eaw{order:1;display:block}
+html:root #ed>.eaw>#eam{width:100%}
+html:root #gd>.eaw{display:block}
+html:root #cp .cpe>.cpw{display:block;min-width:0}
+html:root #cp .cpe>.cpw>input{width:100%}
+html:root :is(#sh #rev,#gd #bvl) .rv2>.rvt{order:7;display:none;flex:0 0 120px}
+html:root :is(#sh #rev,#gd #bvl) .rv2.tgo>.rvt{display:flex}
+html:root #sh label.fld,html:root #nc label.ncr{cursor:text}
+/* v193: касание текста неактивного поля в окне iOS обрабатывает как «поставить курсор в точку касания» — и экран скачет; касание подписи
+   той же строки (label) ставит фокус без скачка (проверено на телефоне). Поэтому, пока поле не в фокусе, касание проходит сквозь него на его label;
+   в активном поле курсор ставится пальцем как обычно. У каждого текстового поля в окнах есть label (обёртки .eaw, .rvf, label.fld/.ncr/.tgf) */
+@media (pointer:coarse){html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc) label :is(input:not([type]),input[type=text],input[type=search],input[type=tel],input[type=number],input[type=email],input[type=url],textarea):not(:focus){pointer-events:none}}
 html:root :is(#sh #rev,#gd #bvl) .rv2 .rch{order:5;display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px;border-radius:14px;border:0;font-size:12.5px;line-height:1;white-space:nowrap;
   background:rgba(var(--wr),.07);color:var(--m2);max-width:100%;overflow:hidden;text-overflow:ellipsis;-webkit-tap-highlight-color:transparent;position:relative}
 html:root :is(#sh #rev,#gd #bvl) .rv2 .cpb.rch{order:4;color:var(--cc,var(--t));background:color-mix(in srgb,var(--cc,#888) 15%,transparent);font-weight:600;width:auto;max-width:62%;text-align:left}
@@ -1744,7 +1761,7 @@ html:root #ed #eam,html:root #ed label.ef,html:root #ed .ef.tgf,html:root #ed in
 <div class="fr"><b>Тег</b><select id="fptag" aria-label="Тег"></select></div>
 </div>
 <div id="sh" class="glass" role="dialog" aria-label="Новая операция">
-<div class="fld"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input id="inp" placeholder="Заметки, бюджет, лимиты, цели" autocomplete="off" enterkeyhint="done"><button type="button" class="rcic" id="recic" aria-label="Повторяющиеся операции" aria-haspopup="dialog"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg></button></div>
+<label class="fld" for="inp"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input id="inp" placeholder="Заметки, бюджет, лимиты, цели" autocomplete="off" enterkeyhint="done"><button type="button" class="rcic" id="recic" aria-label="Повторяющиеся операции" aria-haspopup="dialog"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg></button></label>
 <div id="tpls"></div>
 <div id="rev"></div>
 <div class="shf"><button class="sm atg" id="atg" type="button"></button><button class="sm pr" id="go">Добавить</button></div>
@@ -2449,7 +2466,7 @@ function lockBg(on){
 function openSheet(){if(!drafts.length){const el=$('#rev');el.classList.remove('anim','clearing');el.innerHTML=''}syncAuto();cancelGestures();lockBg(true);setOrigin(sh,fab);sh.classList.add('on');ov.className='on';ignore=false;renderTpls()}
 function closeSheet(){cancelAuto();sh.classList.remove('on');unlockIfIdle();cancelGestures()}
 fab.onclick=()=>{if(!isModalOpen())openSheet()};$('#thlp').onclick=()=>{if(isModalOpen())return;if(window.openTips)openTips()};inp.oninput=()=>{cancelAuto();syncBtn()};
-sh.addEventListener('pointerdown',e=>{e.stopPropagation();if(autoT&&e.target.closest('.fld,#rev input,#rev select,#rev .sg,#rev .dp,#rev .cpb,#rev .tgp'))cancelAuto()});
+sh.addEventListener('pointerdown',e=>{e.stopPropagation();if(autoT&&e.target.closest('.fld,#rev input,#rev .rvf,#rev select,#rev .sg,#rev .dp,#rev .cpb,#rev .tgp'))cancelAuto()});
 sh.addEventListener('pointermove',e=>e.stopPropagation());
 {const rv=$('#rev');
  rv.addEventListener('click',e=>{const b=e.target.closest('.tgp');if(!b)return;const dl=b.closest('.r');if(!dl)return;dl.classList.add('tgo');const i=dl.querySelector('.tgi');if(i)i.focus({preventScroll:true})});
@@ -2506,11 +2523,11 @@ function dChip(d){const td=new Date(),y=new Date();y.setDate(y.getDate()-1);if(d
 function row(t,dr,i=0,del){const c=cd(t.category),inc=t.type==='income';
   return `<div class="sw" data-id="${t.id}" style="--i:${i}"><button class="swb" tabindex="-1" aria-label="Удалить">${ITR}</button><div class="r rv2" data-id="${t.id}">
 <button class="sg ${inc?'inc':'exp'}" data-a="sg" aria-label="${inc?'Доход — сделать расходом':'Расход — сделать доходом'}">${inc?'+':'−'}</button>
-<input data-f="note" value="${E(t.note)}" placeholder="Заметка" autocomplete="off">
-<input class="am ${inc?'inc':'exp'}" data-f="amount" inputmode="decimal" value="${t.amount||''}" placeholder="0" autocomplete="off">
+<label class="rvf rvn"><input data-f="note" value="${E(t.note)}" placeholder="Заметка" autocomplete="off"></label>
+<label class="rvf rva"><input class="am ${inc?'inc':'exp'}" data-f="amount" inputmode="decimal" value="${t.amount||''}" placeholder="0" autocomplete="off"></label>
 <button type="button" class="cpb rch" data-f="category" data-cpo="1" style="--cc:${c.c}">${E(c.l)}</button>
 <span class="ac"><label class="dp rch" aria-label="Изменить дату">${ICAL}<span>${dChip(t.date)}</span><input type="date" data-f="date" value="${t.date}"></label></span>
-${tagChips(t)}<button type="button" class="tgp rch">+ тег</button><input class="tgi" data-f="tagadd" list="tgl" placeholder="#друзья" autocomplete="off" autocapitalize="none" enterkeyhint="done">
+${tagChips(t)}<button type="button" class="tgp rch">+ тег</button><label class="rvf rvt"><input class="tgi" data-f="tagadd" list="tgl" placeholder="#друзья" autocomplete="off" autocapitalize="none" enterkeyhint="done"></label>
 ${t.oc?`<span class="rch rcur">${fmt(t.oa)} ${E(t.oc)}</span>`:''}${dr&&t.oc&&!(parseFloat(cfg.rates[t.oc])>0)?`<label class="rch rtl">1 ${E(t.oc)} = <input class="rtin" data-f="rate" data-c="${E(t.oc)}" inputmode="decimal" placeholder="?" autocomplete="off"> ${E(cfg.cur)}</label>`:''}${del?`<button type="button" class="rch rdel" data-a="x" aria-label="Удалить">${ITR}</button>`:''}</div></div>`+
   `<div class="dl" data-id="${t.id}" style="--i:${i}"></div>`}
 let autoT=null,autoN=0,autoEnd=0;
@@ -2774,7 +2791,7 @@ function openDebt(d,src){if(isModalOpen())return;cancelGestures();lockBg(true);g
   if(!d)autoF('#dwh',60)}
 function openDpay(d,src){if(isModalOpen())return;cancelGestures();lockBg(true);gT={mode:'dpay',id:d.id};
   gd.innerHTML=`<div class="eh"><b>${d.dir==='in'?'Получено':'Возвращено'}</b><button class="x" id="gcl" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div>
-<input id="gam" class="${d.dir==='in'?'inc':'exp'}" inputmode="decimal" placeholder="0" aria-label="Сумма">
+<label class="eaw"><input id="gam" class="${d.dir==='in'?'inc':'exp'}" inputmode="decimal" placeholder="0" aria-label="Сумма"></label>
 <div class="eo">${E(d.who)} · осталось ${fmt(Math.round(dRem(d)))} из ${fmt(d.amount)} ${cfg.cur}</div>
 <div class="shf"><button class="sm" id="dfull">Всё</button><button class="sm pr" id="gsvb">Записать</button></div>`;showGd(src);autoF('#gam',60)}
 function saveDebt(){if(!gT||gT.mode!=='debt')return;const who=($('#dwh').value||'').trim().slice(0,40)||'Без имени',am=pn($('#dam').value),paid=Math.max(0,Math.min(am,pn($('#dpd').value))),due=$('#ddu').value||'';
@@ -2873,7 +2890,7 @@ function openGoal(g,src){if(isModalOpen())return;cancelGestures();lockBg(true);g
 <div class="shf">${g?'<button class="sm del" id="gdel">Удалить</button>':'<span></span>'}<button class="sm pr${g?' auto':''}" id="gsvb">Сохранить</button></div>`;showGd(src)}
 function openDep(g,src){if(isModalOpen())return;cancelGestures();lockBg(true);gT={mode:'dep',id:g.id,sign:1};
   gd.innerHTML=`<div class="eh"><span class="sgm"><button data-gm="in" class="on">Взнос</button><button data-gm="out">Снять</button></span><button class="x" id="gcl" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div>
-<input id="gam" class="inc" inputmode="decimal" placeholder="0" aria-label="Сумма">
+<label class="eaw"><input id="gam" class="inc" inputmode="decimal" placeholder="0" aria-label="Сумма"></label>
 <div class="eo">${E(g.name)} · ${fmt(g.saved)} из ${fmt(g.target)} ${cfg.cur}</div>
 <div class="shf"><span></span><button class="sm pr" id="gdep">Внести</button></div>`;showGd(src);autoF('#gam',60)}
 function closeGoal(){gd.classList.remove('on');gT=null;unlockIfIdle();cancelGestures()}
@@ -3508,13 +3525,13 @@ function readEd(){if(!eT)return;const g=k=>{const el=$(k);return el?el.value:''}
   const en=$('#etn');if(en&&en.value.trim()){addTags(eT,en.value);en.value=''}}
 function renderEd(){const t=eT,inc=t.type==='income';
   ed.innerHTML=`<div class="eh"><span class="sgm"><button data-et="expense" class="${inc?'':'on'}">Расх.</button><button data-et="income" class="${inc?'on':''}">Дох.</button></span><button class="x" id="ecl" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div>
-<input id="eam" class="${inc?'inc':'exp'}" inputmode="decimal" enterkeyhint="done" value="${t.amount||''}" placeholder="Сумма" aria-label="Сумма">
+<label class="eaw"><input id="eam" class="${inc?'inc':'exp'}" inputmode="decimal" enterkeyhint="done" value="${t.amount||''}" placeholder="Сумма" aria-label="Сумма"></label>
 ${t.oc?`<div class="eo">${fmt(t.oa)} ${E(t.oc)}</div>`:''}
 <label class="ef">Заметка<input id="eno" type="text" value="${E(t.note)}" placeholder="Заметка" enterkeyhint="done" autocomplete="off" autocorrect="off" spellcheck="false"></label>
 <label class="ef">Категория<button type="button" class="cpb" id="eca">${E(cd(t.category).l)}</button></label>
 
 <label class="ef">Дата<input id="eda" type="date" value="${t.date}"></label>
-<div class="ef tgf"><label class="fl tgl" for="etn">Теги</label><div class="tgw">${(t.tags||[]).map(g=>`<button class="tgc" data-er="${E(g)}">#${E(g)} ×</button>`).join('')}<input id="etn" type="text" list="tgl" placeholder="#друзья" aria-label="Теги" autocomplete="off" autocorrect="off" spellcheck="false" autocapitalize="none" enterkeyhint="done"></div></div>
+<label class="ef tgf" for="etn"><span class="fl tgl">Теги</span><div class="tgw">${(t.tags||[]).map(g=>`<button class="tgc" data-er="${E(g)}">#${E(g)} ×</button>`).join('')}<input id="etn" type="text" list="tgl" placeholder="#друзья" aria-label="Теги" autocomplete="off" autocorrect="off" spellcheck="false" autocapitalize="none" enterkeyhint="done"></div></label>
 <div class="eac"><button type="button" class="eab" id="etp"></button><button type="button" class="eab" id="erp"></button></div>
 <div class="shf"><button type="button" class="sm del" id="edel">Удалить</button><button type="button" class="sm pr" id="esv">Сохранить</button></div>`}
 /* v132: окно операции монтируется один раз (renderEd в openEdit); дальше обновляются только изменившиеся узлы.
@@ -4937,7 +4954,7 @@ const CPROT=['other','in_other','debt','debtin','save'];   // v168: служеб
 function cpHtml(){const s=cpS,inc=s.type==='income';
   if(s.view==='edit'){const c=cd(s.id),x=c.custom?cfg.custom.find(z=>z.id===c.id):null,col=/^#[0-9a-f]{6}$/i.test(c.c)?c.c:'#888888';
     return `<div class="cpt0"><span>Редактировать категорию</span></div>
-<div class="cpe"><input id="cpem" value="${E(c.e)}" maxlength="8" autocomplete="off" aria-label="Эмодзи"><input id="cpn" value="${E(c.n)}" maxlength="40" autocomplete="off" aria-label="Название"><input type="color" id="cpc" value="${col}" aria-label="Цвет"></div>
+<div class="cpe"><label class="cpw"><input id="cpem" value="${E(c.e)}" maxlength="8" autocomplete="off" aria-label="Эмодзи"></label><label class="cpw"><input id="cpn" value="${E(c.n)}" maxlength="40" autocomplete="off" aria-label="Название"></label><input type="color" id="cpc" value="${col}" aria-label="Цвет"></div>
 <div class="cpg0">Чтобы записать в эту категорию голосом или текстом, скажите: «… категория ${E(c.n).toLowerCase().slice(0,24)}».</div>
 <div class="cpf"><button class="sm" data-cp="back">Назад</button>${CPROT.includes(c.id)?'':'<button class="sm del" data-cp="del">Удалить</button>'}<button class="sm pr" data-cp="save">Сохранить</button></div>`}
   const list=ALL.filter(c=>c.inc===inc);
@@ -4998,7 +5015,7 @@ cpEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPU
 let ncCb=null,ncCancel=null,ncType='expense';
 const NC_EMO=['🛒','🍽️','☕','🍰','🍺','🚕','🚌','⛽','🏠','💡','📱','💊','🧘','👕','💄','🎉','🎬','🎮','📚','🎁','🧸','🐾','✈️','💪','🛠️','🪑','💳','🏦','💰','💻','🎨','⭐'];let ncEmo='';
 function openNc(type,done,cancel){ncEmo='';const el=$('#nc');ncType=type==='income'?'income':'expense';ncCb=done;ncCancel=cancel||null;
-  el.innerHTML=`<div class="nct">Новая категория · ${ncType==='income'?'доход':'расход'}</div><div class="ncr"><button type="button" class="nce" id="nce" aria-label="Стикер категории" aria-expanded="false">${ncType==='income'?'💸':'🏷️'}</button><input id="ncn" placeholder="Название" maxlength="40" autocomplete="off" aria-label="Название новой категории" enterkeyhint="next"></div><div class="ncep" id="ncep" hidden>${NC_EMO.map(e=>`<button type="button" data-e="${e}">${e}</button>`).join('')}<input id="nceo" maxlength="8" placeholder="свой" autocomplete="off" aria-label="Свой стикер"></div><div class="ncs">Записать в неё: «… категория <span id="ncsn">название</span>»</div><div class="ncb"><button class="sm" id="ncx">Отмена</button><button class="sm pr" id="nca">Добавить</button></div>`;
+  el.innerHTML=`<div class="nct">Новая категория · ${ncType==='income'?'доход':'расход'}</div><label class="ncr" for="ncn"><button type="button" class="nce" id="nce" aria-label="Стикер категории" aria-expanded="false">${ncType==='income'?'💸':'🏷️'}</button><input id="ncn" placeholder="Название" maxlength="40" autocomplete="off" aria-label="Название новой категории" enterkeyhint="next"></label><div class="ncep" id="ncep" hidden>${NC_EMO.map(e=>`<button type="button" data-e="${e}">${e}</button>`).join('')}<input id="nceo" maxlength="8" placeholder="свой" autocomplete="off" aria-label="Свой стикер"></div><div class="ncs">Записать в неё: «… категория <span id="ncsn">название</span>»</div><div class="ncb"><button class="sm" id="ncx">Отмена</button><button class="sm pr" id="nca">Добавить</button></div>`;
   ['sh','ed','gd','cf'].forEach(id=>{const e=$('#'+id);if(e&&e.classList.contains('on'))e.classList.add('sub')});
   try{setOrigin(el)}catch(e){}el.classList.add('on');ov.className='on';
   autoF('#ncn',140)}
@@ -5981,7 +5998,7 @@ async function ibLoop(){
   let tp=null;
   document.addEventListener('mousedown',e=>{const t=e.target,p=tp;if(p){clearTimeout(p.timer);tp=null}
     if(!typing()||!t.closest||!t.closest(WIN))return;
-    if(fieldIn(t))return;
+    if(fieldIn(t))return;   // v193: касание подписи поля (label) — фокус не снимаем до click: его переведёт сам label (как на iPhone); иначе поле теряло фокус, строки перерисовывались и click приходил в удалённый элемент
     if(!active(t)){if(p&&document.activeElement===p.a)p.a.blur();return}   // неактивное место: клавиатуру прячем (на компьютере фокус уходит и так)
     e.preventDefault()},true);
   document.addEventListener('touchstart',e=>{const t=e.target;tp=e.touches.length===1&&typing()&&t.closest&&t.closest(WIN)?{x:e.touches[0].clientX,y:e.touches[0].clientY,t:Date.now(),a:document.activeElement,tg:t}:null},{capture:true,passive:true});
