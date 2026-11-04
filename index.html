@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v191';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v193';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -80,6 +80,11 @@ html.ns,html.ns body{overflow:hidden;height:100%}
    который сам стоит ниже на padding-top у html (= --sat): в полноэкранном Telegram отступ считался дважды и блок закрывал первую строку.
    clip обрезает так же, но области прокрутки не создаёт (как в v131 для окон); в старых браузерах без clip остаётся hidden */
 html.ns body{overflow:clip}
+/* v192: открыто окно — прокрутку страницы держит body, у корня её нет (wlk() в lockBg). Отступ сверху (--sat) переносится с html
+   в распорку body::before: отступ (padding) у body сдвинул бы липкие блоки — они отсчитывают top от внутреннего края области прокрутки (см. v135) */
+html.wlk{overflow:hidden!important;height:100%;padding-top:0!important}
+html.wlk body{height:100%;overflow:hidden!important;position:relative}
+html.wlk body::before{content:"";display:block;height:var(--sat)}
 #vb{position:fixed;right:8px;bottom:calc(2px + var(--sab,0px));z-index:5;font-size:10px;line-height:12px;letter-spacing:.2px;color:var(--m);opacity:.45;pointer-events:none;user-select:none;-webkit-user-select:none;font-variant-numeric:tabular-nums}
 #body .dg{will-change:auto}
 #body{position:relative;display:flow-root;min-height:55vh;touch-action:pan-y pinch-zoom;will-change:transform}
@@ -1614,6 +1619,23 @@ html:root :is(#sh #rev,#gd #bvl) .rv2 .sg.exp{background:color-mix(in srgb,var(-
 html:root :is(#sh #rev,#gd #bvl) .rv2 .sg.inc{background:color-mix(in srgb,var(--g) 18%,transparent);color:var(--g)}
 html:root :is(#sh #rev,#gd #bvl) .rv2 input[data-f=note]{order:2;flex:1 1 calc(100% - 150px);min-width:0;font-size:16px!important;font-weight:600;padding:4px 0;background:none;border:0;color:var(--t)}
 html:root :is(#sh #rev,#gd #bvl) .rv2 .am{order:3;flex:0 0 96px;width:96px!important;text-align:right;font-size:18px!important;font-weight:650;font-variant-numeric:tabular-nums;padding:4px 0;background:none;border:0}
+/* v193: поля черновика обёрнуты в label (касание неактивного поля идёт через подпись — см. блок v193) — роль в строке переходит к обёртке */
+html:root :is(#sh #rev,#gd #bvl) .rv2>.rvf{display:flex;min-width:0;margin:0}
+html:root :is(#sh #rev,#gd #bvl) .rv2>.rvn{order:2;flex:1 1 calc(100% - 150px)}
+html:root :is(#sh #rev,#gd #bvl) .rv2>.rva{order:3;flex:0 0 96px}
+html:root :is(#sh #rev,#gd #bvl) .rv2>.rvf>input{flex:1 1 auto;min-width:0;width:100%!important}
+html:root #ed>.eaw{order:1;display:block}
+html:root #ed>.eaw>#eam{width:100%}
+html:root #gd>.eaw{display:block}
+html:root #cp .cpe>.cpw{display:block;min-width:0}
+html:root #cp .cpe>.cpw>input{width:100%}
+html:root :is(#sh #rev,#gd #bvl) .rv2>.rvt{order:7;display:none;flex:0 0 120px}
+html:root :is(#sh #rev,#gd #bvl) .rv2.tgo>.rvt{display:flex}
+html:root #sh label.fld,html:root #nc label.ncr{cursor:text}
+/* v193: касание текста неактивного поля в окне iOS обрабатывает как «поставить курсор в точку касания» — и экран скачет; касание подписи
+   той же строки (label) ставит фокус без скачка (проверено на телефоне). Поэтому, пока поле не в фокусе, касание проходит сквозь него на его label;
+   в активном поле курсор ставится пальцем как обычно. У каждого текстового поля в окнах есть label (обёртки .eaw, .rvf, label.fld/.ncr/.tgf) */
+@media (pointer:coarse){html:root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc) label :is(input:not([type]),input[type=text],input[type=search],input[type=tel],input[type=number],input[type=email],input[type=url],textarea):not(:focus){pointer-events:none}}
 html:root :is(#sh #rev,#gd #bvl) .rv2 .rch{order:5;display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px;border-radius:14px;border:0;font-size:12.5px;line-height:1;white-space:nowrap;
   background:rgba(var(--wr),.07);color:var(--m2);max-width:100%;overflow:hidden;text-overflow:ellipsis;-webkit-tap-highlight-color:transparent;position:relative}
 html:root :is(#sh #rev,#gd #bvl) .rv2 .cpb.rch{order:4;color:var(--cc,var(--t));background:color-mix(in srgb,var(--cc,#888) 15%,transparent);font-weight:600;width:auto;max-width:62%;text-align:left}
@@ -1739,7 +1761,7 @@ html:root #ed #eam,html:root #ed label.ef,html:root #ed .ef.tgf,html:root #ed in
 <div class="fr"><b>Тег</b><select id="fptag" aria-label="Тег"></select></div>
 </div>
 <div id="sh" class="glass" role="dialog" aria-label="Новая операция">
-<div class="fld"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input id="inp" placeholder="Заметки, бюджет, лимиты, цели" autocomplete="off" enterkeyhint="done"><button type="button" class="rcic" id="recic" aria-label="Повторяющиеся операции" aria-haspopup="dialog"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg></button></div>
+<label class="fld" for="inp"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input id="inp" placeholder="Заметки, бюджет, лимиты, цели" autocomplete="off" enterkeyhint="done"><button type="button" class="rcic" id="recic" aria-label="Повторяющиеся операции" aria-haspopup="dialog"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg></button></label>
 <div id="tpls"></div>
 <div id="rev"></div>
 <div class="shf"><button class="sm atg" id="atg" type="button"></button><button class="sm pr" id="go">Добавить</button></div>
@@ -1755,6 +1777,9 @@ html:root #ed #eam,html:root #ed label.ef,html:root #ed .ef.tgf,html:root #ed in
 <datalist id="tgl"></datalist>
 <div id="toast" role="status" aria-live="polite"></div>
 <script>
+// v192: прокрутка страницы. Пока открыто окно, страницу прокручивает body, а не корень документа (wlk() в lockBg) — читать и задавать её через pgY()/pgTo()
+function pgY(){const b=document.body;return b&&document.documentElement.classList.contains('wlk')?b.scrollTop:(window.scrollY||0)}
+function pgTo(y){const b=document.body;if(b&&document.documentElement.classList.contains('wlk'))b.scrollTop=y;else window.scrollTo(0,y)}
 const $=s=>document.querySelector(s),E=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 let _sfT=0;
 const S={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch{const n=Date.now();if(n-_sfT>8000){_sfT=n;try{toast('⚠ Не удалось сохранить данные. Сделайте копию: Экспорт JSON')}catch{}}return false}}};
@@ -2415,13 +2440,20 @@ function cancelGestures(){
 // v69: единая точка снятия блокировки — оверлей и фон освобождаются только когда не осталось ни одного открытого окна
 function unlockIfIdle(){if(isModalOpen())return false;ov.className='';lockBg(false);return true}
 let lockRaf=0;
+// v192: на время окна у документа нет прокрутки вовсе — прокручивается body (на ту же величину, поэтому страница не сдвигается).
+// Раскадровка записей (60 к/с) и исходники WebKit/Telegram: при каждом фокусе поля на iPhone WebKit «центрирует» поле, прокручивая документ
+// анимацией 0,25 с (закреплённое окно переставляется сразу, страница — плавно), а наш возврат прокрутки тут же отменял это —
+// всё окно и страница рывком уходили вниз и пружиной возвращались. Без прокрутки у корня WebKit сдвигать нечего (его прокрутка ограничена размером документа).
+function wlk(on){const de=document.documentElement,b=document.body;if(!b||on===de.classList.contains('wlk'))return;
+  if(on){const y=window.scrollY||0;de.classList.add('wlk');b.scrollTop=y}
+  else{const y=b.scrollTop||0;b.scrollTop=0;de.classList.remove('wlk');if(y||window.scrollY)window.scrollTo(0,y)}}   // браузер помнит прокрутку body — обнуляем, иначе следующее окно её «вспомнит»
 function lockBg(on){
   // блокировка фона — тяжёлая (пересчёт всей страницы), поэтому при открытии окна она идёт уже ПОСЛЕ старта анимации, а не перед ней;
   // экран всё это время перекрыт оверлеем, так что касания до страницы не доходят
   const w=$('#w'),tb=$('#tabs'),fb=$('#topact');
   cancelAnimationFrame(lockRaf);
   const apply=()=>{lockRaf=0;
-    document.documentElement.style.overflow=on?'hidden':'';
+    document.documentElement.style.overflow=on?'hidden':'';wlk(on);
     /* v131: overflow:hidden на body ломал position:sticky у главного блока -- при открытии окна он прыгал на место в списке; фон держат html-overflow, блокировка touchmove и возврат scrollY */
     document.body.style.overflow='';
     document.body.style.touchAction='';   // жесты под окном гасит сам оверлей (touch-action:none), а не весь body — смена touch-action у body пересчитывала всю страницу
@@ -2434,7 +2466,7 @@ function lockBg(on){
 function openSheet(){if(!drafts.length){const el=$('#rev');el.classList.remove('anim','clearing');el.innerHTML=''}syncAuto();cancelGestures();lockBg(true);setOrigin(sh,fab);sh.classList.add('on');ov.className='on';ignore=false;renderTpls()}
 function closeSheet(){cancelAuto();sh.classList.remove('on');unlockIfIdle();cancelGestures()}
 fab.onclick=()=>{if(!isModalOpen())openSheet()};$('#thlp').onclick=()=>{if(isModalOpen())return;if(window.openTips)openTips()};inp.oninput=()=>{cancelAuto();syncBtn()};
-sh.addEventListener('pointerdown',e=>{e.stopPropagation();if(autoT&&e.target.closest('.fld,#rev input,#rev select,#rev .sg,#rev .dp,#rev .cpb,#rev .tgp'))cancelAuto()});
+sh.addEventListener('pointerdown',e=>{e.stopPropagation();if(autoT&&e.target.closest('.fld,#rev input,#rev .rvf,#rev select,#rev .sg,#rev .dp,#rev .cpb,#rev .tgp'))cancelAuto()});
 sh.addEventListener('pointermove',e=>e.stopPropagation());
 {const rv=$('#rev');
  rv.addEventListener('click',e=>{const b=e.target.closest('.tgp');if(!b)return;const dl=b.closest('.r');if(!dl)return;dl.classList.add('tgo');const i=dl.querySelector('.tgi');if(i)i.focus({preventScroll:true})});
@@ -2491,11 +2523,11 @@ function dChip(d){const td=new Date(),y=new Date();y.setDate(y.getDate()-1);if(d
 function row(t,dr,i=0,del){const c=cd(t.category),inc=t.type==='income';
   return `<div class="sw" data-id="${t.id}" style="--i:${i}"><button class="swb" tabindex="-1" aria-label="Удалить">${ITR}</button><div class="r rv2" data-id="${t.id}">
 <button class="sg ${inc?'inc':'exp'}" data-a="sg" aria-label="${inc?'Доход — сделать расходом':'Расход — сделать доходом'}">${inc?'+':'−'}</button>
-<input data-f="note" value="${E(t.note)}" placeholder="Заметка" autocomplete="off">
-<input class="am ${inc?'inc':'exp'}" data-f="amount" inputmode="decimal" value="${t.amount||''}" placeholder="0" autocomplete="off">
+<label class="rvf rvn"><input data-f="note" value="${E(t.note)}" placeholder="Заметка" autocomplete="off"></label>
+<label class="rvf rva"><input class="am ${inc?'inc':'exp'}" data-f="amount" inputmode="decimal" value="${t.amount||''}" placeholder="0" autocomplete="off"></label>
 <button type="button" class="cpb rch" data-f="category" data-cpo="1" style="--cc:${c.c}">${E(c.l)}</button>
 <span class="ac"><label class="dp rch" aria-label="Изменить дату">${ICAL}<span>${dChip(t.date)}</span><input type="date" data-f="date" value="${t.date}"></label></span>
-${tagChips(t)}<button type="button" class="tgp rch">+ тег</button><input class="tgi" data-f="tagadd" list="tgl" placeholder="#друзья" autocomplete="off" autocapitalize="none" enterkeyhint="done">
+${tagChips(t)}<button type="button" class="tgp rch">+ тег</button><label class="rvf rvt"><input class="tgi" data-f="tagadd" list="tgl" placeholder="#друзья" autocomplete="off" autocapitalize="none" enterkeyhint="done"></label>
 ${t.oc?`<span class="rch rcur">${fmt(t.oa)} ${E(t.oc)}</span>`:''}${dr&&t.oc&&!(parseFloat(cfg.rates[t.oc])>0)?`<label class="rch rtl">1 ${E(t.oc)} = <input class="rtin" data-f="rate" data-c="${E(t.oc)}" inputmode="decimal" placeholder="?" autocomplete="off"> ${E(cfg.cur)}</label>`:''}${del?`<button type="button" class="rch rdel" data-a="x" aria-label="Удалить">${ITR}</button>`:''}</div></div>`+
   `<div class="dl" data-id="${t.id}" style="--i:${i}"></div>`}
 let autoT=null,autoN=0,autoEnd=0;
@@ -2712,7 +2744,7 @@ function calHtml(an){const [ccl,cst]=calAn(an,month);const [y,mo]=month.split('-
   const dl=(cfg.debts||[]).filter(d=>d.due&&mOf(d.due)===month&&dRem(d)>0).sort((a,c)=>a.due.localeCompare(c.due));
   if(dl.length)h+=`<div class="cd" style="padding:2px 14px"><h4 style="margin-top:10px">Сроки по долгам</h4>`+dl.map(d=>`<div class="pl" data-go="debts" role="button" tabindex="0"><span class="pc" style="background:#f2c14e;color:#111">${+d.due.slice(8,10)}</span><span>${E(d.who)} · ${d.dir==='in'?'вернут':'вернуть'}</span><span>${fmt(Math.round(dRem(d)))}</span></div>`).join('')+`</div>`;
   return h+`<div class="hint">Нажмите на день — откроются его операции.${Object.keys(due).length?' Жёлтая точка — срок по долгу.':''}</div>`}
-const openDay=d=>{if(isModalOpen())return;fday=d;fcat=null;ftag=null;tab='list';render();window.scrollTo(0,0)};
+const openDay=d=>{if(isModalOpen())return;fday=d;fcat=null;ftag=null;tab='list';render();pgTo(0)};
 
 // ---- долги ----
 const dRem=d=>Math.max(0,d.amount-d.paid);
@@ -2759,7 +2791,7 @@ function openDebt(d,src){if(isModalOpen())return;cancelGestures();lockBg(true);g
   if(!d)autoF('#dwh',60)}
 function openDpay(d,src){if(isModalOpen())return;cancelGestures();lockBg(true);gT={mode:'dpay',id:d.id};
   gd.innerHTML=`<div class="eh"><b>${d.dir==='in'?'Получено':'Возвращено'}</b><button class="x" id="gcl" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div>
-<input id="gam" class="${d.dir==='in'?'inc':'exp'}" inputmode="decimal" placeholder="0" aria-label="Сумма">
+<label class="eaw"><input id="gam" class="${d.dir==='in'?'inc':'exp'}" inputmode="decimal" placeholder="0" aria-label="Сумма"></label>
 <div class="eo">${E(d.who)} · осталось ${fmt(Math.round(dRem(d)))} из ${fmt(d.amount)} ${cfg.cur}</div>
 <div class="shf"><button class="sm" id="dfull">Всё</button><button class="sm pr" id="gsvb">Записать</button></div>`;showGd(src);autoF('#gam',60)}
 function saveDebt(){if(!gT||gT.mode!=='debt')return;const who=($('#dwh').value||'').trim().slice(0,40)||'Без имени',am=pn($('#dam').value),paid=Math.max(0,Math.min(am,pn($('#dpd').value))),due=$('#ddu').value||'';
@@ -2858,7 +2890,7 @@ function openGoal(g,src){if(isModalOpen())return;cancelGestures();lockBg(true);g
 <div class="shf">${g?'<button class="sm del" id="gdel">Удалить</button>':'<span></span>'}<button class="sm pr${g?' auto':''}" id="gsvb">Сохранить</button></div>`;showGd(src)}
 function openDep(g,src){if(isModalOpen())return;cancelGestures();lockBg(true);gT={mode:'dep',id:g.id,sign:1};
   gd.innerHTML=`<div class="eh"><span class="sgm"><button data-gm="in" class="on">Взнос</button><button data-gm="out">Снять</button></span><button class="x" id="gcl" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div>
-<input id="gam" class="inc" inputmode="decimal" placeholder="0" aria-label="Сумма">
+<label class="eaw"><input id="gam" class="inc" inputmode="decimal" placeholder="0" aria-label="Сумма"></label>
 <div class="eo">${E(g.name)} · ${fmt(g.saved)} из ${fmt(g.target)} ${cfg.cur}</div>
 <div class="shf"><span></span><button class="sm pr" id="gdep">Внести</button></div>`;showGd(src);autoF('#gam',60)}
 function closeGoal(){gd.classList.remove('on');gT=null;unlockIfIdle();cancelGestures()}
@@ -3199,7 +3231,7 @@ function flipRun(m){
 window.__introIdx=()=>{document.querySelectorAll('#body .dg').forEach((d,i)=>d.style.setProperty('--gi',Math.min(i,5)));document.querySelectorAll('#body .dg .sw:not(.sd)').forEach((r,i)=>r.style.setProperty('--ri',Math.min(i,9)))};
 function render(){
   pgSettle();openSw=null;sd=null;
-  {const k=pgKey();if(pgCur==null)pgCur=k;else if(k!==pgCur){if(!pgFresh)PGY[pgCur]=Math.max(0,window.scrollY||0);pgFresh=false;pgCur=k}}   // v55
+  {const k=pgKey();if(pgCur==null)pgCur=k;else if(k!==pgCur){if(!pgFresh)PGY[pgCur]=Math.max(0,pgY());pgFresh=false;pgCur=k}}   // v55
   if(month!==_wm){WO=woFor(month);_wm=month}
   const [y,mo]=month.split('-').map(Number);$('#mn').textContent=MN[mo-1]+' '+y;$('#mn').title=mStart()>1?dLbl(pFrom(month))+' – '+dLbl(pTo(month)):'';
   const mt=tx.filter(t=>mOf(t.date)===month).sort((a,b)=>b.date.localeCompare(a.date));
@@ -3211,13 +3243,13 @@ function render(){
   $('#ttl').textContent=ttlOf(tab);setLt0(tab);
   const dlst=$('#tgl');if(dlst)dlst.innerHTML=allTags().map(g=>`<option value="${E(g)}">`).join('');
   $('#top').style.display=tab==='settings'||(tab==='list'&&searchOn())?'none':'';$('#sp').style.display=tab==='list'?'':'none';if(tab!=='list')$('#chip').innerHTML='';
-  const y0=window.scrollY||0;
+  const y0=pgY();
   const fs=flipSnap();
   {const R_=document.documentElement,inI=R_.classList.contains('intro')&&window.__introT;
     if(inI){R_.style.setProperty('--ie',((performance.now()-window.__introT)/1000).toFixed(3)+'s');R_.classList.add('rr')}
     buildPage(tab,$('#body'),false);if(inI)window.__introIdx()}
   hoistBar();
-  if(y0>0&&Math.abs((window.scrollY||0)-y0)>2&&document.documentElement.scrollHeight>=y0+innerHeight)window.scrollTo(0,y0);   // перерисовка (бот, облако) не сбрасывает прокрутку
+  if(y0>0&&Math.abs(pgY()-y0)>2&&(document.documentElement.classList.contains('wlk')?document.body:document.documentElement).scrollHeight>=y0+innerHeight)pgTo(y0);   // перерисовка (бот, облако) не сбрасывает прокрутку
   flipRun(fs);fitSoon()}
 function buildPage(pg,B,peek){if(!TXMd++)TXM=new Map();try{return buildPage0(pg,B,peek)}finally{if(!--TXMd)TXM=null}}
 function buildPage0(pg,B,peek){
@@ -3342,7 +3374,7 @@ function navStats(d){const now=new Date();
   if(RG==='week'){WO=Math.max(0,Math.min(weeksOf(month).length-1,WO+d));_wm=month}
   else if(RG==='year'){const[yy,mm]=month.split('-').map(Number),ny=Math.min(now.getFullYear(),yy+d),nmo=ny===now.getFullYear()?Math.min(mm,now.getMonth()+1):mm;month=mk(new Date(ny,nmo-1,1))}
   render();softIn(false)}
-function openTag(g,r,bk){ftag=g;ftagR=r||null;ftagBk=bk||'goals';fcat=null;tab='list';render();window.scrollTo(0,0)}
+function openTag(g,r,bk){ftag=g;ftagR=r||null;ftagBk=bk||'goals';fcat=null;tab='list';render();pgTo(0)}
 // ---------- свайп справа налево: удалить строку или целый день ----------
 const SWO=84;let sd=null,openSw=null,swBlock=false;
 function setRv(w,rv,anim){const c=w.lastElementChild,b=w.firstElementChild;w.classList.toggle('anim',!!anim);w.classList.add('swg');clearTimeout(w._sg);if(!(rv>0))w._sg=setTimeout(()=>{if(!(+w.dataset.rv>0))w.classList.remove('swg')},700);
@@ -3493,13 +3525,13 @@ function readEd(){if(!eT)return;const g=k=>{const el=$(k);return el?el.value:''}
   const en=$('#etn');if(en&&en.value.trim()){addTags(eT,en.value);en.value=''}}
 function renderEd(){const t=eT,inc=t.type==='income';
   ed.innerHTML=`<div class="eh"><span class="sgm"><button data-et="expense" class="${inc?'':'on'}">Расх.</button><button data-et="income" class="${inc?'on':''}">Дох.</button></span><button class="x" id="ecl" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div>
-<input id="eam" class="${inc?'inc':'exp'}" inputmode="decimal" enterkeyhint="done" value="${t.amount||''}" placeholder="Сумма" aria-label="Сумма">
+<label class="eaw"><input id="eam" class="${inc?'inc':'exp'}" inputmode="decimal" enterkeyhint="done" value="${t.amount||''}" placeholder="Сумма" aria-label="Сумма"></label>
 ${t.oc?`<div class="eo">${fmt(t.oa)} ${E(t.oc)}</div>`:''}
 <label class="ef">Заметка<input id="eno" type="text" value="${E(t.note)}" placeholder="Заметка" enterkeyhint="done" autocomplete="off" autocorrect="off" spellcheck="false"></label>
 <label class="ef">Категория<button type="button" class="cpb" id="eca">${E(cd(t.category).l)}</button></label>
 
 <label class="ef">Дата<input id="eda" type="date" value="${t.date}"></label>
-<div class="ef tgf"><span class="fl tgl">Теги</span><div class="tgw">${(t.tags||[]).map(g=>`<button class="tgc" data-er="${E(g)}">#${E(g)} ×</button>`).join('')}<input id="etn" type="text" list="tgl" placeholder="#друзья" aria-label="Теги" autocomplete="off" autocorrect="off" spellcheck="false" autocapitalize="none" enterkeyhint="done"></div></div>
+<label class="ef tgf" for="etn"><span class="fl tgl">Теги</span><div class="tgw">${(t.tags||[]).map(g=>`<button class="tgc" data-er="${E(g)}">#${E(g)} ×</button>`).join('')}<input id="etn" type="text" list="tgl" placeholder="#друзья" aria-label="Теги" autocomplete="off" autocorrect="off" spellcheck="false" autocapitalize="none" enterkeyhint="done"></div></label>
 <div class="eac"><button type="button" class="eab" id="etp"></button><button type="button" class="eab" id="erp"></button></div>
 <div class="shf"><button type="button" class="sm del" id="edel">Удалить</button><button type="button" class="sm pr" id="esv">Сохранить</button></div>`}
 /* v132: окно операции монтируется один раз (renderEd в openEdit); дальше обновляются только изменившиеся узлы.
@@ -3564,12 +3596,12 @@ function pgKey(t,sub){t=t||tab;
   if(t==='tags')return 'tags:'+(sub||ps);
   if(t==='list')return 'list'+(ftag?'#'+ftag:'')+(fcat?'|'+fcat.id:'')+(fday?'@'+fday:'');
   return t}
-function pgSave(){if(pgCur==null)pgCur=pgKey();PGY[pgCur]=Math.max(0,window.scrollY||0);pgFresh=true}
+function pgSave(){if(pgCur==null)pgCur=pgKey();PGY[pgCur]=Math.max(0,pgY());pgFresh=true}
 // v191: прокрутка каждой страницы своя. После смены страницы её позиция удерживается ~0,45 с, пока нет касания:
 // инерция прокрутки прошлой страницы (или колесо мыши) не утащит новую
 let pgG=null;
-function pgApply(){window.scrollTo(0,PGY[pgKey()]||0);pgG={y:window.scrollY||0,until:Date.now()+450}}
-addEventListener('scroll',()=>{const g=pgG;if(!g)return;if(Date.now()>g.until){pgG=null;return}if(Math.abs((window.scrollY||0)-g.y)>1)window.scrollTo(0,g.y)},{passive:true});
+function pgApply(){window.scrollTo(0,PGY[pgKey()]||0);pgG={y:pgY(),until:Date.now()+450}}
+addEventListener('scroll',()=>{const g=pgG;if(!g)return;if(Date.now()>g.until){pgG=null;return}if(Math.abs(pgY()-g.y)>1)window.scrollTo(0,g.y)},{passive:true});
 ['touchstart','wheel','keydown'].forEach(ev=>addEventListener(ev,()=>{pgG=null},{passive:true,capture:true}));
 let softA=null;
 function softIn(strong){if(RM||!bodyEl.animate)return;try{if(softA)softA.cancel()}catch{}
@@ -3769,7 +3801,7 @@ document.addEventListener('click',e=>{if(!$('#sp').classList.contains('open'))re
 // обычная прокрутка вниз прячет пустую панель (когда она уже ушла за верх экрана); с запросом или фильтром — не трогаем
 addEventListener('scroll',()=>{const sp=$('#sp');if(!sp.classList.contains('open'))return;
   if(q||fOn()||fpEl.classList.contains('open')||sp.contains(document.activeElement))return;
-  const h=sp.offsetHeight,y=window.scrollY||0,top=sp.getBoundingClientRect().top+y;
+  const h=sp.offsetHeight,y=pgY(),top=sp.getBoundingClientRect().top+y;
   if(h>0&&y>top+h+40){setSearch(false,true);window.scrollTo(0,Math.max(0,y-h))}},{passive:true});
 // ---- единая логика прокрутки и растягивания (v48) ----
 // Вся страница (#w) тянется за пальцем у верхнего и нижнего края с затуханием и возвращается пружиной без колебаний.
@@ -3828,8 +3860,8 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
     MM.p=p;window.scrollTo(0,p);
     if(Math.abs(MM.v)<24){momStop();return}
     MM.raf=requestAnimationFrame(momTick)}
-  function momStart(v){momStop();MM.p=window.scrollY||0;MM.v=Math.max(-8000,Math.min(8000,v));MM.last=performance.now();MM.raf=requestAnimationFrame(momTick)}
-  function toScroll(t){const sy=window.scrollY||0;OS.y=0;OS.v=0;paint(0);
+  function momStart(v){momStop();MM.p=pgY();MM.v=Math.max(-8000,Math.min(8000,v));MM.last=performance.now();MM.raf=requestAnimationFrame(momTick)}
+  function toScroll(t){const sy=pgY();OS.y=0;OS.v=0;paint(0);
     g.mode='scroll';g.on=true;g.p0=sy;g.base=t.clientY;g.lp=sy;g.vp=0;g.vy=0;g.ly=0;g.lt=performance.now()}
   let g=null,lastSc=0;
   addEventListener('scroll',()=>{lastSc=performance.now()},{passive:true});   // v115: по недавним событиям прокрутки видно, что страница ещё «доезжает» (в том числе родная инерция)
@@ -3838,15 +3870,15 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
     const el=e.target;if(el.closest&&el.closest(skip))return;
     if(OS.wa)OS.y=curY();const grab=OS.raf?OS.y:0;if(OS.raf){stop();OS.drag=1;0}   // страница ещё возвращается — можно поймать пальцем
     const mom=!!MM.raf;if(mom){momStop();OS.drag=1}                                       // v49: ручная инерция тоже ловится пальцем
-    const sy0=window.scrollY||0,anim=mom||grab!==0||performance.now()-lastSc<140,tz=!!(el.closest&&el.closest('#top,#lt0,#chip,#st .lt,#st .pf0')),canS=tab==='list'&&!tz&&!spOpen();
-    g={top:tz,cvs:canS&&grab>0,cvm:canS&&mom&&sy0<=48,t0:(sy0<=0&&!mom)||(anim&&sy0<=48),mode:mom?'scroll':grab?'stretch':'',on:!!grab||mom,p0:window.scrollY||0,lp:window.scrollY||0,vp:0,vy:0,base:e.touches[0].clientY,bx:e.touches[0].clientX,y0:grab,sgn:grab<0?-1:1,D0:grab?rbi(Math.abs(grab)):0,h0:0,h:0,v:0,lt:performance.now(),ly:grab};
+    const sy0=pgY(),anim=mom||grab!==0||performance.now()-lastSc<140,tz=!!(el.closest&&el.closest('#top,#lt0,#chip,#st .lt,#st .pf0')),canS=tab==='list'&&!tz&&!spOpen();
+    g={top:tz,cvs:canS&&grab>0,cvm:canS&&mom&&sy0<=48,t0:(sy0<=0&&!mom)||(anim&&sy0<=48),mode:mom?'scroll':grab?'stretch':'',on:!!grab||mom,p0:pgY(),lp:pgY(),vp:0,vy:0,base:e.touches[0].clientY,bx:e.touches[0].clientX,y0:grab,sgn:grab<0?-1:1,D0:grab?rbi(Math.abs(grab)):0,h0:0,h:0,v:0,lt:performance.now(),ly:grab};
     // v163: блокирующий touchmove — только если жест начался у края (или во время отскока/инерции). В середине списка прокрутку целиком ведёт iOS:
     // пока висел блокирующий обработчик, каждый сдвиг пальца ждал JavaScript, и прокрутка шла рывками
     {const mx=Math.max(0,document.documentElement.scrollHeight-innerHeight);if(grab||mom||sy0<=48||sy0>=mx-48)tmArm()}
   },{passive:true});
   const onTM=e=>{if(!g)return;
     if(e.touches.length!==1||isModalOpen()){finish(false);return}
-    const t=e.touches[0],sy=window.scrollY||0,maxY=Math.max(0,document.documentElement.scrollHeight-innerHeight);
+    const t=e.touches[0],sy=pgY(),maxY=Math.max(0,document.documentElement.scrollHeight-innerHeight);
     let dy=t.clientY-g.base;const dx=t.clientX-g.bx;
     if(!g.on){
       if(Math.abs(dx)>Math.abs(dy)+4){g=null;return}               // горизонтальный жест — не наш (вкладки, свайп строк)
@@ -3867,7 +3899,7 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
       spStop();sp.style.transition='none';inn.style.willChange='opacity,transform';
       g.h0=h0;g.h=h0;g.base=t.clientY;g.lt=performance.now();g.v=0;g.sv=0;dy=0;spPaint(h0)}
     if(g.cvm&&g.mode==='scroll'&&g.p0-(t.clientY-g.base)<0){   // v115: поймали инерцию у самого верха и тянут дальше вниз — вместо растяжения выезжает поиск
-      const ex=g.p0-(t.clientY-g.base);g.cvm=false;OS.y=0;OS.v=0;paint(0);if((window.scrollY||0)!==0)window.scrollTo(0,0);g.mode='search';
+      const ex=g.p0-(t.clientY-g.base);g.cvm=false;OS.y=0;OS.v=0;paint(0);if(pgY()!==0)window.scrollTo(0,0);g.mode='search';
       if(sp.contains(document.activeElement))document.activeElement.blur();
       spStop();sp.style.transition='none';inn.style.willChange='opacity,transform';
       g.h0=0;g.h=0;g.base=t.clientY+ex/.85;g.lt=performance.now();g.v=0;g.sv=0;dy=t.clientY-g.base}
@@ -3875,7 +3907,7 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
     const now=performance.now(),dt=now-g.lt;
     if(g.mode==='scroll'){
       const p=g.p0-(t.clientY-g.base),cp=Math.max(0,Math.min(maxY,p)),ex=p-cp,y=ex<0?rb(-ex):ex>0?-rb(ex):0;
-      if((window.scrollY||0)!==cp)window.scrollTo(0,cp);
+      if(pgY()!==cp)window.scrollTo(0,cp);
       if(dt>0){g.vp=lpf(g.vp,(p-g.lp)/dt*1000,dt,33);g.vy=lpf(g.vy,(y-g.ly)/dt*1000,dt,33)}
       g.lp=p;g.ly=y;g.lt=now;OS.y=y;paint(y);return}
     if(g.mode==='stretch'){
@@ -3900,18 +3932,18 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
   document.addEventListener('touchcancel',()=>finish(false),{passive:true});
   // мышь / тачпад: прокрутка вверх колесом на самом верху списка
   let wa=0,wt=0;
-  addEventListener('wheel',e=>{if(tab!=='list'||isModalOpen()||spOpen()||(window.scrollY||0)>0||e.ctrlKey)return;
+  addEventListener('wheel',e=>{if(tab!=='list'||isModalOpen()||spOpen()||pgY()>0||e.ctrlKey)return;
     if(e.deltaY>=0){wa=0;return}
     const n=performance.now();if(n-wt>400)wa=0;wt=n;wa-=e.deltaY;if(wa>110){wa=0;setSearch(true)}},{passive:true});
   // ---- отскок на инерции: бросок доехал до края — страница чуть выходит за край и пружиной возвращается ----
   // Работает на всех вкладках (прокручивается всё окно). Касание пальцем, программные прокрутки (смена вкладки, scrollTo) и открытые окна не отскакивают.
-  const RMq=matchMedia('(prefers-reduced-motion:reduce)');let wcT=0,touching=false,lastTE=0,lastWh=0,py=window.scrollY||0,pt=performance.now(),pv=0,run=0;
+  const RMq=matchMedia('(prefers-reduced-motion:reduce)');let wcT=0,touching=false,lastTE=0,lastWh=0,py=pgY(),pt=performance.now(),pv=0,run=0;
   document.addEventListener('touchstart',()=>{touching=true},{passive:true,capture:true});
   const te=()=>{touching=false;lastTE=Date.now()};
   document.addEventListener('touchend',te,{passive:true,capture:true});document.addEventListener('touchcancel',te,{passive:true,capture:true});
   addEventListener('wheel',()=>{lastWh=Date.now()},{passive:true,capture:true});
   addEventListener('scroll',()=>{
-    const y=window.scrollY||0,now=performance.now(),dt=Math.max(1,now-pt);
+    const y=pgY(),now=performance.now(),dt=Math.max(1,now-pt);
     const v=(y-py)/dt*1000;if(dt>100){pv=0;run=0}pv=lpf(pv,v,dt,24);run=dt<64&&Math.abs(v)>120?run+1:0;
     const prev=py;py=y;pt=now;
     // перф: перед краем заранее выносим страницу в отдельный слой — иначе в момент удара о край слой создаётся посреди анимации и кадр «залипает»
@@ -3936,7 +3968,7 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
   document.addEventListener('touchend',gEnd,{passive:true,capture:true});document.addEventListener('touchcancel',gEnd,{passive:true,capture:true});
   document.addEventListener('click',e=>{if(guard){e.stopPropagation();e.preventDefault()}},true);
 })();
-$('#chip').onclick=e=>{if(e.target.closest('[data-a="clr"]')){if(fcat)fcat=null;else if(ftag){ftag=null;ftagR=null;if(ftagBk==='stats'){tab='stats';AS='tags'}else{tab='tags';ps='goals'}}else if(fday){fday=null;tab='stats';AS='cal'}render();window.scrollTo(0,0)}};
+$('#chip').onclick=e=>{if(e.target.closest('[data-a="clr"]')){if(fcat)fcat=null;else if(ftag){ftag=null;ftagR=null;if(ftagBk==='stats'){tab='stats';AS='tags'}else{tab='tags';ps='goals'}}else if(fday){fday=null;tab='stats';AS='cal'}render();pgTo(0)}};
 const shift=d=>{fcat=null;fday=null;const [y,m]=month.split('-').map(Number);month=mk(new Date(y,m-1+d,1));render()};
 const monthSwap=d=>{settleAll();swapAnim(d,()=>shift(d),[bodyEl,topEl],0,1,false)};   // v118: анимация смены месяца (уезжает старый блок, приезжает новый)
 $('#pv').onclick=()=>{if(!isModalOpen())monthSwap(-1)};$('#nx').onclick=()=>{if(!isModalOpen())monthSwap(1)};
@@ -3996,7 +4028,7 @@ topEl.addEventListener('click',e=>{if(msBlock){e.stopPropagation();e.preventDefa
   function check(){raf=0;let gone;
     if(isModalOpen())gone=false;
     else if(topEl.offsetHeight&&!document.documentElement.classList.contains('stk'))gone=topEl.getBoundingClientRect().bottom<sat+4;   // блок целиком ушёл за верх (в «Аналитике» и «Планах» он закреплён — там по прокрутке)
-    else gone=(window.scrollY||0)>Math.max(240,window.innerHeight*.5);           // экраны без блока (настройки, поиск)
+    else gone=pgY()>Math.max(240,window.innerHeight*.5);           // экраны без блока (настройки, поиск)
     if(gone===shown)return;shown=gone;if(gone)pos();b.classList.toggle('on',gone)}
   const kick=()=>{if(!raf)raf=requestAnimationFrame(check)};
   addEventListener('scroll',kick,{passive:true});
@@ -4017,7 +4049,7 @@ topEl.addEventListener('click',e=>{if(msBlock){e.stopPropagation();e.preventDefa
   const mkey=()=>{const w=document.getElementById('w'),hd=w&&w.querySelector('.hd'),els=[hd,document.getElementById('lt0'),document.getElementById('tps'),topEl,document.getElementById('sp'),sbwEl()];
     if(els.some(e=>e&&e.getAnimations&&e.getAnimations().length))return '';
     return [tab,R.className.replace(/\bstk\b/g,''),document.body.className,w?w.className:'',innerWidth].concat(els.map(e=>e?e.offsetHeight+':'+e.className:'-')).join('|')};
-  function meas(){const y=window.scrollY||0,lt=document.getElementById('lt0'),sb=sbwEl();R.classList.remove('stk');
+  function meas(){const y=pgY(),lt=document.getElementById('lt0'),sb=sbwEl();R.classList.remove('stk');
     const at=e=>e&&e.offsetHeight?Math.round(e.getBoundingClientRect().top+y):null,a=at(lt),b=at(topEl),c=at(sb);R.classList.add('stk');
     [a,b,c].forEach((v,i)=>{if(v!=null&&v!==s0[i]){s0[i]=v;R.style.setProperty('--stk'+i,v+'px')}});dirty=false}
   // v163: переменные пишутся только при изменении, высота подложки — на самой подложке. Раньше каждый кадр прокрутки менялись переменные корня документа —
@@ -4033,7 +4065,7 @@ topEl.addEventListener('click',e=>{if(msBlock){e.stopPropagation();e.preventDefa
     lk=sv(bg,'--stkh',Math.round(Math.max(tr.bottom,sr.bottom)+10),lk);window.__stkh=lk;
     // v191: при смене страницы («Аналитика», «Планы», их разделы) подложка встаёт сразу — раньше она проявлялась 0,22 с,
     // и первые кадры содержимое (диаграмма) было видно резко сквозь шапку: мерцание под главным блоком. Плавно — только при прокрутке на той же странице
-    const bo=(window.scrollY||0)>2,pk=typeof pgKey==='function'?pgKey():tab,inst=pk!==lpk||jOn;lpk=pk;jOn=false;
+    const bo=pgY()>2,pk=typeof pgKey==='function'?pgKey():tab,inst=pk!==lpk||jOn;lpk=pk;jOn=false;
     if(bo!==bg.classList.contains('on')){if(inst){bg.style.transition='none';bg.classList.toggle('on',bo);void bg.offsetWidth;requestAnimationFrame(()=>{bg.style.transition=''})}else bg.classList.toggle('on',bo)}}
   window.__stkKick=()=>{dirty=true;kick()};window.__stkNow=()=>{dirty=true;upd()};
   const kick=()=>{if(!raf)raf=requestAnimationFrame(upd)},re=()=>{dirty=true;kick()},reH=()=>{hard=true;re()};
@@ -4054,7 +4086,7 @@ topEl.addEventListener('click',e=>{if(msBlock){e.stopPropagation();e.preventDefa
   const isR=()=>R.classList.contains('rvl');
   const els=()=>[document.getElementById('lt0'),topEl,document.getElementById('topact'),document.getElementById('stkbg')].filter(e=>e&&e.animate);
   const H=()=>(window.__stkh||Math.round(topEl.getBoundingClientRect().bottom)+10)+6;
-  function show(){if(isR()||busy)return;y0=ymin=window.scrollY||0;R.classList.add('rvl');try{window.__stkNow()}catch(e){}
+  function show(){if(isR()||busy)return;y0=ymin=pgY();R.classList.add('rvl');try{window.__stkNow()}catch(e){}
     const h=H();b.classList.remove('tuck');b.classList.add('up');b.style.setProperty('--hy',(h-sat-14)+'px');b.setAttribute('aria-label','Спрятать верхний блок');   // v164: едет вниз вместе с блоком и становится полоской под ним
     if(RM)return;busy=true;const kf=[{transform:`translate3d(0,${-h}px,0)`},{transform:'none'}],o={duration:360,easing:'cubic-bezier(.2,.9,.25,1)'};
     const as=els().map(e=>e.animate(kf,o));if(as[0])as[0].onfinish=as[0].oncancel=()=>{busy=false};else busy=false}
@@ -4063,7 +4095,7 @@ topEl.addEventListener('click',e=>{if(msBlock){e.stopPropagation();e.preventDefa
     const off=()=>{R.classList.remove('rvl');try{window.__stkNow()}catch(e){}busy=false;kick()};
     if(instant||RM){off();return}busy=true;const h=H(),as=els().map(e=>e.animate([{transform:'none'},{transform:`translate3d(0,${-h}px,0)`}],{duration:230,easing:'cubic-bezier(.4,0,1,1)',fill:'forwards'}));
     if(!as.length){off();return}as[0].onfinish=()=>{off();requestAnimationFrame(()=>requestAnimationFrame(()=>as.forEach(a=>{try{a.cancel()}catch(e){}})))}}
-  function check(){raf=0;const y=window.scrollY||0;let list=false;try{list=tab==='list'&&!searchOn()&&!isModalOpen()&&!R.classList.contains('selm')}catch(e){}
+  function check(){raf=0;const y=pgY();let list=false;try{list=tab==='list'&&!searchOn()&&!isModalOpen()&&!R.classList.contains('selm')}catch(e){}
     if(isR()){if(!list||y<=2){hide(true)}else if(!busy){if(y>ymin+40)hide(false);else{if(y<ymin)ymin=y;if(y<y0-10)b.classList.add('tuck')}}}   // вверх — полоска уходит под блок
     const want=list&&(isR()||(!!topEl.offsetHeight&&topEl.getBoundingClientRect().bottom<sat+4));
     if(want!==b.classList.contains('on')){b.classList.toggle('on',want);if(!want){setTimeout(()=>{if(!b.classList.contains('on')){b.classList.remove('up','tuck');b.style.removeProperty('--hy')}},300)}}}
@@ -4922,7 +4954,7 @@ const CPROT=['other','in_other','debt','debtin','save'];   // v168: служеб
 function cpHtml(){const s=cpS,inc=s.type==='income';
   if(s.view==='edit'){const c=cd(s.id),x=c.custom?cfg.custom.find(z=>z.id===c.id):null,col=/^#[0-9a-f]{6}$/i.test(c.c)?c.c:'#888888';
     return `<div class="cpt0"><span>Редактировать категорию</span></div>
-<div class="cpe"><input id="cpem" value="${E(c.e)}" maxlength="8" autocomplete="off" aria-label="Эмодзи"><input id="cpn" value="${E(c.n)}" maxlength="40" autocomplete="off" aria-label="Название"><input type="color" id="cpc" value="${col}" aria-label="Цвет"></div>
+<div class="cpe"><label class="cpw"><input id="cpem" value="${E(c.e)}" maxlength="8" autocomplete="off" aria-label="Эмодзи"></label><label class="cpw"><input id="cpn" value="${E(c.n)}" maxlength="40" autocomplete="off" aria-label="Название"></label><input type="color" id="cpc" value="${col}" aria-label="Цвет"></div>
 <div class="cpg0">Чтобы записать в эту категорию голосом или текстом, скажите: «… категория ${E(c.n).toLowerCase().slice(0,24)}».</div>
 <div class="cpf"><button class="sm" data-cp="back">Назад</button>${CPROT.includes(c.id)?'':'<button class="sm del" data-cp="del">Удалить</button>'}<button class="sm pr" data-cp="save">Сохранить</button></div>`}
   const list=ALL.filter(c=>c.inc===inc);
@@ -4983,7 +5015,7 @@ cpEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPU
 let ncCb=null,ncCancel=null,ncType='expense';
 const NC_EMO=['🛒','🍽️','☕','🍰','🍺','🚕','🚌','⛽','🏠','💡','📱','💊','🧘','👕','💄','🎉','🎬','🎮','📚','🎁','🧸','🐾','✈️','💪','🛠️','🪑','💳','🏦','💰','💻','🎨','⭐'];let ncEmo='';
 function openNc(type,done,cancel){ncEmo='';const el=$('#nc');ncType=type==='income'?'income':'expense';ncCb=done;ncCancel=cancel||null;
-  el.innerHTML=`<div class="nct">Новая категория · ${ncType==='income'?'доход':'расход'}</div><div class="ncr"><button type="button" class="nce" id="nce" aria-label="Стикер категории" aria-expanded="false">${ncType==='income'?'💸':'🏷️'}</button><input id="ncn" placeholder="Название" maxlength="40" autocomplete="off" aria-label="Название новой категории" enterkeyhint="next"></div><div class="ncep" id="ncep" hidden>${NC_EMO.map(e=>`<button type="button" data-e="${e}">${e}</button>`).join('')}<input id="nceo" maxlength="8" placeholder="свой" autocomplete="off" aria-label="Свой стикер"></div><div class="ncs">Записать в неё: «… категория <span id="ncsn">название</span>»</div><div class="ncb"><button class="sm" id="ncx">Отмена</button><button class="sm pr" id="nca">Добавить</button></div>`;
+  el.innerHTML=`<div class="nct">Новая категория · ${ncType==='income'?'доход':'расход'}</div><label class="ncr" for="ncn"><button type="button" class="nce" id="nce" aria-label="Стикер категории" aria-expanded="false">${ncType==='income'?'💸':'🏷️'}</button><input id="ncn" placeholder="Название" maxlength="40" autocomplete="off" aria-label="Название новой категории" enterkeyhint="next"></label><div class="ncep" id="ncep" hidden>${NC_EMO.map(e=>`<button type="button" data-e="${e}">${e}</button>`).join('')}<input id="nceo" maxlength="8" placeholder="свой" autocomplete="off" aria-label="Свой стикер"></div><div class="ncs">Записать в неё: «… категория <span id="ncsn">название</span>»</div><div class="ncb"><button class="sm" id="ncx">Отмена</button><button class="sm pr" id="nca">Добавить</button></div>`;
   ['sh','ed','gd','cf'].forEach(id=>{const e=$('#'+id);if(e&&e.classList.contains('on'))e.classList.add('sub')});
   try{setOrigin(el)}catch(e){}el.classList.add('on');ov.className='on';
   autoF('#ncn',140)}
@@ -5269,10 +5301,10 @@ let _scT=0;window.addEventListener('scroll',()=>{_scT=Date.now()},{passive:true}
 function fitScroll(){const de=document.documentElement,B=$('#body'),tb=$('#tabs');if(!B||!tb)return;
   // v136: пока открыто окно, страница под ним неподвижна — не снимаем и не возвращаем html.ns на каждый resize от клавиатуры
   // (это перекладка всего списка прямо во время движения окна); проверим заново, когда окно закроется
-  if(isModalOpen()){clearTimeout(_fitT);_fitT=setTimeout(fitScroll,500);return}
+  if(isModalOpen()||de.classList.contains('wlk')){clearTimeout(_fitT);_fitT=setTimeout(fitScroll,500);return}
   // пока палец листает список (или сразу после) — ничего не меряем и не прыгаем наверх
   if(Date.now()-_scT<350||(typeof tp!=='undefined'&&tp&&tp.on)||(typeof OS!=='undefined'&&(OS.raf||OS.y||OS.drag))){fitSoon();return}
-  const sy=window.scrollY||0;
+  const sy=pgY();
   if(sy>0&&de.classList.contains('ns')===false&&de.scrollHeight>innerHeight+8)return;   // страница явно длиннее экрана и уже прокручена — отдельно проверять нечего
   de.classList.remove('ns');let bot=B.getBoundingClientRect().top+sy;
   for(const c of B.children){const r=c.getBoundingClientRect();if(r.height>0&&r.bottom+sy>bot)bot=r.bottom+sy}
@@ -5752,7 +5784,7 @@ async function ibLoop(){
     const pf=bigPf(),on=!!pf;
     lon=on;
     if(pf!==lpf){lpf=pf;pfSync()}
-    const y=Math.max(0,window.scrollY||0);let p,pb,pq=0;
+    const y=Math.max(0,pgY());let p,pb,pq=0;
     p=c01((y-6)/22);pb=c01((y-2)/12);
         p=Math.round(p*100)/100;pb=Math.round(pb*100)/100;pq=Math.round(pq*100)/100;
     if(p!==lp){lp=p;nb.style.setProperty('--p',p)}
@@ -5814,7 +5846,7 @@ async function ibLoop(){
   const kmOf=(el,L)=>Math.max(160,Math.round(baseH-L-sat-8));   // v186: окна стоят вплотную к низу (--rest 0) — запаса снизу больше нет
   function restPx(el){const p=document.createElement('i');p.style.cssText='position:absolute;left:0;top:0;width:0;visibility:hidden;pointer-events:none;height:var(--rest,0px)';el.appendChild(p);const h=p.offsetHeight;p.remove();return h}
   function cur(x){const w=x.tw;if(!w)return x.lift;if(w.wa){const u=Math.min(1,Math.max(0,(w.wa.currentTime||0)/w.c[4]));return w.from+(w.to-w.from)*ease(w.c,u)}return x.lift}
-  // v190: пока окно едет за клавиатурой, у него класс kbmv: курсор в полях прозрачный, выделение текста ждёт остановки (см. блок v189/v190) —
+  // v190: пока окно едет за клавиатурой, у него класс kbmv: курсор в полях прозрачный, выделение текста ждёт остановки (см. focusin в блоке v147) —
   // iOS рисует курсор и выделение отдельно от страницы, они не успевают за движущимся окном и на миг остаются на старом месте
   const mvT=new Map();function mv(el,on,ms){clearTimeout(mvT.get(el));if(on){el.classList.add('kbmv');mvT.set(el,setTimeout(()=>el.classList.remove('kbmv'),(ms||300)+200))}else el.classList.remove('kbmv')}
   function halt(el){const x=S(el),w=x.tw;if(!w)return;const v=cur(x);if(w.wa){try{w.wa.cancel()}catch(e){}}x.tw=null;x.lift=v;x.target=v;apply(el);mv(el,false)}   // остановить подъём там, где окно сейчас
@@ -5888,11 +5920,12 @@ async function ibLoop(){
     const r=a.getBoundingClientRect(),mr=m.getBoundingClientRect(),pad=14;let d=0;
     if(r.bottom>mr.bottom-pad)d=r.bottom-mr.bottom+pad;else if(r.top<mr.top+pad)d=r.top-mr.top-pad;
     if(d)m.scrollBy({top:d,behavior:RMQ.matches?'auto':'smooth'})}
-  window.addEventListener('scroll',()=>{if(IDS.some(id=>{const e=$i(id);return e&&e.classList.contains('on')})&&window.scrollY!==savedY)window.scrollTo(0,savedY)},{passive:true});
+  // v192: пока окно открыто, у корня прокрутки нет (wlk) — он должен стоять в 0; до включения блокировки (первые 2 кадра) держим прежнее место
+  window.addEventListener('scroll',()=>{if(!IDS.some(id=>{const e=$i(id);return e&&e.classList.contains('on')}))return;const t=root.classList.contains('wlk')?0:savedY;if(window.scrollY!==t)window.scrollTo(0,t)},{passive:true});
   // --- окна открываются/закрываются/становятся задними
   const rst=new Map();
   const mo=new MutationObserver(ms=>{ms.forEach(m=>{const el=m.target,cls=el.classList,on=cls.contains('on'),was=/(^|\s)on(\s|$)/.test(m.oldValue||''),sub=cls.contains('sub'),wasSub=/(^|\s)sub(\s|$)/.test(m.oldValue||'');
-    if(on&&!was){savedY=window.scrollY;clearTimeout(rst.get(el));if(!foc()&&Date.now()-lastBlur>400)syncBase();   // окно всегда открывается в текущей видимой части экрана
+    if(on&&!was){if(!root.classList.contains('wlk'))savedY=window.scrollY;clearTimeout(rst.get(el));if(!foc()&&Date.now()-lastBlur>400)syncBase();   // окно всегда открывается в текущей видимой части экрана
       if(!el.contains(document.activeElement)){halt(el);const x=S(el);x.lift=0;x.target=0;apply(el)}}
     else if(!on&&was){halt(el);   // v154: закрытие: подъём замирает — окно уезжает вниз от того места, где было (раньше оно подпрыгивало, если закрыть его, пока оно опускалось за клавиатурой)
       if(el.contains(document.activeElement))document.activeElement.blur();if(owner===el)owner=null;
@@ -5902,35 +5935,6 @@ async function ibLoop(){
   IDS.forEach(id=>{const el=$i(id);if(el)mo.observe(el,{attributes:true,attributeFilter:['class'],attributeOldValue:true})});
   // для openCp: клавиатура сейчас поднята? и: начать её опускание сразу (окно, в котором было поле, опускается вместе с ней)
   window.Sheets={kbUp:()=>!!owner&&(S(owner).lift>2||S(owner).target>2),hideKb(){clearTimeout(hideT);if(owner){const x=S(owner);if(x.lift>2||x.target>2)go(owner,0,C_HIDE)}}};
-})();
-</script>
-<script>
-// ================= v189: касание поля — фокус без прокрутки страницы =================
-// Раскадровка записи экрана (60 к/с): при касании поля в окне iOS (WebKit) сама прокручивает страницу «к полю». Окна у нас лежат поверх
-// страницы и сами поднимаются над клавиатурой, поэтому WebKit промахивается: всё содержимое за один кадр уходит вниз на 40–85 px
-// (сверху видна тёмная полоса), затем пружиной возвращается за ~0,25 с, а курсор на миг рисуется на старом месте поля.
-// Так было при каждом переходе между полями — сумма → заметка → теги, поля повтора и шаблона, в любом месяце.
-// Теперь касание ещё не активного текстового поля в окне ставит фокус само — focus({preventScroll:true}): клавиатура появляется,
-// а прокрутки страницы нет. Повторное касание уже активного поля — как обычно (курсор ставится пальцем). Списки, даты, кнопки — как раньше.
-(function(){const SEL='#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc,#fp,#sp';
-  const txt=f=>!!f&&!f.disabled&&!f.readOnly&&(f.tagName==='TEXTAREA'||(f.tagName==='INPUT'&&/^(text|search|tel|number|url|email|password|)$/.test(f.type||'')));
-  const fieldOf=t=>{if(!t||!t.closest)return null;let f=t.closest('input,textarea');
-    if(!f){const lb=t.closest('label');if(lb&&!lb.querySelector('select,.cpb,button'))f=lb.querySelector('input,textarea')}
-    return txt(f)&&f.closest(SEL)?f:null};
-  // v190: касание рядом с полем (до 28 px) — iOS сама «доводит» его до ближайшего поля и ставит фокус с прокруткой страницы.
-  // Например, строка тегов: поле в ней узкое, вокруг — обёртка с чипами. Такое касание тоже обрабатываем сами. Кнопки и чипы не трогаем.
-  const NOT='button,select,a,summary,[role=button],[role=switch],[role=tab],.cpb,.tgc,.tgp,.sgm,.dp,[data-a],[data-rc],[data-cp],[data-cpf],[data-tt],[data-te],.rcr,.tpr,.cpi';
-  const nearOf=(t,x,y)=>{if(!t||!t.closest||t.closest(NOT))return null;const w=t.closest(SEL);if(!w)return null;let best=null,bd=29;
-    w.querySelectorAll('input,textarea').forEach(f=>{if(!txt(f)||!f.offsetWidth)return;const r=f.getBoundingClientRect(),dx=Math.max(r.left-x,0,x-r.right),dy=Math.max(r.top-y,0,y-r.bottom),d=Math.hypot(dx,dy);if(d<bd){bd=d;best=f}});
-    return best};
-  let s=null;
-  document.addEventListener('touchstart',e=>{s=null;if(e.touches.length!==1)return;const p0=e.touches[0],f=fieldOf(e.target)||nearOf(e.target,p0.clientX,p0.clientY);if(!f||f===document.activeElement)return;
-    const w=f.closest(SEL);if(w&&(w.classList.contains('sub')||w.inert))return;const p=e.touches[0];s={f,x:p.clientX,y:p.clientY,t:Date.now()}},{capture:true,passive:true});
-  document.addEventListener('touchmove',e=>{if(!s)return;const p=e.touches[0];if(Math.abs(p.clientX-s.x)>10||Math.abs(p.clientY-s.y)>10)s=null},{capture:true,passive:true});
-  document.addEventListener('touchcancel',()=>{s=null},{capture:true,passive:true});
-  document.addEventListener('touchend',e=>{const q=s;s=null;if(!q||Date.now()-q.t>500||!q.f.isConnected||q.f===document.activeElement)return;
-    e.preventDefault();   // без этого iOS сама ставит фокус и прокручивает страницу к полю
-    try{q.f.focus({preventScroll:true})}catch(x){q.f.focus()}},{capture:true,passive:false});
 })();
 </script>
 <script>
@@ -5989,12 +5993,12 @@ async function ibLoop(){
       f.style.caretColor='';if(!f.value)return;f._sa=Date.now();selAll(f);setTimeout(()=>{if(f._sa&&Date.now()-f._sa<400)selAll(f)},60)};
     setTimeout(()=>fin(0),35);f.addEventListener('blur',()=>{f.style.caretColor=''},{once:true})},true);
   // касание само ставит курсор после фокуса (mouseup/click) — в первые 400 мс после фокуса возвращаем выделение
-  ['mouseup','click'].forEach(ev=>document.addEventListener(ev,e=>{const f=e.target;if(!f||!f._sa)return;if(Date.now()-f._sa<400){if(ev==='mouseup')e.preventDefault();selAll(f)}else f._sa=0},true));
+  ['mouseup','click'].forEach(ev=>document.addEventListener(ev,e=>{const f=e.target;if(!f||!f._sa)return;if(Date.now()-f._sa<400){if(ev==='mouseup')e.preventDefault();if(f.style.caretColor!=='transparent')selAll(f)}else f._sa=0},true));   // v192: пока окно едет (курсор скрыт), выделит fin() после остановки
   document.addEventListener('input',e=>{if(e.target&&e.target._sa)e.target._sa=0},true);
   let tp=null;
   document.addEventListener('mousedown',e=>{const t=e.target,p=tp;if(p){clearTimeout(p.timer);tp=null}
     if(!typing()||!t.closest||!t.closest(WIN))return;
-    if(fieldIn(t))return;
+    if(fieldIn(t))return;   // v193: касание подписи поля (label) — фокус не снимаем до click: его переведёт сам label (как на iPhone); иначе поле теряло фокус, строки перерисовывались и click приходил в удалённый элемент
     if(!active(t)){if(p&&document.activeElement===p.a)p.a.blur();return}   // неактивное место: клавиатуру прячем (на компьютере фокус уходит и так)
     e.preventDefault()},true);
   document.addEventListener('touchstart',e=>{const t=e.target;tp=e.touches.length===1&&typing()&&t.closest&&t.closest(WIN)?{x:e.touches[0].clientX,y:e.touches[0].clientY,t:Date.now(),a:document.activeElement,tg:t}:null},{capture:true,passive:true});
@@ -6099,7 +6103,7 @@ async function ibLoop(){
     for(let i=0;i<S.length;i+=Math.max(1,Math.floor(S.length/16))){const x=S[i];o+=String(Math.round(x[0])).padStart(4)+' '+String(r1(x[1])).padStart(4)+' '+String(r1(x[2])).padStart(4)+' '+String(r1(x[4])).padStart(4)+' '+String(r1(x[5])).padStart(4)+' '+String(r1(x[6])).padStart(5)+' '+String(r1(x[7])).padStart(5)+'\n'}
     ensure();panel.textContent=o;window.__dbgLast=o}
   function capture(tag){if(!on||busy)return;busy=true;const t0=performance.now(),S=[];
-    (function f(t){const w=winEl();S.push([t-t0,window.scrollY||0,vv?vv.offsetTop:0,vv?vv.pageTop:0,vv?vv.height:innerHeight,innerHeight,anc(),w?w.getBoundingClientRect().bottom:0,+getComputedStyle(document.getElementById('ov')).opacity,w?+getComputedStyle(w).opacity:0,w?(w.getBoundingClientRect().height>0?1:0):0]);
+    (function f(t){const w=winEl();S.push([t-t0,pgY(),vv?vv.offsetTop:0,vv?vv.pageTop:0,vv?vv.height:innerHeight,innerHeight,anc(),w?w.getBoundingClientRect().bottom:0,+getComputedStyle(document.getElementById('ov')).opacity,w?+getComputedStyle(w).opacity:0,w?(w.getBoundingClientRect().height>0?1:0):0]);
       if(t-t0<1100)requestAnimationFrame(f);else{busy=false;report(tag,S)}})(t0)}
   function toggle(){on=!on;ensure();panel.textContent=on?'самописец включён: нажмите на поле суммы, затем на категорию':'самописец выключен';if(!on)setTimeout(()=>{if(panel&&!on)panel.textContent=''},1200)}
   window.__dbgToggle=toggle;window.__dbgCapture=capture;
