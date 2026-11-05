@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v195';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v196';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -1626,6 +1626,23 @@ html:root :is(#sh #rev,#gd #bvl) .rv2>.rva{order:3;flex:0 0 96px}
 html:root :is(#sh #rev,#gd #bvl) .rv2>.rvf>input{flex:1 1 auto;min-width:0;width:100%!important}
 html:root #ed>.eaw{order:1;display:block}
 html:root #ed>.eaw>#eam{width:100%}
+/* v196: строка суммы в валюте: [5][EUR ▾] = [100] MDL, под ней курс */
+html:root #ed>.eamr{order:1;display:flex;align-items:flex-end;gap:8px;min-width:0;margin:6px 0 0;padding:0 0 6px;border-bottom:1px solid var(--sep)}
+html:root #ed>.eamr .eaw{display:block;flex:1 1 0;min-width:0}
+html:root #ed>.eamr :is(#eam,#efa){width:100%!important;display:block;box-sizing:border-box;font-size:24px!important;font-weight:500;letter-spacing:-.01em;padding:10px 0 0!important;margin:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:none;color:var(--t)!important;text-align:left}
+html:root #ed>.eamr :is(#eam,#efa):focus{border:0!important;box-shadow:none!important;outline:0}
+html:root #ed>.eamr.one #eam{font-size:26px!important}
+html:root #ed>.eamr .ecw{flex:none;position:relative;display:inline-flex;align-items:center;margin-bottom:2px}
+html:root #ed>.eamr #ecs{-webkit-appearance:none;appearance:none;height:30px;padding:0 22px 0 10px!important;border:0!important;border-radius:15px!important;background:rgba(var(--wr),.09)!important;color:var(--t)!important;font-size:14px!important;font-weight:600;width:auto!important;min-width:0;text-align:left}
+html:root #ed>.eamr .ecw::after{content:"";position:absolute;right:9px;top:50%;width:6px;height:6px;margin-top:-5px;border-right:1.6px solid var(--m2);border-bottom:1.6px solid var(--m2);transform:rotate(45deg);pointer-events:none}
+html:root #ed>.eamr .eeq{flex:none;color:var(--m2);font-size:18px;margin-bottom:5px}
+html:root #ed>.eamr .ecm{flex:none;color:var(--m2);font-size:14px;font-weight:600;margin-bottom:8px}
+html:root #ed>.eamr.one .efw,html:root #ed>.eamr.one .eeq,html:root #ed>.eamr.one .ecm{display:none}
+html:root #ed>.eamr.one .emw{order:-1}
+html:root #ed>.erl{order:2;display:none;padding-top:6px}
+html:root #ed>.erl.on{display:block}
+html:root #ed>.erl .ertw{display:none!important;margin-top:4px}
+html:root #ed>.erl .ertw.on{display:flex!important}
 html:root #gd>.eaw{display:block}
 html:root #cp .cpe>.cpw{display:block;min-width:0}
 html:root #cp .cpe>.cpw>input{width:100%}
@@ -3551,21 +3568,46 @@ ed.addEventListener('touchmove',e=>e.stopPropagation(),{passive:true});
 function openEdit(id){if(isModalOpen())return;const t=tx.find(x=>x.id===id);if(!t)return;cancelGestures();lockBg(true);eT={...t,tags:[...(t.tags||[])]};renderEd();const row=document.querySelector('.r2[data-id="'+id+'"]');if(row)setOrigin(ed,row);ed.classList.add('on');ov.className='on'}
 function closeEdit(){ed.classList.remove('on');eT=null;unlockIfIdle();cancelGestures()}
 const _renderEd0=renderEd;
+// v196: строка суммы в окне операции: [сумма в валюте][EUR ▾] = [сумма в основной] MDL, под ней курс. Сумма в валюте → основная по курсу операции;
+// основная → валюта по тому же курсу (курс не меняется). Выбор валюты (список добавленных): число остаётся, курс — текущий для новой валюты, основная пересчитывается;
+// выбрана основная — операция становится обычной. Нет курса — его можно ввести тут же (сохраняется как ручной курс валюты). Окно не перерисовывается — клавиатура не сбрасывается.
+const edFo=t=>!!(t&&t.oc&&t.oc!==cfg.cur);
+const edR2=v=>Math.round((+v||0)*100)/100,edNum=v=>v>0?String(edR2(v)):'';
+function edCurs(c0){const S=new Set();[...(Array.isArray(cfg.curList)?cfg.curList:[]),...Object.keys(_obj(cfg.rates)?cfg.rates:{}).filter(c=>parseFloat(cfg.rates[c])>0),c0].forEach(c=>{if(c&&c!==cfg.cur&&/^[A-Z]{3}$/.test(c))S.add(c)});return [cfg.cur,...S]}
+function edCurHtml(t,inc){const fo=edFo(t),cls=inc?'inc':'exp';
+  t._r=fo?(t.oa>0&&t.amount>0?t.amount/t.oa:(+t.rt||parseFloat(cfg.rates[t.oc])||0)):0;t._now=false;delete t._rman;
+  return `<div class="eamr${fo?'':' one'}" id="eamr"><label class="eaw efw"><input id="efa" class="${cls}" inputmode="decimal" enterkeyhint="done" value="${fo?edNum(t.oa):''}" placeholder="0" aria-label="Сумма в валюте"></label>`+
+    `<label class="ecw"><select id="ecs" aria-label="Валюта операции">${edCurs(t.oc).map(c=>`<option value="${c}"${c===(fo?t.oc:cfg.cur)?' selected':''}>${c}</option>`).join('')}</select></label>`+
+    `<span class="eeq">=</span><label class="eaw emw"><input id="eam" class="${cls}" inputmode="decimal" enterkeyhint="done" value="${t.amount||''}" placeholder="Сумма" aria-label="Сумма"></label><span class="ecm">${E(cfg.cur)}</span></div>`+
+    `<div class="eo erl${fo?' on':''}" id="erl"><span id="ert0"></span><label class="ef ertw" id="ertw">Курс 1 <b id="ertc"></b> в ${E(cfg.cur)}<input id="ert" inputmode="decimal" enterkeyhint="done" placeholder="Курс" aria-label="Курс"></label></div>`}
+function edCurLine(){const t=eT,l=$('#erl'),x=$('#ert0'),w=$('#ertw');if(!t||!l||!x||!w)return;const fo=edFo(t);l.classList.toggle('on',fo);
+  if(!fo){x.textContent='';w.classList.remove('on');return}
+  const r=t._r;x.textContent=r>0?'1 '+t.oc+' = '+fmtN(Math.round(r*1e4)/1e4)+' '+cfg.cur+' · '+(t._rman?'ваш курс':t._now?'курс сейчас':'курс на день записи'):'Нет курса '+t.oc+' — введите его';
+  w.classList.toggle('on',!(r>0)||!!t._rman);$('#ertc').textContent=t.oc}
+function edCurBind(){const fa=$('#efa'),am=$('#eam'),cs=$('#ecs'),rt=$('#ert'),row=$('#eamr');if(!fa||!am||!cs||!row)return;
+  const fromFa=()=>{if(!edFo(eT))return;eT.oa=Math.max(0,pn(fa.value));if(eT._r>0)am.value=edNum(eT.oa*eT._r)};
+  fa.addEventListener('input',fromFa);
+  am.addEventListener('input',()=>{if(!edFo(eT)||!(eT._r>0))return;const v=Math.max(0,pn(am.value));eT.oa=edR2(v/eT._r);fa.value=edNum(eT.oa)});
+  if(rt)rt.addEventListener('input',()=>{const v=pn(rt.value);eT._r=v>0?v:0;eT._rman=v>0?v:0;fromFa();const x=$('#ert0');if(x)x.textContent=v>0?'1 '+eT.oc+' = '+fmtN(v)+' '+cfg.cur+' · ваш курс':'Нет курса '+eT.oc+' — введите его'});
+  cs.addEventListener('change',()=>{const c=cs.value,n=edFo(eT)?pn(fa.value):pn(am.value);delete eT._rman;if(rt)rt.value='';
+    if(c===cfg.cur){delete eT.oc;delete eT.oa;delete eT.rt;eT._r=0;am.value=edNum(n);row.classList.add('one');edCurLine();return}
+    const r=parseFloat(cfg.rates[c])||0;eT.oc=c;eT.oa=n>0?edR2(n):0;eT._r=r;eT._now=true;fa.value=edNum(n);am.value=r>0?edNum(n*r):'';row.classList.remove('one');edCurLine();
+    if(!(r>0)&&ratesAuto())ratesRefresh(true).then(()=>{const r2=parseFloat(cfg.rates[c])||0;if(r2>0&&eT&&eT.oc===c&&!(eT._r>0)){eT._r=r2;fromFa();edCurLine()}}).catch(()=>{})});
+  edCurLine()}
 function readEd(){if(!eT)return;const g=k=>{const el=$(k);return el?el.value:''};
-  eT.amount=Math.max(0,pn(g('#eam')));eT.note=g('#eno').trim();{const cv=g('#eca');if(cv&&cv!=='__add')eT.category=cv}
+  eT.amount=Math.max(0,pn(g('#eam')));{const fa=$('#efa');if(edFo(eT)&&fa)eT.oa=Math.max(0,pn(fa.value))}eT.note=g('#eno').trim();{const cv=g('#eca');if(cv&&cv!=='__add')eT.category=cv}
   if(/^\d{4}-\d{2}-\d{2}$/.test(g('#eda')))eT.date=g('#eda');
   const en=$('#etn');if(en&&en.value.trim()){addTags(eT,en.value);en.value=''}}
 function renderEd(){const t=eT,inc=t.type==='income';
   ed.innerHTML=`<div class="eh"><span class="sgm"><button data-et="expense" class="${inc?'':'on'}">Расх.</button><button data-et="income" class="${inc?'on':''}">Дох.</button></span><button class="x" id="ecl" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div>
-<label class="eaw"><input id="eam" class="${inc?'inc':'exp'}" inputmode="decimal" enterkeyhint="done" value="${t.amount||''}" placeholder="Сумма" aria-label="Сумма"></label>
-${t.oc?`<div class="eo">${fmt(t.oa)} ${E(t.oc)}</div>`:''}
+${edCurHtml(t,inc)}
 <label class="ef">Заметка<input id="eno" type="text" value="${E(t.note)}" placeholder="Заметка" enterkeyhint="done" autocomplete="off" autocorrect="off" spellcheck="false"></label>
 <label class="ef">Категория<button type="button" class="cpb" id="eca">${E(cd(t.category).l)}</button></label>
 
 <label class="ef">Дата<input id="eda" type="date" value="${t.date}"></label>
 <label class="ef tgf" for="etn"><span class="fl tgl">Теги</span><div class="tgw">${(t.tags||[]).map(g=>`<button class="tgc" data-er="${E(g)}">#${E(g)} ×</button>`).join('')}<input id="etn" type="text" list="tgl" placeholder="#друзья" aria-label="Теги" autocomplete="off" autocorrect="off" spellcheck="false" autocapitalize="none" enterkeyhint="done"></div></label>
 <div class="eac"><button type="button" class="eab" id="etp"></button><button type="button" class="eab" id="erp"></button></div>
-<div class="shf"><button type="button" class="sm del" id="edel">Удалить</button><button type="button" class="sm pr" id="esv">Сохранить</button></div>`}
+<div class="shf"><button type="button" class="sm del" id="edel">Удалить</button><button type="button" class="sm pr" id="esv">Сохранить</button></div>`;edCurBind()}
 /* v132: окно операции монтируется один раз (renderEd в openEdit); дальше обновляются только изменившиеся узлы.
    Раньше смена типа/категории/тега пересоздавала innerHTML: поля терялись, фокус и клавиатура сбрасывались, окно мигало. */
 function patchEdTags(){const w=ed.querySelector('.tgw'),i=$('#etn');if(!w||!i||!eT){if(eT)renderEd();return}
@@ -3574,13 +3616,14 @@ function patchEdTags(){const w=ed.querySelector('.tgw'),i=$('#etn');if(!w||!i||!
 function patchEd(){const t=eT;if(!t)return;const am=$('#eam');if(!am){renderEd();return}
   const inc=t.type==='income';
   ed.querySelectorAll('[data-et]').forEach(b=>b.classList.toggle('on',(b.dataset.et==='income')===inc));
-  am.classList.toggle('inc',inc);am.classList.toggle('exp',!inc);
+  [am,$('#efa')].forEach(x=>{if(x){x.classList.toggle('inc',inc);x.classList.toggle('exp',!inc)}});
   const c=$('#eca');if(c)c.textContent=cd(t.category).l;
   patchEdTags()}
-function saveEd(){if(!eT)return;readEd();if(!(eT.amount>0)){toast('Укажите сумму');return}
+function saveEd(){if(!eT)return;readEd();if(edFo(eT)&&!(eT._r>0)){toast('Укажите курс '+eT.oc);return}if(!(eT.amount>0)){toast('Укажите сумму');return}
   const o=tx.find(x=>x.id===eT.id);if(!o){closeEdit();return}
   if(eT.category!==o.category&&eT.note)learn[norm(eT.note)]=eT.category;
-  if(o.oc&&eT.amount!==o.amount){delete o.oc;delete o.oa;delete o.rt}
+  if(edFo(eT)&&eT.oa>0){o.oc=eT.oc;o.oa=edR2(eT.oa);o.rt=Math.round((eT._r>0?eT._r:eT.amount/eT.oa)*1e6)/1e6}else{delete o.oc;delete o.oa;delete o.rt}   // v196: исходная сумма, валюта и курс — из строки суммы
+  if(edFo(eT)&&eT._rman>0){const c=eT.oc;setRate(c,eT._rman);ratePin(c,eT._rman);rhAdd(c,eT._rman,'m');if(Array.isArray(cfg.curList)&&!cfg.curList.includes(c))cfg.curList.push(c)}   // введённый тут курс — ручной курс валюты
   if(eT.date!==o.date)month=mOf(eT.date);
   if(eT.tags&&eT.tags.length)o.tags=eT.tags.slice();else delete o.tags;
     o.type=eT.type;o.amount=eT.amount;o.note=eT.note||cd(eT.category).n;o.category=eT.category;o.date=eT.date;
@@ -6005,7 +6048,7 @@ async function ibLoop(){
     if(st.side!=='f'&&st.anchor&&st.anchor.isConnected){const r=st.anchor.getBoundingClientRect();st.ar=r.top;hz(r);
       let y=st.side==='b'?r.bottom+6:r.top-6-st.h;y=Math.max(T,Math.min(y,B-st.h));el.style.top=Math.round(y)+'px';el.style.height=Math.round(st.h)+'px';return}
     el.style.left=el.style.right='';const top=Math.max(T,v.bot-Math.min(520,(v.bot-v.top)*.86));el.style.top=Math.round(top)+'px';el.style.height=Math.round(B-top)+'px'}
-  const hz=r=>{const W=window.innerWidth;el.style.left=Math.round(Math.max(8,r.left-8))+'px';el.style.right=Math.round(Math.max(8,W-r.right-8))+'px'};   // v150: короткое меню — по ширине строки, а не окна
+  const hz=r=>{const W=window.innerWidth,MW=180;let L=Math.max(8,r.left-8),R=Math.max(8,W-r.right-8);if(W-L-R<MW){L=Math.max(8,Math.min(L,W-8-MW));R=Math.max(8,W-L-Math.max(MW,r.width+16))}el.style.left=Math.round(L)+'px';el.style.right=Math.round(R)+'px'};   // v196: узкая строка (значок валюты) — меню не уже 180 px   // v150: короткое меню — по ширине строки, а не окна
   function follow(){raf=0;if(!st)return;const a=st.anchor;
     if(a){const w=a.closest(WIN+',#fp'),ok=w&&(w.id==='fp'?w.classList.contains('open'):w.classList.contains('on')&&!w.classList.contains('sub'));if(!a.isConnected||!ok){close();return}
       if(st.side!=='f'&&Math.abs(a.getBoundingClientRect().top-st.ar)>.5)place()}
