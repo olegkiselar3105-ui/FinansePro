@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v194';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v197';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -1626,6 +1626,25 @@ html:root :is(#sh #rev,#gd #bvl) .rv2>.rva{order:3;flex:0 0 96px}
 html:root :is(#sh #rev,#gd #bvl) .rv2>.rvf>input{flex:1 1 auto;min-width:0;width:100%!important}
 html:root #ed>.eaw{order:1;display:block}
 html:root #ed>.eaw>#eam{width:100%}
+/* v196: строка суммы в валюте: [5][EUR ▾] = [100] MDL, под ней курс */
+html:root #ed>.eamr{order:1;display:flex;align-items:center;gap:8px;min-width:0;margin:6px 0 0;padding:0 0 6px;border-bottom:1px solid var(--sep)}
+html:root #ed>.eamr .eaw{display:block;flex:1 1 0;min-width:0}
+html:root #ed>.eamr :is(#eam,#efa){width:100%!important;display:block;box-sizing:border-box;font-size:24px!important;font-weight:500;letter-spacing:-.01em;padding:6px 0!important;margin:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:none;color:var(--t)!important;text-align:left}
+html:root #ed>.eamr :is(#eam,#efa):focus{border:0!important;box-shadow:none!important;outline:0}
+html:root #ed>.eamr.one #eam{font-size:26px!important}
+html:root #ed>.eamr .ecw{order:0;flex:none;position:relative;display:inline-flex;align-items:center}
+html:root #ed>.eamr #ecs{-webkit-appearance:none;appearance:none;height:30px;padding:0 22px 0 10px!important;border:0!important;border-radius:15px!important;background:rgba(var(--wr),.09)!important;color:var(--t)!important;font-size:14px!important;font-weight:600;width:auto!important;min-width:0;text-align:left}
+html:root #ed>.eamr .ecw::after{content:"";position:absolute;right:9px;top:50%;width:6px;height:6px;margin-top:-5px;border-right:1.6px solid var(--m2);border-bottom:1.6px solid var(--m2);transform:rotate(45deg);pointer-events:none}
+html:root #ed>.eamr .eeq{display:none}
+html:root #ed>.eamr .efw{order:1}
+html:root #ed>.eamr .emw{order:3}
+html:root #ed>.eamr .ecm{order:2;flex:none;color:var(--m2);font-size:14px;font-weight:600;line-height:30px}
+html:root #ed>.eamr.one .efw,html:root #ed>.eamr.one .eeq,html:root #ed>.eamr.one .ecm{display:none}
+html:root #ed>.eamr.one .emw{order:1}
+html:root #ed>.erl{order:2;display:none;padding-top:6px}
+html:root #ed>.erl.on{display:block}
+html:root #ed>.erl .ertw{display:none!important;margin-top:4px}
+html:root #ed>.erl .ertw.on{display:flex!important}
 html:root #gd>.eaw{display:block}
 html:root #cp .cpe>.cpw{display:block;min-width:0}
 html:root #cp .cpe>.cpw>input{width:100%}
@@ -2078,6 +2097,38 @@ const curOf=w=>{if(!w)return null;w=String(w).toLowerCase().trim();for(const k o
 // записать курс (1 единица валюты c в основной валюте) и пересчитать черновики
 let lastRateN=0,cadOpen=false;
 const needRate=new Set();
+// v195: история курсов — cfg.rh = {EUR:[[дата,курс,база,источник],…]}: «1 EUR = курс базы» на дату; источник: m — вручную, a — автообновление, c — подтверждён при смене валюты.
+// Пока только копится (на показ не влияет): задел под показ старых операций по курсу на их дату. Одна запись в день на валюту и базу, повтор того же курса не пишется.
+const RH_MAX=400;
+function rhAdd(c,v,src,base,d){v=+v;base=base||cfg.cur;if(!/^[A-Z]{3}$/.test(c)||!/^[A-Z]{3}$/.test(base)||c===base||!(v>0)||!isFinite(v))return;
+  d=d||ymd(new Date());if(!_obj(cfg.rh))cfg.rh={};const L=Array.isArray(cfg.rh[c])?cfg.rh[c]:(cfg.rh[c]=[]);v=Math.round(v*1e6)/1e6;
+  let last=null;for(let i=L.length-1;i>=0;i--)if(L[i][2]===base){last=L[i];break}
+  if(last&&last[0]===d){if(last[3]==='m'&&src==='a'&&cfg.rman&&cfg.rman[c])return;last[1]=v;last[3]=src;return}   // тот же день: обновить (автокурс не перекрывает действующий ручной)
+  if(last&&last[1]===v)return;
+  L.push([d,v,base,src]);L.sort((a,b)=>a[0]<b[0]?-1:a[0]>b[0]?1:0);if(L.length>RH_MAX)L.splice(0,L.length-RH_MAX)}
+// слияние истории с другого устройства или из файла: объединение по дате и базе; при совпадении — ручная запись, иначе своя
+function rhMerge(a,b){const o={};[b,a].forEach((src,k)=>{if(!_obj(src))return;Object.entries(src).forEach(([c,L])=>{if(!/^[A-Z]{3}$/.test(c)||!Array.isArray(L))return;
+    const m=o[c]||(o[c]=new Map());L.forEach(e=>{if(!Array.isArray(e)||!/^\d{4}-\d{2}-\d{2}$/.test(String(e[0]))||!(+e[1]>0)||!/^[A-Z]{3}$/.test(String(e[2])))return;
+      const key=e[0]+'|'+e[2],was=m.get(key),x=[String(e[0]),+e[1],String(e[2]),e[3]==='m'||e[3]==='c'?e[3]:'a'];
+      if(!was||k===1&&!(was[3]==='m'&&x[3]!=='m')||k===0&&x[3]==='m'&&was[3]!=='m')m.set(key,x)})})});
+  const r={};Object.entries(o).forEach(([c,m])=>{const L=[...m.values()].sort((x,y)=>x[0]<y[0]?-1:x[0]>y[0]?1:0);r[c]=L.slice(-RH_MAX)});return r}
+// v195: копия перед сменой валюты — отдельный ключ finapp.cbk (не перезаписывается синхронизацией, в отличие от finapp.bak): до 2 последних копий.
+// «Вернуть как было» в окне валют возвращает данные на момент до смены (валюту, суммы, курсы); изменения после неё отменяются.
+const CBK='finapp.cbk',CBK_MAX=25e5;
+const cbkList=()=>{try{const a=JSON.parse(localStorage.getItem(CBK)||'[]');return Array.isArray(a)?a.filter(x=>x&&x.d&&Array.isArray(x.d.tx)&&x.t>0):[]}catch{return[]}};
+function cbkSave(from,to){let one;try{one={t:Date.now(),from,to,d:JSON.parse(JSON.stringify(collectData()))}}catch{return false}
+  const L=[one,...cbkList()].slice(0,2);
+  for(let n=L.length;n>0;n--){try{const j=JSON.stringify(L.slice(0,n));if(j.length>CBK_MAX)continue;localStorage.setItem(CBK,j);return true}catch{}}
+  return false}
+function cbkRestore(b){const d=b.d,now=Date.now(),ids=a=>new Set((Array.isArray(a)?a:[]).map(x=>x&&x.id!=null?String(x.id):'').filter(Boolean));
+  // всё, что появилось после копии, помечаем удалённым — иначе слияние с облаком вернёт это обратно
+  const keep=ids(d.tx),late=tx.filter(t=>!keep.has(String(t.id))).map(t=>t.id);
+  const dc=_obj(d.cfg)?d.cfg:{};['goals','debts','rec','custom','tpls'].forEach(k=>{const was=ids(dc[k]);(Array.isArray(cfg[k])?cfg[k]:[]).forEach(x=>{if(x&&x.id!=null&&!was.has(String(x.id)))late.push(x.id)})});
+  const del={...(_obj(cfg.del)?cfg.del:{})};
+  applyReplace({tx:JSON.parse(JSON.stringify(d.tx)),cfg:JSON.parse(JSON.stringify(dc)),learn:_obj(d.learn)?d.learn:{}});
+  tx.forEach(t=>{t.u=now});                                            // восстановленные операции свежее облачных — при слиянии побеждают они
+  cfg.del={...del,...(_obj(cfg.del)?cfg.del:{})};untomb([...keep]);tomb(late);
+  save();render();renderSt();return late.length}
 // Курс фиксируется в операции в момент записи (поле rt): смена курса не трогает прошлое.
 // Пересчитываются только черновики и операции, у которых суммы ещё нет (курс не был задан); all=true — пересчитать всё по явной просьбе.
 function setRate(c,v,all){v=parseFloat(String(v).replace(/\s/g,'').replace(',','.'))||0;cfg.rates[c]=v;needRate.delete(c);lastRateN=0;
@@ -2232,7 +2283,7 @@ function voiceCmds(raw){
   // курс в строке: «курс евро 19.5», «1 евро = 19,5», «курс доллара = 17.8 лей» → записать курс (прошлые операции сохраняют свой курс)
   {const CW=curWords(),NUM='(\\d+(?:[.,]\\d+)?)',BW='(?:\\s*(?:'+curSrc(cfg.cur)+')(?=\\s|$))?';
    const setR=(w,n)=>{const cc=curOf(w);if(!cc||cc===cfg.cur)return false;const v=parseFloat(String(n).replace(',','.'));if(!(v>0))return false;
-     setRate(cc,v);(cfg.rman||(cfg.rman={}))[cc]=1;if(!cfg.curList.includes(cc))cfg.curList.push(cc);save();
+     setRate(cc,v);(cfg.rman||(cfg.rman={}))[cc]=1;rhAdd(cc,v,'m');if(!cfg.curList.includes(cc))cfg.curList.push(cc);save();
      say('Курс: 1 '+cc+' = '+fmtN(v)+' '+cfg.cur+(lastRateN?' · посчитано операций без курса: '+lastRateN:''));return true};
    take(new RegExp(B+'курс\\S*\\s+(?:1\\s*)?('+CW+')(?=\\s|$|[=:—-])\\s*(?:=|:|—|-|равен|равна)?\\s*'+NUM+BW,'g'),m=>setR(m[1],m[2]));
    take(new RegExp(B+'1\\s*('+CW+')\\s*(?:=|:|—|-)\\s*'+NUM+BW,'g'),m=>setR(m[1],m[2]))}
@@ -3519,21 +3570,46 @@ ed.addEventListener('touchmove',e=>e.stopPropagation(),{passive:true});
 function openEdit(id){if(isModalOpen())return;const t=tx.find(x=>x.id===id);if(!t)return;cancelGestures();lockBg(true);eT={...t,tags:[...(t.tags||[])]};renderEd();const row=document.querySelector('.r2[data-id="'+id+'"]');if(row)setOrigin(ed,row);ed.classList.add('on');ov.className='on'}
 function closeEdit(){ed.classList.remove('on');eT=null;unlockIfIdle();cancelGestures()}
 const _renderEd0=renderEd;
+// v196: строка суммы в окне операции: [сумма в валюте][EUR ▾] = [сумма в основной] MDL, под ней курс. Сумма в валюте → основная по курсу операции;
+// основная → валюта по тому же курсу (курс не меняется). Выбор валюты (список добавленных): число остаётся, курс — текущий для новой валюты, основная пересчитывается;
+// выбрана основная — операция становится обычной. Нет курса — его можно ввести тут же (сохраняется как ручной курс валюты). Окно не перерисовывается — клавиатура не сбрасывается.
+const edFo=t=>!!(t&&t.oc&&t.oc!==cfg.cur);
+const edR2=v=>Math.round((+v||0)*100)/100,edNum=v=>v>0?String(edR2(v)):'';
+function edCurs(c0){const S=new Set();[...(Array.isArray(cfg.curList)?cfg.curList:[]),...Object.keys(_obj(cfg.rates)?cfg.rates:{}).filter(c=>parseFloat(cfg.rates[c])>0),c0].forEach(c=>{if(c&&c!==cfg.cur&&/^[A-Z]{3}$/.test(c))S.add(c)});return [cfg.cur,...S]}
+function edCurHtml(t,inc){const fo=edFo(t),cls=inc?'inc':'exp';
+  t._r=fo?(t.oa>0&&t.amount>0?t.amount/t.oa:(+t.rt||parseFloat(cfg.rates[t.oc])||0)):0;t._now=false;delete t._rman;
+  return `<div class="eamr${fo?'':' one'}" id="eamr"><label class="eaw efw"><input id="efa" class="${cls}" inputmode="decimal" enterkeyhint="done" value="${fo?edNum(t.oa):''}" placeholder="0" aria-label="Сумма в валюте"></label>`+
+    `<label class="ecw"><select id="ecs" aria-label="Валюта операции">${edCurs(t.oc).map(c=>`<option value="${c}"${c===(fo?t.oc:cfg.cur)?' selected':''}>${c}</option>`).join('')}</select></label>`+
+    `<span class="eeq">=</span><label class="eaw emw"><input id="eam" class="${cls}" inputmode="decimal" enterkeyhint="done" value="${t.amount||''}" placeholder="Сумма" aria-label="Сумма"></label><span class="ecm">${E(cfg.cur)}</span></div>`+
+    `<div class="eo erl${fo?' on':''}" id="erl"><span id="ert0"></span><label class="ef ertw" id="ertw">Курс 1 <b id="ertc"></b> в ${E(cfg.cur)}<input id="ert" inputmode="decimal" enterkeyhint="done" placeholder="Курс" aria-label="Курс"></label></div>`}
+function edCurLine(){const t=eT,l=$('#erl'),x=$('#ert0'),w=$('#ertw');if(!t||!l||!x||!w)return;const fo=edFo(t);l.classList.toggle('on',fo);
+  if(!fo){x.textContent='';w.classList.remove('on');return}
+  const r=t._r;x.textContent=r>0?'1 '+t.oc+' = '+fmtN(Math.round(r*1e4)/1e4)+' '+cfg.cur+' · '+(t._rman?'ваш курс':t._now?'курс сейчас':'курс на день записи'):'Нет курса '+t.oc+' — введите его';
+  w.classList.toggle('on',!(r>0)||!!t._rman);$('#ertc').textContent=t.oc}
+function edCurBind(){const fa=$('#efa'),am=$('#eam'),cs=$('#ecs'),rt=$('#ert'),row=$('#eamr');if(!fa||!am||!cs||!row)return;
+  const fromFa=()=>{if(!edFo(eT))return;eT.oa=Math.max(0,pn(fa.value));if(eT._r>0)am.value=edNum(eT.oa*eT._r)};
+  fa.addEventListener('input',fromFa);
+  am.addEventListener('input',()=>{if(!edFo(eT)||!(eT._r>0))return;const v=Math.max(0,pn(am.value));eT.oa=edR2(v/eT._r);fa.value=edNum(eT.oa)});
+  if(rt)rt.addEventListener('input',()=>{const v=pn(rt.value);eT._r=v>0?v:0;eT._rman=v>0?v:0;fromFa();const x=$('#ert0');if(x)x.textContent=v>0?'1 '+eT.oc+' = '+fmtN(v)+' '+cfg.cur+' · ваш курс':'Нет курса '+eT.oc+' — введите его'});
+  cs.addEventListener('change',()=>{const c=cs.value,n=edFo(eT)?pn(fa.value):pn(am.value);delete eT._rman;if(rt)rt.value='';
+    if(c===cfg.cur){delete eT.oc;delete eT.oa;delete eT.rt;eT._r=0;am.value=edNum(n);row.classList.add('one');edCurLine();return}
+    const r=parseFloat(cfg.rates[c])||0;eT.oc=c;eT.oa=n>0?edR2(n):0;eT._r=r;eT._now=true;fa.value=edNum(n);am.value=r>0?edNum(n*r):'';row.classList.remove('one');edCurLine();
+    if(!(r>0)&&ratesAuto())ratesRefresh(true).then(()=>{const r2=parseFloat(cfg.rates[c])||0;if(r2>0&&eT&&eT.oc===c&&!(eT._r>0)){eT._r=r2;fromFa();edCurLine()}}).catch(()=>{})});
+  edCurLine()}
 function readEd(){if(!eT)return;const g=k=>{const el=$(k);return el?el.value:''};
-  eT.amount=Math.max(0,pn(g('#eam')));eT.note=g('#eno').trim();{const cv=g('#eca');if(cv&&cv!=='__add')eT.category=cv}
+  eT.amount=Math.max(0,pn(g('#eam')));{const fa=$('#efa');if(edFo(eT)&&fa)eT.oa=Math.max(0,pn(fa.value))}eT.note=g('#eno').trim();{const cv=g('#eca');if(cv&&cv!=='__add')eT.category=cv}
   if(/^\d{4}-\d{2}-\d{2}$/.test(g('#eda')))eT.date=g('#eda');
   const en=$('#etn');if(en&&en.value.trim()){addTags(eT,en.value);en.value=''}}
 function renderEd(){const t=eT,inc=t.type==='income';
   ed.innerHTML=`<div class="eh"><span class="sgm"><button data-et="expense" class="${inc?'':'on'}">Расх.</button><button data-et="income" class="${inc?'on':''}">Дох.</button></span><button class="x" id="ecl" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div>
-<label class="eaw"><input id="eam" class="${inc?'inc':'exp'}" inputmode="decimal" enterkeyhint="done" value="${t.amount||''}" placeholder="Сумма" aria-label="Сумма"></label>
-${t.oc?`<div class="eo">${fmt(t.oa)} ${E(t.oc)}</div>`:''}
+${edCurHtml(t,inc)}
 <label class="ef">Заметка<input id="eno" type="text" value="${E(t.note)}" placeholder="Заметка" enterkeyhint="done" autocomplete="off" autocorrect="off" spellcheck="false"></label>
 <label class="ef">Категория<button type="button" class="cpb" id="eca">${E(cd(t.category).l)}</button></label>
 
 <label class="ef">Дата<input id="eda" type="date" value="${t.date}"></label>
 <label class="ef tgf" for="etn"><span class="fl tgl">Теги</span><div class="tgw">${(t.tags||[]).map(g=>`<button class="tgc" data-er="${E(g)}">#${E(g)} ×</button>`).join('')}<input id="etn" type="text" list="tgl" placeholder="#друзья" aria-label="Теги" autocomplete="off" autocorrect="off" spellcheck="false" autocapitalize="none" enterkeyhint="done"></div></label>
 <div class="eac"><button type="button" class="eab" id="etp"></button><button type="button" class="eab" id="erp"></button></div>
-<div class="shf"><button type="button" class="sm del" id="edel">Удалить</button><button type="button" class="sm pr" id="esv">Сохранить</button></div>`}
+<div class="shf"><button type="button" class="sm del" id="edel">Удалить</button><button type="button" class="sm pr" id="esv">Сохранить</button></div>`;edCurBind()}
 /* v132: окно операции монтируется один раз (renderEd в openEdit); дальше обновляются только изменившиеся узлы.
    Раньше смена типа/категории/тега пересоздавала innerHTML: поля терялись, фокус и клавиатура сбрасывались, окно мигало. */
 function patchEdTags(){const w=ed.querySelector('.tgw'),i=$('#etn');if(!w||!i||!eT){if(eT)renderEd();return}
@@ -3542,13 +3618,14 @@ function patchEdTags(){const w=ed.querySelector('.tgw'),i=$('#etn');if(!w||!i||!
 function patchEd(){const t=eT;if(!t)return;const am=$('#eam');if(!am){renderEd();return}
   const inc=t.type==='income';
   ed.querySelectorAll('[data-et]').forEach(b=>b.classList.toggle('on',(b.dataset.et==='income')===inc));
-  am.classList.toggle('inc',inc);am.classList.toggle('exp',!inc);
+  [am,$('#efa')].forEach(x=>{if(x){x.classList.toggle('inc',inc);x.classList.toggle('exp',!inc)}});
   const c=$('#eca');if(c)c.textContent=cd(t.category).l;
   patchEdTags()}
-function saveEd(){if(!eT)return;readEd();if(!(eT.amount>0)){toast('Укажите сумму');return}
+function saveEd(){if(!eT)return;readEd();if(edFo(eT)&&!(eT._r>0)){toast('Укажите курс '+eT.oc);return}if(!(eT.amount>0)){toast('Укажите сумму');return}
   const o=tx.find(x=>x.id===eT.id);if(!o){closeEdit();return}
   if(eT.category!==o.category&&eT.note)learn[norm(eT.note)]=eT.category;
-  if(o.oc&&eT.amount!==o.amount){delete o.oc;delete o.oa;delete o.rt}
+  if(edFo(eT)&&eT.oa>0){o.oc=eT.oc;o.oa=edR2(eT.oa);o.rt=Math.round((eT._r>0?eT._r:eT.amount/eT.oa)*1e6)/1e6}else{delete o.oc;delete o.oa;delete o.rt}   // v196: исходная сумма, валюта и курс — из строки суммы
+  if(edFo(eT)&&eT._rman>0){const c=eT.oc;setRate(c,eT._rman);ratePin(c,eT._rman);rhAdd(c,eT._rman,'m');if(Array.isArray(cfg.curList)&&!cfg.curList.includes(c))cfg.curList.push(c)}   // введённый тут курс — ручной курс валюты
   if(eT.date!==o.date)month=mOf(eT.date);
   if(eT.tags&&eT.tags.length)o.tags=eT.tags.slice();else delete o.tags;
     o.type=eT.type;o.amount=eT.amount;o.note=eT.note||cd(eT.category).n;o.category=eT.category;o.date=eT.date;
@@ -4469,30 +4546,39 @@ function importData(text){
     const sid=v=>String(v==null?'':v).replace(/[^\w-]/g,'').slice(0,40),isHex=v=>/^#[0-9a-f]{6}$/i.test(String(v));
     const have=new Set(tx.map(t=>t.id)),hadTx=tx.length>0;
     const add=d.tx.filter(t=>t&&sid(t.id)&&!have.has(sid(t.id))&&/^\d{4}-\d{2}-\d{2}/.test(String(t.date))&&(t.type==='income'||t.type==='expense')).map(t=>({id:sid(t.id),type:t.type,amount:Math.max(0,Number(t.amount)||0),category:sid(t.category)||(t.type==='income'?'in_other':'other'),note:String(t.note||''),date:String(t.date).slice(0,10),...(Array.isArray(t.tags)&&t.tags.map(normTag).filter(Boolean).length?{tags:[...new Set(t.tags.map(normTag).filter(Boolean))].slice(0,8)}:{}),...(t.oc?{oc:String(t.oc),oa:Number(t.oa)||0,...(Number(t.rt)>0?{rt:Number(t.rt)}:{})}:{}),...(t.rid?{rid:sid(t.rid)}:{})}));
+    // v195: файл в другой валюте — суммы пересчитываются по курсу (у операций сохраняется исходная сумма и валюта); без курса импорт не начинаем
+    let fx=0;const fc=d.cfg&&typeof d.cfg.cur==='string'?d.cfg.cur:'';
+    if(hadTx&&/^[A-Z]{3}$/.test(fc)&&fc!==cfg.cur){const r=parseFloat(cfg.rates[fc])||0;
+      if(!(r>0)){bqInfo('В файле суммы в '+fc,'Чтобы добавить их, задайте курс 1 '+fc+' в '+cfg.cur+' в «Валюта и курсы» и повторите импорт.');return}
+      fx=r;const R=v=>Math.round(v*r*100)/100;
+      add.forEach(t=>{if(t.oc===cfg.cur){t.amount=Math.round((t.oa||0)*100)/100;delete t.oc;delete t.oa;delete t.rt}
+        else if(t.oc){t.amount=R(t.amount);if(t.oa>0)t.rt=Math.round(t.amount/t.oa*1e6)/1e6;else delete t.rt}
+        else{t.oc=fc;t.oa=t.amount;t.rt=r;t.amount=R(t.amount)}})}
     const hasExtra=!!(d.cfg&&(Number(d.cfg.budget)>0||Object.keys(_obj(d.cfg.bm)?d.cfg.bm:{}).length||(d.cfg.goals||[]).length||(d.cfg.debts||[]).length||(d.cfg.rec||[]).length||(d.cfg.custom||[]).length));
     if(!add.length&&!hasExtra){toast('Новых данных в файле нет');return}
-    bqAsk('Импорт копии',add.length?'Добавить операций из файла: '+add.length+'? Настройки, цели и долги из файла тоже добавятся.':'Новых операций нет. Добавить из файла настройки, цели и долги?','Добавить',()=>applyData(d,{add,sid,isHex,hadTx}));}
+    bqAsk('Импорт копии',(add.length?'Добавить операций из файла: '+add.length+'? Настройки, цели и долги из файла тоже добавятся.':'Новых операций нет. Добавить из файла настройки, цели и долги?')+(fx?' Суммы в файле в '+fc+' — пересчитаются в '+cfg.cur+' по курсу 1 '+fc+' = '+fmtN(fx)+' '+cfg.cur+'.':''),'Добавить',()=>applyData(d,{add,sid,isHex,hadTx,fx}));}
   catch{toast('Не удалось прочитать файл')}}
 function applyData(d,o){o=o||{};
   if(o.replace)return applyReplace(d);
   return applyMerge(d,o)}
 // слияние (импорт JSON из файла): добавляет недостающее, ничего не затирает
-function applyMerge(d,o){const {add,sid,isHex,hadTx}=o;
+function applyMerge(d,o){const {add,sid,isHex,hadTx}=o,fx=o.fx>0?o.fx:1,F=v=>Math.round((Number(v)||0)*fx*100)/100;
   try{
     ((d.cfg&&d.cfg.custom)||[]).forEach(x=>{const id=x&&sid(x.id);if(id&&!cfg.custom.some(y=>y.id===id))cfg.custom.push({id,l:String(x.l||'Категория').slice(0,40),c:isHex(x.c)?x.c:'#8a8a8a',t:x.t==='income'?'income':'expense',k:String(x.k||'')})});
     if(d.cfg&&d.cfg.catOv&&typeof d.cfg.catOv==='object'){const o={};Object.entries(d.cfg.catOv).forEach(([k,v])=>{if(!v||typeof v!=='object')return;const r={};if(v.l)r.l=String(v.l).slice(0,40);if(isHex(v.c))r.c=v.c;if(v.k)r.k=String(v.k).slice(0,300);o[sid(k)]=r});cfg.catOv={...o,...cfg.catOv}}
-    if(d.cfg&&d.cfg.limits&&typeof d.cfg.limits==='object')Object.entries(d.cfg.limits).forEach(([k,v])=>{const n=Number(v),id=sid(k);if(id&&n>0&&!(cfg.limits[id]>0))cfg.limits[id]=n});
-    if(d.cfg&&Array.isArray(d.cfg.goals))d.cfg.goals.forEach(g=>{const id=g&&sid(g.id);if(!id||cfg.goals.some(x=>x.id===id))return;const tg=Number(g.target);if(!(tg>0))return;
-      cfg.goals.push({id,name:String(g.name||'Цель').slice(0,40),target:tg,saved:Math.max(0,Number(g.saved)||0),plan:Math.max(0,Number(g.plan)||0),tag:normTag(g.tag||''),by:/^\d{4}-\d{2}-\d{2}$/.test(String(g.by))?String(g.by):'',closed:/^\d{4}-\d{2}-\d{2}$/.test(String(g.closed))?String(g.closed):'',created:/^\d{4}-\d{2}-\d{2}$/.test(String(g.created))?String(g.created):ymd(new Date()),log:(Array.isArray(g.log)?g.log:[]).filter(e=>e&&/^\d{4}-\d{2}-\d{2}$/.test(String(e.d))&&isFinite(Number(e.a))).map(e=>({d:String(e.d),a:Number(e.a)})).slice(-200)})});
-    if(d.cfg&&Array.isArray(d.cfg.debts))d.cfg.debts.forEach(x=>{const id=x&&sid(x.id);if(!id||cfg.debts.some(y=>y.id===id))return;const am=Number(x.amount);if(!(am>0))return;
-      cfg.debts.push({id,who:String(x.who||'Без имени').slice(0,40),dir:x.dir==='out'?'out':'in',amount:am,paid:Math.max(0,Math.min(am,Number(x.paid)||0)),due:/^\d{4}-\d{2}-\d{2}$/.test(String(x.due))?String(x.due):'',closed:/^\d{4}-\d{2}-\d{2}$/.test(String(x.closed))?String(x.closed):'',created:/^\d{4}-\d{2}-\d{2}$/.test(String(x.created))?String(x.created):ymd(new Date()),log:[]})});
-    if(d.cfg&&Array.isArray(d.cfg.rec))d.cfg.rec.forEach(x=>{const id=x&&sid(x.id);if(!id||cfg.rec.some(y=>y.id===id))return;const r=recClean(x,id);if(r)cfg.rec.push(r)});
-    if(d.cfg&&Array.isArray(d.cfg.tpls))d.cfg.tpls.forEach(x=>{const r=tplClean(x);if(r&&!cfg.tpls.some(y=>y.id===r.id))cfg.tpls.push(r)});
+    if(d.cfg&&d.cfg.limits&&typeof d.cfg.limits==='object')Object.entries(d.cfg.limits).forEach(([k,v])=>{const n=F(v),id=sid(k);if(id&&n>0&&!(cfg.limits[id]>0))cfg.limits[id]=n});
+    if(d.cfg&&Array.isArray(d.cfg.goals))d.cfg.goals.forEach(g=>{const id=g&&sid(g.id);if(!id||cfg.goals.some(x=>x.id===id))return;const tg=F(g.target);if(!(tg>0))return;
+      cfg.goals.push({id,name:String(g.name||'Цель').slice(0,40),target:tg,saved:Math.max(0,F(g.saved)),plan:Math.max(0,F(g.plan)),tag:normTag(g.tag||''),by:/^\d{4}-\d{2}-\d{2}$/.test(String(g.by))?String(g.by):'',closed:/^\d{4}-\d{2}-\d{2}$/.test(String(g.closed))?String(g.closed):'',created:/^\d{4}-\d{2}-\d{2}$/.test(String(g.created))?String(g.created):ymd(new Date()),log:(Array.isArray(g.log)?g.log:[]).filter(e=>e&&/^\d{4}-\d{2}-\d{2}$/.test(String(e.d))&&isFinite(Number(e.a))).map(e=>({d:String(e.d),a:F(e.a)})).slice(-200)})});
+    if(d.cfg&&Array.isArray(d.cfg.debts))d.cfg.debts.forEach(x=>{const id=x&&sid(x.id);if(!id||cfg.debts.some(y=>y.id===id))return;const am=F(x.amount);if(!(am>0))return;
+      cfg.debts.push({id,who:String(x.who||'Без имени').slice(0,40),dir:x.dir==='out'?'out':'in',amount:am,paid:Math.max(0,Math.min(am,F(x.paid))),due:/^\d{4}-\d{2}-\d{2}$/.test(String(x.due))?String(x.due):'',closed:/^\d{4}-\d{2}-\d{2}$/.test(String(x.closed))?String(x.closed):'',created:/^\d{4}-\d{2}-\d{2}$/.test(String(x.created))?String(x.created):ymd(new Date()),log:[]})});
+    if(d.cfg&&Array.isArray(d.cfg.rec))d.cfg.rec.forEach(x=>{const id=x&&sid(x.id);if(!id||cfg.rec.some(y=>y.id===id))return;const r=recClean(fx!==1?{...x,amount:F(x.amount)}:x,id);if(r)cfg.rec.push(r)});
+    if(d.cfg&&Array.isArray(d.cfg.tpls))d.cfg.tpls.forEach(x=>{const r=tplClean(fx!==1?{...x,amount:F(x.amount)}:x);if(r&&!cfg.tpls.some(y=>y.id===r.id))cfg.tpls.push(r)});
     if(d.cfg){const c=d.cfg;if(Array.isArray(c.cc))c.cc.forEach(k=>{if(/^[A-Z]{3}$/.test(k)&&!codes().includes(k))cfg.cc.push(k)});const CS=codes();
       if(!hadTx&&CS.includes(c.cur)&&c.cur!==cfg.cur){cfg.cur=c.cur;cfg.rates={}}
       if(c.cur===cfg.cur&&c.rates&&typeof c.rates==='object')CS.forEach(k=>{const v=Number(c.rates[k]);if(k!==cfg.cur&&v>0&&!(parseFloat(cfg.rates[k])>0))cfg.rates[k]=v});
-      if(!(cfg.budget>0)&&Number(c.budget)>0)cfg.budget=Number(c.budget);
-      if(_obj(c.bm)){if(!_obj(cfg.bm))cfg.bm={};Object.entries(c.bm).forEach(([k,v])=>{if(/^\d{4}-\d{2}$/.test(k)&&Number(v)>0&&!(Number(cfg.bm[k])>0))cfg.bm[k]=Number(v)})}
+      if(_obj(c.rh)){cfg.rh=rhMerge(cfg.rh,c.rh);if(!Object.keys(cfg.rh).length)delete cfg.rh}
+      if(!(cfg.budget>0)&&Number(c.budget)>0)cfg.budget=F(c.budget);
+      if(_obj(c.bm)){if(!_obj(cfg.bm))cfg.bm={};Object.entries(c.bm).forEach(([k,v])=>{if(/^\d{4}-\d{2}$/.test(k)&&Number(v)>0&&!(Number(cfg.bm[k])>0))cfg.bm[k]=F(v)})}
       if(Array.isArray(c.hide))c.hide.map(sid).filter(Boolean).forEach(x=>{if(!cfg.hide.includes(x))cfg.hide.push(x)})}
     const lr={};Object.entries(d.learn||{}).forEach(([k,v])=>{if(sid(v))lr[String(k).slice(0,80)]=sid(v)});
     learn={...lr,...learn};buildAll();tx=[...add,...tx];save();render();renderSt();toast('Импортировано операций: '+add.length)}catch{toast('Не удалось прочитать файл')}}
@@ -4547,23 +4633,24 @@ ${cadOpen?`<div class="cpl">${rest.map(c=>`<button type="button" class="cpi" dat
 <label>Обновлять курсы автоматически<button type="button" class="tg${ratesAuto()?' on':''}" id="arate" role="switch" aria-checked="${ratesAuto()}" aria-label="Обновлять курсы автоматически"></button></label>
 <label>Курсы: open.er-api.com<button type="button" class="sm" id="arnow">Обновить</button></label>
 <div class="hint2" id="arst">${E(ratesStatus())}</div>
+${(()=>{const b=cbkList()[0];if(!b)return'';const w=new Date(b.t),p=n=>String(n).padStart(2,'0');
+  return `<label>До смены валюты ${E(b.from)} → ${E(b.to)} · ${p(w.getDate())}.${p(w.getMonth()+1)} ${p(w.getHours())}:${p(w.getMinutes())}<button type="button" class="sm" id="cbkr">Вернуть как было</button></label>`})()}
 <div class="hint2">Задайте курс — и фразы вроде «кофе 5 евро», «такси $10», «один доллар» сами переведутся в ${E(cfg.cur)}. Курс можно написать и в строке записи: «курс евро 19.5». При смене курса все записи в этой валюте пересчитываются. Любую валюту можно добавить по коду из 3 букв.</div>`;
     $('#cu').onchange=e=>{const nc=e.target.value,oc=cfg.cur;if(nc===oc)return;
-      const rt=parseFloat(cfg.rates[nc])||0,CS=codes();
-      const apply=f=>{const R=v=>Math.round((Number(v)||0)*f*100)/100;
+      const rt=parseFloat(cfg.rates[nc])||0,CS=codes(),has=tx.length||cfg.budget>0||Object.keys(cfg.bm||{}).length||cfg.goals.length||cfg.debts.length||cfg.rec.length;
+      const apply=f=>{const R=v=>Math.round((Number(v)||0)*f*100)/100;const bk=has?cbkSave(oc,nc):true;if(f&&rt>0)rhAdd(nc,rt,'c',oc);
         if(f){tx.forEach(t=>{t.amount=R(t.amount)});cfg.budget=R(cfg.budget);Object.keys(cfg.bm||{}).forEach(k=>{cfg.bm[k]=R(cfg.bm[k])});
           Object.keys(cfg.limits).forEach(k=>{cfg.limits[k]=R(cfg.limits[k])});if(_obj(cfg.lm))Object.values(cfg.lm).forEach(o=>{if(_obj(o))Object.keys(o).forEach(k=>{o[k]=R(o[k])})});
           cfg.goals.forEach(g=>{g.target=R(g.target);g.saved=R(g.saved);g.plan=R(g.plan);(g.log||[]).forEach(l=>{if(typeof l.a==='number')l.a=R(l.a)})});
           cfg.debts.forEach(d=>{d.amount=R(d.amount);d.paid=R(d.paid);(d.log||[]).forEach(l=>{if(typeof l.a==='number')l.a=R(l.a)})});
           cfg.rec.forEach(r=>{r.amount=R(r.amount)})}
         const nr={};if(f)CS.forEach(c=>{if(c===nc)return;const v=c===oc?1:(parseFloat(cfg.rates[c])||0);if(v>0)nr[c]=Math.round(v*f*1e6)/1e6});
-        cfg.rates=nr;cfg.rman={};cfg.ratesAt=0;cfg.cur=nc;save();render();renderCf();renderSt();toast('Валюта: '+nc+(f?' · суммы пересчитаны':''))};
-      const has=tx.length||cfg.budget>0||Object.keys(cfg.bm||{}).length||cfg.goals.length||cfg.debts.length||cfg.rec.length;
+        cfg.rates=nr;cfg.rman={};cfg.ratesAt=0;cfg.cur=nc;save();render();renderCf();renderSt();toast(bk?'Валюта: '+nc+(f?' · суммы пересчитаны':'')+' · копия сохранена':'Валюта: '+nc+' · копию сохранить не удалось — сделайте экспорт JSON')};
       renderCf();
       if(!has){apply(0);return}
       if(rt>0)bqAsk('Сменить валюту на '+nc+'?','Курс: 1 '+nc+' = '+fmtN(rt)+' '+oc+'. Все суммы (операции, бюджет, лимиты, цели, долги, повторяющиеся) будут пересчитаны в '+nc+'.','Пересчитать',()=>apply(1/rt));
       else bqAsk('Сменить валюту на '+nc+'?','Курс 1 '+nc+' в '+oc+' не задан, поэтому суммы не пересчитаются: останутся прежними числами, но будут считаться в '+nc+'. Чтобы пересчитать, сначала введите курс ниже.','Без пересчёта',()=>apply(0))};
-    cf.querySelectorAll('.rt').forEach(i=>i.onchange=()=>{const c=i.dataset.c,v=setRate(c,i.value);ratePin(c,v);if(lastRateN){render();toast('Посчитано операций без курса: '+lastRateN)}if(drafts.length)renderRev(true);
+    cf.querySelectorAll('.rt').forEach(i=>i.onchange=()=>{const c=i.dataset.c,v=setRate(c,i.value);ratePin(c,v);rhAdd(c,v,'m');save();if(lastRateN){render();toast('Посчитано операций без курса: '+lastRateN)}if(drafts.length)renderRev(true);
       // прошлые операции сохраняют курс на момент записи; пересчёт — только по явному согласию
       if(v>0){const n=tx.filter(t=>t.oc===c&&t.oa>0&&t.amount>0&&Math.round(t.oa*v*100)/100!==t.amount).length;
         if(n)bqAsk('Пересчитать прошлые операции?','Операции в '+c+' ('+n+' шт.) сохраняют курс, который действовал при записи. Пересчитать их по новому курсу 1 '+c+' = '+fmtN(v)+' '+cfg.cur+'?','Пересчитать',()=>{setRate(c,v,true);render();toast('Пересчитано операций: '+lastRateN)})}});
@@ -4575,6 +4662,10 @@ ${cadOpen?`<div class="cpl">${rest.map(c=>`<button type="button" class="cpi" dat
           toast(v>0?'Курс: 1 '+c+' = '+fmtN(v)+' '+cfg.cur:ok?'Курса '+c+' нет в источнике — введите вручную':'Нет связи — введите курс '+c+' вручную')})}
       else{const n=cf.querySelector('.rt[data-c="'+c+'"]');if(n)n.focus({preventScroll:true})}};
     const cb=$('#cadb');if(cb)cb.onclick=()=>{cadOpen=!cadOpen;renderCf()};
+    const kb=$('#cbkr');if(kb)kb.onclick=()=>{const b=cbkList()[0];if(!b)return;const w=new Date(b.t),p=n=>String(n).padStart(2,'0'),at=p(w.getDate())+'.'+p(w.getMonth()+1)+' '+p(w.getHours())+':'+p(w.getMinutes());
+      const keep=new Set(b.d.tx.map(t=>String(t.id))),late=tx.filter(t=>!keep.has(String(t.id))).length;
+      bqAsk('Вернуть как было до '+at+'?','Валюта снова станет '+b.from+', суммы, курсы, бюджет, лимиты, цели и долги — как были до смены на '+b.to+'.'+(late?' Операции, добавленные после этого ('+late+' шт.), будут удалены.':'')+' Другие изменения после '+at+' тоже отменятся.','Вернуть',()=>{
+        cbkRestore(b);try{localStorage.setItem(CBK,JSON.stringify(cbkList().slice(1)))}catch{}renderCf();toast('Данные возвращены на '+at)})};
     cf.querySelectorAll('.cpi').forEach(b=>b.onclick=()=>addCur(b.dataset.c));
     const ca=$('#cadd');if(ca)ca.onchange=e=>{const c=e.target.value.trim().toUpperCase();e.target.value='';if(c)addCur(c)};ratesBind()}
 }
@@ -5437,6 +5528,7 @@ function mergeCloudData(d){
     ['goals','debts','rec','custom'].forEach(k=>{mg[k]=un(cfg[k],dc[k])});
     ['rates','limits','catOv','bm','rman','lm'].forEach(k=>{mg[k]={...(_obj(dc[k])?dc[k]:{}),...(_obj(cfg[k])?cfg[k]:{})}});
     ['cc','curList'].forEach(k=>{mg[k]=arr(cfg[k],dc[k])});
+    mg.rh=rhMerge(cfg.rh,dc.rh);if(!Object.keys(mg.rh).length)delete mg.rh;
     mg.del=del;
     cfg=mg;tx=out;learn={...(_obj(d.learn)?d.learn:{}),...learn};
     normState();buildAll();snapTx(false);save()}
@@ -5556,6 +5648,7 @@ function ratesRefresh(force){
       let n=0;
       for(const[c,v]of Object.entries(got)){
         if(cfg.rman&&cfg.rman[c])continue;                         // ручной курс не трогаем
+        rhAdd(c,v,'a');
         if(parseFloat(cfg.rates[c])===v)continue;
         setRate(c,v);n++}                                          // setRate досчитывает только черновики и операции без суммы
       cfg.ratesAt=Date.now();cfg.ratesBase=cfg.cur;cfg.ratesErr='';save();
@@ -5957,7 +6050,7 @@ async function ibLoop(){
     if(st.side!=='f'&&st.anchor&&st.anchor.isConnected){const r=st.anchor.getBoundingClientRect();st.ar=r.top;hz(r);
       let y=st.side==='b'?r.bottom+6:r.top-6-st.h;y=Math.max(T,Math.min(y,B-st.h));el.style.top=Math.round(y)+'px';el.style.height=Math.round(st.h)+'px';return}
     el.style.left=el.style.right='';const top=Math.max(T,v.bot-Math.min(520,(v.bot-v.top)*.86));el.style.top=Math.round(top)+'px';el.style.height=Math.round(B-top)+'px'}
-  const hz=r=>{const W=window.innerWidth;el.style.left=Math.round(Math.max(8,r.left-8))+'px';el.style.right=Math.round(Math.max(8,W-r.right-8))+'px'};   // v150: короткое меню — по ширине строки, а не окна
+  const hz=r=>{const W=window.innerWidth,MW=180;let L=Math.max(8,r.left-8),R=Math.max(8,W-r.right-8);if(W-L-R<MW){L=Math.max(8,Math.min(L,W-8-MW));R=Math.max(8,W-L-Math.max(MW,r.width+16))}el.style.left=Math.round(L)+'px';el.style.right=Math.round(R)+'px'};   // v196: узкая строка (значок валюты) — меню не уже 180 px   // v150: короткое меню — по ширине строки, а не окна
   function follow(){raf=0;if(!st)return;const a=st.anchor;
     if(a){const w=a.closest(WIN+',#fp'),ok=w&&(w.id==='fp'?w.classList.contains('open'):w.classList.contains('on')&&!w.classList.contains('sub'));if(!a.isConnected||!ok){close();return}
       if(st.side!=='f'&&Math.abs(a.getBoundingClientRect().top-st.ar)>.5)place()}
