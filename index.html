@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v196';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v197';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -1627,18 +1627,20 @@ html:root :is(#sh #rev,#gd #bvl) .rv2>.rvf>input{flex:1 1 auto;min-width:0;width
 html:root #ed>.eaw{order:1;display:block}
 html:root #ed>.eaw>#eam{width:100%}
 /* v196: строка суммы в валюте: [5][EUR ▾] = [100] MDL, под ней курс */
-html:root #ed>.eamr{order:1;display:flex;align-items:flex-end;gap:8px;min-width:0;margin:6px 0 0;padding:0 0 6px;border-bottom:1px solid var(--sep)}
+html:root #ed>.eamr{order:1;display:flex;align-items:center;gap:8px;min-width:0;margin:6px 0 0;padding:0 0 6px;border-bottom:1px solid var(--sep)}
 html:root #ed>.eamr .eaw{display:block;flex:1 1 0;min-width:0}
-html:root #ed>.eamr :is(#eam,#efa){width:100%!important;display:block;box-sizing:border-box;font-size:24px!important;font-weight:500;letter-spacing:-.01em;padding:10px 0 0!important;margin:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:none;color:var(--t)!important;text-align:left}
+html:root #ed>.eamr :is(#eam,#efa){width:100%!important;display:block;box-sizing:border-box;font-size:24px!important;font-weight:500;letter-spacing:-.01em;padding:6px 0!important;margin:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:none;color:var(--t)!important;text-align:left}
 html:root #ed>.eamr :is(#eam,#efa):focus{border:0!important;box-shadow:none!important;outline:0}
 html:root #ed>.eamr.one #eam{font-size:26px!important}
-html:root #ed>.eamr .ecw{flex:none;position:relative;display:inline-flex;align-items:center;margin-bottom:2px}
+html:root #ed>.eamr .ecw{order:0;flex:none;position:relative;display:inline-flex;align-items:center}
 html:root #ed>.eamr #ecs{-webkit-appearance:none;appearance:none;height:30px;padding:0 22px 0 10px!important;border:0!important;border-radius:15px!important;background:rgba(var(--wr),.09)!important;color:var(--t)!important;font-size:14px!important;font-weight:600;width:auto!important;min-width:0;text-align:left}
 html:root #ed>.eamr .ecw::after{content:"";position:absolute;right:9px;top:50%;width:6px;height:6px;margin-top:-5px;border-right:1.6px solid var(--m2);border-bottom:1.6px solid var(--m2);transform:rotate(45deg);pointer-events:none}
-html:root #ed>.eamr .eeq{flex:none;color:var(--m2);font-size:18px;margin-bottom:5px}
-html:root #ed>.eamr .ecm{flex:none;color:var(--m2);font-size:14px;font-weight:600;margin-bottom:8px}
+html:root #ed>.eamr .eeq{display:none}
+html:root #ed>.eamr .efw{order:1}
+html:root #ed>.eamr .emw{order:3}
+html:root #ed>.eamr .ecm{order:2;flex:none;color:var(--m2);font-size:14px;font-weight:600;line-height:30px}
 html:root #ed>.eamr.one .efw,html:root #ed>.eamr.one .eeq,html:root #ed>.eamr.one .ecm{display:none}
-html:root #ed>.eamr.one .emw{order:-1}
+html:root #ed>.eamr.one .emw{order:1}
 html:root #ed>.erl{order:2;display:none;padding-top:6px}
 html:root #ed>.erl.on{display:block}
 html:root #ed>.erl .ertw{display:none!important;margin-top:4px}
