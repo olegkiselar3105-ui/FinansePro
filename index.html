@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v193';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v194';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -3823,10 +3823,11 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
   // даже если JavaScript занят. Раньше каждый кадр считался в JS, и отскок шёл через кадр (на видео 0, −4, 0, −4…)
   const curY=()=>{if(!OS.wa)return OS.y;const f=OS.fr,i=Math.min(f.length-1,Math.max(0,(OS.wa.currentTime||0)*60/1000)),i0=Math.floor(i),i1=Math.min(f.length-1,i0+1);return f[i0]+(f[i1]-f[i0])*(i-i0)};
   const stop=()=>{if(OS.wa){const a=OS.wa;OS.y=curY();OS.wa=null;paint(OS.y);try{a.cancel()}catch(e){}}cancelAnimationFrame(OS.raf);OS.raf=0};
-  function spring(){const k=OS.k||169,c=2*Math.sqrt(k),fr=[];let y=OS.y,v=OS.v;const n=4,d=1/60/n;
+  function spring(skip){const k=OS.k||169,c=2*Math.sqrt(k),fr=[];let y=OS.y,v=OS.v;const n=4,d=1/60/n;
     for(let f=0;f<300;f++){fr.push(Math.round(y*100)/100);for(let i=0;i<n;i++){v+=(-k*y-c*v)*d;y+=v*d}if(Math.abs(y)<.05&&Math.abs(v)<5)break}fr.push(0);
     if(!bodyEl.animate||fr.length<3){OS.last=performance.now();OS.raf=requestAnimationFrame(tick);return}
     stClear();const a=bodyEl.animate(fr.map(y=>({transform:y?'translate3d(0,'+y+'px,0)':'none'})),{duration:(fr.length-1)*1000/60,easing:'linear'});
+    if(skip>0)try{a.currentTime=Math.min(skip,(fr.length-1)*1000/60)}catch(e){}   // v194: удар о край уже был — анимация начинается с того места пружины, где страница должна быть сейчас (раньше повторялся кадр «у края без отскока» — страница на кадр замирала)
     OS.wa=a;OS.fr=fr;OS.raf=-1;a.onfinish=()=>{if(OS.wa===a){OS.wa=null;OS.raf=0;rest()}};a.oncancel=()=>{if(OS.wa===a){OS.wa=null;OS.raf=0;OS.y=0;OS.v=0}}}   // отменил кто-то другой — состояние не зависает
   let rcT=0;
   // слой страницы снимаем не сразу после остановки, а когда всё затихло: иначе в момент снятия строки чуть «щёлкают» на долю пикселя
@@ -3855,7 +3856,7 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
     if(p<=0||p>=mx){
       const top=p<=0,v0=Math.min(4200,Math.abs(MM.v));momStop();MM.skip=performance.now()+200;
       window.scrollTo(0,top?0:mx);
-      if(v0>=260){OS.k=121;OS.y=0;OS.v=top?v0:-v0;spring()}
+      if(v0>=260){OS.k=121;OS.y=0;OS.v=top?v0:-v0;spring(1000/60)}
       return}
     MM.p=p;window.scrollTo(0,p);
     if(Math.abs(MM.v)<24){momStop();return}
@@ -3937,7 +3938,7 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
     const n=performance.now();if(n-wt>400)wa=0;wt=n;wa-=e.deltaY;if(wa>110){wa=0;setSearch(true)}},{passive:true});
   // ---- отскок на инерции: бросок доехал до края — страница чуть выходит за край и пружиной возвращается ----
   // Работает на всех вкладках (прокручивается всё окно). Касание пальцем, программные прокрутки (смена вкладки, scrollTo) и открытые окна не отскакивают.
-  const RMq=matchMedia('(prefers-reduced-motion:reduce)');let wcT=0,touching=false,lastTE=0,lastWh=0,py=pgY(),pt=performance.now(),pv=0,run=0;
+  const RMq=matchMedia('(prefers-reduced-motion:reduce)');let wcT=0,touching=false,lastTE=0,lastWh=0,py=pgY(),pt=performance.now(),pv=0,run=0,pvf=0;
   document.addEventListener('touchstart',()=>{touching=true},{passive:true,capture:true});
   const te=()=>{touching=false;lastTE=Date.now()};
   document.addEventListener('touchend',te,{passive:true,capture:true});document.addEventListener('touchcancel',te,{passive:true,capture:true});
@@ -3945,7 +3946,8 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
   addEventListener('scroll',()=>{
     const y=pgY(),now=performance.now(),dt=Math.max(1,now-pt);
     const v=(y-py)/dt*1000;if(dt>100){pv=0;run=0}pv=lpf(pv,v,dt,24);run=dt<64&&Math.abs(v)>120?run+1:0;
-    const prev=py;py=y;pt=now;
+    const prev=py,pt0=pt;py=y;pt=now;
+    {const mxf=Math.max(0,document.documentElement.scrollHeight-innerHeight);if(dt>100)pvf=0;if(y>0&&y<mxf-1)pvf=v}   // v194: скорость последнего полного шага (шаг, упёршийся в край, короче и занижает скорость)
     // перф: перед краем заранее выносим страницу в отдельный слой — иначе в момент удара о край слой создаётся посреди анимации и кадр «залипает»
     if(!touching&&!OS.raf&&Math.abs(pv)>600){const mx0=document.documentElement.scrollHeight-innerHeight;
       if(mx0>0&&(y<700||y>mx0-700)){0;clearTimeout(wcT);wcT=setTimeout(()=>{if(!OS.raf&&!OS.y&&!OS.drag&&!MM.raf)0},900)}}
@@ -3956,8 +3958,10 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
     const hitTop=prev>0&&y<=0&&pv<-250,hitBot=prev<maxY-1&&y>=maxY-1&&pv>250;
     if(!hitTop&&!hitBot)return;
     if(MM.raf||performance.now()<MM.skip)return;                  // v49: край в ручной инерции обрабатывает она сама
-    const v0=Math.min(4200,Math.abs(pv));if(v0<260)return;         // v49: выход за край = скорость/(ω·e): 3000 px/с ≈ 90 px, как на видео
-    stop();OS.k=121;OS.y=0;OS.v=hitTop?v0:-v0;spring()},{passive:true});
+    const vf=Math.max(Math.abs(pv),Math.sign(pvf)===Math.sign(pv)?Math.abs(pvf):0),v0=Math.min(4200,vf);if(v0<260)return;         // v49: выход за край = скорость/(ω·e): 3000 px/с ≈ 90 px, как на видео
+    // v194: событие прокрутки приходит уже после удара о край (на кадр позже) — пружину запускаем с прошедшим временем: момент удара — по доле последнего шага
+    const step=Math.abs(y-prev),full=vf*(now-pt0)/1000,tHit=pt0+(now-pt0)*(full>0?Math.min(1,step/full):1);
+    stop();OS.k=121;OS.y=0;OS.v=hitTop?v0:-v0;spring(Math.max(8,Math.min(50,now-tHit)))},{passive:true});
   // v49: касание во время движения (пружина, инерция) только ловит список — строка при этом не нажимается
   let guard=false,gT=0;
   const moving=()=>!!(OS.raf||OS.y||MM.raf||(!touching&&performance.now()-pt<110&&Math.abs(pv)>180));
