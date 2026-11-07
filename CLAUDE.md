@@ -27,6 +27,15 @@
 Не советовать добавлять `?v=N` в адрес: метка вызывала двойной запуск из-за старой копии страницы в кэше Telegram.
 Обновления приложение подхватывает само по `IB_VER`.
 
+## Выкладка сайта (Cloudflare Pages) — с ноября 2026, вместо GitHub Pages
+
+Аккаунт GitHub владельца был приостановлен, сайт перенесён на Cloudflare Pages: проект `finansepro`, адрес **https://finansepro.pages.dev** (BotFather и `APP_URL` воркера указывают на него; прежний адрес GitHub Pages больше не основной).
+- Токен Cloudflare (права: Pages Edit, Workers Scripts Edit) хранится как сетевой секрет среды для хоста `api.cloudflare.com`; запросить заново — `request_credential`. В запросах заголовок подставляет прокси: писать `Authorization: Bearer proxy-injected`.
+- `wrangler pages deploy` в облачной сессии НЕ работает (прокси подменяет служебный ключ загрузки, ошибка «Authorization failed 8000013»). Работает так: `python3 tools/pagesworker.py <папка_сайта> build/_worker.js`, затем `curl -X POST https://api.cloudflare.com/client/v4/accounts/<ACCOUNT_ID>/pages/projects/finansepro/deployments -H "Authorization: Bearer proxy-injected" -F 'manifest={}' -F 'branch=main' -F '_worker.js=@build/_worker.js;type=application/javascript+module;filename=_worker.js'`. `<ACCOUNT_ID>` — из `GET /client/v4/accounts`. Готовность — `GET …/deployments/<id>` (этап deploy: success).
+- Папка сайта: `index.html`, `sw.js`, `manifest.webmanifest`, `mail.html`, `_headers`, `icons/` (файлы из `git archive`). Перед выкладкой проверить `IB_VER`. Адрес `finansepro.pages.dev` из облачной сессии недоступен — проверку открытием делает пользователь.
+- Воркер бота (`worker/`) автодеплоился из GitHub (Workers Builds) — без GitHub не обновляется; менять только при необходимости, и только по просьбе пользователя (переменные и секреты воркера не трогать).
+- Когда GitHub вернёт доступ: коммиты ветки `claude/nifty-sagan-pdvw4w` не отправлены (v199 и правило формата) — отправить и открыть PR.
+
 ## Поток данных
 
 1. Пользователь → бот в Telegram. Telegram шлёт обновление на воркер `POST /webhook`
