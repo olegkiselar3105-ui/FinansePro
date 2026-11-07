@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v205';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v206';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -5316,7 +5316,7 @@ function toastKb(){const el=$('#toast');if(!el)return;const vv=window.visualView
   k=Math.max(0,Math.round(window.innerHeight-V)),on=k>80;el.style.setProperty('--tkb',(on?k:0)+'px');el.classList.toggle('kb',on)}
 try{if(window.visualViewport){visualViewport.addEventListener('resize',toastKb);visualViewport.addEventListener('scroll',toastKb)}window.addEventListener('resize',toastKb)}catch(e){}
 function toast(m,lbl,fn,kind,html){
-  if(!lbl&&!(m!=null&&/^(⚠|Введите|Выберите|Укажите|Число месяца|Платежей|Дата окончания|Не удалось|Нет доступа|Датчик|Доступ запрещён|В таблице нет|Пока нечего|Новых данных|Ничего не изменилось|Облако Telegram недоступно|Контакт|Бот:)/.test(String(m)))){if(!_tb)delB=null;_tb=0;return}
+  if(!lbl&&!(m!=null&&/^(⚠|Введите|Выберите|Укажите|Число месяца|Платежей|Дата окончания|Не удалось|Нет доступа|Датчик|Доступ запрещён|В таблице нет|Пока нечего|Новых данных|Ничего не изменилось|Облако Telegram недоступно|Контакт|Бот:|Записи восстановлены)/.test(String(m)))){if(!_tb)delB=null;_tb=0;return}
   const el=$('#toast');clearTimeout(tt);if(!_tb)delB=null;_tb=0;
   el.dataset.k=kind||'';toastKb();
   el.innerHTML=(TIC[kind]?`<span class="tic">${TIC[kind]}</span>`:'')+`<span class="ttx">${html!=null?html:E(m)}</span>`+(lbl?`<button type="button" class="tbt">${lbl}</button>`:'');
@@ -5621,6 +5621,7 @@ async function cloudUnpack(body,z){let json;
 // ---- чтение ----
 async function cloudMeta(){const r=await csCall('getItem','meta');if(!r)return null;
   let m;try{m=JSON.parse(r)}catch{return {bad:1}}
+  if(m&&m.rescue)return {rescue:1,t:+m.t||0};   // v206: метка спасения (старая версия читает её как «облако пустое» и выгружает свои записи)
   if(!m||!(m.n>0)||!(m.t>0)||m.n>CLK.maxKeys)return {bad:1};
   return m}
 async function cloudRead(m){const keys=[];for(let i=0;i<m.n;i++)keys.push('d'+i);
@@ -5647,13 +5648,13 @@ async function cloudPush(){const t=Date.now(),hNow=cloudHash(),json=JSON.stringi
     for(let i=0;i<stale.length;i+=50)await csCall('removeItems',stale.slice(i,i+50))}catch{}}
 
 // ---- загрузка из облака и применение ----
-async function cloudPull(m){const hb=cloudHash();let d;
+async function cloudPull(m,force){const hb=cloudHash();let d;
   try{d=await cloudRead(m)}
   catch(e){if(!(e&&e.corrupt))throw e;
     await new Promise(r=>setTimeout(r,1500));      // возможно, другое устройство как раз дописывает куски
     try{const m2=await cloudMeta();if(m2&&!m2.bad)m=m2;d=await cloudRead(m)}
     catch(e2){if(e2&&e2.corrupt&&cloudHas()){await cloudPush();return}throw e2}}
-  if(cloudHash()!==hb){await cloudPush();return}   // пока читали, пользователь внёс правки — они важнее
+  if(cloudHash()!==hb&&!force){await cloudPush();return}   // пока читали, пользователь внёс правки — они важнее (на пустом устройстве — нет: облако не затираем, v206)
   if(isModalOpen()){CL.retryT=setTimeout(()=>cloudSync('modal'),2500);return 'defer'}   // не меняем данные под открытым окном
   try{if(tx.length){const b=JSON.stringify(collectData());if(b.length<9e5)localStorage.setItem('finapp.bak',b)}}catch{}   // страховка: прежние локальные данные
   applyData(d,{replace:true});CL.pulled=true;
@@ -5663,7 +5664,7 @@ async function cloudPull(m){const hb=cloudHash();let d;
 
 // ---- слияние: правки на двух устройствах объединяются, а не затирают друг друга ----
 function cloudBase(h){if(!h)return;CL.sb=h;try{localStorage.setItem('finapp.synch',h)}catch{}}
-function mergeCloudData(d){
+function mergeCloudData(d,cw){
   CL.mute=true;
   try{
     const dc=_obj(d.cfg)?d.cfg:{},now=Date.now(),old=now-400*864e5,del={};
@@ -5680,7 +5681,7 @@ function mergeCloudData(d){
     // списки с id (цели, долги, повторы, свои категории): объединение, при совпадении — локальная версия
     const un=(a,b)=>{const o=[],sn=new Set();_okArr(a).concat(_okArr(b)).forEach(x=>{const id=x&&x.id!=null?String(x.id):'';if(!id||sn.has(id)||dead(id))return;sn.add(id);o.push(x)});return o};
     const arr=(a,b)=>[...new Set([...(Array.isArray(a)?a:[]),...(Array.isArray(b)?b:[])])];
-    const mg={...dc,...cfg};                                  // одиночные настройки: выигрывают локальные
+    const mg=cw?{...cfg,...dc}:{...dc,...cfg};                // одиночные настройки: выигрывают локальные (при спасении v206 — облачные: прежние настройки человека)
     ['rec','custom'].forEach(k=>{mg[k]=un(cfg[k],dc[k])});
     ['goals','debts'].forEach(k=>{mg[k]=dgMerge(cfg[k],dc[k],k,dead)});   // v198: версия посвежее + записи журнала по id
     ['rates','limits','catOv','bm','rman','lm'].forEach(k=>{mg[k]={...(_obj(dc[k])?dc[k]:{}),...(_obj(cfg[k])?cfg[k]:{})}});
@@ -5691,11 +5692,11 @@ function mergeCloudData(d){
     normState();buildAll();snapTx(false);snapDG(false);save()}
   finally{CL.mute=false}
   applyTheme(false);render();renderSt()}
-async function cloudMerge(m){
+async function cloudMerge(m,cw){
   const d=await cloudRead(m);                               // повреждено/дописывается → ошибка → повтор позже
   if(isModalOpen()){CL.retryT=setTimeout(()=>cloudSync('modal'),2500);return 'defer'}   // не меняем данные под открытым окном
   try{if(tx.length){const b=JSON.stringify(collectData());if(b.length<9e5)localStorage.setItem('finapp.bak',b)}}catch{}   // страховка: локальные данные до слияния
-  mergeCloudData(d);
+  mergeCloudData(d,cw);
   CL.lt=Date.now();cloudPersist();
   await cloudPush();
   try{if(applyRec())render()}catch{}
@@ -5717,6 +5718,16 @@ function cloudFail(e){const x=cloudErr(e);CL.fails++;const first=CL.errShown!==x
 function cloudSoon(){CL.pending=true;if(CL.st!=='sync')csSet('sync');clearTimeout(CL.timer);
   CL.timer=setTimeout(()=>{CL.pending=false;cloudSync('save')},1000)}
 
+// ---- v206: спасение записей после переезда ----
+const RSQ_END=Date.UTC(2026,10,21);   // до 21.11.2026
+const rsqOn=()=>Date.now()<RSQ_END;
+const dataEmpty=d=>{const c=_obj(d&&d.cfg)?d.cfg:{};return !_okArr(d&&d.tx).length&&!_okArr(c.goals).length&&!_okArr(c.debts).length&&!_okArr(c.rec).length&&!_okArr(c.custom).length&&!(+c.budget>0)};
+async function rsqMerge(m){const n0=tx.length;
+  const r=await cloudMerge(m,true);if(r==='defer')return r;
+  try{localStorage.removeItem('finapp.rsq');localStorage.setItem('finapp.rsqd','1')}catch{}
+  if(tx.length>n0)setTimeout(()=>toast('Записи восстановлены из прежней версии'),400);
+  return r}
+
 // ---- главная сверка: читаем meta и решаем — загрузить из облака, отправить в облако или ничего ----
 async function cloudSync(why){
   if(!IN_TG||!CL.on)return;
@@ -5728,16 +5739,28 @@ async function cloudSync(why){
     let m=await cloudMeta();
     const hNow=cloudHash(),edited=hNow!==h0;       // правки, сделанные, пока шёл запрос
     if(m&&m.bad)m=null;
-    let r;
+    let r,rq=false;
+    // v206: спасение записей после переезда на новый адрес (до RSQ_END). Ошибка v198–v205: первый запуск на новом адресе мог записать
+    // пустые данные поверх облака — записи остались только в памяти старого адреса. Если и тут, и в облаке пусто — ставим метку:
+    // старая версия (открытая по старому адресу) примет её за пустое облако и выгрузит свои записи; пока метка стоит — облако не трогаем
+    if(m&&m.rescue){if(rsqOn()){rq=true;try{localStorage.setItem('finapp.rsq',String(m.t||1))}catch{}}else m=null}
+    else if(rsqOn()&&!cloudHas()&&!localStorage.getItem('finapp.rsqd')){let empty=!m;
+      if(m&&!(m.h===hNow)){try{empty=dataEmpty(await cloudRead(m))}catch{empty=false}}
+      else if(m)empty=true;
+      if(empty&&!cloudHas()){await csCall('setItem','meta',JSON.stringify({rescue:1,t:Date.now()}));rq=true;try{localStorage.setItem('finapp.rsq',String(Date.now()))}catch{}}}
+    const rsqHit=!rq&&!!m&&!m.rescue&&(()=>{try{return !!localStorage.getItem('finapp.rsq')}catch{return false}})();
     const base=CL.sb,lch=!!base&&hNow!==base,cch=!!base&&!!m&&m.h!==base;   // менялось ли что-то у нас / в облаке с прошлой сверки
-    if(!m){if(cloudHas())await cloudPush();else CL.lh=hNow}                // в облаке пусто
+    if(rq){}                                                                // ждём записи из старой версии
+    else if(rsqHit)r=await rsqMerge(m);                                     // записи из старой версии пришли — объединяем
+    else if(!m){if(cloudHas())await cloudPush();else CL.lh=hNow}           // в облаке пусто
     else if(m.h===hNow){CL.lt=m.t;cloudPersist();CL.lh=hNow}               // данные уже одинаковые
     else if(lch&&cch)r=await cloudMerge(m);                                // менялось и у нас, и в облаке — объединяем
     else if(base&&cch&&!lch&&!edited)r=await cloudPull(m);                 // изменилось только в облаке (часы устройств не важны)
     else if(base&&lch&&!cch)await cloudPush();                             // изменилось только у нас
-    else if(!edited&&m.t>CL.lt)r=await cloudPull(m);                       // основы нет (первый запуск после обновления): новее по времени
-    else await cloudPush();                                                // локальная новее (или равна, но изменена)
+    else if(!cloudHas())r=await cloudPull(m,true);                         // на устройстве пусто (первый запуск, новый адрес) — берём облако целиком
+    else r=await cloudMerge(m);                                            // v206: без общей основы облако не затираем — объединяем
     if(r==='defer')defer=true;
+    else if(rq){ok=true;CL.lastSync=Date.now();CL.fails=0;csSet('ok','')}
     else{ok=true;cloudBase(CL.lh);CL.lastSync=Date.now();setTimeout(lkMigrateSoon,0);CL.fails=0;CL.lastErr=null;CL.errShown='';csSet('ok','');if(CL.manual)toast('Облако Telegram: всё сохранено');
       try{if(localStorage.getItem('finapp.rst')){localStorage.removeItem('finapp.rst');if(CL.pulled)toast('Данные восстановлены из облака Telegram')}}catch{}}
   }catch(e){cloudFail(e)}
