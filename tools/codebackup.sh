@@ -1,5 +1,5 @@
 #!/bin/bash
-# Копия всего кода (git bundle со всей историей) в закрытом хранилище Cloudflare KV «finansepro-code».
+# Копия всего кода (tar: git bundle со всей историей + файл shallow — граница истории, рабочая копия была неполным клоном GitHub) в закрытом хранилище Cloudflare KV «finansepro-code».
 # Заменяет GitHub как место хранения кода. Ключ Cloudflare подставляет прокси облачной среды
 # (сетевой секрет для api.cloudflare.com), в коде ключей нет.
 #   tools/codebackup.sh save           — положить копию текущего репозитория (latest + история, хранится 10 последних)
@@ -31,9 +31,10 @@ save)
   [ -z "$(git status --porcelain)" ] || { echo "Есть незакоммиченные изменения — сначала коммит"; exit 1; }
   ver=$(grep -o "IB_VER='v[0-9]*'" index.html | head -1 | grep -o "v[0-9]*" || echo v0)
   key="b/$(date -u +%Y%m%d-%H%M%S)-$ver-$(git rev-parse --short HEAD)"
-  f="$TMP/fp-backup.bundle"; rm -f "$f"
-  git bundle create "$f" --all 2>/dev/null
-  git bundle verify "$f" >/dev/null 2>&1
+  w="$TMP/fp-backup"; rm -rf "$w"; mkdir -p "$w"; f="$w.tar"; rm -f "$f"
+  git bundle create "$w/repo.bundle" --all 2>/dev/null
+  if [ -f .git/shallow ]; then cp .git/shallow "$w/shallow"; else : > "$w/shallow"; fi
+  tar cf "$f" -C "$w" repo.bundle shallow
   for k in latest "$key"; do
     curl -sf -X PUT "$BASE/$k" -H "$H" -H "Content-Type: application/octet-stream" --data-binary @"$f" | python3 -c "import sys,json;assert json.load(sys.stdin)['success']"
   done
@@ -44,16 +45,16 @@ save)
   # проверка: скачанная копия совпадает с отправленной
   curl -sf "$BASE/latest" -H "$H" -o "$f.chk"; cmp -s "$f" "$f.chk" || { echo "Проверка не прошла: копия в хранилище отличается"; exit 1; }
   echo "Сохранено: latest и $key ($(stat -c %s "$f") байт); копий в истории: $(keys "$ACC" "$NS" | wc -l)"
-  rm -f "$f.chk";;
+  rm -f "$f.chk"; rm -rf "$w";;
 list) keys "$ACC" "$NS";;
 restore)
   dir=${2:?укажите папку}; k=${3:-latest}
   [ ! -e "$dir" ] || { echo "Папка $dir уже есть"; exit 1; }
-  f="$TMP/fp-restore.bundle"; curl -sf "$BASE/$k" -H "$H" -o "$f"
-  git bundle verify "$f" >/dev/null 2>&1 || { echo "Копия повреждена"; exit 1; }
-  git clone -q "$f" "$dir"
-  ( cd "$dir"; for b in $(git branch -r | grep -v HEAD | sed 's#origin/##'); do git branch -q "$b" "origin/$b" 2>/dev/null || true; done
-    git checkout -q claude/nifty-sagan-pdvw4w 2>/dev/null || true; git remote remove origin )
+  w="$TMP/fp-restore"; rm -rf "$w"; mkdir -p "$w"; curl -sf "$BASE/$k" -H "$H" -o "$w/b.tar"; tar xf "$w/b.tar" -C "$w"
+  mkdir -p "$dir"; ( cd "$dir"; git init -q; [ -s "$w/shallow" ] && cp "$w/shallow" .git/shallow
+    git fetch -q "$w/repo.bundle" '+refs/heads/*:refs/heads/*'
+    git checkout -q claude/nifty-sagan-pdvw4w 2>/dev/null || git checkout -q main
+    git fsck --no-dangling >/dev/null 2>&1 || { echo "Копия повреждена"; exit 1; } )
   echo "Восстановлено в $dir из $k: $(cd "$dir"; git log -1 --format='%h %s')";;
 *) echo "использование: $0 save | list | restore <папка> [ключ]"; exit 1;;
 esac
