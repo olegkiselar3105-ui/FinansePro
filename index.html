@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v200';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v201';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -789,8 +789,8 @@ html.intro.rr #body .dg .sw:not(.sd){animation-delay:calc(.34s + var(--ri,0)*.05
 html.intro.rr #body>*:not(.dg){animation-delay:calc(.2s - var(--ie,0s))}
 html.intro #tabs,html.intro #fab{animation:inUp .9s cubic-bezier(.22,1,.36,1) .4s backwards}
 @keyframes inA{from{opacity:0;transform:translate3d(0,10px,0)}}
-@keyframes inTop{from{opacity:0;transform:translate3d(0,28px,0) scale(.95);filter:blur(10px)}}
-@keyframes inMn{from{opacity:0;transform:translate3d(0,8px,0);letter-spacing:.14em;filter:blur(4px)}}
+@keyframes inTop{from{opacity:0;transform:translate3d(0,28px,0) scale(.95)}}
+@keyframes inMn{from{opacity:0;transform:translate3d(0,8px,0)}}
 @keyframes inDg{from{opacity:0;transform:translate3d(0,22px,0) scale(.97)}}
 @keyframes inRow{from{opacity:0;transform:translate3d(0,12px,0)}}
 @keyframes inUp{from{opacity:0;transform:translate3d(0,26px,0)}}
@@ -1670,6 +1670,10 @@ html:root #gd .jr b.jo{color:var(--rd)}
 html:root #gd .jr b.ji{color:var(--g)}
 html:root #gd .hops{display:flex;align-items:center;justify-content:center;gap:4px;width:100%;min-height:44px;margin:4px 0 2px;border:0;border-radius:14px;background:rgba(var(--wr),.07);color:var(--t);font:inherit;font-size:14px;font-weight:600;-webkit-tap-highlight-color:transparent}
 html:root #gd .hops:active{opacity:.6}
+/* v201: постоянно видимые размытые панели — без дополнительного фильтра насыщенности и не сильнее 16 px: на iPhone размытие считается заново каждый кадр прокрутки */
+html:root #nb .nbg{-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+html:root #stkbg{-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+html:root #totop{-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
 html:root #bq label.ef{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:50px;margin:0;border-bottom:1px solid var(--sep);font-size:15px;color:var(--m2)}
 html:root #bq label.ef input{flex:1;min-width:0;width:auto;text-align:right;font-size:16px!important;color:var(--t);background:none;border:0;padding:10px 0;outline:0;-webkit-appearance:none;appearance:none}
 html:root #bq label.ef input[type=date]{text-align:right;text-align-last:right}
@@ -2909,8 +2913,7 @@ function histHtml(){if(!gT)return'';const isD=gT.mode==='dhist',o=((isD?cfg.debt
     return `<button type="button" class="jr" data-je="${n}"><span class="jd">${E(dFmt(x.d)||'—')}</span><span class="jt">${E(x.l)}${x.e&&jLinked(x.e)?'<small>в операциях</small>':''}</span><b class="${out?'jo':'ji'}">${out?'−':'+'}${fmt(Math.abs(x.a))}</b></button>`}).join('')
     :'<div class="jz">Записей пока нет</div>';
   const act=isD?(dRem(o)>0?`<button class="sm pr" id="hpay">${o.dir==='in'?'+ Получил':'+ Вернул'}</button>`:'<span></span>'):`<button class="sm pr" id="hdep">+ Взнос</button>`;
-  const nl=lkTx(isD?'d':'g',o.id).length;
-  return `<div class="eh"><b>${E(isD?o.who:o.name)}</b><button class="x" id="gcl" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div><div class="eo">${E(sub)}</div><div class="jl">${li}</div>${nl?`<button type="button" class="hops" id="hops">Показать в операциях · ${nl}${CHV}</button>`:''}<div class="shf"><button class="sm" id="hed">Изменить</button>${act}</div>`}
+  return `<div class="eh"><b>${E(isD?o.who:o.name)}</b><button class="x" id="gcl" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div><div class="eo">${E(sub)}</div><div class="jl">${li}</div><div class="shf"><button class="sm" id="hed">Изменить</button>${act}</div>`}
 function openHist(k,o,src){if(!o||isModalOpen())return;cancelGestures();lockBg(true);gT={mode:k==='d'?'dhist':'ghist',id:o.id};gd.innerHTML=histHtml();showGd(src)}
 function histRefresh(){if(gT&&(gT.mode==='dhist'||gT.mode==='ghist')&&gd.classList.contains('on')){const h=histHtml();if(h)gd.innerHTML=h;else closeGoal()}}
 // правка одной записи — поверх истории (окно подтверждения)
@@ -3598,7 +3601,7 @@ function fxExpand(el,dur,delay){
   const d=dur||620,dl=delay||0,ov=el.style.overflow;el.style.overflow='hidden';
   const geo=fxGeo(el,cs,h),nb=fxNeighbors(el,1,d,dl);
   const g=el.animate([ZG,geo],{duration:d,delay:dl,easing:FX_I,fill:'backwards'});
-  const v=el.animate([{opacity:0,transform:'scale(.84) translateY(-6px)',filter:'blur(5px)'},{opacity:1,transform:'none',filter:'blur(0px)'}],
+  const v=el.animate([{opacity:0,transform:'scale(.84) translateY(-6px)'},{opacity:1,transform:'none'}],
     {duration:Math.round(d*1.05),delay:dl,easing:FX_I,fill:'backwards'});
   const end=()=>{el.style.overflow=ov};
   return Promise.all([g.finished,v.finished,...nb.map(a=>a.finished)]).then(end,end)}
