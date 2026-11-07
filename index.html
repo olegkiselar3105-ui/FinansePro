@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v197';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v198';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -1908,12 +1908,48 @@ function snapTx(stamp){const now=Date.now(),keep=new Map();
 // метки удаления: cfg.del = {id: время}; без них при слиянии удалённое «воскресло» бы с другого устройства
 const tomb=ids=>{if(!_obj(cfg.del))cfg.del={};const n=Date.now();[].concat(ids).forEach(id=>{if(id!=null&&id!=='')cfg.del[String(id)]=n})};
 const untomb=ids=>{if(!_obj(cfg.del))return;[].concat(ids).forEach(id=>{delete cfg.del[String(id)]})};
-buildAll();snapTx(false);
+buildAll();snapTx(false);snapDG(false);
 let month=curM(),tab='list',drafts=[],undoIds=null,KD='expense',RG='month';
 const PGY={};let pgCur=null,pgFresh=false;   // v55: прокрутка каждой страницы (см. pgKey)
 function mk(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
 function ymd(d){return mk(d)+'-'+String(d.getDate()).padStart(2,'0')}
-const save=()=>{try{lkSync()}catch(e){console.error(e)}snapTx(true);S.set('finapp.tx',tx);S.set('finapp.settings',cfg);S.set('finapp.learn',learn);cloudTouch()};
+// ===== v198: журналы долгов и целей — у каждой записи свой id, удаления помечаются (cfg.del), правки сливаются между устройствами =====
+// Долг: d.ol — выдачи/займы (меняют amount), d.log — возвраты (меняют paid); цель: g.log — взносы (+) и снятия (−), меняют saved.
+// Каждая запись журнала получает id (старые — тоже, без связывания с операциями). Удалённая запись помечается в cfg.del по своему id — как операция.
+// Долг и цель получают метку правки u (как операции); при слиянии с облаком берётся версия посвежее, записи журнала объединяются по id,
+// помеченные удалёнными выбрасываются, а записи, добавленные на другом устройстве, добавляются со своим влиянием на сумму.
+const jNid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+function jIds(){[...(cfg.debts||[]),...(cfg.goals||[])].forEach(o=>{if(!o)return;['log','ol'].forEach(k=>{if(Array.isArray(o[k]))o[k].forEach(e=>{if(e&&typeof e==='object'&&!e.id)e.id=jNid()})})})}
+var _dgs=_dgs||new Map();   // var: snapDG вызывается при загрузке раньше этой строки
+function snapDG(stamp){const now=Date.now(),keep=new Map();
+  ['debts','goals'].forEach(k=>(cfg[k]||[]).forEach(o=>{if(!o||o.id==null)return;const{u,...r}=o,j=JSON.stringify(r),key=k+'|'+o.id;if(stamp&&_dgs.get(key)!==j)o.u=now;keep.set(key,j)}));_dgs=keep}
+function dgMerge(L,C,k,dead){const kk=k==='debts'?'d':'g',cm=new Map(),out=[],seen=new Set();
+  (Array.isArray(C)?C:[]).forEach(x=>{if(x&&x.id!=null)cm.set(String(x.id),x)});
+  const one=(a,b)=>{const base=JSON.parse(JSON.stringify(!b?a:!a?b:((+b.u||0)>(+a.u||0)?b:a))),oth=!a||!b?null:(base.id===a.id&&(+b.u||0)>(+a.u||0)?a:b);
+    (kk==='d'?['log','ol']:['log']).forEach(ln=>{const p=ln==='ol'?'open':kk==='d'?'pay':'dep';let L2=Array.isArray(base[ln])?base[ln]:null;
+      const ids=new Set((L2||[]).map(e=>e&&e.id).filter(Boolean));
+      if(oth&&Array.isArray(oth[ln]))oth[ln].forEach(e=>{if(!e||!e.id||ids.has(e.id)||dead(e.id))return;L2=L2||(base[ln]=[]);const c=JSON.parse(JSON.stringify(e));L2.push(c);ids.add(c.id);lkEff({o:base,k:kk,p},r2(c.a))});
+      if(L2)base[ln]=L2.filter(e=>{if(e&&e.id&&dead(e.id)){lkEff({o:base,k:kk,p},-r2(e.a));return false}return true}).sort((x,y)=>String(x&&x.d||'').localeCompare(String(y&&y.d||'')))});
+    return base};
+  (Array.isArray(L)?L:[]).forEach(a=>{if(!a||a.id==null)return;const id=String(a.id);if(seen.has(id)||dead(id))return;seen.add(id);out.push(one(a,cm.get(id)))});
+  cm.forEach((b,id)=>{if(seen.has(id)||dead(id))return;seen.add(id);out.push(one(null,b))});
+  return out}
+// запись журнала → операция (обратная сторона связи v180): удалить запись — удаляется её операция; изменить сумму/дату — меняется и операция
+function jFind(e){for(const d of cfg.debts||[]){for(const [ln,p] of [['log','pay'],['ol','open']]){const L=d[ln];if(Array.isArray(L)&&L.includes(e))return{o:d,k:'d',p,L}}}
+  for(const g of cfg.goals||[]){if(Array.isArray(g.log)&&g.log.includes(e))return{o:g,k:'g',p:'dep',L:g.log}}return null}
+function jDel(e){const x=jFind(e);if(!x)return null;const i=x.L.indexOf(e);x.L.splice(i,1);lkEff(x,-r2(e.a));if(e.id)tomb(e.id);
+  let t=null;if(e.t){t=tx.find(z=>z.id===e.t)||null;if(t){tx=tx.filter(z=>z!==t);tomb(t.id)}}
+  return {x,e,i,t}}
+function jUndo(r){if(!r)return;const L=r.x.L;L.splice(Math.min(r.i,L.length),0,r.e);lkEff(r.x,r2(r.e.a));if(r.e.id)untomb(r.e.id);if(r.t){untomb(r.t.id);if(!tx.includes(r.t))tx.push(r.t)}}
+function jEdit(e,a,d){const x=jFind(e);if(!x)return false;a=r2(a);
+  if(x.k==='g'&&x.p==='dep'&&r2(e.a)<0)a=-Math.abs(a);   // снятие из цели остаётся снятием
+  lkEff(x,r2(a-r2(e.a)));e.a=a;if(/^\d{4}-\d{2}-\d{2}$/.test(String(d||'')))e.d=d;
+  const t=e.t&&tx.find(z=>z.id===e.t);if(t){const was=t.amount;t.amount=Math.abs(a);t.date=e.d;if(t.oc&&t.oa>0&&was>0)t.oa=r2(t.oa*t.amount/was)}
+  return true}
+// дата начала долга: своя (created), у старых без неё — дата первой записи журнала
+function dStart(d){if(!d)return'';if(/^\d{4}-\d{2}-\d{2}$/.test(String(d.created||'')))return d.created;
+  const ds=[...(d.ol||[]),...(d.log||[])].map(e=>e&&e.d).filter(v=>/^\d{4}-\d{2}-\d{2}$/.test(String(v))).sort();return ds[0]||''}
+const save=()=>{try{jIds();lkSync()}catch(e){console.error(e)}snapTx(true);snapDG(true);S.set('finapp.tx',tx);S.set('finapp.settings',cfg);S.set('finapp.learn',learn);cloudTouch()};
 // бюджет по месяцам: cfg.bm = {'2026-10': 20000}; месяц без своего бюджета берёт общий (cfg.budget)
 const bmOwn=m=>!!(cfg.bm&&Number(cfg.bm[m])>0);
 // перенос бюджета: включён (по умолчанию) — общий бюджет действует и в следующих месяцах; выключен — с месяца budOffFrom его нужно задавать вручную (прошлые месяцы не меняются)
@@ -1984,7 +2020,7 @@ function lkSync(){let ch=false;const T=new Map(tx.map(t=>[t.id,t])),ents=new Map
   // 1) записи истории со связью: операция удалена или стала другой категории — снимаем её влияние; сумма или дата изменились — переносим
   ents.forEach(x=>{if(!x.e.t)return;const t=T.get(x.e.t);
     if(!t||!t.lk||t.lk.e!==x.e.id||!ok(t,x)){
-      lkEff(x,-r2(x.e.a));const L=lkList(x.o,x.k,x.p),i=L.indexOf(x.e);if(i>=0)L.splice(i,1);ents.delete(x.e.id);
+      lkEff(x,-r2(x.e.a));const L=lkList(x.o,x.k,x.p),i=L.indexOf(x.e);if(i>=0)L.splice(i,1);ents.delete(x.e.id);tomb(x.e.id);
       if(t&&t.lk&&t.lk.e===x.e.id)delete t.lk;
       // долг, созданный этой операцией, без других записей и возвратов — убираем целиком
       if(x.k==='d'&&x.p==='open'&&!(x.o.amount>0)&&!(x.o.paid>0)&&!(x.o.log||[]).length&&!(x.o.ol||[]).length){cfg.debts=cfg.debts.filter(d=>d!==x.o);tomb(x.o.id)}
@@ -1995,12 +2031,12 @@ function lkSync(){let ch=false;const T=new Map(tx.map(t=>[t.id,t])),ents=new Map
   tx.forEach(t=>{if(!t.lk)return;const x=ents.get(t.lk.e);if(x&&x.e.t===t.id)return;
     const k=t.lk.k,p=k==='g'?'dep':(t.lk.p==='open'?'open':'pay'),o=x?null:((k==='d'?cfg.debts:cfg.goals)||[]).find(z=>z.id===t.lk.id);
     if(!o||!ok(t,{k,p,o})){delete t.lk;ch=true;return}
-    const e={d:t.date,a:r2(t.amount),id:t.lk.e,t:t.id};lkList(o,k,p).push(e);lkEff({o,k,p},e.a);ents.set(e.id,{o,e,k,p});ch=true});
+    const e={d:t.date,a:r2(t.amount),id:t.lk.e,t:t.id};lkList(o,k,p).push(e);untomb(e.id);lkEff({o,k,p},e.a);ents.set(e.id,{o,e,k,p});ch=true});
   return ch}
 // правка долга или цели в «Планах»: уменьшение снимается с последних связанных записей (и их операций), увеличение — новая связанная запись
 function lkShrink(o,k,p,need){const L=lkList(o,k,p);
   for(let i=L.length-1;i>=0&&need>.004;i--){const e=L[i],t=e&&e.t&&tx.find(z=>z.id===e.t);if(!t)continue;const a=r2(e.a);
-    if(a<=need+.004){tx=tx.filter(z=>z!==t);tomb(t.id);L.splice(i,1);need=r2(need-a)}else{e.a=r2(a-need);t.amount=e.a;need=0}}
+    if(a<=need+.004){tx=tx.filter(z=>z!==t);tomb(t.id);L.splice(i,1);if(e.id)tomb(e.id);need=r2(need-a)}else{e.a=r2(a-need);t.amount=e.a;need=0}}
   return need}
 function lkNew(o,k,p,a){a=r2(a);if(!(a>0))return null;const c=lkCat(k,p,o.dir);
   const t=c[0]==='income'?addLinkedIncome(a,o.who):addLinkedExpense(k==='g'?'goal':'debt',a,k==='g'?'Взнос в цель «'+o.name+'»':o.who);
@@ -2835,6 +2871,7 @@ function debtAct(el){const a=el.dataset.da,d=(cfg.debts||[]).find(x=>x.id===el.d
 function openDebt(d,src){if(isModalOpen())return;cancelGestures();lockBg(true);gT={mode:'debt',id:d?d.id:null,dir:d?d.dir:'in'};const v=d||{who:'',amount:'',paid:'',due:''};
   gd.innerHTML=`<div class="eh"><span class="sgm"><button data-dm="in" class="${gT.dir==='in'?'on':''}">Мне должны</button><button data-dm="out" class="${gT.dir==='out'?'on':''}">Я должен</button></span><button class="x" id="gcl" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div>
 <label class="ef">Кто<input id="dwh" type="text" value="${E(v.who)}" placeholder="Имя" autocomplete="off"></label>
+<label class="ef">${gT.dir==='in'?'Дал(а) в долг':'Взял(а) в долг'}<input id="dst" type="date" value="${E((d&&dStart(d))||ymd(new Date()))}"></label>
 <label class="ef">Сумма<input id="dam" inputmode="decimal" value="${v.amount||''}" placeholder="500"></label>
 <label class="ef">Уже возвращено<input id="dpd" inputmode="decimal" value="${v.paid||''}" placeholder="0"></label>
 <label class="ef">Вернуть до<input id="ddu" type="date" value="${E(v.due||'')}"></label>
@@ -2845,11 +2882,11 @@ function openDpay(d,src){if(isModalOpen())return;cancelGestures();lockBg(true);g
 <label class="eaw"><input id="gam" class="${d.dir==='in'?'inc':'exp'}" inputmode="decimal" placeholder="0" aria-label="Сумма"></label>
 <div class="eo">${E(d.who)} · осталось ${fmt(Math.round(dRem(d)))} из ${fmt(d.amount)} ${cfg.cur}</div>
 <div class="shf"><button class="sm" id="dfull">Всё</button><button class="sm pr" id="gsvb">Записать</button></div>`;showGd(src);autoF('#gam',60)}
-function saveDebt(){if(!gT||gT.mode!=='debt')return;const who=($('#dwh').value||'').trim().slice(0,40)||'Без имени',am=pn($('#dam').value),paid=Math.max(0,Math.min(am,pn($('#dpd').value))),due=$('#ddu').value||'';
+function saveDebt(){if(!gT||gT.mode!=='debt')return;const who=($('#dwh').value||'').trim().slice(0,40)||'Без имени',st0=($('#dst')&&$('#dst').value)||'',st=/^\d{4}-\d{2}-\d{2}$/.test(st0)?st0:ymd(new Date()),am=pn($('#dam').value),paid=Math.max(0,Math.min(am,pn($('#dpd').value))),due=$('#ddu').value||'';
   if(!(am>0)){toast('Укажите сумму долга');return}
-  if(gT.id){const d=cfg.debts.find(x=>x.id===gT.id);if(d){const o0={who:d.who,dir:d.dir,amount:+d.amount||0,paid:+d.paid||0};Object.assign(d,{who,dir:gT.dir,amount:am,paid,due});lkDebtEdit(d,o0);if(am-paid<=0){if(!d.closed)d.closed=ymd(new Date())}else delete d.closed}}
-  else{cfg.debts.push({id:uid(),who,dir:gT.dir,amount:am,paid,due,created:ymd(new Date()),log:[]});
-    {const nd=cfg.debts[cfg.debts.length-1],out=Math.round((am-paid)*100)/100,lk=out>0&&debtMove(gT.dir,'open',out,who,nd);if(lk)toast((lk.type==='income'?'Записано как доход: ':'Записано как расход: ')+fmt(out)+' '+cfg.cur)}}
+  if(gT.id){const d=cfg.debts.find(x=>x.id===gT.id);if(d){const o0={who:d.who,dir:d.dir,amount:+d.amount||0,paid:+d.paid||0};Object.assign(d,{who,dir:gT.dir,amount:am,paid,due});lkDebtEdit(d,o0);if(st!==dStart(d)){d.created=st;const e0=(d.ol||[])[0],t0=e0&&e0.t&&tx.find(z=>z.id===e0.t);if(e0){e0.d=st;if(t0)t0.date=st}}else if(!d.created)d.created=st;if(am-paid<=0){if(!d.closed)d.closed=ymd(new Date())}else delete d.closed}}
+  else{cfg.debts.push({id:uid(),who,dir:gT.dir,amount:am,paid,due,created:st,log:[]});
+    {const nd=cfg.debts[cfg.debts.length-1],out=Math.round((am-paid)*100)/100,lk=out>0&&debtMove(gT.dir,'open',out,who,nd);if(lk){lk.date=st;const e0=(nd.ol||[])[0];if(e0)e0.d=st}if(lk)toast((lk.type==='income'?'Записано как доход: ':'Записано как расход: ')+fmt(out)+' '+cfg.cur)}}
   save();closeGoal();render()}
 function saveDpay(){if(!gT||gT.mode!=='dpay')return;const d=cfg.debts.find(x=>x.id===gT.id),a=pn($('#gam').value);if(!d)return;if(!(a>0)){toast('Укажите сумму');return}
   const add=Math.min(a,dRem(d)),pe={d:ymd(new Date()),a:add};d.paid=Math.min(d.amount,d.paid+a);d.log=(d.log||[]).concat(pe).slice(-200);if(dRem(d)<=0)d.closed=ymd(new Date());
@@ -2967,7 +3004,7 @@ function saveDep(){if(!gT)return;const g=cfg.goals.find(x=>x.id===gT.id),a=pn($(
   save();closeGoal();render();const sfx=lk?' · записано как расход':'';
   if(g.saved>=g.target&&sg>0)toast('Цель «'+g.name+'» достигнута 🎉'+sfx);else if(real>0)toast((sg>0?'Внесено в цель: +'+fmt(real):'Снято из цели: −'+fmt(real))+sfx)}
 gd.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!gT)return;
-  if(b.id==='gcl')closeGoal();else if(b.id==='gsvb')saveGoal();else if(b.id==='gdel')delGoal();else if(b.id==='gdep')saveDep();else if(b.id==='dfull'){const g=cfg.debts.find(x=>x.id===gT.id);if(g)$('#gam').value=String(Math.round(dRem(g)*100)/100)}else if(b.dataset.dm){gT.dir=b.dataset.dm;gd.querySelectorAll('[data-dm]').forEach(x=>x.classList.toggle('on',x===b))}
+  if(b.id==='gcl')closeGoal();else if(b.id==='gsvb')saveGoal();else if(b.id==='gdel')delGoal();else if(b.id==='gdep')saveDep();else if(b.id==='dfull'){const g=cfg.debts.find(x=>x.id===gT.id);if(g)$('#gam').value=String(Math.round(dRem(g)*100)/100)}else if(b.dataset.dm){gT.dir=b.dataset.dm;gd.querySelectorAll('[data-dm]').forEach(x=>x.classList.toggle('on',x===b));{const i=$('#dst'),n=i&&i.parentElement.firstChild;if(n&&(n.nodeType===3||n.classList&&n.classList.contains('fl')))n.textContent=gT.dir==='in'?'Дал(а) в долг':'Взял(а) в долг'}}
   else if(b.dataset.bs){gT.scope=b.dataset.bs;gd.querySelectorAll('[data-bs]').forEach(x=>x.classList.toggle('on',x===b));budHint();const a=$('#bam');if(a&&gT.scope==='all'&&!bmOwn(month)&&Number(cfg.budget)>0)a.value=cfg.budget}
   else if(b.dataset.gm){gT.sign=b.dataset.gm==='out'?-1:1;gd.querySelectorAll('[data-gm]').forEach(x=>x.classList.toggle('on',x===b));const a=$('#gam');a.className=gT.sign<0?'exp':'inc';$('#gdep').textContent=gT.sign<0?'Снять':'Внести'}});
 gd.addEventListener('keydown',e=>{if(!gT)return;if(e.key==='Enter'&&e.target.tagName==='INPUT'){e.preventDefault();if(gT.mode==='dep')saveDep();else saveGoal()}});
@@ -4605,7 +4642,7 @@ function applyReplace(d){
     tx=_okArr(d.tx,t=>_obj(t));
     cfg={cur:'MDL',budget:0,auto:false,rates:{},custom:[],catOv:{},...(_obj(d.cfg)?d.cfg:{})};
     learn=_obj(d.learn)?d.learn:{};
-    normState();buildAll();snapTx(false);save()}
+    normState();buildAll();snapTx(false);snapDG(false);save()}
   finally{CL.mute=false}
   applyTheme(false);render();renderSt()}
 
@@ -5525,13 +5562,14 @@ function mergeCloudData(d){
     const un=(a,b)=>{const o=[],sn=new Set();_okArr(a).concat(_okArr(b)).forEach(x=>{const id=x&&x.id!=null?String(x.id):'';if(!id||sn.has(id)||dead(id))return;sn.add(id);o.push(x)});return o};
     const arr=(a,b)=>[...new Set([...(Array.isArray(a)?a:[]),...(Array.isArray(b)?b:[])])];
     const mg={...dc,...cfg};                                  // одиночные настройки: выигрывают локальные
-    ['goals','debts','rec','custom'].forEach(k=>{mg[k]=un(cfg[k],dc[k])});
+    ['rec','custom'].forEach(k=>{mg[k]=un(cfg[k],dc[k])});
+    ['goals','debts'].forEach(k=>{mg[k]=dgMerge(cfg[k],dc[k],k,dead)});   // v198: версия посвежее + записи журнала по id
     ['rates','limits','catOv','bm','rman','lm'].forEach(k=>{mg[k]={...(_obj(dc[k])?dc[k]:{}),...(_obj(cfg[k])?cfg[k]:{})}});
     ['cc','curList'].forEach(k=>{mg[k]=arr(cfg[k],dc[k])});
     mg.rh=rhMerge(cfg.rh,dc.rh);if(!Object.keys(mg.rh).length)delete mg.rh;
     mg.del=del;
     cfg=mg;tx=out;learn={...(_obj(d.learn)?d.learn:{}),...learn};
-    normState();buildAll();snapTx(false);save()}
+    normState();buildAll();snapTx(false);snapDG(false);save()}
   finally{CL.mute=false}
   applyTheme(false);render();renderSt()}
 async function cloudMerge(m){
