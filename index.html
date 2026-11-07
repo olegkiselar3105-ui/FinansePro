@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v198';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v199';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -1645,6 +1645,21 @@ html:root #ed>.erl{order:2;display:none;padding-top:6px}
 html:root #ed>.erl.on{display:block}
 html:root #ed>.erl .ertw{display:none!important;margin-top:4px}
 html:root #ed>.erl .ertw.on{display:flex!important}
+/* v199: история долга и цели */
+html:root #gd .jl{display:flex;flex-direction:column;margin:10px 0 4px;max-height:calc(var(--kmax,70vh) - 190px);overflow-y:auto;overscroll-behavior:contain}
+html:root #gd .jr{display:flex;align-items:center;gap:10px;width:100%;min-height:46px;padding:8px 2px;border:0;border-bottom:1px solid var(--sep);background:none;color:var(--t);font:inherit;text-align:left;-webkit-tap-highlight-color:transparent}
+html:root #gd .jr:active{opacity:.6}
+html:root #gd .jr .jd{flex:none;width:62px;color:var(--m2);font-size:13px;font-variant-numeric:tabular-nums}
+html:root #gd .jr .jt{flex:1;min-width:0;font-size:15px}
+html:root #gd .jr .jt small{display:block;color:var(--m2);font-size:11.5px;margin-top:1px}
+html:root #gd .jr b{flex:none;font-weight:600;font-variant-numeric:tabular-nums}
+html:root #gd .jr b.jn{color:var(--rd)}
+html:root #gd .jz{color:var(--m);font-size:13px;padding:14px 2px}
+html:root .cd .gx.gl{margin-top:2px;opacity:.85}
+html:root #bq label.ef{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:50px;margin:0;border-bottom:1px solid var(--sep);font-size:15px;color:var(--m2)}
+html:root #bq label.ef input{flex:1;min-width:0;width:auto;text-align:right;font-size:16px!important;color:var(--t);background:none;border:0;padding:10px 0;outline:0;-webkit-appearance:none;appearance:none}
+html:root #bq label.ef input[type=date]{text-align:right;text-align-last:right}
+html:root #bq .bqt+label.ef{margin-top:6px}
 html:root #gd>.eaw{display:block}
 html:root #cp .cpe>.cpw{display:block;min-width:0}
 html:root #cp .cpe>.cpw>input{width:100%}
@@ -2856,9 +2871,56 @@ function debtFc(d){const rem=dRem(d);if(!(rem>0))return'';const pace=debtPace(d)
     if(t)t+='.'}
   else if(d.due&&n>=0){const mo=Math.max(1,Math.ceil(n/30.4));t=`Чтобы успеть к ${byTxt(d.due)}: ≈${fmt(Math.ceil(rem/mo))} ${cfg.cur} в мес.`}
   return t?`<div class="gx" style="margin-top:2px">${E(t)}</div>`:''}
+// ===== v199: история долга и цели — окно по нажатию на плитку; запись можно исправить (дата, сумма) или удалить, связанная операция меняется следом =====
+const dFmt=v=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(String(v||'')))return '';const [y,m,d]=v.split('-');return d+'.'+m+(+y!==new Date().getFullYear()?'.'+y.slice(2):'')};
+const jSum=L=>r2((Array.isArray(L)?L:[]).reduce((s,e)=>s+(e&&+e.a||0),0));
+const jLinked=e=>!!(e&&e.t&&tx.some(t=>t.id===e.t));
+const dOpenL=d=>d.dir==='in'?'Дал(а) в долг':'Взял(а) в долг',dPayL=d=>d.dir==='in'?'Вернули мне':'Я вернул(а)';
+// строки истории: записи журнала + «начальные» суммы, которых нет в журнале (долг создан без записи выдачи, «уже возвращено» при создании, накоплено до журнала)
+function dRows(d){const R=[],ol=Array.isArray(d.ol)?d.ol:[],lg=Array.isArray(d.log)?d.log:[],base=r2(d.amount-jSum(ol)),pb=r2(d.paid-jSum(lg)),st=dStart(d);
+  if(base>.004)R.push({v:'base',d:st,a:base,l:dOpenL(d)});
+  ol.forEach((e,i)=>{if(e)R.push({e,d:e.d,a:r2(e.a),l:i===0&&!(base>.004)?dOpenL(d):(d.dir==='in'?'Дал(а) ещё':'Взял(а) ещё')})});
+  if(pb>.004)R.push({v:'pbase',d:st,a:pb,l:'Возвращено раньше'});
+  lg.forEach(e=>{if(e)R.push({e,d:e.d,a:r2(e.a),l:dPayL(d)})});
+  return R.map((x,i)=>({...x,i})).sort((a,b)=>String(a.d||'').localeCompare(String(b.d||''))||a.i-b.i)}
+function gRows(g){const R=[],lg=Array.isArray(g.log)?g.log:[],base=r2(g.saved-jSum(lg));
+  if(base>.004)R.push({v:'gbase',d:g.created||'',a:base,l:'Было до записи'});
+  lg.forEach(e=>{if(e)R.push({e,d:e.d,a:r2(e.a),l:+e.a<0?'Снятие':'Взнос'})});
+  return R.map((x,i)=>({...x,i})).sort((a,b)=>String(a.d||'').localeCompare(String(b.d||''))||a.i-b.i)}
+function histHtml(){if(!gT)return'';const isD=gT.mode==='dhist',o=((isD?cfg.debts:cfg.goals)||[]).find(x=>x.id===gT.id);if(!o)return'';
+  const rows=isD?dRows(o):gRows(o);gT.rows=rows;const cur=cfg.cur;
+  const sub=isD?(o.dir==='in'?'Должен мне':'Я должен')+' · '+(dRem(o)>0?'осталось '+fmt(Math.round(dRem(o)))+' из '+fmt(o.amount)+' '+cur:'погашен ✓')+(dStart(o)?' · с '+dFmt(dStart(o)):'')
+    :'Накоплено '+fmt(o.saved)+' из '+fmt(o.target)+' '+cur;
+  const li=rows.length?rows.slice().reverse().map(x=>{const n=rows.indexOf(x),neg=!isD&&x.a<0;
+    return `<button type="button" class="jr" data-je="${n}"><span class="jd">${E(dFmt(x.d)||'—')}</span><span class="jt">${E(x.l)}${x.e&&jLinked(x.e)?'<small>в операциях</small>':''}</span><b class="${neg?'jn':''}">${neg?'−':''}${fmt(Math.abs(x.a))}</b></button>`}).join('')
+    :'<div class="jz">Записей пока нет</div>';
+  const act=isD?(dRem(o)>0?`<button class="sm pr" id="hpay">${o.dir==='in'?'+ Получил':'+ Вернул'}</button>`:'<span></span>'):`<button class="sm pr" id="hdep">+ Взнос</button>`;
+  return `<div class="eh"><b>${E(isD?o.who:o.name)}</b><button class="x" id="gcl" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div><div class="eo">${E(sub)}</div><div class="jl">${li}</div><div class="shf"><button class="sm" id="hed">Изменить</button>${act}</div>`}
+function openHist(k,o,src){if(!o||isModalOpen())return;cancelGestures();lockBg(true);gT={mode:k==='d'?'dhist':'ghist',id:o.id};gd.innerHTML=histHtml();showGd(src)}
+function histRefresh(){if(gT&&(gT.mode==='dhist'||gT.mode==='ghist')&&gd.classList.contains('on')){const h=histHtml();if(h)gd.innerHTML=h;else closeGoal()}}
+// правка одной записи — поверх истории (окно подтверждения)
+let jCur=null;
+function openJEdit(n){const x=gT&&gT.rows&&gT.rows[n];if(!x)return;const isD=gT.mode==='dhist',o=((isD?cfg.debts:cfg.goals)||[]).find(z=>z.id===gT.id);if(!o)return;jCur={x,o,isD};
+  const lk=x.e&&jLinked(x.e),canDel=x.v!=='base';
+  bqShow(`<div class="bqt">${E(x.l)}</div><label class="ef">Дата<input id="jed" type="date" value="${E(x.d||'')}"></label><label class="ef">Сумма<input id="jea" inputmode="decimal" value="${Math.abs(x.a)}" placeholder="0" enterkeyhint="done"></label>`+
+    `<div class="bqs">${lk?'Связанная операция изменится тоже.':x.v==='base'?'Начальная сумма долга. Удалить её можно только вместе с долгом.':x.v?'Сумма, внесённая без отдельной записи.':''}</div>`+
+    `<div class="bqb">${canDel?'<button class="sm del" data-jx="del">Удалить</button>':'<span></span>'}<button class="sm pr" data-jx="ok">Сохранить</button></div>`,'jedit')}
+function jSaveCur(del){const c=jCur;if(!c)return;const {x,o,isD}=c,cur=cfg.cur;let msg='',undo=null;
+  if(del){
+    if(x.e){const r=jDel(x.e);if(!r)return;msg='Запись удалена'+(r.t?' · и операция':'');undo=()=>{jUndo(r);save();render();histRefresh()}}
+    else if(x.v==='pbase'){o.paid=r2(o.paid-x.a);lkFix(o,'d');msg='Запись удалена';undo=()=>{o.paid=r2(o.paid+x.a);lkFix(o,'d');save();render();histRefresh()}}
+    else if(x.v==='gbase'){o.saved=r2(o.saved-x.a);lkFix(o,'g');msg='Запись удалена';undo=()=>{o.saved=r2(o.saved+x.a);lkFix(o,'g');save();render();histRefresh()}}
+    else return}
+  else{const a=Math.abs(pn($('#jea').value)),d=$('#jed').value;if(!(a>0)){toast('Укажите сумму');return}const okD=/^\d{4}-\d{2}-\d{2}$/.test(d);
+    if(x.e){jEdit(x.e,x.a<0?-a:a,okD?d:x.e.d);if(isD&&o.ol&&o.ol[0]===x.e&&okD)o.created=d}
+    else if(x.v==='base'){o.amount=r2(o.amount+a-x.a);if(okD)o.created=d;lkFix(o,'d')}
+    else if(x.v==='pbase'){o.paid=r2(o.paid+a-x.a);lkFix(o,'d')}
+    else if(x.v==='gbase'){o.saved=r2(o.saved+a-x.a);if(okD)o.created=d;lkFix(o,'g')}}
+  jCur=null;closeBq();save();render();histRefresh();if(msg)toast(msg,'Отмена',undo);else toast('Сохранено')}
 function debtCard(d){const rem=dRem(d),p=d.amount>0?Math.min(100,d.paid/d.amount*100):0,done=rem<=0,n=d.due?dueRel(d.due):null;
   const dueS=done?'<span style="color:var(--g)">Погашен ✓</span>':d.due?`<span style="color:${n<0?'#ff6b6b':n<=3?'#f2c14e':'var(--m2)'}">до ${dueShort(d.due)} · ${dueTxt(n)}</span>`:'<span>без срока</span>';
-  return `<div class="cd"${done?' style="opacity:.6"':''}><div class="gh"><b><i class="dtd ${d.dir}"></i>${E(d.who)}</b><span>${fmt(d.paid)} / ${fmt(d.amount)} ${cfg.cur}</span></div><div class="lb"><i style="width:${p}%;background:${done?'var(--g)':'var(--t)'}"></i></div><div class="gx">${d.dir==='in'?'Должен мне':'Я должен'}${done?'':' · осталось '+fmt(Math.round(rem))+' '+cfg.cur} · ${dueS}</div>${done?'':debtFc(d)}<div class="gb">${done?'':`<button class="sm" data-da="pay" data-did="${d.id}">${d.dir==='in'?'+ Получил':'+ Вернул'}</button>`}<button class="sm" data-da="edit" data-did="${d.id}">Изменить</button></div></div>`}
+  return `<div class="cd"${done?' style="opacity:.6"':''}><div class="gh"><b><i class="dtd ${d.dir}"></i>${E(d.who)}</b><span>${fmt(d.paid)} / ${fmt(d.amount)} ${cfg.cur}</span></div><div class="lb"><i style="width:${p}%;background:${done?'var(--g)':'var(--t)'}"></i></div><div class="gx">${d.dir==='in'?'Должен мне':'Я должен'}${done?'':' · осталось '+fmt(Math.round(rem))+' '+cfg.cur} · ${dueS}</div>${(()=>{const st=dStart(d),L=(d.log||[]).filter(e=>e&&e.d).slice().sort((a,b)=>String(a.d).localeCompare(String(b.d))),last=L[L.length-1];
+    return `<div class="gx gl">${E(dOpenL(d))}${st?' '+dFmt(st):''} · ${last?'последний возврат '+dFmt(last.d)+' — '+fmt(last.a)+' '+cfg.cur:fmt(d.amount)+' '+cfg.cur}</div>`})()}${done?'':debtFc(d)}<div class="gb">${done?'':`<button class="sm" data-da="pay" data-did="${d.id}">${d.dir==='in'?'+ Получил':'+ Вернул'}</button>`}<button class="sm" data-da="edit" data-did="${d.id}">Изменить</button></div></div>`}
 function debtsHtml(){const ds=cfg.debts||[];
   let h=`<div class="gsec"><div class="gsh">${mtg('ld',linkDebtOn(),'Записывать в доходы и расходы')}<button class="gp" data-da="new" aria-label="Добавить долг">+</button></div>`;
   if(!ds.length)return h+`<div class="cd" style="color:var(--m);font-size:13px;line-height:1.45">Например: «Игорь одолжил 500, вернёт до 20 числа». Нажмите «+» — напомню, когда подойдёт срок.</div></div>`;
@@ -2914,12 +2976,12 @@ function goalsHtml(){const gs=cfg.goals||[];
   let h=`<div class="gsh">${mtg('lg',linkGoalOn(),'Взносы — в расходы')}<button class="gp" data-ga="new" aria-label="Добавить цель">+</button></div>`;
   if(!gs.length)h+=`<div class="cd" style="color:var(--m);font-size:13px;line-height:1.45">Например: «Отпуск 20 000, отложено 6 500». Нажмите зелёный «+» — покажу прогресс и когда накопите.</div>`;
   else h+=gs.map(g=>{const i=goalInfo(g),sp=g.tag?tx.filter(t=>t.type==='expense'&&(t.tags||[]).includes(g.tag)).reduce((s,t)=>s+t.amount,0):0;
-    return `<div class="cd"><div class="gh"><b>${E(g.name)}</b><span>${fmt(g.saved)} / ${fmt(g.target)} ${cfg.cur}</span></div><div class="lb"><i style="width:${i.p}%;background:${i.p>=100?'var(--g)':'var(--t)'}"></i></div><div class="gx">${Math.round(i.p)}% · ${E(i.txt)}</div>${g.tag?`<div class="gb"><button class="tgc sg2" data-ga="tag" data-gid="${g.id}">#${E(g.tag)} · потрачено ${fmt(sp)}</button></div>`:''}<div class="gb"><button class="sm" data-ga="dep" data-gid="${g.id}">+ Взнос</button><button class="sm" data-ga="edit" data-gid="${g.id}">Изменить</button></div></div>`}).join('');
+    return `<div class="cd"><div class="gh"><b>${E(g.name)}</b><span>${fmt(g.saved)} / ${fmt(g.target)} ${cfg.cur}</span></div><div class="lb"><i style="width:${i.p}%;background:${i.p>=100?'var(--g)':'var(--t)'}"></i></div><div class="gx">${Math.round(i.p)}% · ${E(i.txt)}</div>${(()=>{const L=(g.log||[]).filter(e=>e&&e.d&&+e.a>0).slice().sort((a,b)=>String(a.d).localeCompare(String(b.d))),last=L[L.length-1];return last?`<div class="gx gl">последний взнос ${dFmt(last.d)} — ${fmt(last.a)} ${cfg.cur}</div>`:''})()}${g.tag?`<div class="gb"><button class="tgc sg2" data-ga="tag" data-gid="${g.id}">#${E(g.tag)} · потрачено ${fmt(sp)}</button></div>`:''}<div class="gb"><button class="sm" data-ga="dep" data-gid="${g.id}">+ Взнос</button><button class="sm" data-ga="edit" data-gid="${g.id}">Изменить</button></div></div>`}).join('');
   return `<div class="gsec">${h}</div>`}
 // v168: нажатие на плитку (не на кнопку) — сразу основное действие: долг → «Получил/Вернул», цель → взнос, бюджет и лимит → изменить
 function cardTap(t){if(tab!=='tags'||!t.closest||t.closest('button,a,input,select,textarea,label,.gsh,.sbt'))return false;const c=t.closest('#body .cd');if(!c||!c.querySelector('.gh'))return false;const q=k=>c.querySelector('['+k+']'),dd=q('data-did'),gg=q('data-gid'),ll=q('data-cid'),w=dd?{k:'debt',id:dd.dataset.did}:gg?{k:'goal',id:gg.dataset.gid}:ll?{k:'lim',id:ll.dataset.cid}:q('data-la="bud"')?{k:'bud'}:null;if(!w)return false;
-  if(w.k==='debt'){const d=(cfg.debts||[]).find(x=>x.id===w.id);if(!d)return false;dRem(d)>0?openDpay(d,c):openDebt(d,c)}
-  else if(w.k==='goal'){const g=(cfg.goals||[]).find(x=>x.id===w.id);if(!g)return false;openDep(g,c)}
+  if(w.k==='debt'){const d=(cfg.debts||[]).find(x=>x.id===w.id);if(!d)return false;openHist('d',d,c)}   // v199: плитка открывает историю
+  else if(w.k==='goal'){const g=(cfg.goals||[]).find(x=>x.id===w.id);if(!g)return false;openHist('g',g,c)}
   else if(w.k==='lim')openLim(w.id,c);else if(w.k==='bud')openBud(c);else return false;
   return true}
 function goalAct(el){const a=el.dataset.ga,g=(cfg.goals||[]).find(x=>x.id===el.dataset.gid);
@@ -3003,6 +3065,12 @@ function saveDep(){if(!gT)return;const g=cfg.goals.find(x=>x.id===gT.id),a=pn($(
   let lk=false;if(sg>0&&linkGoalOn()&&real>0)lk=!!lkSet(addLinkedExpense('goal',real,'Взнос в цель «'+g.name+'»'),'g',g,g.log[g.log.length-1]);
   save();closeGoal();render();const sfx=lk?' · записано как расход':'';
   if(g.saved>=g.target&&sg>0)toast('Цель «'+g.name+'» достигнута 🎉'+sfx);else if(real>0)toast((sg>0?'Внесено в цель: +'+fmt(real):'Снято из цели: −'+fmt(real))+sfx)}
+gd.addEventListener('click',e=>{if(!gT||(gT.mode!=='dhist'&&gT.mode!=='ghist'))return;const b=e.target.closest('button');if(!b)return;   // v199: окно истории
+  const isD=gT.mode==='dhist',o=((isD?cfg.debts:cfg.goals)||[]).find(z=>z.id===gT.id);
+  if(b.dataset.je!=null){e.stopImmediatePropagation();openJEdit(+b.dataset.je);return}
+  if(!o)return;const go=f=>{e.stopImmediatePropagation();closeGoal();setTimeout(f,230)};
+  if(b.id==='hed')go(()=>isD?openDebt(o):openGoal(o));else if(b.id==='hpay')go(()=>openDpay(o));else if(b.id==='hdep')go(()=>openDep(o))});
+document.getElementById('bq').addEventListener('click',e=>{const b=e.target.closest('[data-jx]');if(!b||bqT!=='jedit')return;e.stopPropagation();jSaveCur(b.dataset.jx==='del')});
 gd.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!gT)return;
   if(b.id==='gcl')closeGoal();else if(b.id==='gsvb')saveGoal();else if(b.id==='gdel')delGoal();else if(b.id==='gdep')saveDep();else if(b.id==='dfull'){const g=cfg.debts.find(x=>x.id===gT.id);if(g)$('#gam').value=String(Math.round(dRem(g)*100)/100)}else if(b.dataset.dm){gT.dir=b.dataset.dm;gd.querySelectorAll('[data-dm]').forEach(x=>x.classList.toggle('on',x===b));{const i=$('#dst'),n=i&&i.parentElement.firstChild;if(n&&(n.nodeType===3||n.classList&&n.classList.contains('fl')))n.textContent=gT.dir==='in'?'Дал(а) в долг':'Взял(а) в долг'}}
   else if(b.dataset.bs){gT.scope=b.dataset.bs;gd.querySelectorAll('[data-bs]').forEach(x=>x.classList.toggle('on',x===b));budHint();const a=$('#bam');if(a&&gT.scope==='all'&&!bmOwn(month)&&Number(cfg.budget)>0)a.value=cfg.budget}
