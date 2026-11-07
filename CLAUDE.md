@@ -34,7 +34,7 @@
 - `wrangler pages deploy` в облачной сессии НЕ работает (прокси подменяет служебный ключ загрузки, ошибка «Authorization failed 8000013»). Работает так: `python3 tools/pagesworker.py <папка_сайта> build/_worker.js`, затем `curl -X POST https://api.cloudflare.com/client/v4/accounts/<ACCOUNT_ID>/pages/projects/finansepro/deployments -H "Authorization: Bearer proxy-injected" -F 'manifest={}' -F 'branch=main' -F '_worker.js=@build/_worker.js;type=application/javascript+module;filename=_worker.js'`. `<ACCOUNT_ID>` — из `GET /client/v4/accounts`. Готовность — `GET …/deployments/<id>` (этап deploy: success).
 - Папка сайта: `index.html`, `sw.js`, `manifest.webmanifest`, `mail.html`, `_headers`, `icons/` (файлы из `git archive`). Перед выкладкой проверить `IB_VER`. Адрес `finansepro.pages.dev` из облачной сессии недоступен — проверку открытием делает пользователь.
 - Воркер бота (`worker/`) автодеплоился из GitHub (Workers Builds) — без GitHub не обновляется; менять только при необходимости, и только по просьбе пользователя (переменные и секреты воркера не трогать).
-- Когда GitHub вернёт доступ: коммиты ветки `claude/nifty-sagan-pdvw4w` не отправлены (v199 и правило формата) — отправить и открыть PR.
+- **GitHub пока не трогать (решение пользователя, ноябрь 2026):** не пытаться отправлять коммиты и открывать PR, работать только через Cloudflare. Коммиты делать локально на ветке `claude/nifty-sagan-pdvw4w`; в конце ответа вместо ссылки на PR — «PR: нет — работаем через Cloudflare». Вернуться к GitHub — только когда пользователь скажет.
 
 ## Поток данных
 
