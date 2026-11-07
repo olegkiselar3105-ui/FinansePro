@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v199';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v200';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -1656,6 +1656,20 @@ html:root #gd .jr b{flex:none;font-weight:600;font-variant-numeric:tabular-nums}
 html:root #gd .jr b.jn{color:var(--rd)}
 html:root #gd .jz{color:var(--m);font-size:13px;padding:14px 2px}
 html:root .cd .gx.gl{margin-top:2px;opacity:.85}
+/* v200: плитка долга — «осталось» справа, тип долга и срок отдельной строкой; история — цвет по направлению денег */
+html:root .dcd .gh .drm{color:var(--m2);font-size:13px;white-space:nowrap}
+html:root .dcd .gh .drm b{color:var(--t);font-size:16px;font-weight:700;margin-left:3px}
+html:root .dcd .gh .drm b.dok{color:var(--g);font-size:14px;margin:0}
+html:root .dcd .gx.dmt{display:flex;align-items:center;justify-content:space-between;gap:10px}
+html:root .dcd .gx.dmt .dk{font-weight:600}
+html:root .dcd .gx.dmt .dk.in{color:var(--g)}
+html:root .dcd .gx.dmt .dk.out{color:var(--rd)}
+html:root .dcd .gx.dmt .ddu{color:var(--m2)}
+html:root .cd .gx.gl b{color:var(--t);font-weight:600;white-space:nowrap}
+html:root #gd .jr b.jo{color:var(--rd)}
+html:root #gd .jr b.ji{color:var(--g)}
+html:root #gd .hops{display:flex;align-items:center;justify-content:center;gap:4px;width:100%;min-height:44px;margin:4px 0 2px;border:0;border-radius:14px;background:rgba(var(--wr),.07);color:var(--t);font:inherit;font-size:14px;font-weight:600;-webkit-tap-highlight-color:transparent}
+html:root #gd .hops:active{opacity:.6}
 html:root #bq label.ef{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:50px;margin:0;border-bottom:1px solid var(--sep);font-size:15px;color:var(--m2)}
 html:root #bq label.ef input{flex:1;min-width:0;width:auto;text-align:right;font-size:16px!important;color:var(--t);background:none;border:0;padding:10px 0;outline:0;-webkit-appearance:none;appearance:none}
 html:root #bq label.ef input[type=date]{text-align:right;text-align-last:right}
@@ -2723,7 +2737,7 @@ function bind(root,list,isDraft){
   root.addEventListener('click',e=>{const dp=e.target.closest('.dp');if(dp){const i=dp.querySelector('input');try{if(i.showPicker)i.showPicker()}catch{}return}
     const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,r=b.closest('[data-id]'),L=list();
     if(a==='x'){const id=r.dataset.id;const i=L.findIndex(x=>x.id===id);if(i<0)return;const it=L[i];
-      if(isDraft){const w=b.closest('.sw');if(w&&typeof commitSw==='function')commitSw(w);else removeDraftAnim(id)}else{L.splice(i,1);tx=L;tomb(it.id);save();toastDel(1,()=>{untomb(it.id);tx.splice(Math.min(i,tx.length),0,it);save();fxCV();render();fxIn([it.id])});render()}}
+      if(isDraft){const w=b.closest('.sw');if(w&&typeof commitSw==='function')commitSw(w);else removeDraftAnim(id)}else{const lw=lkWhere([it]),lr=lkKeep([it]);L.splice(i,1);tx=L;tomb(it.id);save();toastDel(1,()=>{lr();untomb(it.id);tx.splice(Math.min(i,tx.length),0,it);save();fxCV();render();fxIn([it.id])},lw);render()}}
     if(a==='cal'){openRow=openRow===r.dataset.id?null:r.dataset.id;if(isDraft)revRowPatch(r.dataset.id);else render()}
     if(a==='sg'){const t=L.find(x=>x.id===r.dataset.id);t.type=t.type==='income'?'expense':'income';t.category=detect(t.note,t.note,t.type);if(isDraft){const inc=t.type==='income',rr=b.closest('.r'),am=rr&&rr.querySelector('input[data-f="amount"]'),cb=rr&&rr.querySelector('.cpb'),c=cd(t.category);   // v183: на месте, без пересборки строки
       b.className='sg '+(inc?'inc':'exp');b.textContent=inc?'+':'−';b.setAttribute('aria-label',inc?'Доход — сделать расходом':'Расход — сделать доходом');
@@ -2734,7 +2748,7 @@ function bind(root,list,isDraft){
 bind($('#rev'),()=>drafts,true);bind($('#body'),()=>tx,false);
 
 // ---------- основной экран ----------
-let q='',fcat=null,ftag=null,fday=null,ftagR=null,ftagBk='goals',AS='all',ps='goals',TR='all',tipsOpen=false,WO=0,_wm=null,lastRange={from:'',to:''},openRow=null,newType='expense';
+let q='',flk=null,fcat=null,ftag=null,fday=null,ftagR=null,ftagBk='goals',AS='all',ps='goals',TR='all',tipsOpen=false,WO=0,_wm=null,lastRange={from:'',to:''},openRow=null,newType='expense';
 function weeksOf(m){const D=pDates(m),out=[];let a=0;while(a<D.length){const dt=D[a],wd=(new Date(+dt.slice(0,4),+dt.slice(5,7)-1,+dt.slice(8,10)).getDay()+6)%7,b=Math.min(D.length-1,a+(6-wd));out.push({from:D[a],to:D[b]});a=b+1}return out}
 function woFor(m){const W=weeksOf(m),td=ymd(new Date()),i=W.findIndex(w=>td>=w.from&&td<=w.to);return i>=0?i:0}
 const MS=['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
@@ -2846,7 +2860,7 @@ function calHtml(an){const [ccl,cst]=calAn(an,month);const [y,mo]=month.split('-
   const dl=(cfg.debts||[]).filter(d=>d.due&&mOf(d.due)===month&&dRem(d)>0).sort((a,c)=>a.due.localeCompare(c.due));
   if(dl.length)h+=`<div class="cd" style="padding:2px 14px"><h4 style="margin-top:10px">Сроки по долгам</h4>`+dl.map(d=>`<div class="pl" data-go="debts" role="button" tabindex="0"><span class="pc" style="background:#f2c14e;color:#111">${+d.due.slice(8,10)}</span><span>${E(d.who)} · ${d.dir==='in'?'вернут':'вернуть'}</span><span>${fmt(Math.round(dRem(d)))}</span></div>`).join('')+`</div>`;
   return h+`<div class="hint">Нажмите на день — откроются его операции.${Object.keys(due).length?' Жёлтая точка — срок по долгу.':''}</div>`}
-const openDay=d=>{if(isModalOpen())return;fday=d;fcat=null;ftag=null;tab='list';render();pgTo(0)};
+const openDay=d=>{if(isModalOpen())return;fday=d;flk=null;fcat=null;ftag=null;tab='list';render();pgTo(0)};
 
 // ---- долги ----
 const dRem=d=>Math.max(0,d.amount-d.paid);
@@ -2878,24 +2892,25 @@ const jLinked=e=>!!(e&&e.t&&tx.some(t=>t.id===e.t));
 const dOpenL=d=>d.dir==='in'?'Дал(а) в долг':'Взял(а) в долг',dPayL=d=>d.dir==='in'?'Вернули мне':'Я вернул(а)';
 // строки истории: записи журнала + «начальные» суммы, которых нет в журнале (долг создан без записи выдачи, «уже возвращено» при создании, накоплено до журнала)
 function dRows(d){const R=[],ol=Array.isArray(d.ol)?d.ol:[],lg=Array.isArray(d.log)?d.log:[],base=r2(d.amount-jSum(ol)),pb=r2(d.paid-jSum(lg)),st=dStart(d);
-  if(base>.004)R.push({v:'base',d:st,a:base,l:dOpenL(d)});
-  ol.forEach((e,i)=>{if(e)R.push({e,d:e.d,a:r2(e.a),l:i===0&&!(base>.004)?dOpenL(d):(d.dir==='in'?'Дал(а) ещё':'Взял(а) ещё')})});
-  if(pb>.004)R.push({v:'pbase',d:st,a:pb,l:'Возвращено раньше'});
-  lg.forEach(e=>{if(e)R.push({e,d:e.d,a:r2(e.a),l:dPayL(d)})});
+  if(base>.004)R.push({v:'base',d:st,a:base,l:dOpenL(d),f:d.dir==='in'?'o':'i'});
+  ol.forEach((e,i)=>{if(e)R.push({e,d:e.d,a:r2(e.a),l:i===0&&!(base>.004)?dOpenL(d):(d.dir==='in'?'Дал(а) ещё':'Взял(а) ещё'),f:d.dir==='in'?'o':'i'})});
+  if(pb>.004)R.push({v:'pbase',d:st,a:pb,l:'Возвращено раньше',f:d.dir==='in'?'i':'o'});
+  lg.forEach(e=>{if(e)R.push({e,d:e.d,a:r2(e.a),l:dPayL(d),f:d.dir==='in'?'i':'o'})});
   return R.map((x,i)=>({...x,i})).sort((a,b)=>String(a.d||'').localeCompare(String(b.d||''))||a.i-b.i)}
 function gRows(g){const R=[],lg=Array.isArray(g.log)?g.log:[],base=r2(g.saved-jSum(lg));
-  if(base>.004)R.push({v:'gbase',d:g.created||'',a:base,l:'Было до записи'});
-  lg.forEach(e=>{if(e)R.push({e,d:e.d,a:r2(e.a),l:+e.a<0?'Снятие':'Взнос'})});
+  if(base>.004)R.push({v:'gbase',d:g.created||'',a:base,l:'Было до записи',f:'o'});
+  lg.forEach(e=>{if(e)R.push({e,d:e.d,a:r2(e.a),l:+e.a<0?'Снятие':'Взнос',f:+e.a<0?'i':'o'})});
   return R.map((x,i)=>({...x,i})).sort((a,b)=>String(a.d||'').localeCompare(String(b.d||''))||a.i-b.i)}
 function histHtml(){if(!gT)return'';const isD=gT.mode==='dhist',o=((isD?cfg.debts:cfg.goals)||[]).find(x=>x.id===gT.id);if(!o)return'';
   const rows=isD?dRows(o):gRows(o);gT.rows=rows;const cur=cfg.cur;
   const sub=isD?(o.dir==='in'?'Должен мне':'Я должен')+' · '+(dRem(o)>0?'осталось '+fmt(Math.round(dRem(o)))+' из '+fmt(o.amount)+' '+cur:'погашен ✓')+(dStart(o)?' · с '+dFmt(dStart(o)):'')
     :'Накоплено '+fmt(o.saved)+' из '+fmt(o.target)+' '+cur;
-  const li=rows.length?rows.slice().reverse().map(x=>{const n=rows.indexOf(x),neg=!isD&&x.a<0;
-    return `<button type="button" class="jr" data-je="${n}"><span class="jd">${E(dFmt(x.d)||'—')}</span><span class="jt">${E(x.l)}${x.e&&jLinked(x.e)?'<small>в операциях</small>':''}</span><b class="${neg?'jn':''}">${neg?'−':''}${fmt(Math.abs(x.a))}</b></button>`}).join('')
+  const li=rows.length?rows.slice().reverse().map(x=>{const n=rows.indexOf(x),out=x.f==='o';   // v200: из кошелька — красным «−», в кошелёк — зелёным «+»
+    return `<button type="button" class="jr" data-je="${n}"><span class="jd">${E(dFmt(x.d)||'—')}</span><span class="jt">${E(x.l)}${x.e&&jLinked(x.e)?'<small>в операциях</small>':''}</span><b class="${out?'jo':'ji'}">${out?'−':'+'}${fmt(Math.abs(x.a))}</b></button>`}).join('')
     :'<div class="jz">Записей пока нет</div>';
   const act=isD?(dRem(o)>0?`<button class="sm pr" id="hpay">${o.dir==='in'?'+ Получил':'+ Вернул'}</button>`:'<span></span>'):`<button class="sm pr" id="hdep">+ Взнос</button>`;
-  return `<div class="eh"><b>${E(isD?o.who:o.name)}</b><button class="x" id="gcl" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div><div class="eo">${E(sub)}</div><div class="jl">${li}</div><div class="shf"><button class="sm" id="hed">Изменить</button>${act}</div>`}
+  const nl=lkTx(isD?'d':'g',o.id).length;
+  return `<div class="eh"><b>${E(isD?o.who:o.name)}</b><button class="x" id="gcl" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div><div class="eo">${E(sub)}</div><div class="jl">${li}</div>${nl?`<button type="button" class="hops" id="hops">Показать в операциях · ${nl}${CHV}</button>`:''}<div class="shf"><button class="sm" id="hed">Изменить</button>${act}</div>`}
 function openHist(k,o,src){if(!o||isModalOpen())return;cancelGestures();lockBg(true);gT={mode:k==='d'?'dhist':'ghist',id:o.id};gd.innerHTML=histHtml();showGd(src)}
 function histRefresh(){if(gT&&(gT.mode==='dhist'||gT.mode==='ghist')&&gd.classList.contains('on')){const h=histHtml();if(h)gd.innerHTML=h;else closeGoal()}}
 // правка одной записи — поверх истории (окно подтверждения)
@@ -2918,9 +2933,14 @@ function jSaveCur(del){const c=jCur;if(!c)return;const {x,o,isD}=c,cur=cfg.cur;l
     else if(x.v==='gbase'){o.saved=r2(o.saved+a-x.a);if(okD)o.created=d;lkFix(o,'g')}}
   jCur=null;closeBq();save();render();histRefresh();if(msg)toast(msg,'Отмена',undo);else toast('Сохранено')}
 function debtCard(d){const rem=dRem(d),p=d.amount>0?Math.min(100,d.paid/d.amount*100):0,done=rem<=0,n=d.due?dueRel(d.due):null;
-  const dueS=done?'<span style="color:var(--g)">Погашен ✓</span>':d.due?`<span style="color:${n<0?'#ff6b6b':n<=3?'#f2c14e':'var(--m2)'}">до ${dueShort(d.due)} · ${dueTxt(n)}</span>`:'<span>без срока</span>';
-  return `<div class="cd"${done?' style="opacity:.6"':''}><div class="gh"><b><i class="dtd ${d.dir}"></i>${E(d.who)}</b><span>${fmt(d.paid)} / ${fmt(d.amount)} ${cfg.cur}</span></div><div class="lb"><i style="width:${p}%;background:${done?'var(--g)':'var(--t)'}"></i></div><div class="gx">${d.dir==='in'?'Должен мне':'Я должен'}${done?'':' · осталось '+fmt(Math.round(rem))+' '+cfg.cur} · ${dueS}</div>${(()=>{const st=dStart(d),L=(d.log||[]).filter(e=>e&&e.d).slice().sort((a,b)=>String(a.d).localeCompare(String(b.d))),last=L[L.length-1];
-    return `<div class="gx gl">${E(dOpenL(d))}${st?' '+dFmt(st):''} · ${last?'последний возврат '+dFmt(last.d)+' — '+fmt(last.a)+' '+cfg.cur:fmt(d.amount)+' '+cfg.cur}</div>`})()}${done?'':debtFc(d)}<div class="gb">${done?'':`<button class="sm" data-da="pay" data-did="${d.id}">${d.dir==='in'?'+ Получил':'+ Вернул'}</button>`}<button class="sm" data-da="edit" data-did="${d.id}">Изменить</button></div></div>`}
+  // v200: «осталось» — крупно справа; «Должен мне / Я должен» и срок — отдельной строкой; дата начала и последний возврат — ниже. Прогноз «При таком темпе…» убран
+  const dueS=done?'':d.due?`<span class="ddu" style="color:${n<0?'#ff6b6b':n<=3?'#f2c14e':'var(--m2)'}">до ${dueShort(d.due)} · ${dueTxt(n)}</span>`:'<span class="ddu">без срока</span>';
+  const st=dStart(d),L=(d.log||[]).filter(e=>e&&e.d).slice().sort((a,b)=>String(a.d).localeCompare(String(b.d))),last=L[L.length-1];
+  return `<div class="cd dcd"${done?' style="opacity:.6"':''}><div class="gh"><b><i class="dtd ${d.dir}"></i>${E(d.who)}</b><span class="drm">${done?'<b class="dok">Погашен ✓</b>':`осталось <b>${fmt(Math.round(rem))} ${cfg.cur}</b>`}</span></div>`+
+    `<div class="lb"><i style="width:${p}%;background:${done?'var(--g)':'var(--t)'}"></i></div>`+
+    `<div class="gx dmt"><b class="dk ${d.dir}">${d.dir==='in'?'Должен мне':'Я должен'}</b>${dueS}</div>`+
+    `<div class="gx gl">${E(dOpenL(d))}${st?' <b>'+dFmt(st)+'</b>':''}${last?' · последний возврат <b>'+dFmt(last.d)+' — '+fmt(last.a)+' '+cfg.cur+'</b>':' · <b>'+fmt(d.amount)+' '+cfg.cur+'</b>'}</div>`+
+    `<div class="gb">${done?'':`<button class="sm" data-da="pay" data-did="${d.id}">${d.dir==='in'?'+ Получил':'+ Вернул'}</button>`}<button class="sm" data-da="edit" data-did="${d.id}">Изменить</button></div></div>`}
 function debtsHtml(){const ds=cfg.debts||[];
   let h=`<div class="gsec"><div class="gsh">${mtg('ld',linkDebtOn(),'Записывать в доходы и расходы')}<button class="gp" data-da="new" aria-label="Добавить долг">+</button></div>`;
   if(!ds.length)return h+`<div class="cd" style="color:var(--m);font-size:13px;line-height:1.45">Например: «Игорь одолжил 500, вернёт до 20 числа». Нажмите «+» — напомню, когда подойдёт срок.</div></div>`;
@@ -3069,6 +3089,7 @@ gd.addEventListener('click',e=>{if(!gT||(gT.mode!=='dhist'&&gT.mode!=='ghist'))r
   const isD=gT.mode==='dhist',o=((isD?cfg.debts:cfg.goals)||[]).find(z=>z.id===gT.id);
   if(b.dataset.je!=null){e.stopImmediatePropagation();openJEdit(+b.dataset.je);return}
   if(!o)return;const go=f=>{e.stopImmediatePropagation();closeGoal();setTimeout(f,230)};
+  if(b.id==='hops'){e.stopImmediatePropagation();closeGoal();flk={k:isD?'d':'g',id:o.id};fcat=null;ftag=null;fday=null;setTimeout(()=>{const tb=document.querySelector('#tabs [data-t="list"]');if(tab!=='list'&&tb)tb.click();else{render()}pgTo(0)},230);return}
   if(b.id==='hed')go(()=>isD?openDebt(o):openGoal(o));else if(b.id==='hpay')go(()=>openDpay(o));else if(b.id==='hdep')go(()=>openDep(o))});
 document.getElementById('bq').addEventListener('click',e=>{const b=e.target.closest('[data-jx]');if(!b||bqT!=='jedit')return;e.stopPropagation();jSaveCur(b.dataset.jx==='del')});
 gd.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!gT)return;
@@ -3353,7 +3374,7 @@ function animNums(root){if(RM||PRV)return;root.querySelectorAll('[data-cn]').for
 // ---- плавное обновление списка операций: ничего не мигает, плашки дней и строки переезжают на новые места ----
 let _fk='';
 const FLIP_EASE='cubic-bezier(.22,1,.36,1)',FLIP_MS=560;
-function flipKey(){return [tab,month,fday||'',fcat?fcat.id:'',ftag||'',typeof q==='string'?q:'',searchOn()?1:0].join('|')}
+function flipKey(){return [tab,month,flk?flk.k+flk.id:'',fday||'',fcat?fcat.id:'',ftag||'',typeof q==='string'?q:'',searchOn()?1:0].join('|')}
 function flipSnap(){
   const key=flipKey(),same=key===_fk;_fk=key;
   if(!same||tab!=='list'||!Element.prototype.animate||matchMedia('(prefers-reduced-motion:reduce)').matches||document.getElementById('spl')||document.documentElement.classList.contains('intro'))return null;
@@ -3415,14 +3436,16 @@ function buildPage0(pg,B,peek){
     const w=norm(q),searching=searchOn();let L=mt;
     const ww=w.replace(/^#/,'');
     if(searching)L=tx.filter(t=>((t.note||'').toLowerCase().includes(ww)||cd(t.category).l.toLowerCase().includes(ww)||(t.tags||[]).some(g=>g.includes(ww)))&&fMatch(t));
+    else if(flk)L=tx.filter(t=>t.lk&&t.lk.k===flk.k&&t.lk.id===flk.id);   // v200: «Показать в операциях» из долга/цели
     else if(fday&&!ftag)L=tx.filter(t=>t.date===fday);
     else if(ftag){const rg=ftagR||rangeOf(TR);L=tx.filter(t=>(t.tags||[]).includes(ftag)&&t.date>=rg.from&&t.date<=rg.to)}
     else if(fcat)L=tx.filter(t=>t.date>=fcat.from&&t.date<=fcat.to);
     if(fcat)L=L.filter(t=>t.category===fcat.id);
     L=L.slice().sort((a,b)=>b.date.localeCompare(a.date));
-    const full=searching||!!fcat||!!ftag||!!fday,cs=L.reduce((s,t)=>s+(t.type==='income'?t.amount:-t.amount),0);
+    const lkO=flk&&!searching?((flk.k==='d'?cfg.debts:cfg.goals)||[]).find(z=>z.id===flk.id):null,lkN=lkO?(flk.k==='d'?'Долг: '+lkO.who:'Цель: '+lkO.name):(flk?(flk.k==='d'?'Долг':'Цель'):'');
+    const full=searching||!!flk||!!fcat||!!ftag||!!fday,cs=L.reduce((s,t)=>s+(t.type==='income'?t.amount:-t.amount),0);
     const showTag=ftag&&!searching,showDay=fday&&!ftag&&!searching;
-    if(!peek)$('#chip').innerHTML=full?`<span class="cht">${showDay?E(dayLbl(fday))+' · ':''}${showTag?'#'+E(ftag)+(fcat?' › ':' · '):''}${fcat?E(cd(fcat.id).l)+' · ':''}${L.length} шт · ${cs<0?'−':''}${fmt(Math.abs(cs))} ${cfg.cur}</span>${fcat?`<button data-a="clr">Сбросить</button>`:showTag?`<button data-a="clr">${ftagBk==='stats'?'Все теги':'К целям'}${CHV}</button>`:showDay?`<button data-a="clr">В календарь${CHV}</button>`:''}`:'';
+    if(!peek)$('#chip').innerHTML=full?`<span class="cht">${flk&&!searching?E(lkN)+' · ':''}${showDay?E(dayLbl(fday))+' · ':''}${showTag?'#'+E(ftag)+(fcat?' › ':' · '):''}${fcat?E(cd(fcat.id).l)+' · ':''}${L.length} шт · ${cs<0?'−':''}${fmt(Math.abs(cs))} ${cfg.cur}</span>${flk&&!searching?`<button data-a="clr">${flk.k==='d'?'К долгам':'К целям'}${CHV}</button>`:fcat?`<button data-a="clr">Сбросить</button>`:showTag?`<button data-a="clr">${ftagBk==='stats'?'Все теги':'К целям'}${CHV}</button>`:showDay?`<button data-a="clr">В календарь${CHV}</button>`:''}`:'';
     let pre='';
     if(searching&&L.length)pre=foundCard(L);
     if(showTag){
@@ -3530,7 +3553,7 @@ function navStats(d){const now=new Date();
   if(RG==='week'){WO=Math.max(0,Math.min(weeksOf(month).length-1,WO+d));_wm=month}
   else if(RG==='year'){const[yy,mm]=month.split('-').map(Number),ny=Math.min(now.getFullYear(),yy+d),nmo=ny===now.getFullYear()?Math.min(mm,now.getMonth()+1):mm;month=mk(new Date(ny,nmo-1,1))}
   render();softIn(false)}
-function openTag(g,r,bk){ftag=g;ftagR=r||null;ftagBk=bk||'goals';fcat=null;tab='list';render();pgTo(0)}
+function openTag(g,r,bk){flk=null;ftag=g;ftagR=r||null;ftagBk=bk||'goals';fcat=null;tab='list';render();pgTo(0)}
 // ---------- свайп справа налево: удалить строку или целый день ----------
 const SWO=84;let sd=null,openSw=null,swBlock=false;
 function setRv(w,rv,anim){const c=w.lastElementChild,b=w.firstElementChild;w.classList.toggle('anim',!!anim);w.classList.add('swg');clearTimeout(w._sg);if(!(rv>0))w._sg=setTimeout(()=>{if(!(+w.dataset.rv>0))w.classList.remove('swg')},700);
@@ -3539,8 +3562,8 @@ function setRv(w,rv,anim){const c=w.lastElementChild,b=w.firstElementChild;w.cla
 function closeSw(w){if(!w)return;w.classList.remove('armed');setRv(w,0,true);if(openSw===w)openSw=null}
 // данные удаляются и плашка «Удалено» выезжает сразу; перерисовка (defer) — позже, когда строка доехала
 function delTx(ids,defer,st){const set=new Set(ids),rem=[];tx.forEach((t,i)=>{if(set.has(t.id))rem.push([i,t])});if(!rem.length)return false;
-  tx=tx.filter(t=>!set.has(t.id));tomb([...set]);save();
-  toastDel(rem.length,()=>{if(st)st.undone=true;untomb(rem.map(r=>r[1].id));rem.forEach(([i,t])=>{tx.splice(Math.min(i,tx.length),0,t)});save();fxCV();render();fxIn(rem.map(r=>r[1].id))});
+  const lw=lkWhere(rem.map(r=>r[1])),lr=lkKeep(rem.map(r=>r[1]));tx=tx.filter(t=>!set.has(t.id));tomb([...set]);save();
+  toastDel(rem.length,()=>{if(st)st.undone=true;lr();untomb(rem.map(r=>r[1].id));rem.forEach(([i,t])=>{tx.splice(Math.min(i,tx.length),0,t)});save();fxCV();render();fxIn(rem.map(r=>r[1].id))},lw);
   if(!defer)render();return true}
 // плавное схлопывание по высоте (WAAPI, iOS-кривая); возвращает Promise
 // на время удаления/возврата отключаем «ленивую» отрисовку групп: иначе после перерисовки на кадр подставляется оценочная высота и список дёргается
@@ -3735,8 +3758,8 @@ function saveEd(){if(!eT)return;readEd();if(edFo(eT)&&!(eT._r>0)){toast('Ука�
   if(eT.tags&&eT.tags.length)o.tags=eT.tags.slice();else delete o.tags;
     o.type=eT.type;o.amount=eT.amount;o.note=eT.note||cd(eT.category).n;o.category=eT.category;o.date=eT.date;
   save();closeEdit();render()}
-function delEd(){if(!eT)return;const i=tx.findIndex(x=>x.id===eT.id);if(i<0){closeEdit();return}const it=tx[i],st={undone:false};tx.splice(i,1);tomb(it.id);save();
-  toastDel(1,()=>{st.undone=true;untomb(it.id);tx.splice(Math.min(i,tx.length),0,it);save();fxCV();render();fxIn([it.id])});
+function delEd(){if(!eT)return;const i=tx.findIndex(x=>x.id===eT.id);if(i<0){closeEdit();return}const it=tx[i],st={undone:false},lw=lkWhere([it]),lr=lkKeep([it]);tx.splice(i,1);tomb(it.id);save();
+  toastDel(1,()=>{st.undone=true;lr();untomb(it.id);tx.splice(Math.min(i,tx.length),0,it);save();fxCV();render();fxIn([it.id])},lw);
   fxCV();const w=document.querySelector(`#body .sw[data-id="${it.id}"]`),dg=w&&w.closest('.dg'),tg=dg&&dg.querySelectorAll('.sw:not(.sd)').length===1?dg:w;
   closeEdit();if(!tg||RM){render();return}
   setTimeout(()=>{if(st.undone)return;fxCollapse(tg).then(()=>{if(!st.undone)render()})},170)}
@@ -3766,7 +3789,7 @@ const bodyEl=$('#body'),GAP=16;
 let tp=null,tpBlock=false,tpRaf=0;
 const TP_SKIP='#totop,#lk,#lt0,#st .lt,#st .pf0,.swb,#top,#tabs,#fab,#thlp,#topact,.hd,#sp,#stw,#sh,#ed,#gd,#cf,#bq,#nc,#cp,#ov,#toast,#tour,input,select,textarea';
 const setLt0=t=>{const e=document.getElementById('lt0');if(!e)return;e.style.display=t==='settings'?'none':'';e.textContent=ttlOf(t)};
-const ttlOf=t=>t==='list'?(ftag?'#'+ftag+(fcat?' › '+cd(fcat.id).l:''):fcat?cd(fcat.id).l:fday?dayLbl(fday):'Операции'):t==='stats'?'Аналитика':t==='tags'?'Планы':t==='settings'?'Настройки':'Советы';
+const ttlOf=t=>t==='list'?(flk?(()=>{const o=((flk.k==='d'?cfg.debts:cfg.goals)||[]).find(z=>z.id===flk.id);return o?(flk.k==='d'?o.who:o.name):'Операции'})():ftag?'#'+ftag+(fcat?' › '+cd(fcat.id).l:''):fcat?cd(fcat.id).l:fday?dayLbl(fday):'Операции'):t==='stats'?'Аналитика':t==='tags'?'Планы':t==='settings'?'Настройки':'Советы';
 const tabInd=()=>$('#tabs').querySelector('.ind');
 function ltPop(s){}   // v159: заголовок при смене вкладки просто меняется, без сдвига
 // ---------- v55: у каждой страницы своя позиция прокрутки ----------
@@ -3776,7 +3799,7 @@ function ltPop(s){}   // v159: заголовок при смене вкладк
 function pgKey(t,sub){t=t||tab;
   if(t==='stats')return 'stats:'+(sub||AS);
   if(t==='tags')return 'tags:'+(sub||ps);
-  if(t==='list')return 'list'+(ftag?'#'+ftag:'')+(fcat?'|'+fcat.id:'')+(fday?'@'+fday:'');
+  if(t==='list')return 'list'+(flk?'~'+flk.id:'')+(ftag?'#'+ftag:'')+(fcat?'|'+fcat.id:'')+(fday?'@'+fday:'');
   return t}
 function pgSave(){if(pgCur==null)pgCur=pgKey();PGY[pgCur]=Math.max(0,pgY());pgFresh=true}
 // v191: прокрутка каждой страницы своя. После смены страницы её позиция удерживается ~0,45 с, пока нет касания:
@@ -3800,7 +3823,7 @@ function slideTo(t){document.documentElement.classList.remove('intro');   // v51
   const s=TABS.indexOf(t)>TABS.indexOf(tab)?1:-1;
   {const sb=sbwEl().querySelector('.sbt');if(sb){const w=document.createElement('div');w.style.display='flow-root';w.appendChild(sb);bodyEl.insertBefore(w,bodyEl.firstChild)}}
   const stSw=t==='settings'||tab==='settings',clamp=stSw;
-  if(tab==='list'){fcat=null;ftag=null;fday=null}
+  if(tab==='list'){flk=null;fcat=null;ftag=null;fday=null}
   tab=t;const ind=tabInd();if(ind)ind.style.transition='';moveInd();$('#ttl').textContent=ttlOf(t);
   if(clamp){
     setLt0(t);render();pgApply();softIn(false);return}   // v163: «Настройки» открываются сразу, с коротким проявлением (было: старая страница 0,25 с гасла, новая 0,5 с проявлялась)
@@ -4154,7 +4177,7 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
   document.addEventListener('touchend',gEnd,{passive:true,capture:true});document.addEventListener('touchcancel',gEnd,{passive:true,capture:true});
   document.addEventListener('click',e=>{if(guard){e.stopPropagation();e.preventDefault()}},true);
 })();
-$('#chip').onclick=e=>{if(e.target.closest('[data-a="clr"]')){if(fcat)fcat=null;else if(ftag){ftag=null;ftagR=null;if(ftagBk==='stats'){tab='stats';AS='tags'}else{tab='tags';ps='goals'}}else if(fday){fday=null;tab='stats';AS='cal'}render();pgTo(0)}};
+$('#chip').onclick=e=>{if(e.target.closest('[data-a="clr"]')){if(flk){const k=flk.k;flk=null;tab='tags';ps=k==='d'?'debts':'goals'}else if(fcat)fcat=null;else if(ftag){ftag=null;ftagR=null;if(ftagBk==='stats'){tab='stats';AS='tags'}else{tab='tags';ps='goals'}}else if(fday){fday=null;tab='stats';AS='cal'}render();pgTo(0)}};
 const shift=d=>{fcat=null;fday=null;const [y,m]=month.split('-').map(Number);month=mk(new Date(y,m-1+d,1));render()};
 const monthSwap=d=>{settleAll();swapAnim(d,()=>shift(d),[bodyEl,topEl],0,1,false)};   // v118: анимация смены месяца (уезжает старый блок, приезжает новый)
 $('#pv').onclick=()=>{if(!isModalOpen())monthSwap(-1)};$('#nx').onclick=()=>{if(!isModalOpen())monthSwap(1)};
@@ -5241,6 +5264,11 @@ let tt;const TIC={del:'<svg width="26" height="26" viewBox="0 0 24 24" fill="non
 // плашка снизу в стиле Telegram: выезжает сразу, держится 3 секунды, плавно уезжает
 let delB=null,_tb=0;const TOAST_MS=3000;
 // подряд идущие удаления складываются в одну плашку: «Удалено», «Удалено: 2»… — число перекатывается, «Отмена» возвращает всё
+// v200: удаление операций, связанных с долгом/целью: в плашке — откуда ещё удалено; «Отмена» возвращает и долг, если он был создан этой операцией
+function lkWhere(ops){const ns=[];(ops||[]).forEach(t=>{if(!t||!t.lk)return;const o=((t.lk.k==='d'?cfg.debts:cfg.goals)||[]).find(z=>z.id===t.lk.id);if(o)ns.push((t.lk.k==='d'?'из долга: ':'из цели: ')+(t.lk.k==='d'?o.who:o.name))});
+  const u=[...new Set(ns)];return u.length?(u.length===1?' · также '+u[0]:' · также из долгов и целей: '+u.length):''}
+function lkKeep(ops){const L=(ops||[]).filter(t=>t&&t.lk);if(!L.length)return ()=>{};const keep=L.map(t=>{const k=t.lk.k==='d'?'debts':'goals',o=(cfg[k]||[]).find(z=>z.id===t.lk.id);return {k,id:t.lk.id,e:t.lk.e,o:o?JSON.parse(JSON.stringify(o)):null}});
+  return ()=>{keep.forEach(x=>{if(x.e)untomb(x.e);if(!x.o)return;const a=cfg[x.k]||(cfg[x.k]=[]);if(!a.some(z=>z.id===x.id)){a.push(x.o);untomb(x.id)}})}}
 const delMsg=n=>'Удалено'+(n>1?`<span class="tcc">: </span><span class="odo"><span class="od">${n}</span></span>`:'');
 function toastMorph(el,n){const tx=el.querySelector('.ttx');if(!tx)return false;const odo=tx.querySelector('.odo');
   if(!odo){tx.insertAdjacentHTML('beforeend',`<span class="tcc">: </span><span class="odo"><span class="od">${n}</span></span>`);
@@ -5250,14 +5278,14 @@ function toastMorph(el,n){const tx=el.querySelector('.ttx');if(!tx)return false;
   const o=old.animate([{transform:'translateY(0)',opacity:1},{transform:'translateY(-115%)',opacity:0}],{duration:420,easing:'cubic-bezier(.32,.72,0,1)',fill:'forwards'});
   nw.animate([{transform:'translateY(115%)',opacity:0},{transform:'translateY(0)',opacity:1}],{duration:420,easing:'cubic-bezier(.32,.72,0,1)'});
   o.onfinish=()=>old.remove();return true}
-function toastDel(n,undo){const el=$('#toast'),live=!!delB&&el.classList.contains('on');
-  if(live){delB.n+=n;delB.u.push(undo)}else delB={n,u:[undo]};
+function toastDel(n,undo,lw){const el=$('#toast'),live=!lw&&!!delB&&!delB.x&&el.classList.contains('on');
+  if(live){delB.n+=n;delB.u.push(undo)}else delB={n,u:[undo],x:lw||''};
   const b=delB;_tb=1;
   if(live&&el.dataset.k==='del'&&!RM&&el.animate&&toastMorph(el,b.n)){
     clearTimeout(tt);_tb=0;tt=setTimeout(()=>{el.classList.remove('on');delB=null},TOAST_MS);
     el.animate([{transform:'translateY(0) scale(1)'},{transform:'translateY(-3px) scale(1.018)',offset:.4},{transform:'translateY(0) scale(1)'}],{duration:480,easing:'cubic-bezier(.32,.72,0,1)'});
     return}
-  toast(null,'Отмена',()=>{const u=b.u.slice().reverse();if(delB===b)delB=null;u.forEach(f=>f())},'del',delMsg(b.n))}
+  toast(null,'Отмена',()=>{const u=b.u.slice().reverse();if(delB===b)delB=null;u.forEach(f=>f())},'del',delMsg(b.n)+(b.x?E(b.x):''))}
 // Плашка показывается только для отмены действия (кнопка «Отмена» / «Сохранить»). Подтверждения вроде «Сохранено» не показываем:
 // человек и так видит, что сделал. Остаются только короткие объяснения, почему действие не выполнилось (ошибки и «укажите сумму»).
 // v184: плашка поднимается над клавиатурой: --tkb — сколько экрана снизу закрыто (видимая часть короче окна)
