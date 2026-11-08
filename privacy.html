@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="dark">
-<title>Политика конфиденциальности · Privacy Policy</title>
+<title>Политика конфиденциальности · Privacy Policy · FinansePro</title>
 <style>
 :root{--bg:#0b0b0d;--card:#17171b;--t:#f2f2f4;--m:#a1a1aa;--ln:rgba(255,255,255,.08);--a:#8fc9a0}
 *{box-sizing:border-box}
@@ -14,24 +14,28 @@ h1{font-size:28px;line-height:1.2;margin:0 0 6px;letter-spacing:-.01em}
 h2{font-size:18px;margin:26px 0 8px}
 p,li{color:var(--t)}
 .m{color:var(--m);font-size:14px}
-.lang{display:flex;gap:8px;margin:14px 0 22px}
-.lang a{color:var(--t);text-decoration:none;padding:6px 14px;border:1px solid var(--ln);border-radius:20px;font-size:14px}
-section{background:var(--card);border:1px solid var(--ln);border-radius:20px;padding:18px 18px 8px;margin-bottom:24px}
+section{background:var(--card);border:1px solid var(--ln);border-radius:20px;padding:18px 18px 8px;margin-bottom:24px;scroll-margin-top:100px}
 ul{padding-left:20px;margin:6px 0 12px}li{margin:4px 0}
 a{color:var(--a)}
 b{font-weight:600}
-/* один язык на экране: по умолчанию русский, по ссылке #en — английский */
-#en,body:has(#en:target) #ru{display:none}
-#en:target{display:block}
-.lang a.on,body:has(#en:target) .lang a[href="#en"]{background:var(--t);color:var(--bg);border-color:var(--t)}
-body:has(#en:target) .lang a[href="#ru"]{background:none;color:var(--t);border-color:var(--ln)}
 section h1{margin-top:4px}
-section{scroll-margin-top:100px}   /* переход по #en не уводит переключатель за верх экрана */
+/* язык: кнопка-глобус справа вверху; на экране один язык — по умолчанию русский, по ссылке #ro/#en/#de/#es — выбранный */
+.top{display:flex;justify-content:flex-end;margin:0 0 14px}
+.lg{position:relative}
+.lg summary{list-style:none;cursor:pointer;width:44px;height:44px;border-radius:50%;border:1px solid var(--ln);background:var(--card);display:flex;align-items:center;justify-content:center;color:var(--t)}
+.lg summary::-webkit-details-marker{display:none}
+.lg nav{position:absolute;right:0;top:52px;z-index:2;min-width:170px;background:var(--card);border:1px solid var(--ln);border-radius:16px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.lg nav a{display:block;padding:10px 12px;border-radius:10px;color:var(--t);text-decoration:none;font-size:15px}
+section{display:none}#ru,section:target{display:block}body:has(section:target) #ru:not(:target){display:none}
+.lg a[href="#ru"],body:has(#ro:target) .lg a[href="#ro"],body:has(#en:target) .lg a[href="#en"],body:has(#de:target) .lg a[href="#de"],body:has(#es:target) .lg a[href="#es"]{background:rgba(255,255,255,.1);font-weight:600}
+body:has(section:target:not(#ru)) .lg a[href="#ru"]{background:none;font-weight:400}
 </style>
 </head>
 <body>
 <main>
-<div class="lang"><a href="#ru" class="on">Русский</a><a href="#en">English</a></div>
+<div class="top"><details class="lg"><summary aria-label="Язык / Language"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"/></svg></summary>
+<nav><a href="#ru">Русский</a><a href="#ro">Română</a><a href="#en">English</a><a href="#de">Deutsch</a><a href="#es">Español</a></nav></details></div>
+<script>document.querySelectorAll('.lg nav a').forEach(a=>a.onclick=()=>{a.closest('details').open=false;document.documentElement.lang=a.hash.slice(1)})</script>
 
 <section id="ru">
 <h1>Политика конфиденциальности</h1>
@@ -71,6 +75,43 @@ section{scroll-margin-top:100px}   /* переход по #en не уводит 
 <li>Очередь бота очищается сама (см. сроки выше).</li>
 <li>В облаке Telegram остаются настройки приложения и служебные отметки об удалённых записях.</li>
 <li>Вопросы и просьбы — «Настройки → Написать нам»: Telegram <a href="https://t.me/olegkr31">@olegkr31</a> или <a href="mailto:olegkiselar3105@gmail.com">olegkiselar3105@gmail.com</a>.</li>
+</ul>
+</section>
+
+<section id="ro" lang="ro">
+<h1>Politica de confidențialitate</h1>
+<div class="m">FinansePro — evidența veniturilor și cheltuielilor în Telegram (bot și aplicație). Ultima actualizare: 8 noiembrie 2026.</div>
+<h2>Unde sunt păstrate înregistrările</h2>
+<ul>
+<li><b>În cloud-ul Telegram</b> (CloudStorage) — legat de contul dumneavoastră Telegram și de acest bot, astfel încât înregistrările sunt aceleași pe toate dispozitivele.</li>
+<li><b>Pe dispozitivul dumneavoastră</b> — în memoria aplicației din Telegram, ca să funcționeze și fără internet.</li>
+<li>Înregistrările, sumele și setările <b>nu sunt păstrate</b> pe serverele noastre.</li>
+</ul>
+<h2>Ce păstrează botul</h2>
+<p>Mesajul trimis botului așteaptă într-o coadă pe server (Cloudflare D1) până când aplicația îl preia:</p>
+<ul>
+<li><b>ID-ul Telegram</b>, <b>textul mesajului</b> (până la 500 de caractere) și ora trimiterii — se șterg imediat ce aplicația preia înregistrarea și, în orice caz, în cel mult <b>30 de zile</b>;</li>
+<li>o notă de serviciu pentru răspunsul „✅ Înregistrat” (numărul chatului și al mesajului, începutul textului) — tot cel mult <b>30 de zile</b>;</li>
+<li><b>contorul zilnic de mesaje</b> (ID, dată, număr) — pentru limita zilnică, păstrat <b>2 zile</b>.</li>
+</ul>
+<h2>Cui se transmite ce</h2>
+<ul>
+<li><b>Mesajele vocale</b> sunt trimise serviciului Groq pentru a transforma vorbirea în text. Botul păstrează doar textul rezultat, nu și înregistrarea audio.</li>
+<li><b>Cursurile valutare</b> sunt cerute de la open.er-api.com. Se transmit doar codurile valutelor (de exemplu, EUR), fără datele dumneavoastră.</li>
+<li><b>Fotografia de profil</b> din setări este încărcată din Telegram.</li>
+<li><b>Găzduire</b>: aplicația — Cloudflare Pages, botul — Cloudflare Workers. În caz de erori, Cloudflare poate păstra mesaje tehnice despre acestea.</li>
+</ul>
+<h2>Ce nu facem</h2>
+<ul>
+<li>Fără reclame, fără analitică, fără urmărirea vizitatorilor.</li>
+<li>Nu vindem și nu transmitem datele dumneavoastră nimănui în afara serviciilor de mai sus.</li>
+</ul>
+<h2>Cum ștergeți datele</h2>
+<ul>
+<li>Înregistrările: ștergeți-le în aplicație sau „Setări → Export, import și resetare → Resetează toate operațiunile”. Obiectivele și datoriile se șterg în secțiunea „Planuri”. Modificările ajung automat în cloud-ul Telegram.</li>
+<li>Coada botului se golește singură (vezi termenele de mai sus).</li>
+<li>În cloud-ul Telegram rămân setările aplicației și notele de serviciu despre înregistrările șterse.</li>
+<li>Întrebări și solicitări — „Setări → Scrieți-ne”: Telegram <a href="https://t.me/olegkr31">@olegkr31</a> sau <a href="mailto:olegkiselar3105@gmail.com">olegkiselar3105@gmail.com</a>.</li>
 </ul>
 </section>
 
@@ -114,6 +155,81 @@ section{scroll-margin-top:100px}   /* переход по #en не уводит 
 <li>Questions and requests — “Settings → Write to us”: Telegram <a href="https://t.me/olegkr31">@olegkr31</a> or <a href="mailto:olegkiselar3105@gmail.com">olegkiselar3105@gmail.com</a>.</li>
 </ul>
 </section>
+
+<section id="de" lang="de">
+<h1>Datenschutzerklärung</h1>
+<div class="m">FinansePro — Einnahmen und Ausgaben in Telegram erfassen (Bot und App). Zuletzt geändert: 8. November 2026.</div>
+<h2>Wo Ihre Einträge gespeichert werden</h2>
+<ul>
+<li><b>In der Telegram-Cloud</b> (CloudStorage) — verknüpft mit Ihrem Telegram-Konto und diesem Bot, damit die Einträge auf allen Ihren Geräten gleich sind.</li>
+<li><b>Auf Ihrem Gerät</b> — im Speicher der App in Telegram, damit sie auch offline funktioniert.</li>
+<li>Ihre Einträge, Beträge und Einstellungen werden <b>nicht</b> auf unseren Servern gespeichert.</li>
+</ul>
+<h2>Was der Bot speichert</h2>
+<p>Eine Nachricht an den Bot wartet in einer Warteschlange auf unserem Server (Cloudflare D1), bis die App sie abholt:</p>
+<ul>
+<li>Ihre <b>Telegram-ID</b>, der <b>Nachrichtentext</b> (bis zu 500 Zeichen) und der Zeitpunkt — werden gelöscht, sobald die App den Eintrag abgeholt hat, spätestens nach <b>30 Tagen</b>;</li>
+<li>ein interner Vermerk für die Antwort „✅ Erfasst“ (Chat- und Nachrichtennummer, Anfang des Textes) — ebenfalls höchstens <b>30 Tage</b>;</li>
+<li>ein <b>täglicher Nachrichtenzähler</b> (ID, Datum, Anzahl) für das Tageslimit — wird <b>2 Tage</b> aufbewahrt.</li>
+</ul>
+<h2>Wer was erhält</h2>
+<ul>
+<li><b>Sprachnachrichten</b> werden an den Dienst Groq gesendet, um Sprache in Text umzuwandeln. Der Bot speichert nur den erkannten Text, nicht die Audioaufnahme.</li>
+<li><b>Wechselkurse</b> werden bei open.er-api.com abgefragt. Übermittelt werden nur Währungscodes (z. B. EUR), keine persönlichen Daten.</li>
+<li>Ihr <b>Profilbild</b> in den Einstellungen wird von Telegram geladen.</li>
+<li><b>Hosting</b>: die App läuft auf Cloudflare Pages, der Bot auf Cloudflare Workers. Bei Störungen kann Cloudflare technische Fehlermeldungen speichern.</li>
+</ul>
+<h2>Was wir nicht tun</h2>
+<ul>
+<li>Keine Werbung, keine Analyse, kein Tracking.</li>
+<li>Wir verkaufen Ihre Daten nicht und geben sie an niemanden außer den oben genannten Diensten weiter.</li>
+</ul>
+<h2>Daten löschen</h2>
+<ul>
+<li>Einträge: in der App löschen oder „Einstellungen → Export, Import und Zurücksetzen → Alle Buchungen zurücksetzen“. Ziele und Schulden werden im Bereich „Pläne“ gelöscht. Änderungen werden automatisch mit der Telegram-Cloud abgeglichen.</li>
+<li>Die Warteschlange des Bots leert sich von selbst (siehe Fristen oben).</li>
+<li>In der Telegram-Cloud bleiben die App-Einstellungen und interne Vermerke über gelöschte Einträge.</li>
+<li>Fragen und Anfragen — „Einstellungen → Schreiben Sie uns“: Telegram <a href="https://t.me/olegkr31">@olegkr31</a> oder <a href="mailto:olegkiselar3105@gmail.com">olegkiselar3105@gmail.com</a>.</li>
+</ul>
+</section>
+
+<section id="es" lang="es">
+<h1>Política de privacidad</h1>
+<div class="m">FinansePro — registro de ingresos y gastos en Telegram (bot y aplicación). Última actualización: 8 de noviembre de 2026.</div>
+<h2>Dónde se guardan sus registros</h2>
+<ul>
+<li><b>En la nube de Telegram</b> (CloudStorage), vinculada a su cuenta de Telegram y a este bot, para que los registros coincidan en todos sus dispositivos.</li>
+<li><b>En su dispositivo</b>, en la memoria de la aplicación dentro de Telegram, para que funcione sin conexión.</li>
+<li>Sus registros, importes y ajustes <b>no se guardan</b> en nuestros servidores.</li>
+</ul>
+<h2>Qué guarda el bot</h2>
+<p>Un mensaje enviado al bot espera en una cola en nuestro servidor (Cloudflare D1) hasta que la aplicación lo recoge:</p>
+<ul>
+<li>su <b>ID de Telegram</b>, el <b>texto del mensaje</b> (hasta 500 caracteres) y la hora de envío: se borran en cuanto la aplicación recoge el registro y, en cualquier caso, en un máximo de <b>30 días</b>;</li>
+<li>una nota de servicio para mostrar «✅ Registrado» (número de chat y de mensaje, inicio del texto): también <b>30 días</b> como máximo;</li>
+<li>un <b>contador diario de mensajes</b> (ID, fecha, cantidad) para el límite diario: se guarda <b>2 días</b>.</li>
+</ul>
+<h2>Quién recibe qué</h2>
+<ul>
+<li>Los <b>mensajes de voz</b> se envían al servicio Groq para convertir la voz en texto. El bot guarda solo el texto resultante, no el audio.</li>
+<li>Los <b>tipos de cambio</b> se consultan en open.er-api.com. Solo se envían códigos de moneda (por ejemplo, EUR), sin sus datos.</li>
+<li>Su <b>foto de perfil</b> en los ajustes se carga desde Telegram.</li>
+<li><b>Alojamiento</b>: la aplicación funciona en Cloudflare Pages y el bot en Cloudflare Workers. Si se produce un fallo, Cloudflare puede guardar mensajes técnicos de error.</li>
+</ul>
+<h2>Lo que no hacemos</h2>
+<ul>
+<li>Sin publicidad, sin analítica, sin seguimiento de visitantes.</li>
+<li>No vendemos ni compartimos sus datos con nadie, salvo con los servicios mencionados arriba.</li>
+</ul>
+<h2>Cómo borrar sus datos</h2>
+<ul>
+<li>Registros: bórrelos en la aplicación o en «Ajustes → Exportar, importar y restablecer → Restablecer todas las operaciones». Los objetivos y las deudas se borran en la sección «Planes». Los cambios se sincronizan automáticamente con la nube de Telegram.</li>
+<li>La cola del bot se vacía sola (consulte los plazos arriba).</li>
+<li>En la nube de Telegram quedan los ajustes de la aplicación y las notas de servicio sobre los registros borrados.</li>
+<li>Preguntas y solicitudes: «Ajustes → Escríbanos»: Telegram <a href="https://t.me/olegkr31">@olegkr31</a> o <a href="mailto:olegkiselar3105@gmail.com">olegkiselar3105@gmail.com</a>.</li>
+</ul>
+</section>
+
 </main>
 </body>
 </html>
