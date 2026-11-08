@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "Финансы",
-  "short_name": "Финансы",
+  "name": "FinansePro",
+  "short_name": "FinansePro",
   "description": "Личный учёт доходов и расходов. Работает офлайн.",
   "lang": "ru",
   "dir": "ltr",

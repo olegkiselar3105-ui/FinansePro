@@ -3,7 +3,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
-<title>Написать в Finance Pro</title>
+<title>Написать в FinansePro</title>
 <!-- Мост для письма из Telegram: внутри Telegram ссылки mailto: не открываются, поэтому приложение открывает эту страницу
      во внешнем браузере (Telegram.WebApp.openLink), а она уже открывает почту телефона с готовыми адресом и темой.
      Адрес зашит здесь (как SUPPORT.email в index.html) — страницу нельзя использовать для писем на чужие адреса. -->
@@ -21,7 +21,7 @@ a.go{background:var(--b);color:#fff}
 button{background:transparent;color:var(--b);height:44px;line-height:44px}
 </style></head>
 <body><main>
-<h1>Письмо в Finance Pro</h1>
+<h1>Письмо в FinansePro</h1>
 <p>Сейчас откроется почта с адресом и темой — останется написать сообщение. Если не открылась, нажмите кнопку.</p>
 <a class="go" id="go" href="#">Открыть почту</a>
 <div class="ad" id="ad"></div>
@@ -31,7 +31,7 @@ button{background:transparent;color:var(--b);height:44px;line-height:44px}
 (function(){
   var TO='olegkiselar3105@gmail.com';
   var q=new URLSearchParams(location.search),cut=function(v,n){return String(v||'').slice(0,n)};
-  var subj=cut(q.get('s'),120)||'Finance Pro — обращение',body=cut(q.get('b'),1000);
+  var subj=cut(q.get('s'),120)||'FinansePro — обращение',body=cut(q.get('b'),1000);
   var url='mailto:'+TO+'?subject='+encodeURIComponent(subj)+(body?'&body='+encodeURIComponent(body):'');
   document.getElementById('go').href=url;
   document.getElementById('ad').textContent=TO;

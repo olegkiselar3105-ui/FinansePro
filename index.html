@@ -2,12 +2,12 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v207';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v208';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#111111" id="tc">
-<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="apple-mobile-web-app-title" content="Финансы">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="apple-mobile-web-app-title" content="FinansePro">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -64,7 +64,7 @@ addEventListener('click',function(e){
 </script>
 <script>try{if(localStorage.getItem("finapp.pin"))document.documentElement.classList.add("plk")}catch(e){}</script>
 <script>document.documentElement.classList.add("splh");setTimeout(function(){document.documentElement.classList.remove("splh")},7000)</script>
-<title>Финансы</title>
+<title>FinansePro</title>
 <style>
 :root{--sat:calc(max(env(safe-area-inset-top,0px),var(--tg-safe-area-inset-top,0px)) + var(--tg-content-safe-area-inset-top,0px));--sab:calc(max(env(safe-area-inset-bottom,0px),var(--tg-safe-area-inset-bottom,0px)) + var(--tg-content-safe-area-inset-bottom,0px));--g:#8fc9a0;--rd:#e39090;--bg:#111;--s:#181818;--l:#2a2a2a;--t:#f2f2f2;--m:#8a8a8a;--m2:#9a9a9a;--on:#111;--prh:#d8d8d8;--b1:#3a3a3a;--b2:#555;--b3:#333;--l2:#202020;--tx2:#c8c8c8;--wr:255,255,255;--gl:30,30,30;--gl2:30,30,32;--bgr:17,17,17;--tp1:#2b2b2b;--tp2:#202020;--tp3:#424242;--toast:#1c1c1c;color-scheme:dark;box-sizing:border-box;padding-top:var(--sat);padding-bottom:var(--sab)}
 :root[data-theme=light]{--g:#2e8b57;--rd:#c94a4a;--bg:#e4e4e1;--s:#fff;--l:#d3d3ce;--t:#161616;--m:#666;--m2:#555;--on:#fff;--prh:#333;--b1:#c6c6c1;--b2:#b3b3ad;--b3:#cdcdc8;--l2:#d9d9d4;--tx2:#444;--wr:0,0,0;--gl:255,255,255;--gl2:255,255,255;--bgr:228,228,225;--tp1:#fff;--tp2:#f7f7f4;--tp3:#cfcfca;--toast:#fff;color-scheme:light}
@@ -766,13 +766,15 @@ html.ncv .dg{content-visibility:visible}
 .spl-flap{animation-delay:.08s}.spl-body{animation-delay:.22s}
 .spl-bill{opacity:0;transform:translateY(46px);animation:splBill 1s cubic-bezier(.34,1.45,.5,1) .78s forwards}
 .spl-dot{transform-box:fill-box;transform-origin:center;transform:scale(0);animation:splDot .6s cubic-bezier(.34,1.7,.5,1) 1.05s forwards}
-.spl-t{font:600 17px/1 system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;letter-spacing:.06em;color:var(--m2);opacity:0;transform:translateY(10px);animation:splT .8s cubic-bezier(.22,1,.36,1) .9s forwards}
+.spl-t{font:600 19px/1 system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;letter-spacing:.04em;color:var(--t);white-space:nowrap}
+/* v208: название по буквам — каждая поднимается и проявляется из размытия; «Pro» зелёным */
+.spl-t>span{display:inline-block;animation:splL .6s cubic-bezier(.22,1,.36,1) calc(.85s + var(--i)*.032s) backwards}.spl-t>.spl-p{color:var(--g)}
 @keyframes splIn{from{opacity:0;transform:scale(.8)}}
 @keyframes splPulse{50%{transform:scale(1.045)}}
 @keyframes splDraw{to{stroke-dashoffset:0}}
 @keyframes splBill{0%{opacity:0;transform:translateY(46px)}30%{opacity:1}100%{opacity:1;transform:translateY(0)}}
 @keyframes splDot{to{transform:scale(1)}}
-@keyframes splT{to{opacity:1;transform:none}}
+@keyframes splL{from{opacity:0;transform:translateY(9px) scale(.92);filter:blur(5px)}}
 @keyframes splSafe{to{opacity:0;visibility:hidden}}
 /* ---------- появление главного экрана: карточка месяца, затем операции по очереди ---------- */
 html.intro .hd{animation:inA .8s cubic-bezier(.22,1,.36,1) backwards}
@@ -796,7 +798,7 @@ html.intro #tabs,html.intro #fab{animation:inUp .9s cubic-bezier(.22,1,.36,1) .4
 @keyframes inUp{from{opacity:0;transform:translate3d(0,26px,0)}}
 @media (prefers-reduced-motion:reduce){
   .spl-d{animation:none;stroke-dashoffset:0}.spl-bill{animation:none;opacity:1;transform:none}.spl-dot{animation:none;transform:none}
-  .spl-logo,.spl-t{animation:none;opacity:1;transform:none}#spl{transition:opacity .3s ease,visibility 0s .3s}#spl.out{transform:none;filter:none}
+  .spl-logo,.spl-t,.spl-t>span{animation:none;opacity:1;transform:none;filter:none}#spl{transition:opacity .3s ease,visibility 0s .3s}#spl.out{transform:none;filter:none}
   html.intro *{animation:none!important}}
 
 /* ================= Обучение: знакомство и подсказки ================= */
@@ -1798,7 +1800,7 @@ html:root #ed #eam,html:root #ed label.ef,html:root #ed .ef.tgf,html:root #ed in
 <rect class="spl-d spl-body" pathLength="1" x="139" y="196" width="244" height="168" rx="40"/>
 <circle class="spl-dot" cx="335" cy="277" r="15" fill="currentColor" stroke="none"/>
 </svg>
-<div class="spl-t">Финансы</div></div>
+<div class="spl-t" role="img" aria-label="FinansePro"><span style="--i:0">F</span><span style="--i:1">i</span><span style="--i:2">n</span><span style="--i:3">a</span><span style="--i:4">n</span><span style="--i:5">s</span><span style="--i:6">e</span><span class="spl-p" style="--i:7">P</span><span class="spl-p" style="--i:8">r</span><span class="spl-p" style="--i:9">o</span></div></div>
 <script>window.__spl0=0;requestAnimationFrame(function(){window.__spl0=performance.now()})</script>
 <div id="w">
 <div class="hd"><button class="ic" id="srch" aria-label="Поиск" aria-expanded="false" title="Поиск"><svg class="x1" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><svg class="x2" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button><button type="button" id="cs" data-s="ok" aria-live="polite" aria-label="Синхронизация с облаком Telegram"><i></i><span class="csl">сохранено</span></button></div>
@@ -5011,7 +5013,7 @@ function supportTg(){const u=String(SUPPORT.tg||'').replace(/^@/,'').trim();if(!
 function mailUrl(){
   const m=String(SUPPORT.email||'').trim(),
     body='\r\n\r\n—\r\nВерсия приложения: '+(typeof APP_VER!=='undefined'?APP_VER:'')+(IN_TG?' · Telegram':'');
-  return 'mailto:'+m+'?subject='+encodeURIComponent('Finance Pro — обращение')+'&body='+encodeURIComponent(body)}
+  return 'mailto:'+m+'?subject='+encodeURIComponent('FinansePro — обращение')+'&body='+encodeURIComponent(body)}
 // v182: внутри Telegram ссылки mailto: не открываются (встроенный браузер их молча игнорирует) — открываем через Telegram страницу mail.html
 // на нашем сайте, а она открывает почту телефона с готовыми адресом и темой. Вне Telegram работает обычная ссылка mailto:.
 function mailBridge(){const u=new URL(mailUrl()),base=location.origin+location.pathname.replace(/[^/]*$/,'');
@@ -6999,7 +7001,7 @@ function drawSum(d,st){const W=1080,H=1440,cv=document.createElement('canvas');c
     const lw=vx-vw-32-lx;x.textAlign='left';x.fillStyle=A(1);x.font=(st==='min'?'400 38px ':'500 38px ')+fam;
     if(sb){x.fillText(ell(x,l,lw),lx,cy-22);x.fillStyle=A(st==='png'?.8:.55);x.font='400 28px '+fam;x.fillText(ell(x,sb,lw),lx,cy+24)}else x.fillText(ell(x,l,lw),lx,cy)});
   {const nk=nick(),isz=64,cy=H-100;x.save();x.globalAlpha=st==='png'?.95:.75;x.textBaseline='middle';
-    wallet(x,mx,cy-isz/2,isz,'rgb('+S.fg+')');x.fillStyle=A(1);x.textAlign='left';x.font='700 36px '+fam;x.fillText('FinancePro',mx+isz+18,cy);
+    wallet(x,mx,cy-isz/2,isz,'rgb('+S.fg+')');x.fillStyle=A(1);x.textAlign='left';x.font='700 36px '+fam;x.fillText('FinansePro',mx+isz+18,cy);
     if(nk){x.textAlign='right';x.font='500 30px '+fam;x.globalAlpha=st==='png'?.9:.65;x.fillText(ell(x,nk,W/2-mx),W-mx,cy)}x.restore()}
   if(st==='film')filmFx(x,W,H);
   return cv}

@@ -40,6 +40,18 @@ section h1{margin:4px 0 8px;padding-right:56px}   /* заголовок на о�
 section{display:none}#ru,section:target{display:block}body:has(section:target) #ru:not(:target){display:none}
 .lg a[href="#ru"],body:has(#ro:target) .lg a[href="#ro"],body:has(#en:target) .lg a[href="#en"],body:has(#de:target) .lg a[href="#de"],body:has(#es:target) .lg a[href="#es"]{background:rgba(255,255,255,.1);font-weight:600}
 body:has(section:target:not(#ru)) .lg a[href="#ru"]{background:none;font-weight:400}
+/* появление как в приложении: глобус, заголовок, описание, плитка, затем текст плитки по очереди (кривая и сдвиги — как у главного экрана).
+   Секция языка показывается через display — при смене языка появление повторяется само */
+@keyframes pIn{from{opacity:0;transform:translate3d(0,22px,0) scale(.97)}}
+@keyframes pA{from{opacity:0;transform:translate3d(0,10px,0)}}
+@keyframes pG{from{opacity:0;transform:scale(.8)}}
+.top{animation:pG .7s cubic-bezier(.22,1,.36,1) .05s backwards}
+section h1{animation:pA .8s cubic-bezier(.22,1,.36,1) .08s backwards}
+section>.m{animation:pA .8s cubic-bezier(.22,1,.36,1) .16s backwards}
+.card{animation:pIn .85s cubic-bezier(.22,1,.36,1) .24s backwards}
+.card>*{animation:pA .7s cubic-bezier(.22,1,.36,1) calc(.36s + var(--k,0)*.06s) backwards}
+.card>:nth-child(2){--k:1}.card>:nth-child(3){--k:2}.card>:nth-child(4){--k:3}.card>:nth-child(5){--k:4}.card>:nth-child(6){--k:5}.card>:nth-child(7){--k:6}.card>:nth-child(8){--k:7}.card>:nth-child(9){--k:8}.card>:nth-child(10){--k:9}.card>:nth-child(11){--k:10}.card>:nth-child(12){--k:11}.card>:nth-child(n+13){--k:12}
+@media (prefers-reduced-motion:reduce){.top,section h1,section>.m,.card,.card>*{animation:none}}
 </style>
 </head>
 <body>
