@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v221';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v222';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -3825,8 +3825,9 @@ $('#body').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const
 sbwEl().addEventListener('click',e=>{if(isModalOpen())return;const b=e.target.closest('[data-as],[data-ps]');if(!b)return;
   if(b.dataset.as){if(b.dataset.as===AS)return}else{if(b.dataset.ps===ps)return}
   pgSave();   // v191: как при свайпе — у каждого раздела своя прокрутка (раньше нажатие открывало раздел там, где был прокручен предыдущий)
+  const S_=SUBS[tab],k_=b.dataset.as||b.dataset.ps,d_=S_&&S_.list.indexOf(k_)>S_.list.indexOf(S_.get())?1:-1;
   if(b.dataset.as)AS=b.dataset.as;else ps=b.dataset.ps;
-  render();pgApply();softIn(true)});
+  render();pgApply();subIn(d_)});
 $('#tabs').onclick=e=>{if(isModalOpen()||tbdBlock)return;const b=e.target.closest('[data-t]');if(b)setTab(b.dataset.t)};
 
 // ================= page carousel: swipe / tab change =================
@@ -3856,6 +3857,11 @@ function pgApply(){window.scrollTo(0,PGY[pgKey()]||0);pgG={y:pgY(),until:Date.no
 addEventListener('scroll',()=>{const g=pgG;if(!g)return;if(Date.now()>g.until){pgG=null;return}if(Math.abs(pgY()-g.y)>1)window.scrollTo(0,g.y)},{passive:true});
 ['touchstart','wheel','keydown'].forEach(ev=>addEventListener(ev,()=>{pgG=null},{passive:true,capture:true}));
 let softA=null;
+// v222: смена раздела в «Аналитике» и «Планах» — содержимое въезжает со стороны нового раздела пружиной (без рывка) и проявляется
+function subIn(dir){if(RM||!bodyEl.animate)return;try{if(softA)softA.cancel()}catch{}
+  const f=sprK(.8,.52),D=660,N=36,X=dir*44,fr=[];for(let i=0;i<=N;i++){const t=i/N,k=i===N?1:f(t*D/1000),op=1-Math.pow(1-Math.min(1,t/.32),2);
+    fr.push({transform:i===N?'none':`translate3d(${(X*(1-k)).toFixed(2)}px,0,0)`,opacity:+op.toFixed(3)})}
+  const a=bodyEl.animate(fr,{duration:D,easing:'linear'});softA=a;a.onfinish=a.oncancel=()=>{if(softA===a)softA=null}}
 function softIn(strong){if(RM||!bodyEl.animate)return;try{if(softA)softA.cancel()}catch{}
   const a=bodyEl.animate(strong?[{opacity:0,transform:'translate3d(0,10px,0)'},{opacity:1,transform:'none'}]:[{opacity:.55},{opacity:1}],{duration:strong?300:200,easing:'cubic-bezier(.16,1,.3,1)'});
   softA=a;a.onfinish=a.oncancel=()=>{if(softA===a)softA=null}}
@@ -3889,7 +3895,15 @@ const subNb=s=>{const S=SUBS[tab];if(!S)return null;return S.list[S.list.indexOf
 // верхняя плашка разделов: стоит на месте, подсветка плавно «едет» между разделами
 function sbwEl(){return document.getElementById('sbw')}
 function sbBtn(k){return sbwEl().querySelector(`[data-as="${k}"],[data-ps="${k}"]`)}
-function sbPlace(ind,x,w,anim){ind.style.transition=anim?'':'none';ind.style.width=w+'px';ind.style.transform=`translateX(${x}px)`}
+// v222: подсветка раздела едет пружиной (затухающее колебание, лёгкий перелёт ≈4%) от того места, где она сейчас на экране (в том числе посреди прошлого движения)
+const sprK=(z,T)=>{const wn=2*Math.PI/T,wd=wn*Math.sqrt(1-z*z);return t=>1-Math.exp(-z*wn*t)*(Math.cos(wd*t)+z*wn/wd*Math.sin(wd*t))};
+function sbPlace(ind,x,w,anim){let ox=NaN,ow=NaN;
+  if(anim&&ind.animate&&!RM){try{const cs=getComputedStyle(ind);ox=new DOMMatrix(cs.transform==='none'?undefined:cs.transform).m41;ow=parseFloat(cs.width)}catch(e){}}
+  try{if(ind._a){ind._a.cancel();ind._a=null}}catch(e){}
+  ind.style.transition='none';ind.style.width=w+'px';ind.style.transform=`translateX(${x}px)`;
+  if(!anim||!isFinite(ox)||!isFinite(ow)||(Math.abs(ox-x)<.5&&Math.abs(ow-w)<.5))return;
+  const f=sprK(.7,.46),D=640,N=40,fr=[];for(let i=0;i<=N;i++){const k=i===N?1:f(i/N*D/1000);fr.push({transform:`translateX(${(ox+(x-ox)*k).toFixed(2)}px)`,width:(ow+(w-ow)*k).toFixed(2)+'px'})}
+  try{ind._a=ind.animate(fr,{duration:D,easing:'linear'})}catch(e){}}
 function sbSync(anim){const S=SUBS[tab],bar=sbwEl().querySelector('.sbt');if(!S||!bar)return;
   const b=sbBtn(S.get()),ind=bar.querySelector('.ind2');if(!b||!ind)return;sbPlace(ind,b.offsetLeft,b.offsetWidth,anim)}
 function hoistBar(){const w=sbwEl(),S=SUBS[tab],nb=bodyEl.querySelector(':scope > .sbt');
@@ -3910,9 +3924,10 @@ function sbDrag(x,W,nt){const S=SUBS[tab],bar=sbwEl().querySelector('.sbt');if(!
 function slideSub(key){
   const S=SUBS[tab];if(!S)return;
   pgSave();
+  const d_=S.list.indexOf(key)>S.list.indexOf(S.get())?1:-1;
   S.set(key);
   sbwEl().querySelectorAll('.sbt button').forEach(b=>b.classList.toggle('on',b.dataset.as===key||b.dataset.ps===key));sbSync(true);
-  bodyEl.style.transform='';bodyEl.style.willChange='';render();pgApply()}
+  bodyEl.style.transform='';bodyEl.style.willChange='';render();pgApply();subIn(d_)}
 // фиксация направления жеста: если палец пошёл по горизонтали — вертикальную прокрутку блокируем до конца жеста
 let tl=null,axisLock=null;
 document.addEventListener('touchstart',e=>{
@@ -4305,26 +4320,41 @@ topEl.addEventListener('click',e=>{if(msBlock){e.stopPropagation();e.preventDefa
   const mkey=()=>{const w=document.getElementById('w'),hd=w&&w.querySelector('.hd'),els=[hd,document.getElementById('lt0'),document.getElementById('tps'),topEl,document.getElementById('sp'),sbwEl()];
     if(els.some(e=>e&&e.getAnimations&&e.getAnimations().length))return '';
     return [tab,R.className.replace(/\bstk\b/g,''),document.body.className,w?w.className:'',innerWidth].concat(els.map(e=>e?e.offsetHeight+':'+e.className:'-')).join('|')};
-  function meas(){const y=pgY(),lt=document.getElementById('lt0'),sb=sbwEl();R.classList.remove('stk');
+  // v222: «Аналитика» и «Планы» — при прокрутке нижняя полоса блока («Осталось потратить») уезжает под верхнюю часть блока, следом под блок
+  // заезжает строка разделов; всё идёт ровно за пальцем (1:1 с прокруткой), место под содержимое растёт. Высоты не меняются (страница не прыгает):
+  // блок подрезается по фигуре со скруглёнными нижними углами, полоса и строка сдвигаются и гаснут. Наверху — всё на местах.
+  let cS=-1,cB=-1,cR=0;
+  function colClear(){const bl=topEl.querySelector('.bln'),sb=sbwEl();topEl.style.clipPath='';if(bl){bl.style.transform='';bl.style.opacity=''}
+    if(sb){sb.style.transform='';sb.style.clipPath='';sb.style.opacity='';sb.style.pointerEvents=''}cS=cB=-1}
+  function colApply(y){const bl=topEl.querySelector('.bln'),sb=sbwEl(),hS=bl&&bl.offsetHeight?bl.offsetHeight+12:0,hB=sb?sb.offsetHeight:0;
+    const c=Math.max(0,Math.min(y,hS+hB)),pS=Math.round(Math.min(c,hS)*2)/2,pB=Math.round(Math.max(0,c-hS)*2)/2;
+    if(pS===cS&&pB===cB)return;cS=pS;cB=pB;
+    if(pS>0){if(!cR)cR=parseFloat(getComputedStyle(topEl).borderBottomLeftRadius)||20;const W=topEl.offsetWidth,Hc=topEl.offsetHeight-pS,r=cR,m=40;
+      topEl.style.clipPath=`path('M${-m} ${-m}H${W+m}V${Hc-r}H${W}A${r} ${r} 0 0 1 ${W-r} ${Hc}H${r}A${r} ${r} 0 0 1 0 ${Hc-r}H${-m}Z')`}else topEl.style.clipPath='';
+    if(bl){bl.style.transform=pS?`translate3d(0,${(-pS*.35).toFixed(1)}px,0)`:'';bl.style.opacity=pS?Math.max(0,1-pS/hS*1.25).toFixed(3):''}
+    if(sb){const t=pS+pB;sb.style.transform=t?`translate3d(0,${-t}px,0)`:'';sb.style.clipPath=pB?`inset(${pB}px -24px 0 -24px)`:'';
+      sb.style.opacity=pB?Math.max(0,1-pB/hB*1.15).toFixed(3):'';sb.style.pointerEvents=pB>hB*.5?'none':''}}
+  function meas(){colClear();const y=pgY(),lt=document.getElementById('lt0'),sb=sbwEl();R.classList.remove('stk');
     const at=e=>e&&e.offsetHeight?Math.round(e.getBoundingClientRect().top+y):null,a=at(lt),b=at(topEl),c=at(sb);R.classList.add('stk');
     [a,b,c].forEach((v,i)=>{if(v!=null&&v!==s0[i]){s0[i]=v;R.style.setProperty('--stk'+i,v+'px')}});dirty=false}
   // v163: переменные пишутся только при изменении, высота подложки — на самой подложке. Раньше каждый кадр прокрутки менялись переменные корня документа —
   // браузер пересчитывал стили всей страницы, прокрутка в «Аналитике» и «Планах» шла через кадр
   let lh=-1,lk=-1,lon=null,lpk='',jOn=false;const sv=(el,k,v,o)=>{if(v!==o)el.style.setProperty(k,v+'px');return v};
   function upd(){raf=0;let on=false;try{on=((tab==='stats'||tab==='tags')||(tab==='list'&&R.classList.contains('rvl')))&&!!topEl.offsetHeight}catch(e){}
-    if(!on){if(lon!==false){R.classList.remove('stk');bg.classList.remove('on');lon=false}dirty=true;return}
+    if(!on){if(lon!==false){R.classList.remove('stk');bg.classList.remove('on');lon=false}if(cS!==-1)colClear();dirty=true;return}
     if(lon!==true){R.classList.add('stk');lon=true;hard=true;jOn=true}
     if(dirty){const k=mkey();if(hard||!k||k!==mk){meas();mk=k;hard=false}dirty=false}
+    if(tab==='stats'||tab==='tags')colApply(pgY());else if(cS!==-1)colClear();
     // сначала читаем, потом пишем: если высота блока не изменилась, переменная не трогается и второго пересчёта нет
     const th=topEl.offsetHeight,sb=sbwEl(),rd=()=>[topEl.getBoundingClientRect(),sb&&sb.offsetHeight?sb.getBoundingClientRect():null];
     let [tr,sr]=rd();if(th!==lh){lh=sv(R,'--toph',th,lh);[tr,sr]=rd()}if(!sr)sr=tr;
-    lk=sv(bg,'--stkh',Math.round(Math.max(tr.bottom,sr.bottom)+10),lk);window.__stkh=lk;
+    lk=sv(bg,'--stkh',Math.round(Math.max(tr.bottom-(cS>0?cS:0),sr.bottom)+10),lk);window.__stkh=lk;   // v222: видимый низ блока — с учётом подрезки
     // v191: при смене страницы («Аналитика», «Планы», их разделы) подложка встаёт сразу — раньше она проявлялась 0,22 с,
     // и первые кадры содержимое (диаграмма) было видно резко сквозь шапку: мерцание под главным блоком. Плавно — только при прокрутке на той же странице
     const bo=pgY()>2,pk=typeof pgKey==='function'?pgKey():tab,inst=pk!==lpk||jOn;lpk=pk;jOn=false;
     if(bo!==bg.classList.contains('on')){if(inst){bg.style.transition='none';bg.classList.toggle('on',bo);void bg.offsetWidth;requestAnimationFrame(()=>{bg.style.transition=''})}else bg.classList.toggle('on',bo)}}
   window.__stkKick=()=>{dirty=true;kick()};window.__stkNow=()=>{dirty=true;upd()};
-  const kick=()=>{if(!raf)raf=requestAnimationFrame(upd)},re=()=>{dirty=true;kick()},reH=()=>{hard=true;re()};
+  const kick=()=>{if(!raf)raf=requestAnimationFrame(upd)},re=()=>{dirty=true;cS=cB=-1;kick()},reH=()=>{hard=true;cR=0;re()};
   addEventListener('scroll',kick,{passive:true});addEventListener('resize',reH);
   try{const r0=render;render=function(){const v=r0.apply(this,arguments);re();if(window.__totopKick)window.__totopKick();return v}}catch(e){}
   try{['safeAreaChanged','contentSafeAreaChanged','fullscreenChanged'].forEach(ev=>TGW.onEvent(ev,reH))}catch(e){}
