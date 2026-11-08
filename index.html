@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v215';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v216';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -1237,13 +1237,22 @@ html.plk #lk,#lk.on{visibility:visible;opacity:1;transform:none;pointer-events:a
 html.selm #topact{opacity:0;pointer-events:none;transition:opacity .2s ease}
 /* плюс выезжает первым (общее правило .4s), книжка — следом с небольшим опозданием */
 html.intro #thlp{animation:inUp .9s cubic-bezier(.22,1,.36,1) .58s backwards}
+/* v216: точка «есть новый совет» — выпрыгивает; во время появления экрана скрыта и выпрыгивает после того, как лампочка загорелась */
+:root #topact #thlp::after{content:"";position:absolute;top:9px;right:9px;width:8px;height:8px;border-radius:50%;background:var(--g);box-shadow:0 0 6px rgba(143,201,160,.85);pointer-events:none;opacity:0;transform:scale(0);transition:transform .4s cubic-bezier(.34,1.56,.64,1),opacity .2s ease}
+:root #topact #thlp.nw::after{opacity:1;transform:none}
+html.intro #topact #thlp.nw::after{opacity:0;transform:scale(0);transition:none}
 /* v215: летящая иконка превращается в лампочку и садится на её место: до посадки настоящая лампочка скрыта, после — загорается зелёным (свечение как у «Pro») и плавно гаснет */
-.spl-bb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;color:var(--t)}.spl-fx{position:relative}
+.spl-bb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;color:var(--m)}.spl-fx{position:relative}
 html.intro.splb #thlp{animation:splBOn .01s linear var(--sbt,1s) backwards}
-html.intro.splb #thlp svg{animation:splGlow 1.6s cubic-bezier(.4,0,.2,1) var(--sbt,1s) backwards}
+html.intro.splb #thlp svg{animation:splGlow 1.75s linear var(--sbt,1s) backwards}
 @keyframes splBOn{from,to{opacity:0}}
-@keyframes splGlow{0%{color:var(--t);filter:drop-shadow(0 0 0 rgba(143,201,160,0)) drop-shadow(0 0 0 rgba(143,201,160,0))}
-  22%,55%{color:var(--g);filter:drop-shadow(0 0 5px rgba(143,201,160,.75)) drop-shadow(0 0 12px rgba(143,201,160,.4))}
+/* v216: села серой — мигает, как включаемая лампа (вспышка, гаснет, вспышка), загорается зелёным со свечением, держится и плавно возвращается к обычному виду */
+@keyframes splGlow{0%{color:var(--m);filter:drop-shadow(0 0 0 rgba(143,201,160,0)) drop-shadow(0 0 0 rgba(143,201,160,0))}
+  5%{color:var(--t);filter:drop-shadow(0 0 4px rgba(200,235,210,.8)) drop-shadow(0 0 10px rgba(143,201,160,.35))}
+  9%{color:var(--m);filter:drop-shadow(0 0 0 rgba(143,201,160,0)) drop-shadow(0 0 0 rgba(143,201,160,0))}
+  14%{color:var(--g);filter:drop-shadow(0 0 5px rgba(143,201,160,.75)) drop-shadow(0 0 12px rgba(143,201,160,.4))}
+  18%{color:var(--m);filter:drop-shadow(0 0 1px rgba(143,201,160,.1)) drop-shadow(0 0 0 rgba(143,201,160,0))}
+  26%,58%{color:var(--g);filter:drop-shadow(0 0 5px rgba(143,201,160,.8)) drop-shadow(0 0 13px rgba(143,201,160,.45))}
   100%{color:var(--t);filter:drop-shadow(0 0 0 rgba(143,201,160,0)) drop-shadow(0 0 0 rgba(143,201,160,0))}}
 @media (prefers-reduced-motion:reduce){:root #topact #fab,:root #topact #thlp{transition:none!important}:root #topact #fab:active,:root #topact #thlp:active{transform:none}html.intro #thlp,html.intro #thlp svg{animation:none!important}}
 </style>
@@ -3133,13 +3142,22 @@ function linkToggle(b){const debt=b.dataset.lk==='debt';
   const on=debt?linkDebtOn():linkGoalOn();b.classList.toggle('on',on);b.setAttribute('aria-checked',String(on))}
 
 let _tipsF=false;
+// v216: зелёная точка на лампочке — есть совет по вашим данным, которого вы ещё не видели (по заголовку; общие приёмы дня не считаются).
+// Увиденные заголовки — cfg.tipSeen (до 60), отмечаются при открытии советов
+let _tdT=0;
+function tipNew(){const m=curM();if(!tx.some(t=>t.type==='expense'&&mOf(t.date)===m))return false;
+  const seen=Array.isArray(cfg.tipSeen)?cfg.tipSeen:[];return (tips(m)||[]).some(t=>t.k&&!seen.includes(t.h))}
+function tipDot(){const b=document.getElementById('thlp');if(!b)return;let on=false;try{on=tipNew()}catch(e){}b.classList.toggle('nw',on)}
+function tipDotSoon(){clearTimeout(_tdT);_tdT=setTimeout(tipDot,600)}
+function tipSeenAdd(list){const a=Array.isArray(cfg.tipSeen)?cfg.tipSeen:[],n=(list||[]).filter(t=>t.k&&!a.includes(t.h)).map(t=>t.h);
+  if(!n.length)return;cfg.tipSeen=a.concat(n).slice(-60);save();tipDotSoon()}
 // советы: только действия и приёмы экономии (по книгам и проверенным методам); цифры с главного экрана не пересказываем
 function tips(m){
   const now=new Date(),cur=m===curM(),[y,mo]=m.split('-').map(Number),N=pLen(m),el=cur?Math.max(1,pDay(ymd(now),m)):N,C=cfg.cur;
   const ex=tx.filter(t=>t.type==='expense'&&mOf(t.date)===m),I=tx.filter(t=>t.type==='income'&&mOf(t.date)===m).reduce((s,t)=>s+t.amount,0);
   const X=ex.reduce((s,t)=>s+t.amount,0),by={};ex.forEach(t=>by[t.category]=(by[t.category]||0)+t.amount);
   const R=v=>fmt(Math.round(v)),nice=v=>{v=Math.max(1,Math.round(v));const p=Math.pow(10,Math.max(0,String(v).length-2));return Math.max(1,Math.round(v/p)*p)};
-  const mon=v=>cur?v/el*N:v,lab=id=>cd(id).n,has=id=>(by[id]||0)>0,D=[],add=(p,h,b,s)=>D.push({p,h,b,s:s||''});
+  const mon=v=>cur?v/el*N:v,lab=id=>cd(id).n,has=id=>(by[id]||0)>0,D=[],add=(p,h,b,s)=>D.push({p,h,b,s:s||'',k:1});
   const goals=cfg.goals||[];
   // ---- советы по вашим данным: действие + конкретная сумма ----
   if(I>0)add(90,'Заплати себе первым',`С дохода ${R(I)} ${C} отложите 10% — это ${R(I*.1)} ${C} — в день получения, до любых трат. Не «что останется в конце месяца», а первая статья расходов. Лучше настроить автоперевод на накопительный счёт: решение принимается один раз.`,'«Самый богатый человек в Вавилоне», Дж. Клейсон');
@@ -3460,7 +3478,7 @@ function render(){
     buildPage(tab,$('#body'),false);if(inI)window.__introIdx()}
   hoistBar();
   if(y0>0&&Math.abs(pgY()-y0)>2&&(document.documentElement.classList.contains('wlk')?document.body:document.documentElement).scrollHeight>=y0+innerHeight)pgTo(y0);   // перерисовка (бот, облако) не сбрасывает прокрутку
-  flipRun(fs);fitSoon()}
+  flipRun(fs);fitSoon();tipDotSoon()}
 function buildPage(pg,B,peek){if(!TXMd++)TXM=new Map();try{return buildPage0(pg,B,peek)}finally{if(!--TXMd)TXM=null}}
 function buildPage0(pg,B,peek){
   const [y,mo]=month.split('-').map(Number);
@@ -6482,9 +6500,9 @@ if('serviceWorker' in navigator&&location.protocol!=='file:'){
       if(bulb){const sv=hb.querySelector('svg'),bw=document.createElement('div'),z=24/k;
         bw.className='spl-bb';bw.innerHTML=sv?sv.outerHTML:'';const bs=bw.firstElementChild;if(bs){bs.setAttribute('width',z);bs.setAttribute('height',z)}fx.appendChild(bw);
         bw.animate(LG,{duration:T,fill:'forwards'});
-        // превращение: кошелёк тает и чуть размывается, лампочка проявляется из размытия и «дорастает» до своего размера — последние ~25% пути
-        lg.animate([{opacity:1,filter:'blur(0px)'},{opacity:1,filter:'blur(0px)',offset:.7,easing:'cubic-bezier(.4,0,.2,1)'},{opacity:0,filter:'blur(2px)',offset:.92},{opacity:0,filter:'blur(2px)'}],{duration:T,fill:'forwards'});
-        if(bs)bs.animate([{opacity:0,transform:'scale(.6)',filter:'blur(2px)'},{opacity:0,transform:'scale(.6)',filter:'blur(2px)',offset:.72,easing:'cubic-bezier(.2,.8,.3,1)'},{opacity:1,transform:'none',filter:'blur(0px)'}],{duration:T,fill:'forwards'});
+        // v216: превращение раньше — к трети пути это уже лампочка (серая, «выключенная»): кошелёк тает с размытием, лампочка проявляется и дорастает
+        lg.animate([{opacity:1,filter:'blur(0px)'},{opacity:1,filter:'blur(0px)',offset:.26,easing:'cubic-bezier(.4,0,.2,1)'},{opacity:0,filter:'blur(3px)',offset:.46},{opacity:0,filter:'blur(3px)'}],{duration:T,fill:'forwards'});
+        if(bs)bs.animate([{opacity:0,transform:'scale(.7)',filter:'blur(3px)'},{opacity:0,transform:'scale(.7)',filter:'blur(3px)',offset:.28,easing:'cubic-bezier(.2,.8,.3,1)'},{opacity:1,transform:'none',filter:'blur(0px)',offset:.5},{opacity:1,transform:'none',filter:'blur(0px)'}],{duration:T,fill:'forwards'});
         de.style.setProperty('--sbt',(T-30)+'ms')}
       else fx.animate([{opacity:1,filter:'blur(0px)'},{opacity:1,filter:'blur(0px)',offset:.5,easing:'cubic-bezier(.4,0,.6,1)'},{opacity:0,filter:'blur(1.5px)'}],{duration:T,fill:'forwards'});
       s.animate([{backgroundColor:getComputedStyle(s).backgroundColor},{backgroundColor:'rgba(0,0,0,0)'}],{duration:600,delay:220,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'});
@@ -7157,7 +7175,7 @@ function close(){if(!el)return;const e=el;el=null;e.classList.add('cl');e.classL
 const key=e=>{if(e.key==='Escape')close()};
 window.openTips=function(){
   if(el)return;const m=month,has=tx.some(t=>t.type==='expense'&&mOf(t.date)===m);let list=[];
-  if(has){try{list=tips(m)||[]}catch(e){list=[]}}
+  if(has){try{list=tips(m)||[]}catch(e){list=[]}try{tipSeenAdd(list)}catch(e){}}
   const body=list.length?list.map((t,i)=>`<div class="tvk" style="--i:${i}"><i class="tvn">${i+1}</i><div><b>${E(t.h)}</b><span>${E(t.b)}</span>${t.s?`<small>${E(t.s)}</small>`:''}</div></div>`).join('')
    :`<div class="tve"><div class="tvo">${BULB}</div><h3>Здесь появятся советы</h3><p>Добавьте первые траты — и я подскажу, куда уходят деньги, где можно сэкономить и как уложиться в бюджет.</p><div class="tvch"><span style="--i:0">🔍 Куда уходят деньги</span><span style="--i:1">✂️ Где можно сэкономить</span><span style="--i:2">🎯 Как дойти до цели</span></div><button type="button" class="tva">Добавить трату</button></div>`;
   el=document.createElement('div');el.id='tpv';
