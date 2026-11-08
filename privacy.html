@@ -48,7 +48,15 @@ body:has(section:target:not(#ru)) .lg a[href="#ru"]{background:none;font-weight:
 <nav><a href="#ru">Русский</a><a href="#ro">Română</a><a href="#en">English</a><a href="#de">Deutsch</a><a href="#es">Español</a></nav></div></div>
 <script>{const lg=document.querySelector('.lg'),bt=lg.querySelector('button'),set=on=>{lg.classList.toggle('on',on);bt.setAttribute('aria-expanded',on)};
 bt.onclick=()=>set(!lg.classList.contains('on'));
-lg.querySelectorAll('nav a').forEach(a=>a.onclick=()=>{set(false);document.documentElement.lang=a.hash.slice(1)});
+const RM=matchMedia('(prefers-reduced-motion:reduce)').matches;
+lg.querySelectorAll('nav a').forEach(a=>a.onclick=e=>{e.preventDefault();set(false);
+  const secs=[...document.querySelectorAll('section')],id=a.hash.slice(1),nx=document.getElementById(id),cur=secs.find(x=>getComputedStyle(x).display!=='none');
+  const go=()=>{location.replace('#'+id);document.documentElement.lang=id};
+  if(!cur||cur===nx||RM||!nx.animate){go();return}
+  // смена языка — как перелистывание в приложении: текущая страница уходит в сторону, новая приезжает с другой
+  const d=secs.indexOf(nx)>secs.indexOf(cur)?1:-1;
+  cur.animate([{opacity:1,transform:'none'},{opacity:0,transform:'translate3d('+(-d*60)+'px,0,0)'}],{duration:150,easing:'cubic-bezier(.4,0,1,1)',fill:'forwards'}).onfinish=function(){
+    go();this.cancel();nx.animate([{opacity:0,transform:'translate3d('+(d*50)+'px,0,0)'},{opacity:1,transform:'none'}],{duration:380,easing:'cubic-bezier(.16,1,.3,1)'})}});
 document.addEventListener('pointerdown',e=>{if(!lg.contains(e.target))set(false)});   // касание вне окна закрывает его
 document.addEventListener('keydown',e=>{if(e.key==='Escape')set(false)})}</script>
 
