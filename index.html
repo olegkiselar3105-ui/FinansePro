@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v222';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v223';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -4334,6 +4334,21 @@ topEl.addEventListener('click',e=>{if(msBlock){e.stopPropagation();e.preventDefa
     if(bl){bl.style.transform=pS?`translate3d(0,${(-pS*.35).toFixed(1)}px,0)`:'';bl.style.opacity=pS?Math.max(0,1-pS/hS*1.25).toFixed(3):''}
     if(sb){const t=pS+pB;sb.style.transform=t?`translate3d(0,${-t}px,0)`:'';sb.style.clipPath=pB?`inset(${pB}px -24px 0 -24px)`:'';
       sb.style.opacity=pB?Math.max(0,1-pB/hB*1.15).toFixed(3):'';sb.style.pointerEvents=pB>hB*.5?'none':''}}
+  // v223: доводка — прокрутка остановилась посреди сворачивания: страница плавно докатывается до ближайшего края (с учётом направления,
+  // в котором листали), чтобы блок не оставался наполовину свёрнутым. Касание или колесо сразу останавливает доводку
+  let snT=0,snA=0,snOn=false,tch=false,lastY=0,dirY=0;
+  const colRange=()=>{const bl=topEl.querySelector('.bln'),sb=sbwEl();return (bl&&bl.offsetHeight?bl.offsetHeight+12:0)+(sb?sb.offsetHeight:0)};
+  function snStop(){if(snA){cancelAnimationFrame(snA);snA=0}snOn=false}
+  function snCheck(){snT=0;if(tch||snOn||R.classList.contains('wlk'))return;let ok=false;try{ok=(tab==='stats'||tab==='tags')&&!isModalOpen()}catch(e){}if(!ok)return;
+    const y=pgY(),H=colRange();if(!(H>0)||y<=.5||y>=H-.5)return;
+    const to=dirY>0?(y>H*.3?H:0):(y<H*.7?0:H),max=(document.scrollingElement||document.documentElement).scrollHeight-innerHeight;if(to>max+1)return;
+    const y0=y,t0=performance.now(),D=Math.max(220,Math.min(420,Math.abs(to-y0)*4)),ez=t=>1-Math.pow(1-t,3);snOn=true;
+    const st=n=>{const k=Math.min(1,(n-t0)/D);pgTo(Math.round((y0+(to-y0)*ez(k))*2)/2);if(k<1&&snOn)snA=requestAnimationFrame(st);else{snA=0;snOn=false}};snA=requestAnimationFrame(st)}
+  addEventListener('scroll',()=>{const y=pgY();if(Math.abs(y-lastY)>.3)dirY=y>lastY?1:-1;lastY=y;if(!snOn){clearTimeout(snT);snT=setTimeout(snCheck,150)}},{passive:true});
+  addEventListener('touchstart',()=>{tch=true;snStop();clearTimeout(snT)},{passive:true,capture:true});
+  addEventListener('touchend',()=>{tch=false;clearTimeout(snT);snT=setTimeout(snCheck,150)},{passive:true,capture:true});
+  addEventListener('touchcancel',()=>{tch=false},{passive:true,capture:true});
+  addEventListener('wheel',()=>{snStop()},{passive:true,capture:true});
   function meas(){colClear();const y=pgY(),lt=document.getElementById('lt0'),sb=sbwEl();R.classList.remove('stk');
     const at=e=>e&&e.offsetHeight?Math.round(e.getBoundingClientRect().top+y):null,a=at(lt),b=at(topEl),c=at(sb);R.classList.add('stk');
     [a,b,c].forEach((v,i)=>{if(v!=null&&v!==s0[i]){s0[i]=v;R.style.setProperty('--stk'+i,v+'px')}});dirty=false}
