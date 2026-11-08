@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v209';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v210';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -1793,14 +1793,14 @@ html:root #ed #eam,html:root #ed label.ef,html:root #ed .ef.tgf,html:root #ed in
 </style>
 </head>
 <body><div id="lk" role="dialog" aria-modal="true" aria-label="PIN-код"></div><div id="vb" aria-hidden="true"></div><div id="spl" aria-hidden="true">
-<svg class="spl-logo" viewBox="96 96 320 320" width="132" height="132" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+<div class="spl-fx"><svg class="spl-logo" viewBox="96 96 320 320" width="132" height="132" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
 <defs><linearGradient id="splg" x1="0" x2="1"><stop offset="0" style="stop-color:var(--g);stop-opacity:.3"/><stop offset=".5" style="stop-color:var(--g)"/><stop offset="1" style="stop-color:var(--g);stop-opacity:.3"/></linearGradient>
 <clipPath id="splc"><rect x="96" y="96" width="320" height="104"/></clipPath></defs>
 <g clip-path="url(#splc)"><rect class="spl-bill" x="172" y="180" width="164" height="40" rx="10" fill="url(#splg)" stroke="none"/></g>
 <path class="spl-d spl-flap" pathLength="1" d="M146 214 L150 178 C151 160 160 152 175 148 L316 126 C329 124 338 133 338 147 L338 196"/>
 <rect class="spl-d spl-body" pathLength="1" x="139" y="196" width="244" height="168" rx="40"/>
 <circle class="spl-dot" cx="335" cy="277" r="15" fill="currentColor" stroke="none"/>
-</svg>
+</svg></div>
 <div class="spl-t" role="img" aria-label="FinansePro"><span style="--i:0">F</span><span style="--i:1">i</span><span style="--i:2">n</span><span style="--i:3">a</span><span style="--i:4">n</span><span style="--i:5">s</span><span style="--i:6">e</span><span class="spl-p" style="--i:7">P</span><span class="spl-p" style="--i:8">r</span><span class="spl-p" style="--i:9">o</span></div></div>
 <script>window.__spl0=0;requestAnimationFrame(function(){window.__spl0=performance.now()})</script>
 <div id="w">
@@ -6445,17 +6445,36 @@ if('serviceWorker' in navigator&&location.protocol!=='file:'){
   const s=document.getElementById('spl'),de=document.documentElement;if(!s)return;
   const rm=matchMedia('(prefers-reduced-motion:reduce)').matches,SHOW=rm?350:1650,t0=window.__spl0||performance.now();
   let done=false;
+  // v210: уход заставки — название «втягивается» в иконку, иконка по дуге улетает к кнопке Telegram в левом верхнем углу
+  // (полный экран: там название бота, потом «Закрыть») или вверх, в шапку Telegram; фон растворяется, под ним уже появляется приложение
+  function flyOut(){
+    try{
+      const fx=s.querySelector('.spl-fx'),lg=s.querySelector('.spl-logo'),tt=s.querySelector('.spl-t');if(rm||!fx||!lg||!tt||!s.animate)return false;
+      const W=window.Telegram&&window.Telegram.WebApp,fs=!!(W&&W.isFullscreen);
+      const r=lg.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+      let x,y,k;
+      if(fs){const sa=+(W.safeAreaInset&&W.safeAreaInset.top)||0,ca=+(W.contentSafeAreaInset&&W.contentSafeAreaInset.top)||0;x=34;y=sa+(ca>0?ca/2:22);k=.19}
+      else{x=innerWidth/2;y=-30;k=.3}
+      const dx=x-cx,dy=y-cy,tr=tt.getBoundingClientRect(),ty=cy-(tr.top+tr.height/2);
+      s.style.pointerEvents='none';
+      tt.animate([{transform:'none',opacity:1,filter:'blur(0px)'},{transform:'translate3d(0,'+ty+'px,0) scale(.2)',opacity:0,filter:'blur(3px)'}],{duration:320,easing:'cubic-bezier(.55,0,.8,.45)',fill:'forwards'});
+      // иконка «проглатывает» название — короткий толчок, затем полёт: по горизонтали медленнее, по вертикали быстрее — получается дуга
+      lg.animate([{transform:'none',easing:'cubic-bezier(.3,0,.3,1)'},{transform:'scale(1.07)',offset:.3,easing:'cubic-bezier(.35,0,.15,1)'},{transform:'translate3d(0,'+dy+'px,0) scale('+k+')'}],{duration:860,fill:'forwards'});
+      fx.animate([{transform:'none'},{transform:'none',offset:.3,easing:'cubic-bezier(.65,0,.25,1)'},{transform:'translate3d('+dx+'px,0,0)'}],{duration:860,fill:'forwards'});
+      fx.animate([{opacity:1},{opacity:1,offset:.78},{opacity:0}],{duration:860,fill:'forwards'});
+      s.animate([{backgroundColor:getComputedStyle(s).backgroundColor},{backgroundColor:'rgba(0,0,0,0)'}],{duration:520,delay:220,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'});
+      return true}catch(e){return false}}
   function leave(){if(done)return;done=true;
     try{
       window.__introIdx();
     }catch(e){}
-    window.__introT=performance.now();de.classList.add('intro');de.classList.remove('splh');s.classList.add('out');
+    window.__introT=performance.now();de.classList.add('intro');de.classList.remove('splh');const fl=flyOut();if(!fl)s.classList.add('out');
     // цифры остатка заново «набегают» уже на глазах, а не за заставкой
     setTimeout(()=>{try{_animN.delete(month);_nP=null;runNums()}catch(e){}},rm?0:260);
     setTimeout(()=>{de.classList.remove('intro')},rm?400:2800);
     {const endIntro=()=>{de.classList.remove('intro');document.removeEventListener('pointerdown',endIntro,true);document.removeEventListener('touchstart',endIntro,true)};
      document.addEventListener('pointerdown',endIntro,true);document.addEventListener('touchstart',endIntro,true);setTimeout(endIntro,rm?400:2900)}
-    setTimeout(()=>{try{s.remove()}catch(e){}},rm?500:900)}
+    setTimeout(()=>{try{s.remove()}catch(e){}},rm?500:fl?1050:900)}
   // заставка ждёт, пока приложение забирает записи, присланные боту (но не дольше ~4,2 с)
   const tryLeave=()=>{const cl=window.__TG&&typeof CL==='object'&&CL.on&&!CL.ready;if((window.__ibBusy||cl)&&performance.now()-t0<4200)return void setTimeout(tryLeave,120);leave()};
   setTimeout(tryLeave,Math.max(0,SHOW-(performance.now()-t0)));
