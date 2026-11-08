@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v216';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v217';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -1241,19 +1241,10 @@ html.intro #thlp{animation:inUp .9s cubic-bezier(.22,1,.36,1) .58s backwards}
 :root #topact #thlp::after{content:"";position:absolute;top:9px;right:9px;width:8px;height:8px;border-radius:50%;background:var(--g);box-shadow:0 0 6px rgba(143,201,160,.85);pointer-events:none;opacity:0;transform:scale(0);transition:transform .4s cubic-bezier(.34,1.56,.64,1),opacity .2s ease}
 :root #topact #thlp.nw::after{opacity:1;transform:none}
 html.intro #topact #thlp.nw::after{opacity:0;transform:scale(0);transition:none}
-/* v215: летящая иконка превращается в лампочку и садится на её место: до посадки настоящая лампочка скрыта, после — загорается зелёным (свечение как у «Pro») и плавно гаснет */
+/* v217: лампочку во время ухода заставки ведёт скрипт (пружина посадки, загорание, мерцание) — CSS-появление выключено; точка нового совета ждёт конца мерцания */
 .spl-bb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;color:var(--m)}.spl-fx{position:relative}
-html.intro.splb #thlp{animation:splBOn .01s linear var(--sbt,1s) backwards}
-html.intro.splb #thlp svg{animation:splGlow 1.75s linear var(--sbt,1s) backwards}
-@keyframes splBOn{from,to{opacity:0}}
-/* v216: села серой — мигает, как включаемая лампа (вспышка, гаснет, вспышка), загорается зелёным со свечением, держится и плавно возвращается к обычному виду */
-@keyframes splGlow{0%{color:var(--m);filter:drop-shadow(0 0 0 rgba(143,201,160,0)) drop-shadow(0 0 0 rgba(143,201,160,0))}
-  5%{color:var(--t);filter:drop-shadow(0 0 4px rgba(200,235,210,.8)) drop-shadow(0 0 10px rgba(143,201,160,.35))}
-  9%{color:var(--m);filter:drop-shadow(0 0 0 rgba(143,201,160,0)) drop-shadow(0 0 0 rgba(143,201,160,0))}
-  14%{color:var(--g);filter:drop-shadow(0 0 5px rgba(143,201,160,.75)) drop-shadow(0 0 12px rgba(143,201,160,.4))}
-  18%{color:var(--m);filter:drop-shadow(0 0 1px rgba(143,201,160,.1)) drop-shadow(0 0 0 rgba(143,201,160,0))}
-  26%,58%{color:var(--g);filter:drop-shadow(0 0 5px rgba(143,201,160,.8)) drop-shadow(0 0 13px rgba(143,201,160,.45))}
-  100%{color:var(--t);filter:drop-shadow(0 0 0 rgba(143,201,160,0)) drop-shadow(0 0 0 rgba(143,201,160,0))}}
+html.intro.splb #thlp,html.intro.splb #thlp svg{animation:none}
+html.splb #topact #thlp.nw::after{opacity:0;transform:scale(0);transition:none}
 @media (prefers-reduced-motion:reduce){:root #topact #fab,:root #topact #thlp{transition:none!important}:root #topact #fab:active,:root #topact #thlp:active{transform:none}html.intro #thlp,html.intro #thlp svg{animation:none!important}}
 </style>
 <style id="sheet-ui">
@@ -6484,7 +6475,7 @@ if('serviceWorker' in navigator&&location.protocol!=='file:'){
       // садится на место, настоящая лампочка появляется в ту же миг и загорается зелёным
       const hb=document.getElementById('thlp');
       if(hb){hb.style.animation='none';const b=hb.getBoundingClientRect();hb.style.animation='';
-        if(b.width>0&&b.height>0&&b.bottom>0&&b.top<innerHeight&&getComputedStyle(hb).visibility!=='hidden'){x=b.left+b.width/2;y=b.top+b.height/2;k=Math.max(.14,24/(r.width*.76));bulb=true;de.classList.add('splb')}}
+        if(b.width>0&&b.height>0&&b.bottom>0&&b.top<innerHeight&&getComputedStyle(hb).visibility!=='hidden'){x=b.left+b.width/2;y=b.top+b.height/2;k=Math.max(.14,24/(r.width*.76));bulb=true}}
       if(!bulb&&fs){const sa=+(W.safeAreaInset&&W.safeAreaInset.top)||0,ca=+(W.contentSafeAreaInset&&W.contentSafeAreaInset.top)||0;x=34;y=sa+(ca>0?ca/2:22);k=.19}
       else if(!bulb){x=innerWidth/2;y=-30;k=.3}
       const dx=x-cx,dy=y-cy,tr=tt.getBoundingClientRect(),ty=cy-(tr.top+tr.height/2);
@@ -6493,17 +6484,38 @@ if('serviceWorker' in navigator&&location.protocol!=='file:'){
       // иконка «проглатывает» название — короткий толчок, затем полёт: по горизонтали медленнее, по вертикали быстрее — получается дуга
       // v213: полёт как в v210, но конец мягче: движение долго «доезжает» (сильное замедление), иконка гаснет постепенно с середины пути и чуть размывается
       // v214: к лампочке — гаснет позже, в момент, когда лампочка уже выезжает (переход из иконки в лампочку)
-      const T=1000;
-      lg.animate([{transform:'none',easing:'cubic-bezier(.3,0,.3,1)'},{transform:'scale(1.07)',offset:.26,easing:'cubic-bezier(.33,0,.1,1)'},{transform:'translate3d(0,'+dy+'px,0) scale('+k+')'}],{duration:T,fill:'forwards'});
-      fx.animate([{transform:'none'},{transform:'none',offset:.26,easing:'cubic-bezier(.55,0,.15,1)'},{transform:'translate3d('+dx+'px,0,0)'}],{duration:T,fill:'forwards'});
-      const LG=[{transform:'none',easing:'cubic-bezier(.3,0,.3,1)'},{transform:'scale(1.07)',offset:.26,easing:'cubic-bezier(.33,0,.1,1)'},{transform:'translate3d(0,'+dy+'px,0) scale('+k+')'}];
+      // v217: весь уход — одна плавная цепочка. «Глоток» названия → полёт по дуге (к концу пути скорость не гаснет до нуля — иконка «прилетает»)
+      // → по дороге кошелёк перетекает в серую лампочку → посадка с пружиной (чуть утапливается и возвращается) → лампочка загорается зелёным
+      // и гаснет с мерцанием, как перегорающая; затем обычный вид
+      const T=1050,P=.24;
+      // кривые полёта: высота, сдвиг вбок и размер — каждая своя (размер уменьшается раньше, чем иконка долетает), разложены на кадры
+      const bz=(x1,y1,x2,y2)=>t=>{let u=t;for(let i=0;i<8;i++){const x=3*(1-u)*(1-u)*u*x1+3*(1-u)*u*u*x2+u*u*u-t,d=3*(1-u)*(1-u)*x1+6*(1-u)*u*(x2-x1)+3*u*u*(1-x2);if(Math.abs(x)<1e-5||!d)break;u=Math.min(1,Math.max(0,u-x/d))}return 3*(1-u)*(1-u)*u*y1+3*(1-u)*u*u*y2+u*u*u};
+      const eY=bulb?bz(.4,0,.55,.9):bz(.33,0,.1,1),eX=bulb?bz(.62,0,.4,.92):bz(.55,0,.15,1),eS=bulb?bz(.35,0,.25,1):eY;
+      const LG=[{transform:'none',easing:'cubic-bezier(.33,0,.4,1)'},{transform:'scale(1.05)',offset:P}],FX=[{transform:'none'},{transform:'none',offset:P}];
+      for(let n=1,N=30;n<=N;n++){const q=n/N,o=P+(1-P)*q,sc=1.05+(k-1.05)*eS(q);
+        LG.push({transform:'translate3d(0,'+(dy*eY(q)).toFixed(2)+'px,0) scale('+sc.toFixed(4)+')',offset:o});FX.push({transform:'translate3d('+(dx*eX(q)).toFixed(2)+'px,0,0)',offset:o})}
+      lg.animate(LG,{duration:T,fill:'forwards'});
+      fx.animate(FX,{duration:T,fill:'forwards'});
       if(bulb){const sv=hb.querySelector('svg'),bw=document.createElement('div'),z=24/k;
         bw.className='spl-bb';bw.innerHTML=sv?sv.outerHTML:'';const bs=bw.firstElementChild;if(bs){bs.setAttribute('width',z);bs.setAttribute('height',z)}fx.appendChild(bw);
         bw.animate(LG,{duration:T,fill:'forwards'});
-        // v216: превращение раньше — к трети пути это уже лампочка (серая, «выключенная»): кошелёк тает с размытием, лампочка проявляется и дорастает
-        lg.animate([{opacity:1,filter:'blur(0px)'},{opacity:1,filter:'blur(0px)',offset:.26,easing:'cubic-bezier(.4,0,.2,1)'},{opacity:0,filter:'blur(3px)',offset:.46},{opacity:0,filter:'blur(3px)'}],{duration:T,fill:'forwards'});
-        if(bs)bs.animate([{opacity:0,transform:'scale(.7)',filter:'blur(3px)'},{opacity:0,transform:'scale(.7)',filter:'blur(3px)',offset:.28,easing:'cubic-bezier(.2,.8,.3,1)'},{opacity:1,transform:'none',filter:'blur(0px)',offset:.5},{opacity:1,transform:'none',filter:'blur(0px)'}],{duration:T,fill:'forwards'});
-        de.style.setProperty('--sbt',(T-30)+'ms')}
+        // превращение: кошелёк сжимается и тает в размытии, лампочка проявляется из размытия с лёгким поворотом — обе на одной кривой, без ступенек
+        const MO='cubic-bezier(.45,0,.55,1)';
+        lg.animate([{opacity:1,scale:'1',filter:'blur(0px)'},{opacity:1,scale:'1',filter:'blur(0px)',offset:P,easing:MO},{opacity:0,scale:'.78',filter:'blur(4px)',offset:.56},{opacity:0,scale:'.78',filter:'blur(4px)'}],{duration:T,fill:'forwards'});
+        if(bs)bs.animate([{opacity:0,transform:'scale(.72) rotate(-10deg)',filter:'blur(4px)'},{opacity:0,transform:'scale(.72) rotate(-10deg)',filter:'blur(4px)',offset:P+.03,easing:MO},{opacity:1,transform:'none',filter:'blur(0px)',offset:.6},{opacity:1,transform:'none',filter:'blur(0px)'}],{duration:T,fill:'forwards'});
+        fx.animate([{opacity:1},{opacity:1,offset:.985},{opacity:0}],{duration:T,fill:'forwards'});   // передача настоящей лампочке — в последние ~15 мс
+        const L0=T-15,cs=getComputedStyle(de),cv=n=>cs.getPropertyValue(n).trim(),cM=cv('--m')||'#8a8a8a',cG=cv('--g')||'#8fc9a0',cT=cv('--t')||'#fff';
+        hb.animate([{opacity:0},{opacity:0}],{duration:L0});
+        // пружина посадки: затухающее колебание (утопилась ≈ на 10%, отскок ≈ на 2,5%, успокоилась), разложено на кадры — без рывков на стыках
+        {const fr=[],N=40,D=680,w=2*Math.PI/.3,zt=.42,wd=w*Math.sqrt(1-zt*zt);
+         for(let n=0;n<=N;n++){const t=n/N*D/1000,e=Math.exp(-zt*w*t)*Math.sin(wd*t);fr.push({transform:'translate3d(0,'+(2.4*e).toFixed(2)+'px,0) scale('+(1-.19*e).toFixed(4)+')'})}
+         hb.animate(fr,{duration:D,delay:L0,easing:'linear'})}
+        // свет: плавно загорается зелёным, держится, затем гаснет мерцая — вспышки всё слабее и короче; в конце обычный цвет
+        if(sv){const sh=a=>'drop-shadow(0 0 '+(5*a).toFixed(1)+'px rgba(143,201,160,'+(.8*a).toFixed(2)+')) drop-shadow(0 0 '+(13*a).toFixed(1)+'px rgba(143,201,160,'+(.45*a).toFixed(2)+'))',
+           K=(o,c,a,ez)=>({offset:o,color:c,filter:sh(a),easing:ez||'cubic-bezier(.4,0,.6,1)'});
+         sv.animate([K(0,cM,0,'cubic-bezier(.3,0,.2,1)'),K(.17,cG,1),K(.42,cG,1),K(.455,cM,.12),K(.49,cG,.9),K(.53,cM,.05),K(.575,cG,.6),K(.61,cM,0),K(.67,cG,.35),K(.7,cM,0),K(.77,cG,.15),K(.8,cM,0),K(1,cT,0)],
+           {duration:1750,delay:L0+260,fill:'backwards'})}
+        de.classList.add('splb');setTimeout(()=>de.classList.remove('splb'),L0+260+1800)}
       else fx.animate([{opacity:1,filter:'blur(0px)'},{opacity:1,filter:'blur(0px)',offset:.5,easing:'cubic-bezier(.4,0,.6,1)'},{opacity:0,filter:'blur(1.5px)'}],{duration:T,fill:'forwards'});
       s.animate([{backgroundColor:getComputedStyle(s).backgroundColor},{backgroundColor:'rgba(0,0,0,0)'}],{duration:600,delay:220,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'});
       return true}catch(e){return false}}
