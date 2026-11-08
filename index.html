@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v212';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v213';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -775,9 +775,6 @@ html.ncv .dg{content-visibility:visible}
 @keyframes splDraw{to{stroke-dashoffset:0}}
 @keyframes splBill{0%{opacity:0;transform:translateY(46px)}30%{opacity:1}100%{opacity:1;transform:translateY(0)}}
 @keyframes splDot{to{transform:scale(1)}}
-/* v211: вспышка там, куда «нырнула» иконка */
-.spl-fl{position:fixed;z-index:2147483001;width:56px;height:56px;margin:0;border-radius:50%;pointer-events:none;opacity:0;background:radial-gradient(circle,rgba(255,255,255,.9) 0,rgba(143,201,160,.55) 32%,rgba(143,201,160,0) 68%)}
-:root[data-theme=light] .spl-fl{background:radial-gradient(circle,rgba(255,255,255,.95) 0,rgba(46,139,87,.4) 34%,rgba(46,139,87,0) 68%)}
 @keyframes splL{from{opacity:0;transform:translateY(9px) scale(.92);filter:blur(5px)}}
 @keyframes splSafe{to{opacity:0;visibility:hidden}}
 /* ---------- появление главного экрана: карточка месяца, затем операции по очереди ---------- */
@@ -6458,20 +6455,17 @@ if('serviceWorker' in navigator&&location.protocol!=='file:'){
       const r=lg.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
       let x,y,k;
       if(fs){const sa=+(W.safeAreaInset&&W.safeAreaInset.top)||0,ca=+(W.contentSafeAreaInset&&W.contentSafeAreaInset.top)||0;x=34;y=sa+(ca>0?ca/2:22);k=.19}
-      else{x=innerWidth/2;y=4;k=.24}   // обычный режим: к верхнему краю — там шапка Telegram с названием
+      else{x=innerWidth/2;y=-30;k=.3}
       const dx=x-cx,dy=y-cy,tr=tt.getBoundingClientRect(),ty=cy-(tr.top+tr.height/2);
       s.style.pointerEvents='none';
       tt.animate([{transform:'none',opacity:1,filter:'blur(0px)'},{transform:'translate3d(0,'+ty+'px,0) scale(.2)',opacity:0,filter:'blur(3px)'}],{duration:320,easing:'cubic-bezier(.55,0,.8,.45)',fill:'forwards'});
       // иконка «проглатывает» название — короткий толчок, затем полёт: по горизонтали медленнее, по вертикали быстрее — получается дуга
-      // v211: долетев, иконка «ныряет» в кнопку/шапку — резко сжимается в точку, на этом месте лёгкая вспышка
-      const T=900,ar=.8;
-      lg.animate([{transform:'none',easing:'cubic-bezier(.3,0,.3,1)'},{transform:'scale(1.07)',offset:.27,easing:'cubic-bezier(.35,0,.15,1)'},{transform:'translate3d(0,'+dy+'px,0) scale('+k+')',offset:ar,easing:'cubic-bezier(.6,0,.9,.5)'},{transform:'translate3d(0,'+dy+'px,0) scale('+(k*.08)+')'}],{duration:T,fill:'forwards'});
-      fx.animate([{transform:'none'},{transform:'none',offset:.27,easing:'cubic-bezier(.65,0,.25,1)'},{transform:'translate3d('+dx+'px,0,0)',offset:ar},{transform:'translate3d('+dx+'px,0,0)'}],{duration:T,fill:'forwards'});
-      fx.animate([{opacity:1},{opacity:1,offset:.93},{opacity:0}],{duration:T,fill:'forwards'});
-      {const f=document.createElement('div');f.className='spl-fl';f.style.left=x+'px';f.style.top=Math.max(0,y)+'px';document.body.appendChild(f);
-       f.animate([{opacity:0,transform:'translate(-50%,-50%) scale(.2)'},{opacity:1,transform:'translate(-50%,-50%) scale(.9)',offset:.3},{opacity:0,transform:'translate(-50%,-50%) scale(1.7)'}],{duration:520,delay:T*ar+60,easing:'cubic-bezier(.2,.7,.3,1)',fill:'both'}).onfinish=()=>f.remove();
-       setTimeout(()=>{try{f.remove()}catch(e){}},2000)}
-      s.animate([{backgroundColor:getComputedStyle(s).backgroundColor},{backgroundColor:'rgba(0,0,0,0)'}],{duration:520,delay:220,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'});
+      // v213: полёт как в v210, но конец мягче: движение долго «доезжает» (сильное замедление), иконка гаснет постепенно с середины пути и чуть размывается
+      const T=1000;
+      lg.animate([{transform:'none',easing:'cubic-bezier(.3,0,.3,1)'},{transform:'scale(1.07)',offset:.26,easing:'cubic-bezier(.33,0,.1,1)'},{transform:'translate3d(0,'+dy+'px,0) scale('+k+')'}],{duration:T,fill:'forwards'});
+      fx.animate([{transform:'none'},{transform:'none',offset:.26,easing:'cubic-bezier(.55,0,.15,1)'},{transform:'translate3d('+dx+'px,0,0)'}],{duration:T,fill:'forwards'});
+      fx.animate([{opacity:1,filter:'blur(0px)'},{opacity:1,filter:'blur(0px)',offset:.5,easing:'cubic-bezier(.4,0,.6,1)'},{opacity:0,filter:'blur(1.5px)'}],{duration:T,fill:'forwards'});
+      s.animate([{backgroundColor:getComputedStyle(s).backgroundColor},{backgroundColor:'rgba(0,0,0,0)'}],{duration:600,delay:220,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'});
       return true}catch(e){return false}}
   function leave(){if(done)return;done=true;
     try{
@@ -6483,7 +6477,7 @@ if('serviceWorker' in navigator&&location.protocol!=='file:'){
     setTimeout(()=>{de.classList.remove('intro')},rm?400:2800);
     {const endIntro=()=>{de.classList.remove('intro');document.removeEventListener('pointerdown',endIntro,true);document.removeEventListener('touchstart',endIntro,true)};
      document.addEventListener('pointerdown',endIntro,true);document.addEventListener('touchstart',endIntro,true);setTimeout(endIntro,rm?400:2900)}
-    setTimeout(()=>{try{s.remove()}catch(e){}},rm?500:fl?1000:900)}
+    setTimeout(()=>{try{s.remove()}catch(e){}},rm?500:fl?1100:900)}
   // заставка ждёт, пока приложение забирает записи, присланные боту (но не дольше ~4,2 с)
   const tryLeave=()=>{const cl=window.__TG&&typeof CL==='object'&&CL.on&&!CL.ready;if((window.__ibBusy||cl)&&performance.now()-t0<4200)return void setTimeout(tryLeave,120);leave()};
   setTimeout(tryLeave,Math.max(0,SHOW-(performance.now()-t0)));
