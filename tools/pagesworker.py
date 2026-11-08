@@ -27,7 +27,7 @@ export default{async fetch(req){
   const f=FILES[p];
   if(!f)return new Response('Not found',{status:404,headers:{'content-type':'text/plain; charset=utf-8','x-content-type-options':'nosniff'}});
   const h=new Headers({'content-type':f.t,'x-content-type-options':'nosniff','referrer-policy':'no-referrer','permissions-policy':'camera=(), geolocation=(), microphone=()','content-security-policy':CSP});
-  if(NOCACHE.has(p))h.set('cache-control','no-cache');else h.set('cache-control','public, max-age=3600');
+  if(NOCACHE.has(p)||p.endsWith('.html'))h.set('cache-control','no-cache');else h.set('cache-control','public, max-age=3600');
   if(req.method==='HEAD')return new Response(null,{headers:h});
   return new Response(f.s!==undefined?f.s:B64(f.b),{headers:h})}}
 '''%(json.dumps(files,ensure_ascii=False),json.dumps(csp))
