@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Политика конфиденциальности · Privacy</title>
+<style>
+:root{--bg:#0b0b0d;--card:#17171b;--t:#f2f2f4;--m:#a1a1aa;--ln:rgba(255,255,255,.08);--a:#8fc9a0}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--t);font:16px/1.55 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+main{max-width:680px;margin:0 auto;padding:calc(env(safe-area-inset-top,0px) + 24px) 16px calc(env(safe-area-inset-bottom,0px) + 40px)}
+h1{font-size:28px;line-height:1.2;margin:0 0 6px;letter-spacing:-.01em}
+h2{font-size:18px;margin:26px 0 8px}
+p,li{color:var(--t)}
+.m{color:var(--m);font-size:14px}
+.lang{display:flex;gap:8px;margin:14px 0 22px}
+.lang a{color:var(--t);text-decoration:none;padding:6px 14px;border:1px solid var(--ln);border-radius:20px;font-size:14px}
+section{background:var(--card);border:1px solid var(--ln);border-radius:20px;padding:18px 18px 8px;margin-bottom:24px}
+ul{padding-left:20px;margin:6px 0 12px}li{margin:4px 0}
+a{color:var(--a)}
+b{font-weight:600}
+</style>
+</head>
+<body>
+<main>
+<h1>Политика конфиденциальности</h1>
+<div class="m">FinansePro — учёт доходов и расходов в Telegram (бот и приложение). Последнее изменение: 8 ноября 2026 г.</div>
+<div class="lang"><a href="#ru">Русский</a><a href="#en">English</a></div>
+
+<section id="ru">
+<h2>Где хранятся ваши записи</h2>
+<ul>
+<li><b>В облаке Telegram</b> (CloudStorage) — привязано к вашему аккаунту Telegram и этому боту. Так записи одинаковы на всех ваших устройствах.</li>
+<li><b>На вашем устройстве</b> — в памяти приложения внутри Telegram, чтобы работать без интернета.</li>
+<li>На наших серверах записи, суммы и настройки <b>не хранятся</b>.</li>
+</ul>
+
+<h2>Что хранит бот</h2>
+<p>Когда вы пишете боту, сообщение попадает в очередь на сервере (Cloudflare D1), пока приложение его не заберёт:</p>
+<ul>
+<li>ваш <b>Telegram id</b>, <b>текст сообщения</b> (до 500 символов) и время отправки — удаляются, как только приложение забрало запись, и в любом случае не позже чем через <b>30 дней</b>;</li>
+<li>служебная отметка для ответа «✅ Записано» (номер чата и сообщения, начало текста) — тоже не дольше <b>30 дней</b>;</li>
+<li><b>счётчик сообщений за день</b> (id, дата, число) — для дневного лимита, хранится <b>2 дня</b>.</li>
+</ul>
+
+<h2>Кому что передаётся</h2>
+<ul>
+<li><b>Голосовые сообщения</b> отправляются в сервис Groq, чтобы превратить речь в текст. Бот хранит только получившийся текст, само аудио — нет.</li>
+<li><b>Курсы валют</b>: приложение запрашивает их у open.er-api.com. Передаются только коды валют (например, EUR), без ваших данных.</li>
+<li><b>Фото профиля</b> в настройках загружается из Telegram.</li>
+<li><b>Хостинг</b>: приложение — Cloudflare Pages, бот — Cloudflare Workers. При сбоях Cloudflare может сохранять технические сообщения об ошибках.</li>
+</ul>
+
+<h2>Чего мы не делаем</h2>
+<ul>
+<li>Нет рекламы, аналитики и счётчиков посещений.</li>
+<li>Мы не продаём и не передаём ваши данные никому, кроме сервисов из списка выше.</li>
+</ul>
+
+<h2>Как удалить данные</h2>
+<ul>
+<li>Записи: в приложении — удалить нужные или «Настройки → Экспорт, импорт и сброс → Сбросить все операции». Цели и долги удаляются в разделе «Планы». Изменения уходят в облако Telegram автоматически.</li>
+<li>Очередь бота очищается сама (см. сроки выше).</li>
+<li>В облаке Telegram остаются настройки приложения и служебные отметки об удалённых записях.</li>
+<li>Вопросы и просьбы — «Настройки → Написать нам»: Telegram <a href="https://t.me/olegkr31">@olegkr31</a> или <a href="mailto:olegkiselar3105@gmail.com">olegkiselar3105@gmail.com</a>.</li>
+</ul>
+</section>
+
+<section id="en" lang="en">
+<h2>Where your records are stored</h2>
+<ul>
+<li><b>Telegram cloud</b> (CloudStorage), tied to your Telegram account and this bot, so records match on all your devices.</li>
+<li><b>Your device</b> — the app's storage inside Telegram, so it works offline.</li>
+<li>Your records, amounts and settings are <b>not stored</b> on our servers.</li>
+</ul>
+
+<h2>What the bot stores</h2>
+<p>A message you send to the bot waits in a queue on our server (Cloudflare D1) until the app picks it up:</p>
+<ul>
+<li>your <b>Telegram id</b>, the <b>message text</b> (up to 500 characters) and its time — deleted as soon as the app picks it up, and in any case within <b>30 days</b>;</li>
+<li>a service record used to show “✅ Recorded” (chat and message number, start of the text) — also <b>30 days</b> at most;</li>
+<li>a <b>daily message counter</b> (id, date, count) for the daily limit — kept for <b>2 days</b>.</li>
+</ul>
+
+<h2>Who receives what</h2>
+<ul>
+<li><b>Voice messages</b> are sent to Groq to turn speech into text. The bot keeps only the resulting text, not the audio.</li>
+<li><b>Exchange rates</b> are requested from open.er-api.com. Only currency codes (e.g. EUR) are sent, none of your data.</li>
+<li>Your <b>profile photo</b> in settings is loaded from Telegram.</li>
+<li><b>Hosting</b>: the app runs on Cloudflare Pages, the bot on Cloudflare Workers. Cloudflare may keep technical error messages when something fails.</li>
+</ul>
+
+<h2>What we don't do</h2>
+<ul>
+<li>No ads, no analytics, no visitor tracking.</li>
+<li>We don't sell or share your data with anyone other than the services listed above.</li>
+</ul>
+
+<h2>How to delete your data</h2>
+<ul>
+<li>Records: delete them in the app, or “Settings → Export, import and reset → Reset all operations”. Goals and debts are deleted in “Plans”. Changes sync to the Telegram cloud automatically.</li>
+<li>The bot queue clears itself (see the periods above).</li>
+<li>App settings and service marks of deleted records remain in the Telegram cloud.</li>
+<li>Questions and requests — “Settings → Write to us”: Telegram <a href="https://t.me/olegkr31">@olegkr31</a> or <a href="mailto:olegkiselar3105@gmail.com">olegkiselar3105@gmail.com</a>.</li>
+</ul>
+</section>
+</main>
+</body>
+</html>

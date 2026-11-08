@@ -7,14 +7,14 @@
 //   Secret        GROQ_KEY         — ключ Groq (для голосовых)
 //   Secret        WEBHOOK_SECRET   — любая длинная строка (латиница/цифры), та же, что в setWebhook
 //   Variable      ALLOWED_IDS      — ПУСТО = бот открыт для всех (у каждого свои данные). Или список id через запятую, чтобы закрыть
-//   Variable      DAILY_LIMIT      — сообщений в сутки на человека (по умолчанию 60)
-//   Variable      APP_URL          — адрес Mini App (https://…pages.dev), нужен для кнопки «Открыть» в /start
+//   Variable      DAILY_LIMIT      — сообщений в сутки на человека (по умолчанию 30)
+//   Variable      APP_URL          — адрес Mini App (https://…pages.dev): кнопка «Открыть финансы» и ссылка на политику (APP_URL + privacy.html)
 
 //   D1 database     DB             — (желательно) мгновенная очередь без задержек KV. Таблицы создаются сами. Без неё работает старый режим на KV (с задержкой до ~минуты)
 
 const kv = env => env.INBOX || env.FIN;   // KV-привязка может называться INBOX или FIN
 const TTL = 60 * 60 * 24 * 30;           // неразобранные записи живут 30 дней
-const MAX_AGE = 60 * 60 * 24 * 365;      // initData не старше года (окно Mini App может жить в Telegram неделями)
+const MAX_AGE = 60 * 60 * 24 * 7;        // initData не старше 7 дней; старше — 401, приложение просит перезапуск (v207)
 
 export default {
   async fetch(req, env, ctx) {
@@ -101,7 +101,8 @@ const d1Store = (env, uid) => {
       await d1Init(env);
       const r = await q('SELECT n FROM cnt WHERE uid = ? AND day = ?', uid, day).first();
       if (r && Number(r.n) >= limit) return { ok: false };
-      await q('INSERT INTO cnt (uid, day, n) VALUES (?, ?, 1) ON CONFLICT(uid, day) DO UPDATE SET n = n + 1', uid, day).run();
+      await env.DB.batch([q('INSERT INTO cnt (uid, day, n) VALUES (?, ?, 1) ON CONFLICT(uid, day) DO UPDATE SET n = n + 1', uid, day),
+        q('DELETE FROM cnt WHERE uid = ? AND day < ?', uid, new Date(Date.now() - 2 * 864e5).toISOString().slice(0, 10))]);   // счётчики старше 2 дней не храним (политика)
       return { ok: true };
     }
   };
@@ -195,14 +196,23 @@ async function handleUpdate(upd, env) {
 
   if (t === '/id') return reply(`Ваш Telegram id: ${uid}`);                 // чтобы владелец мог добавить жену в ALLOWED_IDS
   if (!allowed(env, uid)) return reply('Доступ закрыт. Попросите владельца добавить ваш id (команда /id).');
-  if (t === '/help' || t === '/помощь') return reply(HELP);
+  const open = env.APP_URL ? { reply_markup: { inline_keyboard: [[{ text: 'Открыть финансы', web_app: { url: env.APP_URL } }]] } } : {};
+  const priv = env.APP_URL ? new URL('privacy.html', env.APP_URL).href : '';
+  if (t === '/privacy') return reply(priv ? `🔒 Политика конфиденциальности: ${priv}` : 'Политика конфиденциальности пока не опубликована.');
+  if (t === '/help' || t === '/помощь') return reply(HELP + (priv ? `\n\n🔒 Политика конфиденциальности: /privacy` : ''));
   if (t === '/queue') return reply(`В очереди на запись в приложение: ${await store(env, uid).count()}`);   // 0 = всё забрано приложением
-  if (t === '/start') return reply('Привет! Пишите или говорите: траты («такси 120»), долги («одолжил Ивану 500»), цели («цель отпуск 50000»), лимиты («лимит еда 3000»), бюджет («бюджет 20000»). Всё попадёт в приложение, когда оно откроется. Примеры — команда /help.',
-    env.APP_URL ? { reply_markup: { inline_keyboard: [[{ text: 'Открыть финансы', web_app: { url: env.APP_URL } }]] } } : {});
+  if (t === '/start') return reply('Привет! Я записываю ваши доходы и расходы.\n\n' +
+    '✍️ Пишите или говорите: «такси 120», «зарплата 15000», «одолжил Ивану 500», «цель отпуск 50000», «лимит еда 3000».\n' +
+    '📲 Записи появляются в приложении, когда вы его открываете — кнопка ниже.\n' +
+    '❓ Примеры — /help' + (priv ? `\n🔒 Политика конфиденциальности: ${priv}` : ''), open);
 
-  // защита квоты: у каждого человека не больше DAILY_LIMIT сообщений в сутки (по умолчанию 60)
-  const day = new Date().toISOString().slice(0, 10), box = store(env, uid);
-  if (!(await box.inc(day, Number(env.DAILY_LIMIT || 60))).ok) return reply('На сегодня лимит сообщений исчерпан, продолжим завтра.');
+  if (!t && !msg.voice && !msg.audio) return reply('Я понимаю только текст и голосовые. Напишите, например: «кофе 30».');   // фото, стикеры и прочее — без списания лимита
+  if (t.startsWith('/')) return;
+  // защита квоты: у каждого человека не больше DAILY_LIMIT сообщений в сутки (по умолчанию 30); ответ о лимите лимит не тратит
+  const day = new Date().toISOString().slice(0, 10), box = store(env, uid), lim = Number(env.DAILY_LIMIT || 30);
+  if (!(await box.inc(day, lim)).ok) return reply(`🌙 На сегодня всё — лимит ${lim} сообщений в день исчерпан.\n\n` +
+    'Записывать можно и дальше, прямо в приложении: нажмите «＋» в правом верхнем углу и напишите запись в строку ввода — так же, как боту.\n\n' +
+    'Завтра бот снова будет принимать сообщения ✨', open);
 
   let text = t;
   if (!text && (msg.voice || msg.audio)) {
@@ -215,10 +225,10 @@ async function handleUpdate(upd, env) {
   const id = `${Date.now()}-${msg.message_id}`;
   await box.add(id, text.slice(0, 500), msg.date);              // сначала кладём в очередь (приложение получает мгновенно), потом отвечаем в чат
   const shown = text.slice(0, 200);
-  if (!box.rc) return reply(`📥 В очереди: «${shown}»\nПоявится в приложении, когда оно откроется.`);
+  if (!box.rc) return reply(`📥 В очереди: «${shown}»\nПоявится в приложении, когда оно откроется.`, open);
   // Бот не может сам записать в облако Telegram — это делает только открытое приложение. Поэтому: сначала «в очереди», а когда приложение
   // заберёт запись (api/ack), это же сообщение сменится на «Записано».
-  const sent = await (await reply(`⏳ В очереди: «${shown}»\nПоявится в приложении, когда оно откроется.`)).json().catch(() => null);
+  const sent = await (await reply(`⏳ В очереди: «${shown}»\nПоявится в приложении, когда оно откроется.`, open)).json().catch(() => null);
   const mid = sent && sent.result && sent.result.message_id;
   if (mid) {
     await box.rc.add(id, chat, mid, shown);

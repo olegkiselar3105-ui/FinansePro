@@ -6,11 +6,13 @@
 
 | Путь | Что это | Где работает |
 |---|---|---|
-| `index.html` | Всё приложение (интерфейс, разбор фраз, хранение, синхронизация) | GitHub Pages |
-| `sw.js`, `manifest.webmanifest`, `icons/` | Работа офлайн и установка как приложение | GitHub Pages |
+| `index.html` | Всё приложение (интерфейс, разбор фраз, хранение, синхронизация) | Cloudflare Pages |
+| `sw.js`, `manifest.webmanifest`, `icons/` | Работа офлайн и установка как приложение | Cloudflare Pages |
+| `privacy.html` | Политика конфиденциальности (RU/EN): https://finansepro.pages.dev/privacy.html | Cloudflare Pages |
 | `_headers` | Политика безопасности (для Cloudflare Pages/Netlify) | хостинг |
 | `worker/worker.js` | Бот: приём сообщений, расшифровка голоса (Groq Whisper), очередь | Cloudflare Workers |
-| `worker/wrangler.toml` | Настройки воркера для деплоя из командной строки | — |
+| `worker/wrangler.toml` | Имя, дата совместимости, привязки KV/D1 воркера | — |
+| `tools/deployworker.sh`, `tools/pagesworker.py`, `tools/codebackup.sh` | Выкладка бота и сайта через API Cloudflare, копии кода | — |
 | `README.txt` | Подробная инструкция по функциям и выкладке | — |
 | `DECISIONS.md` | Журнал решений | — |
 
@@ -21,7 +23,9 @@
 3. Открытый Mini App забирает очередь (`/api/pending`), сам разбирает фразу и сохраняет запись в облако Telegram (CloudStorage).
 4. Приложение подтверждает приём (`/api/ack`) → бот меняет своё сообщение на «✅ Записано».
 
-Вход: Mini App отправляет воркеру `initData` Telegram, воркер проверяет подпись токеном бота.
+Вход: Mini App отправляет воркеру `initData` Telegram, воркер проверяет подпись токеном бота. Подпись действует 7 дней (`MAX_AGE`); старше — ответ 401, приложение останавливает опросы и просит перезапуск.
+
+Команды бота: /start, /help, /privacy, /queue, /id. Лимит — `DAILY_LIMIT` сообщений в сутки (по умолчанию 30); ответ о лимите, команды и нетекстовые сообщения лимит не тратят.
 
 ## Секреты
 
@@ -31,10 +35,8 @@
 
 ## Обновление
 
-- Приложение: загрузить `index.html` (и при изменении `sw.js`) в репозиторий → GitHub Pages обновится сам.
-- Воркер: деплоится автоматически через Cloudflare Workers Builds при слиянии в `main`
-  (`worker/worker.js` + настройки из `worker/wrangler.toml`). Код в панели вручную не править —
-  следующий деплой из репозитория его перезапишет. Статус сборки: Workers → finansepro → Deployments.
-- Секреты и переменные (`ALLOWED_IDS`, `DAILY_LIMIT`, `APP_URL`) по-прежнему задаются в панели, деплой их не трогает.
-- Новая привязка (KV, D1 и т.п.) добавляется в `wrangler.toml`, а не только в панели: привязки,
-  которых нет в файле, при деплое удаляются.
+GitHub недоступен — всё выкладывается через API Cloudflare (ключ — сетевой секрет облачной среды):
+- Сайт: `tools/pagesworker.py` собирает файлы (`index.html`, `sw.js`, `manifest.webmanifest`, `mail.html`, `privacy.html`, `_headers`, `icons/`) в один `_worker.js` → выкладка в проект Pages `finansepro`.
+- Бот: `tools/deployworker.sh` — заливает `worker/worker.js` с привязками из `wrangler.toml`; переменные и секреты остаются из панели. Перед выкладкой сохраняет прежний код для отката.
+- Код: `tools/codebackup.sh save` — копия всего репозитория в закрытое хранилище Cloudflare KV.
+- Секреты и переменные (`ALLOWED_IDS`, `DAILY_LIMIT`, `APP_URL`) задаются в панели, выкладка их не трогает.
