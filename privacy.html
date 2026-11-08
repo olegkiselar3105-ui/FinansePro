@@ -14,13 +14,16 @@ h1{font-size:28px;line-height:1.2;margin:0 0 6px;letter-spacing:-.01em}
 h2{font-size:18px;margin:26px 0 8px}
 p,li{color:var(--t)}
 .m{color:var(--m);font-size:14px}
-section{background:var(--card);border:1px solid var(--ln);border-radius:20px;padding:18px 18px 8px;margin-bottom:24px;scroll-margin-top:100px}
+section{margin-bottom:24px;scroll-margin-top:100px}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:20px;padding:2px 18px 8px;margin-top:18px}
+.card>h2:first-child{margin-top:16px}
 ul{padding-left:20px;margin:6px 0 12px}li{margin:4px 0}
 a{color:var(--a)}
 b{font-weight:600}
-section h1{margin-top:4px}
+main{position:relative}
+section h1{margin:4px 0 8px;padding-right:56px}   /* заголовок на одной линии с глобусом */
 /* язык: кнопка-глобус справа вверху; на экране один язык — по умолчанию русский, по ссылке #ro/#en/#de/#es — выбранный */
-.top{display:flex;justify-content:flex-end;margin:0 0 14px}
+.top{position:absolute;right:16px;top:calc(env(safe-area-inset-top,0px) + 24px);z-index:3}
 .lg{position:relative}
 .lg summary{list-style:none;cursor:pointer;width:44px;height:44px;border-radius:50%;border:1px solid var(--ln);background:var(--card);display:flex;align-items:center;justify-content:center;color:var(--t)}
 .lg summary::-webkit-details-marker{display:none}
@@ -40,6 +43,7 @@ body:has(section:target:not(#ru)) .lg a[href="#ru"]{background:none;font-weight:
 <section id="ru">
 <h1>Политика конфиденциальности</h1>
 <div class="m">FinansePro — учёт доходов и расходов в Telegram (бот и приложение). Последнее изменение: 8 ноября 2026 г.</div>
+<div class="card">
 <h2>Где хранятся ваши записи</h2>
 <ul>
 <li><b>В облаке Telegram</b> (CloudStorage) — привязано к вашему аккаунту Telegram и этому боту. Так записи одинаковы на всех ваших устройствах.</li>
@@ -76,11 +80,13 @@ body:has(section:target:not(#ru)) .lg a[href="#ru"]{background:none;font-weight:
 <li>В облаке Telegram остаются настройки приложения и служебные отметки об удалённых записях.</li>
 <li>Вопросы и просьбы — «Настройки → Написать нам»: Telegram <a href="https://t.me/olegkr31">@olegkr31</a> или <a href="mailto:olegkiselar3105@gmail.com">olegkiselar3105@gmail.com</a>.</li>
 </ul>
+</div>
 </section>
 
 <section id="ro" lang="ro">
 <h1>Politica de confidențialitate</h1>
 <div class="m">FinansePro — evidența veniturilor și cheltuielilor în Telegram (bot și aplicație). Ultima actualizare: 8 noiembrie 2026.</div>
+<div class="card">
 <h2>Unde sunt păstrate înregistrările</h2>
 <ul>
 <li><b>În cloud-ul Telegram</b> (CloudStorage) — legat de contul dumneavoastră Telegram și de acest bot, astfel încât înregistrările sunt aceleași pe toate dispozitivele.</li>
@@ -113,11 +119,13 @@ body:has(section:target:not(#ru)) .lg a[href="#ru"]{background:none;font-weight:
 <li>În cloud-ul Telegram rămân setările aplicației și notele de serviciu despre înregistrările șterse.</li>
 <li>Întrebări și solicitări — „Setări → Scrieți-ne”: Telegram <a href="https://t.me/olegkr31">@olegkr31</a> sau <a href="mailto:olegkiselar3105@gmail.com">olegkiselar3105@gmail.com</a>.</li>
 </ul>
+</div>
 </section>
 
 <section id="en" lang="en">
 <h1>Privacy Policy</h1>
 <div class="m">FinansePro — income and expense tracking in Telegram (bot and app). Last updated: November 8, 2026.</div>
+<div class="card">
 <h2>Where your records are stored</h2>
 <ul>
 <li><b>Telegram cloud</b> (CloudStorage), tied to your Telegram account and this bot, so records match on all your devices.</li>
@@ -154,11 +162,13 @@ body:has(section:target:not(#ru)) .lg a[href="#ru"]{background:none;font-weight:
 <li>App settings and service marks of deleted records remain in the Telegram cloud.</li>
 <li>Questions and requests — “Settings → Write to us”: Telegram <a href="https://t.me/olegkr31">@olegkr31</a> or <a href="mailto:olegkiselar3105@gmail.com">olegkiselar3105@gmail.com</a>.</li>
 </ul>
+</div>
 </section>
 
 <section id="de" lang="de">
 <h1>Datenschutzerklärung</h1>
 <div class="m">FinansePro — Einnahmen und Ausgaben in Telegram erfassen (Bot und App). Zuletzt geändert: 8. November 2026.</div>
+<div class="card">
 <h2>Wo Ihre Einträge gespeichert werden</h2>
 <ul>
 <li><b>In der Telegram-Cloud</b> (CloudStorage) — verknüpft mit Ihrem Telegram-Konto und diesem Bot, damit die Einträge auf allen Ihren Geräten gleich sind.</li>
@@ -191,11 +201,13 @@ body:has(section:target:not(#ru)) .lg a[href="#ru"]{background:none;font-weight:
 <li>In der Telegram-Cloud bleiben die App-Einstellungen und interne Vermerke über gelöschte Einträge.</li>
 <li>Fragen und Anfragen — „Einstellungen → Schreiben Sie uns“: Telegram <a href="https://t.me/olegkr31">@olegkr31</a> oder <a href="mailto:olegkiselar3105@gmail.com">olegkiselar3105@gmail.com</a>.</li>
 </ul>
+</div>
 </section>
 
 <section id="es" lang="es">
 <h1>Política de privacidad</h1>
 <div class="m">FinansePro — registro de ingresos y gastos en Telegram (bot y aplicación). Última actualización: 8 de noviembre de 2026.</div>
+<div class="card">
 <h2>Dónde se guardan sus registros</h2>
 <ul>
 <li><b>En la nube de Telegram</b> (CloudStorage), vinculada a su cuenta de Telegram y a este bot, para que los registros coincidan en todos sus dispositivos.</li>
@@ -228,6 +240,7 @@ body:has(section:target:not(#ru)) .lg a[href="#ru"]{background:none;font-weight:
 <li>En la nube de Telegram quedan los ajustes de la aplicación y las notas de servicio sobre los registros borrados.</li>
 <li>Preguntas y solicitudes: «Ajustes → Escríbanos»: Telegram <a href="https://t.me/olegkr31">@olegkr31</a> o <a href="mailto:olegkiselar3105@gmail.com">olegkiselar3105@gmail.com</a>.</li>
 </ul>
+</div>
 </section>
 
 </main>
