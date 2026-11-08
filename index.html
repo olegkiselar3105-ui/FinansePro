@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v218';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v219';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -7192,7 +7192,7 @@ window.openTips=function(){
    :`<div class="tve"><div class="tvo">${BULB}</div><h3>Здесь появятся советы</h3><p>Добавьте первые траты — и я подскажу, куда уходят деньги, где можно сэкономить и как уложиться в бюджет.</p><div class="tvch"><span style="--i:0">🔍 Куда уходят деньги</span><span style="--i:1">✂️ Где можно сэкономить</span><span style="--i:2">🎯 Как дойти до цели</span></div><button type="button" class="tva">Добавить трату</button></div>`;
   el=document.createElement('div');el.id='tpv';
   el.innerHTML=`<div class="tvb"></div><div class="tvs" role="dialog" aria-label="Советы"><i class="tvh"></i><div class="tvt"><b>Советы</b><span>${MN[+m.slice(5,7)-1]}</span><button type="button" class="tvx" aria-label="Закрыть">×</button></div><div class="tvc">${body}</div></div>`;
-  document.body.appendChild(el);requestAnimationFrame(()=>requestAnimationFrame(()=>{if(!el)return;el.classList.add('on');try{if(window.sheetIn)sheetIn(el.querySelector('.tvc'),70)}catch(e){}}));hp('light');
+  document.body.appendChild(el);requestAnimationFrame(()=>requestAnimationFrame(()=>{if(!el)return;el.classList.add('on');try{if(window.sheetIn)sheetIn(el.querySelector('.tvc'),90,'r')}catch(e){}}));hp('light');
   const sh=el.querySelector('.tvs');el.querySelector('.tvb').onclick=close;el.querySelector('.tvx').onclick=close;
   const add=el.querySelector('.tva');if(add)add.onclick=()=>{close();setTimeout(()=>{const f=document.getElementById('fab');if(f)f.click()},300)};
   const sc=el.querySelector('.tvc'),bd=el.querySelector('.tvb');let g=null;
@@ -7239,9 +7239,10 @@ window.openTips=function(){
         if(r.height>260||r.width<W*.6){if(r.height>260||r.width>=W*.3)walk(c);continue}
         if(r.height<24)continue;if(c.matches(IN)||c.querySelector(IN))continue;out.push([r.top,c])}};
     walk(root);out.sort((a,b)=>a[0]-b[0]);return out.slice(0,40).map(x=>x[1])}
-  function sheetIn(root,d0){if(!root||RM())return;const L=pick(root),A=[];
-    L.forEach((el,i)=>{try{A.push(el.animate([{opacity:0,transform:'translate3d(0,16px,0) scale(.975)'},{opacity:1,transform:'none'}],
-      {duration:560,delay:(d0==null?90:d0)+Math.min(i,10)*42,easing:'cubic-bezier(.22,1,.36,1)',fill:'backwards'}))}catch(e){}});
+  // side='r' — плитки выезжают справа налево (советы): сдвиг 56 px, чуть повёрнуты и уменьшены, шаг больше — видно, как они «въезжают» одна за другой
+  function sheetIn(root,d0,side){if(!root||RM())return;const L=pick(root),A=[],R_=side==='r';
+    const K=R_?[{opacity:0,transform:'translate3d(56px,0,0) rotate(1.2deg) scale(.97)'},{opacity:1,offset:.55},{opacity:1,transform:'none'}]:[{opacity:0,transform:'translate3d(0,16px,0) scale(.975)'},{opacity:1,transform:'none'}];
+    L.forEach((el,i)=>{try{A.push(el.animate(K,{duration:R_?680:560,delay:(d0==null?90:d0)+Math.min(i,10)*(R_?70:42),easing:R_?'cubic-bezier(.16,1,.3,1)':'cubic-bezier(.22,1,.36,1)',fill:'backwards'}))}catch(e){}});
     if(A.length){const stop=()=>{A.forEach(a=>{try{a.finish()}catch(e){}});root.removeEventListener('pointerdown',stop,true)};root.addEventListener('pointerdown',stop,true);setTimeout(()=>root.removeEventListener('pointerdown',stop,true),1400)}}
   window.sheetIn=sheetIn;
   ['gd','cf','bq','cp','rc','nc'].forEach(id=>{const el=document.getElementById(id);if(!el)return;let was=el.classList.contains('on');
