@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="dark">
-<title>Политика конфиденциальности · Privacy</title>
+<title>Политика конфиденциальности · Privacy Policy</title>
 <style>
 :root{--bg:#0b0b0d;--card:#17171b;--t:#f2f2f4;--m:#a1a1aa;--ln:rgba(255,255,255,.08);--a:#8fc9a0}
 *{box-sizing:border-box}
@@ -20,15 +20,22 @@ section{background:var(--card);border:1px solid var(--ln);border-radius:20px;pad
 ul{padding-left:20px;margin:6px 0 12px}li{margin:4px 0}
 a{color:var(--a)}
 b{font-weight:600}
+/* один язык на экране: по умолчанию русский, по ссылке #en — английский */
+#en,body:has(#en:target) #ru{display:none}
+#en:target{display:block}
+.lang a.on,body:has(#en:target) .lang a[href="#en"]{background:var(--t);color:var(--bg);border-color:var(--t)}
+body:has(#en:target) .lang a[href="#ru"]{background:none;color:var(--t);border-color:var(--ln)}
+section h1{margin-top:4px}
+section{scroll-margin-top:100px}   /* переход по #en не уводит переключатель за верх экрана */
 </style>
 </head>
 <body>
 <main>
-<h1>Политика конфиденциальности</h1>
-<div class="m">FinansePro — учёт доходов и расходов в Telegram (бот и приложение). Последнее изменение: 8 ноября 2026 г.</div>
-<div class="lang"><a href="#ru">Русский</a><a href="#en">English</a></div>
+<div class="lang"><a href="#ru" class="on">Русский</a><a href="#en">English</a></div>
 
 <section id="ru">
+<h1>Политика конфиденциальности</h1>
+<div class="m">FinansePro — учёт доходов и расходов в Telegram (бот и приложение). Последнее изменение: 8 ноября 2026 г.</div>
 <h2>Где хранятся ваши записи</h2>
 <ul>
 <li><b>В облаке Telegram</b> (CloudStorage) — привязано к вашему аккаунту Telegram и этому боту. Так записи одинаковы на всех ваших устройствах.</li>
@@ -68,6 +75,8 @@ b{font-weight:600}
 </section>
 
 <section id="en" lang="en">
+<h1>Privacy Policy</h1>
+<div class="m">FinansePro — income and expense tracking in Telegram (bot and app). Last updated: November 8, 2026.</div>
 <h2>Where your records are stored</h2>
 <ul>
 <li><b>Telegram cloud</b> (CloudStorage), tied to your Telegram account and this bot, so records match on all your devices.</li>
