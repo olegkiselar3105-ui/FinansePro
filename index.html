@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v214';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v215';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -1237,11 +1237,14 @@ html.plk #lk,#lk.on{visibility:visible;opacity:1;transform:none;pointer-events:a
 html.selm #topact{opacity:0;pointer-events:none;transition:opacity .2s ease}
 /* плюс выезжает первым (общее правило .4s), книжка — следом с небольшим опозданием */
 html.intro #thlp{animation:inUp .9s cubic-bezier(.22,1,.36,1) .58s backwards}
-/* v214: иконка заставки заезжает в лампочку — лампочка выезжает снизу с лёгким «подскоком» и коротко загорается зелёным */
-html.intro.splb #thlp{animation:splBulb .75s cubic-bezier(.34,1.45,.5,1) .6s backwards}
-html.intro.splb #thlp svg{animation:splGlow 1.1s cubic-bezier(.4,0,.2,1) .72s backwards}
-@keyframes splBulb{from{opacity:0;transform:translate3d(0,16px,0) scale(.55)}55%{opacity:1}to{opacity:1;transform:none}}
-@keyframes splGlow{0%{filter:drop-shadow(0 0 0 rgba(143,201,160,0))}35%{filter:drop-shadow(0 0 7px rgba(143,201,160,.95))}100%{filter:drop-shadow(0 0 0 rgba(143,201,160,0))}}
+/* v215: летящая иконка превращается в лампочку и садится на её место: до посадки настоящая лампочка скрыта, после — загорается зелёным (свечение как у «Pro») и плавно гаснет */
+.spl-bb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;color:var(--t)}.spl-fx{position:relative}
+html.intro.splb #thlp{animation:splBOn .01s linear var(--sbt,1s) backwards}
+html.intro.splb #thlp svg{animation:splGlow 1.6s cubic-bezier(.4,0,.2,1) var(--sbt,1s) backwards}
+@keyframes splBOn{from,to{opacity:0}}
+@keyframes splGlow{0%{color:var(--t);filter:drop-shadow(0 0 0 rgba(143,201,160,0)) drop-shadow(0 0 0 rgba(143,201,160,0))}
+  22%,55%{color:var(--g);filter:drop-shadow(0 0 5px rgba(143,201,160,.75)) drop-shadow(0 0 12px rgba(143,201,160,.4))}
+  100%{color:var(--t);filter:drop-shadow(0 0 0 rgba(143,201,160,0)) drop-shadow(0 0 0 rgba(143,201,160,0))}}
 @media (prefers-reduced-motion:reduce){:root #topact #fab,:root #topact #thlp{transition:none!important}:root #topact #fab:active,:root #topact #thlp:active{transform:none}html.intro #thlp,html.intro #thlp svg{animation:none!important}}
 </style>
 <style id="sheet-ui">
@@ -6459,7 +6462,8 @@ if('serviceWorker' in navigator&&location.protocol!=='file:'){
       const W=window.Telegram&&window.Telegram.WebApp,fs=!!(W&&W.isFullscreen);
       const r=lg.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
       let x,y,k,bulb=false;
-      // v214: цель — лампочка «Советы» справа вверху: иконка заезжает в неё по дуге, лампочка в этот момент выезжает снизу и загорается
+      // v215: цель — лампочка «Советы» справа вверху: иконка по дуге летит к ней и в конце пути превращается в лампочку (копия её значка внутри летящей иконки),
+      // садится на место, настоящая лампочка появляется в ту же миг и загорается зелёным
       const hb=document.getElementById('thlp');
       if(hb){hb.style.animation='none';const b=hb.getBoundingClientRect();hb.style.animation='';
         if(b.width>0&&b.height>0&&b.bottom>0&&b.top<innerHeight&&getComputedStyle(hb).visibility!=='hidden'){x=b.left+b.width/2;y=b.top+b.height/2;k=Math.max(.14,24/(r.width*.76));bulb=true;de.classList.add('splb')}}
@@ -6474,7 +6478,15 @@ if('serviceWorker' in navigator&&location.protocol!=='file:'){
       const T=1000;
       lg.animate([{transform:'none',easing:'cubic-bezier(.3,0,.3,1)'},{transform:'scale(1.07)',offset:.26,easing:'cubic-bezier(.33,0,.1,1)'},{transform:'translate3d(0,'+dy+'px,0) scale('+k+')'}],{duration:T,fill:'forwards'});
       fx.animate([{transform:'none'},{transform:'none',offset:.26,easing:'cubic-bezier(.55,0,.15,1)'},{transform:'translate3d('+dx+'px,0,0)'}],{duration:T,fill:'forwards'});
-      fx.animate([{opacity:1,filter:'blur(0px)'},{opacity:1,filter:'blur(0px)',offset:bulb?.62:.5,easing:'cubic-bezier(.4,0,.6,1)'},{opacity:0,filter:'blur(1.5px)'}],{duration:T,fill:'forwards'});
+      const LG=[{transform:'none',easing:'cubic-bezier(.3,0,.3,1)'},{transform:'scale(1.07)',offset:.26,easing:'cubic-bezier(.33,0,.1,1)'},{transform:'translate3d(0,'+dy+'px,0) scale('+k+')'}];
+      if(bulb){const sv=hb.querySelector('svg'),bw=document.createElement('div'),z=24/k;
+        bw.className='spl-bb';bw.innerHTML=sv?sv.outerHTML:'';const bs=bw.firstElementChild;if(bs){bs.setAttribute('width',z);bs.setAttribute('height',z)}fx.appendChild(bw);
+        bw.animate(LG,{duration:T,fill:'forwards'});
+        // превращение: кошелёк тает и чуть размывается, лампочка проявляется из размытия и «дорастает» до своего размера — последние ~25% пути
+        lg.animate([{opacity:1,filter:'blur(0px)'},{opacity:1,filter:'blur(0px)',offset:.7,easing:'cubic-bezier(.4,0,.2,1)'},{opacity:0,filter:'blur(2px)',offset:.92},{opacity:0,filter:'blur(2px)'}],{duration:T,fill:'forwards'});
+        if(bs)bs.animate([{opacity:0,transform:'scale(.6)',filter:'blur(2px)'},{opacity:0,transform:'scale(.6)',filter:'blur(2px)',offset:.72,easing:'cubic-bezier(.2,.8,.3,1)'},{opacity:1,transform:'none',filter:'blur(0px)'}],{duration:T,fill:'forwards'});
+        de.style.setProperty('--sbt',(T-30)+'ms')}
+      else fx.animate([{opacity:1,filter:'blur(0px)'},{opacity:1,filter:'blur(0px)',offset:.5,easing:'cubic-bezier(.4,0,.6,1)'},{opacity:0,filter:'blur(1.5px)'}],{duration:T,fill:'forwards'});
       s.animate([{backgroundColor:getComputedStyle(s).backgroundColor},{backgroundColor:'rgba(0,0,0,0)'}],{duration:600,delay:220,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'});
       return true}catch(e){return false}}
   function leave(){if(done)return;done=true;
