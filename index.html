@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v217';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v218';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -7167,7 +7167,7 @@ const css=`#tpv{position:fixed;inset:0;z-index:150}
 #tpv .tvt{display:flex;align-items:baseline;gap:8px;padding:6px 18px 10px;touch-action:none}#tpv .tvt b{font-size:20px;font-weight:700}#tpv .tvt span{font-size:13px;color:var(--m)}
 #tpv .tvx{margin-left:auto;align-self:center;width:30px;height:30px;border-radius:50%;border:0;background:rgba(127,127,127,.18);color:var(--t);font-size:13px}
 #tpv .tvc{flex:1 1 auto;min-height:0;overflow-x:hidden;overflow-y:auto;padding:4px 16px 18px;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
-#tpv .tvk{display:flex;gap:12px;padding:14px;border-radius:18px;background:rgba(127,127,127,.1);border:.5px solid var(--l);margin-bottom:10px;opacity:0;transform:translateY(14px);animation:tvu .5s calc(.12s + var(--i)*.08s) cubic-bezier(.2,.8,.2,1) forwards}
+#tpv .tvk{display:flex;gap:12px;padding:14px;border-radius:18px;background:rgba(127,127,127,.1);border:.5px solid var(--l);margin-bottom:10px}
 #tpv .tvn{flex:none;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#f2c14e;background:rgba(242,193,78,.16)}
 #tpv .tvk b{display:block;font-size:15px;margin-bottom:3px}#tpv .tvk span{display:block;font-size:14px;line-height:1.4;opacity:.85}#tpv .tvk small{display:block;font-size:12px;color:var(--m);margin-top:6px}
 @keyframes tvu{to{opacity:1;transform:none}}
@@ -7192,7 +7192,7 @@ window.openTips=function(){
    :`<div class="tve"><div class="tvo">${BULB}</div><h3>Здесь появятся советы</h3><p>Добавьте первые траты — и я подскажу, куда уходят деньги, где можно сэкономить и как уложиться в бюджет.</p><div class="tvch"><span style="--i:0">🔍 Куда уходят деньги</span><span style="--i:1">✂️ Где можно сэкономить</span><span style="--i:2">🎯 Как дойти до цели</span></div><button type="button" class="tva">Добавить трату</button></div>`;
   el=document.createElement('div');el.id='tpv';
   el.innerHTML=`<div class="tvb"></div><div class="tvs" role="dialog" aria-label="Советы"><i class="tvh"></i><div class="tvt"><b>Советы</b><span>${MN[+m.slice(5,7)-1]}</span><button type="button" class="tvx" aria-label="Закрыть">×</button></div><div class="tvc">${body}</div></div>`;
-  document.body.appendChild(el);requestAnimationFrame(()=>requestAnimationFrame(()=>el&&el.classList.add('on')));hp('light');
+  document.body.appendChild(el);requestAnimationFrame(()=>requestAnimationFrame(()=>{if(!el)return;el.classList.add('on');try{if(window.sheetIn)sheetIn(el.querySelector('.tvc'),70)}catch(e){}}));hp('light');
   const sh=el.querySelector('.tvs');el.querySelector('.tvb').onclick=close;el.querySelector('.tvx').onclick=close;
   const add=el.querySelector('.tva');if(add)add.onclick=()=>{close();setTimeout(()=>{const f=document.getElementById('fab');if(f)f.click()},300)};
   const sc=el.querySelector('.tvc'),bd=el.querySelector('.tvb');let g=null;
@@ -7223,6 +7223,29 @@ window.openTips=function(){
     h.addEventListener('pointermove',e=>{if(e.pointerType==='mouse'&&g)move(e.clientY,e.clientX,e)});
     h.addEventListener('pointerup',e=>{if(e.pointerType==='mouse')end()})});
   document.addEventListener('keydown',key)}
+})();
+</script>
+<script>
+// ---------- v218: плитки в выезжающих окнах появляются по очереди (как на главном экране) ----------
+// Одна функция на все окна: окно открылось (класс on) — его видимые плитки поднимаются и проявляются одна за другой, пока окно выезжает.
+// Плитка = верхний по вложенности блок шириной ≥ 60% окна и высотой 24–260 px; блоки с полями ввода не трогаем (фокус и курсор iOS).
+// Касание внутри окна сразу завершает появление (не мешает перетаскиванию и прокрутке).
+(function(){
+  if(!Element.prototype.animate)return;
+  const RM=()=>matchMedia('(prefers-reduced-motion:reduce)').matches,IN='input,select,textarea,[contenteditable]';
+  function pick(root){const R=root.getBoundingClientRect(),W=R.width,out=[],vh=Math.min(R.height,innerHeight);   // окно может ещё стоять за краем экрана — видимость считаем внутри окна
+    const walk=el=>{for(const c of el.children){if(c.matches('script,style,svg,.wnx,.tve,.lkd'))continue;
+        const r=c.getBoundingClientRect(),t=r.top-R.top;if(!r.width||!r.height||t>vh||t+r.height<0)continue;
+        if(r.height>260||r.width<W*.6){if(r.height>260||r.width>=W*.3)walk(c);continue}
+        if(r.height<24)continue;if(c.matches(IN)||c.querySelector(IN))continue;out.push([r.top,c])}};
+    walk(root);out.sort((a,b)=>a[0]-b[0]);return out.slice(0,40).map(x=>x[1])}
+  function sheetIn(root,d0){if(!root||RM())return;const L=pick(root),A=[];
+    L.forEach((el,i)=>{try{A.push(el.animate([{opacity:0,transform:'translate3d(0,16px,0) scale(.975)'},{opacity:1,transform:'none'}],
+      {duration:560,delay:(d0==null?90:d0)+Math.min(i,10)*42,easing:'cubic-bezier(.22,1,.36,1)',fill:'backwards'}))}catch(e){}});
+    if(A.length){const stop=()=>{A.forEach(a=>{try{a.finish()}catch(e){}});root.removeEventListener('pointerdown',stop,true)};root.addEventListener('pointerdown',stop,true);setTimeout(()=>root.removeEventListener('pointerdown',stop,true),1400)}}
+  window.sheetIn=sheetIn;
+  ['gd','cf','bq','cp','rc','nc'].forEach(id=>{const el=document.getElementById(id);if(!el)return;let was=el.classList.contains('on');
+    new MutationObserver(()=>{const on=el.classList.contains('on');if(on&&!was)requestAnimationFrame(()=>sheetIn(el));was=on}).observe(el,{attributes:true,attributeFilter:['class']})});
 })();
 </script>
 </body></html>
