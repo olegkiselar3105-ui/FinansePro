@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v219';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v220';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.3';  // версия для человека (в письме в поддержку); внизу экрана с v142 показывается только номер сборки IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -6487,13 +6487,21 @@ if('serviceWorker' in navigator&&location.protocol!=='file:'){
       // v217: весь уход — одна плавная цепочка. «Глоток» названия → полёт по дуге (к концу пути скорость не гаснет до нуля — иконка «прилетает»)
       // → по дороге кошелёк перетекает в серую лампочку → посадка с пружиной (чуть утапливается и возвращается) → лампочка загорается зелёным
       // и гаснет с мерцанием, как перегорающая; затем обычный вид
-      const T=1050,P=.24;
+      const T=bulb?1200:1050,P=bulb?.2:.24;
       // кривые полёта: высота, сдвиг вбок и размер — каждая своя (размер уменьшается раньше, чем иконка долетает), разложены на кадры
       const bz=(x1,y1,x2,y2)=>t=>{let u=t;for(let i=0;i<8;i++){const x=3*(1-u)*(1-u)*u*x1+3*(1-u)*u*u*x2+u*u*u-t,d=3*(1-u)*(1-u)*x1+6*(1-u)*u*(x2-x1)+3*u*u*(1-x2);if(Math.abs(x)<1e-5||!d)break;u=Math.min(1,Math.max(0,u-x/d))}return 3*(1-u)*(1-u)*u*y1+3*(1-u)*u*u*y2+u*u*u};
       const eY=bulb?bz(.4,0,.55,.9):bz(.33,0,.1,1),eX=bulb?bz(.62,0,.4,.92):bz(.55,0,.15,1),eS=bulb?bz(.35,0,.25,1):eY;
-      const LG=[{transform:'none',easing:'cubic-bezier(.33,0,.4,1)'},{transform:'scale(1.05)',offset:P}],FX=[{transform:'none'},{transform:'none',offset:P}];
-      for(let n=1,N=30;n<=N;n++){const q=n/N,o=P+(1-P)*q,sc=1.05+(k-1.05)*eS(q);
-        LG.push({transform:'translate3d(0,'+(dy*eY(q)).toFixed(2)+'px,0) scale('+sc.toFixed(4)+')',offset:o});FX.push({transform:'translate3d('+(dx*eX(q)).toFixed(2)+'px,0,0)',offset:o})}
+      const LG=[{transform:'none',easing:'cubic-bezier(.33,0,.4,1)'}],FX=[{transform:'none'},{transform:'none',offset:P}];
+      if(bulb){
+        // v220: бросок мячиком — замах (чуть приседает и подрастает), затем полёт по параболе: вверх с замедлением выше лампочки,
+        // вниз с ускорением прямо в неё; по горизонтали скорость ровная. Высота над лампочкой — сколько позволяет верх экрана
+        const y0=7,H=Math.max(16,Math.min(64,y-12)),ya=dy-H,ua=1/(1+Math.sqrt(H/(y0-ya))),ft=bz(.3,0,.7,.7),fs_=bz(.2,0,.4,1);
+        LG.push({transform:'translate3d(0,'+y0+'px,0) scale(1.07)',offset:P});
+        for(let n=1,N=40;n<=N;n++){const q=ft(n/N),o=P+(1-P)*n/N,yy=ya+(y0-ya)*Math.pow((q-ua)/ua,2),sc=1.07+(k-1.07)*fs_(q);
+          LG.push({transform:'translate3d(0,'+yy.toFixed(2)+'px,0) scale('+sc.toFixed(4)+')',offset:o});FX.push({transform:'translate3d('+(dx*q).toFixed(2)+'px,0,0)',offset:o})}}
+      else{LG.push({transform:'scale(1.05)',offset:P});
+        for(let n=1,N=30;n<=N;n++){const q=n/N,o=P+(1-P)*q,sc=1.05+(k-1.05)*eS(q);
+          LG.push({transform:'translate3d(0,'+(dy*eY(q)).toFixed(2)+'px,0) scale('+sc.toFixed(4)+')',offset:o});FX.push({transform:'translate3d('+(dx*eX(q)).toFixed(2)+'px,0,0)',offset:o})}}
       lg.animate(LG,{duration:T,fill:'forwards'});
       fx.animate(FX,{duration:T,fill:'forwards'});
       if(bulb){const sv=hb.querySelector('svg'),bw=document.createElement('div'),z=24/k;
@@ -6506,16 +6514,19 @@ if('serviceWorker' in navigator&&location.protocol!=='file:'){
         fx.animate([{opacity:1},{opacity:1,offset:.985},{opacity:0}],{duration:T,fill:'forwards'});   // передача настоящей лампочке — в последние ~15 мс
         const L0=T-15,cs=getComputedStyle(de),cv=n=>cs.getPropertyValue(n).trim(),cM=cv('--m')||'#8a8a8a',cG=cv('--g')||'#8fc9a0',cT=cv('--t')||'#fff';
         hb.animate([{opacity:0},{opacity:0}],{duration:L0});
-        // пружина посадки: затухающее колебание (утопилась ≈ на 10%, отскок ≈ на 2,5%, успокоилась), разложено на кадры — без рывков на стыках
-        {const fr=[],N=40,D=680,w=2*Math.PI/.3,zt=.42,wd=w*Math.sqrt(1-zt*zt);
-         for(let n=0;n<=N;n++){const t=n/N*D/1000,e=Math.exp(-zt*w*t)*Math.sin(wd*t);fr.push({transform:'translate3d(0,'+(2.4*e).toFixed(2)+'px,0) scale('+(1-.19*e).toFixed(4)+')'})}
-         hb.animate(fr,{duration:D,delay:L0,easing:'linear'})}
+        // v220: удар и отскок: прилетела сверху — «влилась» (сплющилась вниз), отскочила вверх чуть больше своего размера, качнулась и встала
+        hb.animate([{transform:'none',easing:'cubic-bezier(.2,.6,.35,1)'},
+          {transform:'translate3d(0,3.5px,0) scale(1.16,.78)',offset:.14,easing:'cubic-bezier(.45,0,.3,1)'},
+          {transform:'translate3d(0,-4px,0) scale(1.1,1.18)',offset:.4,easing:'cubic-bezier(.45,0,.4,1)'},
+          {transform:'translate3d(0,.8px,0) scale(.97,.99)',offset:.62,easing:'cubic-bezier(.45,0,.4,1)'},
+          {transform:'translate3d(0,-.4px,0) scale(1.02)',offset:.8,easing:'cubic-bezier(.45,0,.4,1)'},
+          {transform:'none'}],{duration:760,delay:L0});
         // свет: плавно загорается зелёным, держится, затем гаснет мерцая — вспышки всё слабее и короче; в конце обычный цвет
         if(sv){const sh=a=>'drop-shadow(0 0 '+(5*a).toFixed(1)+'px rgba(143,201,160,'+(.8*a).toFixed(2)+')) drop-shadow(0 0 '+(13*a).toFixed(1)+'px rgba(143,201,160,'+(.45*a).toFixed(2)+'))',
            K=(o,c,a,ez)=>({offset:o,color:c,filter:sh(a),easing:ez||'cubic-bezier(.4,0,.6,1)'});
          sv.animate([K(0,cM,0,'cubic-bezier(.3,0,.2,1)'),K(.17,cG,1),K(.42,cG,1),K(.455,cM,.12),K(.49,cG,.9),K(.53,cM,.05),K(.575,cG,.6),K(.61,cM,0),K(.67,cG,.35),K(.7,cM,0),K(.77,cG,.15),K(.8,cM,0),K(1,cT,0)],
-           {duration:1750,delay:L0+260,fill:'backwards'})}
-        de.classList.add('splb');setTimeout(()=>de.classList.remove('splb'),L0+260+1800)}
+           {duration:1750,delay:L0+420,fill:'backwards'})}
+        de.classList.add('splb');setTimeout(()=>de.classList.remove('splb'),L0+420+1800)}
       else fx.animate([{opacity:1,filter:'blur(0px)'},{opacity:1,filter:'blur(0px)',offset:.5,easing:'cubic-bezier(.4,0,.6,1)'},{opacity:0,filter:'blur(1.5px)'}],{duration:T,fill:'forwards'});
       s.animate([{backgroundColor:getComputedStyle(s).backgroundColor},{backgroundColor:'rgba(0,0,0,0)'}],{duration:600,delay:220,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'});
       return true}catch(e){return false}}
@@ -6529,7 +6540,7 @@ if('serviceWorker' in navigator&&location.protocol!=='file:'){
     setTimeout(()=>{de.classList.remove('intro')},rm?400:2800);
     {const endIntro=()=>{de.classList.remove('intro');document.removeEventListener('pointerdown',endIntro,true);document.removeEventListener('touchstart',endIntro,true)};
      document.addEventListener('pointerdown',endIntro,true);document.addEventListener('touchstart',endIntro,true);setTimeout(endIntro,rm?400:2900)}
-    setTimeout(()=>{try{s.remove()}catch(e){}},rm?500:fl?1100:900)}
+    setTimeout(()=>{try{s.remove()}catch(e){}},rm?500:fl?1300:900)}
   // заставка ждёт, пока приложение забирает записи, присланные боту (но не дольше ~4,2 с)
   const tryLeave=()=>{const cl=window.__TG&&typeof CL==='object'&&CL.on&&!CL.ready;if((window.__ibBusy||cl)&&performance.now()-t0<4200)return void setTimeout(tryLeave,120);leave()};
   setTimeout(tryLeave,Math.max(0,SHOW-(performance.now()-t0)));
