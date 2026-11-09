@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v234';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v235';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -1842,7 +1842,7 @@ html:root #ed #eam,html:root #ed label.ef,html:root #ed .ef.tgf,html:root #ed in
 <div class="fr"><b>Тег</b><select id="fptag" aria-label="Тег"></select></div>
 </div>
 <div id="sh" class="glass" role="dialog" aria-label="Новая операция">
-<label class="fld" for="inp"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input id="inp" placeholder="Заметки, бюджет, лимиты, цели" autocomplete="off" enterkeyhint="done"><button type="button" class="rcic" id="recic" aria-label="Повторяющиеся операции" aria-haspopup="dialog"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg></button></label>
+<label class="fld" for="inp"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input id="inp" placeholder="Кофе 300 кафе" autocomplete="off" enterkeyhint="done"><button type="button" class="rcic" id="recic" aria-label="Повторяющиеся операции" aria-haspopup="dialog"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg></button></label>
 <div id="tpls"></div>
 <div id="rev"></div>
 <div class="shf"><button class="sm atg" id="atg" type="button"></button><button class="sm pr" id="go">Добавить</button></div>
@@ -2172,6 +2172,10 @@ const catStem=(a,b)=>{if(a===b)return true;const n=Math.min(a.length,b.length);i
 function catByWords(ws,pref){let best=null,bn=0;const sc=c=>(pref!=null&&!!c.inc===pref?2:0)+(c.custom?1:0);   // одинаковые названия: тип по знаку/словам дохода, затем своя категория
   for(const c of ALL){const cw=catWords(c.n);if(!cw.length||cw.length>ws.length)continue;let ok=true;for(let i=0;i<cw.length;i++)if(!catStem(ws[i],cw[i])){ok=false;break}
     if(ok&&(cw.length>bn||(cw.length===bn&&best&&sc(c)>sc(best)))){best=c;bn=cw.length}}
+  // v235: полного названия нет — по первому слову названия («кафе» → «Кафе и рестораны», «одежда» → «Одежда и обувь»);
+  // короткое первое слово (до 3 букв: «дом») — только точное совпадение, иначе «домой» стал бы категорией
+  if(!best&&ws.length&&ws[0].length>=3)for(const c of ALL){const cw=catWords(c.n);if(cw.length<2)continue;const f=cw[0];
+    if(f.length<=3?ws[0]===f:catStem(ws[0],f)){if(!best||sc(c)>sc(best)){best=c;bn=1}}}
   return best?{c:best,n:bn}:null}
 
 
@@ -2274,27 +2278,32 @@ function parse(raw){
   for(const sg of segs){const s0=sg.s;
     let dd=null;const s=s0.replace(/§([a-z])§/g,(m,c)=>{dd=DT[c.charCodeAt(0)-97]||dd;return' '}).trim();
     const re=new RegExp(src,'g');let last=0,m,ps=[];
-    while((m=re.exec(s))){ps.push([s.slice(last,re.lastIndex),m]);last=re.lastIndex}
+    // v235: порядок фразы — заметка, сумма, категория: «кофе 300 продукты». Слова сразу после суммы (до следующего числа), с которых начинается
+    // название категории, становятся категорией этой записи и в заметку не идут. Не совпало («такси 100 домой», «кофе 30 вчера») — как раньше
+    while((m=re.exec(s))){const it=[s.slice(last,re.lastIndex),m,null];ps.push(it);last=re.lastIndex;
+      const tk=[],rx=/[\p{L}\d]+/gu;let w;rx.lastIndex=last;while((w=rx.exec(s))&&!/\d/.test(w[0])&&tk.length<4)tk.push([w[0].toLowerCase().replace(/ё/g,'е'),w.index+w[0].length]);
+      if(tk.length){const h=catByWords(tk.map(x=>x[0]));if(h){it[2]=tk.slice(0,h.n).map(x=>x[0]);last=tk[h.n-1][1];re.lastIndex=last}}}
     if(last<s.length&&ps.length)ps[ps.length-1][0]+=' '+s.slice(last);
     const ld=/^\D*?(позавчера|вчера)/.exec(s);if(ld)carry=ld[1]==='вчера'?1:2;else if(dd||/(позавчера|вчера|сегодня)/.test(s))carry=0;
     const rel0=carry;
-    for(const[p,mm]of ps){
+    for(const[p,mm,acw]of ps){
       let a=parseFloat(mm[1].replace(',','.'));if(mm[2]&&/^(т|к|k)/.test(mm[2]))a*=1000;
       if(!(a>0&&a<=1e12))continue;
       let oc=null,oa=null,rt0=0;const cc=curOf(mm[3]);
       if(cc&&cc!==cfg.cur){oc=cc;oa=a;const rt=parseFloat(cfg.rates[cc])||0;rt0=rt;a=Math.round(a*rt*100)/100;if(!rt)needRate.add(cc)}
       let sgc=0;{const ch=s[mm.index-1];if(ch&&(mm.index<2||/\s/.test(s[mm.index-2]))){if(ch==='+')sgc=1;else if('-−–'.indexOf(ch)>=0)sgc=-1}}
       const low=' '+p.replace(/ё/g,'е')+' ';
-      const iw=INCRE.test(low)||INCW.test(low),xh=sg.cat?catByWords(sg.cat,sgc?sgc>0:(iw?true:null)):null,xc=xh?xh.c:null;   // v165: названа категория — тип по ней
+      const cn=sg.cat!==undefined?sg.cat:acw;   // явная «категория …» важнее слова после суммы
+      const iw=INCRE.test(low)||INCW.test(low),xh=cn?catByWords(cn,sgc?sgc>0:(iw?true:null)):null,xc=xh?xh.c:null;   // v165: названа категория — тип по ней
       const inc=sgc?sgc>0:xc?!!xc.inc:iw;
       const type=inc?'income':'expense';
       let note=p.replace(new RegExp(src,'g'),' ').replace(FILL,' ').replace(FILL,' ').replace(/\s+/g,' ').replace(/(^|\s)[+−–-]+(?=\s|$)/g,' ').replace(/\s+/g,' ').trim();
       if(!/[\p{L}\d]/u.test(note))note='';
-      const cat=sg.cat!==undefined?(xc&&!!xc.inc===inc?xc.id:(inc?'in_other':'other')):detect(p,note,type);   // названа, но не нашлась (или не того типа) — «Прочее»
+      const named=cn!==undefined&&cn!==null||sg.cat!==undefined,cat=named?(xc&&!!xc.inc===inc?xc.id:(inc?'in_other':'other')):detect(p,note,type);   // названа, но не нашлась (или не того типа) — «Прочее»
       note=note?note[0].toUpperCase()+note.slice(1):cd(cat).n;
       const d=new Date(today);if(/позавчера/.test(p))d.setDate(d.getDate()-2);else if(/вчера/.test(p))d.setDate(d.getDate()-1);else if(rel0&&!/сегодня/.test(p))d.setDate(d.getDate()-rel0);
       const tags=[...new Set(sg.tg.map(normTag).filter(Boolean))].slice(0,8);
-      out.push({id:uid(),type,amount:a,category:cat,note,date:dd||ymd(d),...(tags.length?{tags}:{}),...(oc?{oc,oa,rt:rt0}:{})})}}
+      out.push({id:uid(),type,amount:a,category:cat,note,date:dd||ymd(d),...(tags.length?{tags}:{}),...(oc?{oc,oa,rt:rt0}:{}),...(xc&&note!==cd(cat).n?{lrn:1}:{})})}}
   if(pendT.length){const pt=[...new Set(pendT.map(normTag).filter(Boolean))];out.forEach(o=>o.tags=[...new Set([...(o.tags||[]),...pt])].slice(0,8))}
   return out}
 
@@ -2525,13 +2534,14 @@ function saveCmd(raw){const t=String(raw||'').toLowerCase().replace(/ё/g,'е').
 function run(){
   if(saveCmd(inp.value)){inp.value='';syncBtn();inp.blur();bqShow(bqHtml('save'),'save');return}
   needRate.clear();const cm=voiceCmds(inp.value),r=parse(cm.rest);
-  if(!r.length&&!cm.msgs.length){toast('Не нашёл сумму. Пример: «Кофе 30 вчера», «бюджет 20000», «лимит еда 3000», «цель отпуск 50000», «5000+ отпуск», «одолжил Ивану 500»');return}
+  if(!r.length&&!cm.msgs.length){toast('Не нашёл сумму. Пишите: заметка, сумма, категория — «кофе 300 кафе», «бюджет 20000», «лимит еда 3000», «цель отпуск 50000», «5000+ отпуск», «одолжил Ивану 500»');return}
   inp.value='';syncBtn();
   if(cm.msgs.length){save();render();toast(cm.msgs.join(' · '))}
   if(!r.length){if(!drafts.length&&sh.classList.contains('on')&&typeof closeSheet==='function')closeSheet();return}
   if(needRate.size)needRateFlow();
   drafts.push(...r);renderRev();if(cfg.auto&&!needRate.size){if(!sh.classList.contains('on')){if(isModalOpen())return;openSheet()}startAuto();syncBtn()}}
 function commit(list,withUndo){
+  list.forEach(x=>{if(x.lrn){if(x.note)learn[norm(x.note)]=x.category;delete x.lrn}});   // v235: категория названа словами — запоминаем для этой заметки
   tx=[...list,...tx];save();
   const f=mOf(list[list.length-1].date);if(!list.some(x=>mOf(x.date)===month))month=f;
   render();const ln=limitNote(list);if(withUndo){const ids=new Set(list.map(x=>x.id));toast('Добавлено: '+list.length+(ln?' · '+ln:''),'Отмена',()=>{tx=tx.filter(x=>!ids.has(x.id));tomb([...ids]);save();render()},'add')}
@@ -3504,7 +3514,7 @@ function buildPage0(pg,B,peek){
       if(!fcat){const ex=L.filter(t=>t.type==='expense'),et=ex.reduce((s,t)=>s+t.amount,0);
         if(ex.length){const by={};ex.forEach(t=>by[t.category]=(by[t.category]||0)+t.amount);
           pre+=`<div class="cd" style="padding:2px 14px"><h4 style="margin-top:10px">Расходы по категориям</h4>`+Object.entries(by).sort((a,b)=>b[1]-a[1]).map(([id,v])=>{const c=cd(id),p=v/et*100;return `<div class="pl" data-cat="${id}" role="button" tabindex="0"><span class="pc" style="background:${c.c}">${p<1?'<1':Math.round(p)}%</span><span>${E(c.l)}</span><span>${fmt(v)}</span></div>`}).join('')+`</div>`}}}
-    if(!L.length){B.innerHTML=pre+`<div class="emp">${full?'Ничего не найдено.':'Нет операций.<br>Нажмите «+» и напишите несколько позиций подряд.'}</div>`;return}
+    if(!L.length){B.innerHTML=pre+`<div class="emp">${full?'Ничего не найдено.':'Нет операций.<br>Нажмите «+» и напишите: заметка, сумма, категория — «кофе 300 кафе».'}</div>`;return}
     const g={};L.forEach(t=>(g[t.date]=g[t.date]||[]).push(t));
     const days=Object.keys(g).sort().reverse();
     const grp=d=>{const l=g[d],di=l.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0),de=l.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
@@ -6920,8 +6930,8 @@ const v2=(ic,rows)=>`<div class="v2" style="display:flex;align-items:center;gap:
 const SL=[
 {h:'Знайте, куда уходят деньги',p:'Записывайте траты за секунду — просто фразой. Остальное приложение сделает само, а данные останутся только у вас.',v:
    `<div class="v1g"></div><svg class="v1" viewBox="96 96 320 320" width="116" height="116" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><linearGradient id="trg" x1="0" x2="1"><stop offset="0" style="stop-color:var(--g);stop-opacity:.3"/><stop offset=".5" style="stop-color:var(--g)"/><stop offset="1" style="stop-color:var(--g);stop-opacity:.3"/></linearGradient><clipPath id="trc"><rect x="96" y="96" width="320" height="104"/></clipPath></defs><g clip-path="url(#trc)"><rect class="bill" x="172" y="180" width="164" height="40" rx="10" fill="url(#trg)" stroke="none"/></g><path class="d" pathLength="1" d="M146 214 L150 178 C151 160 160 152 175 148 L316 126 C329 124 338 133 338 147 L338 196"/><rect class="d" pathLength="1" x="139" y="196" width="244" height="168" rx="40"/><circle class="dot" cx="335" cy="277" r="15" fill="currentColor" stroke="none"/></svg>`},
-  {h:'Пишите — приложение разберётся',p:'Несколько трат подряд: «кофе 5, такси 12». Категорию задайте словом: «такси 12 категория транспорт» — дальше приложение её запомнит.',v:v2('pen',[['☕','Кофе','−5','exp'],['🚕','Такси','−12','exp'],['💼','Зарплата','+1 500','inc']])},
-  {h:'Записывайте через бота',p:'Напишите боту «такси 120» или отправьте голосовое. В приложении запись откроется на проверку — сохраните её, и бот ответит «Записано».',v:v2('send',[['🚕','Такси','−200','exp'],['☕','Кофе','−50','exp'],['💼','Зарплата','+500','inc']])},
+  {h:'Пишите — приложение разберётся',p:'Порядок простой: сначала заметка, потом сумма, после суммы — категория: «кофе 300 кафе», «такси 120 транспорт». Несколько трат — через запятую. Категорию для этой заметки приложение запомнит.',v:v2('pen',[['☕','Кофе','−5','exp'],['🚕','Такси','−12','exp'],['💼','Зарплата','+1 500','inc']])},
+  {h:'Записывайте через бота',p:'Напишите боту «такси 120 транспорт» или скажите голосом — в том же порядке: заметка, сумма, категория. В приложении запись откроется на проверку — сохраните её, и бот ответит «Записано».',v:v2('send',[['🚕','Такси','−200','exp'],['☕','Кофе','−50','exp'],['💼','Зарплата','+500','inc']])},
   {h:'Повторы и шаблоны',p:'Аренда, подписки, зарплата — настройте один раз, и записи будут появляться сами. Частые траты — в одно касание.',v:v2('repeat',[['🏠','Аренда','−500','exp'],['📺','Подписка','−9','exp'],['💼','Зарплата','+1 500','inc']])},
 {h:'Вся картина за секунды',p:'Остаток, динамика, календарь трат и теги. Месяцы листаются свайпом по списку операций — сравнивайте с прошлым.',v:
    `<div class="v3p"><b class="inc">−12%</b> к прошлому месяцу</div><div class="v3" style="display:flex">${[[46,62],[58,50],[40,70],[66,54],[52,44],[72,38]].map((p,i)=>`<div><i class="a" style="--h:${p[0]}%;--i:${i}"></i><i class="b" style="--h:${p[1]}%;--i:${i}"></i></div>`).join('')}</div>`},
