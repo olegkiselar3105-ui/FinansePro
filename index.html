@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v227';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v228';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -4341,12 +4341,17 @@ topEl.addEventListener('click',e=>{if(msBlock){e.stopPropagation();e.preventDefa
     if(pS===cS&&pB===cB)return;cS=pS;cB=pB;cAp=pS>0||pB>0;
     if(pS>0){if(!cR)cR=parseFloat(getComputedStyle(topEl).borderBottomLeftRadius)||20;const W=topEl.offsetWidth,Hc=topEl.offsetHeight-pS,r=cR,m=40;
       topEl.style.clipPath=`path('M${-m} ${-m}H${W+m}V${Hc-r}H${W}A${r} ${r} 0 0 1 ${W-r} ${Hc}H${r}A${r} ${r} 0 0 1 0 ${Hc-r}H${-m}Z')`}else topEl.style.clipPath='';
-    if(bl){bl.style.transform=pS?`translate3d(0,${(-pS*.35).toFixed(1)}px,0)`:'';bl.style.opacity=pS?Math.max(0,1-pS/hS*1.25).toFixed(3):''}
+    // v228: прозрачность и сдвиги — по плавной кривой (smoothstep), а не по прямой: начало и конец заезда мягче
+    const sm=q=>{q=Math.max(0,Math.min(1,q));return q*q*(3-2*q)};
+    if(bl){const q=hS?pS/hS:0;bl.style.transform=pS?`translate3d(0,${(-pS*.35).toFixed(1)}px,0)`:'';bl.style.opacity=pS?(1-sm(q*1.15)).toFixed(3):''}
     // v227: строку разделов подрезаем по фактическому видимому низу блока (без отрицательных отступов — Safari их не принимает, и строка просвечивала сквозь блок)
-    if(sb){const t=pS+pB;sb.style.transform=t?`translate3d(0,${-t}px,0)`:'';
+    // v228: строка разделов, заезжая под блок, сужается до прямого участка его нижнего края (между скруглениями углов) —
+    // концы строки не торчат по бокам из-под скруглённых углов, она уходит целиком под ровный край
+    if(sb){const t=pS+pB,q=hB?pB/hB:0,W=sb.offsetWidth||1,ins=(cR||20)+3,sx=1-(2*ins/W)*sm(Math.min(1,q*1.6));
+      sb.style.transform=t?`translate3d(0,${-t}px,0)${pB?` scaleX(${sx.toFixed(4)})`:''}`:'';
       let ov=0;if(t){const tb=topEl.getBoundingClientRect().bottom-pS,st=sb.getBoundingClientRect().top;ov=Math.max(0,Math.ceil(tb-st+.5))}
       sb.style.clipPath=ov?`inset(${ov}px 0 0 0)`:'';
-      sb.style.opacity=pB?Math.max(0,1-pB/hB*1.15).toFixed(3):'';sb.style.pointerEvents=pB>hB*.5?'none':''}}
+      sb.style.opacity=pB?(1-sm(q*1.1)).toFixed(3):'';sb.style.pointerEvents=pB>hB*.5?'none':''}}
   // v223: доводка — прокрутка остановилась посреди сворачивания: страница плавно докатывается до ближайшего края (с учётом направления,
   // в котором листали), чтобы блок не оставался наполовину свёрнутым. Касание или колесо сразу останавливает доводку
   let snT=0,snA=0,snOn=false,tch=false,lastY=0,dirY=0;
@@ -4355,12 +4360,22 @@ topEl.addEventListener('click',e=>{if(msBlock){e.stopPropagation();e.preventDefa
   function snCheck(){snT=0;if(tch||snOn||R.classList.contains('wlk'))return;let ok=false;try{ok=(tab==='stats'||tab==='tags')&&!isModalOpen()}catch(e){}if(!ok)return;
     // v225: две независимые остановки — полоса «Осталось потратить» и строка разделов докатываются каждая отдельно, не утягивая друг друга
     const y=pgY(),P_=colPts(),H=P_[P_.length-1];if(!(H>0)||y>=H-.5||y<=.5)return;let a=0,b=H;for(let i=1;i<P_.length;i++)if(y<P_[i]){a=P_[i-1];b=P_[i];break}
-    if(y-a<.5||b-y<.5)return;const L=b-a,to=dirY>0?(y>a+L*.3?b:a):(y<a+L*.7?a:b),max=(document.scrollingElement||document.documentElement).scrollHeight-innerHeight;if(to>max+1)return;
-    const y0=y,t0=performance.now(),D=Math.max(220,Math.min(420,Math.abs(to-y0)*4)),ez=t=>1-Math.pow(1-t,3);snOn=true;
-    const st=n=>{const k=Math.min(1,(n-t0)/D);pgTo(Math.round((y0+(to-y0)*ez(k))*2)/2);if(k<1&&snOn)snA=requestAnimationFrame(st);else{snA=0;snOn=false}};snA=requestAnimationFrame(st)}
-  addEventListener('scroll',()=>{const y=pgY();if(Math.abs(y-lastY)>.3)dirY=y>lastY?1:-1;lastY=y;if(!snOn){clearTimeout(snT);snT=setTimeout(snCheck,150)}},{passive:true});
+    if(y-a<.5||b-y<.5)return;
+    // v228: цель — по месту, куда доехала бы прокрутка по инерции (скорость × 140 мс), с учётом направления
+    const v0=Math.abs(vY)<2.5?vY:0,yp=y+v0*140,L=b-a,to=(dirY>0?(yp>a+L*.3?b:a):(yp<a+L*.7?a:b)),max=(document.scrollingElement||document.documentElement).scrollHeight-innerHeight;if(to>max+1)return;
+    // доводка — критически затухающая пружина: подхватывает текущую скорость прокрутки (без остановки и рывка), подходит к цели без перелёта
+    const w=2*Math.PI/.62,C1=y-to,C2=v0*1000+w*C1,t0=performance.now();snOn=true;
+    const st=n=>{const t=(n-t0)/1000,e=Math.exp(-w*t),x=to+(C1+C2*t)*e,v=(C2-w*(C1+C2*t))*e;
+      if(!snOn)return;if((Math.abs(x-to)<.35&&Math.abs(v)<12)||t>1.4){pgTo(to);snA=0;snOn=false;return}pgTo(Math.round(x*2)/2);snA=requestAnimationFrame(st)};snA=requestAnimationFrame(st)}
+  // скорость прокрутки (px/мс, сглаженная); пока палец не касается и инерция уже почти погасла внутри зоны сворачивания — доводка стартует сразу,
+  // подхватывая скорость (без паузы «остановилось — поехало»); иначе — через 120 мс тишины
+  let vY=0,lt_=0,tEnd=0;
+  addEventListener('scroll',()=>{const y=pgY(),n=performance.now(),dt=n-lt_;if(dt>0&&dt<100)vY=vY*.6+((y-lastY)/dt)*.4;else vY=0;lt_=n;
+    if(Math.abs(y-lastY)>.3)dirY=y>lastY?1:-1;lastY=y;if(snOn)return;clearTimeout(snT);
+    let early=false;if(!tch&&n-tEnd<2500&&Math.abs(vY)<.35&&(tab==='stats'||tab==='tags')){const P_=colPts(),H=P_[P_.length-1];early=H>0&&y>1&&y<H-1}
+    if(early)snCheck();else snT=setTimeout(()=>{vY=0;snCheck()},120)},{passive:true});
   addEventListener('touchstart',()=>{tch=true;snStop();clearTimeout(snT)},{passive:true,capture:true});
-  addEventListener('touchend',()=>{tch=false;clearTimeout(snT);snT=setTimeout(snCheck,150)},{passive:true,capture:true});
+  addEventListener('touchend',()=>{tch=false;tEnd=performance.now();clearTimeout(snT);snT=setTimeout(snCheck,150)},{passive:true,capture:true});
   addEventListener('touchcancel',()=>{tch=false},{passive:true,capture:true});
   addEventListener('wheel',()=>{snStop()},{passive:true,capture:true});
   function meas(){colClear();const y=pgY(),lt=document.getElementById('lt0'),sb=sbwEl();R.classList.remove('stk');
