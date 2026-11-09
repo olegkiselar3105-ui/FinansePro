@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v231';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v232';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -1225,7 +1225,7 @@ html.plk #lk,#lk.on{visibility:visible;opacity:1;transform:none;pointer-events:a
   background:linear-gradient(180deg,color-mix(in srgb,var(--tp1) 62%,transparent),color-mix(in srgb,var(--tp2) 54%,transparent));
   /* v162: без размытия фона: на «Операциях» под блоком ничего не проезжает, в «Аналитике» и «Планах» размывает подложка #stkbg — размытие пересчитывалось каждый кадр прокрутки */
   box-shadow:inset 0 .5px 0 rgba(var(--wr),.16),0 8px 24px rgba(0,0,0,.20)}
-:root[data-theme=light] #top{box-shadow:inset 0 .5px 0 rgba(var(--wr),.14),0 8px 24px rgba(30,30,50,.10)}
+:root[data-theme=light] #top{box-shadow:none}   /* v232: без тени (было 0 8px 24px) */
 </style>
 <style id="v85">
 /* v85: «+» и «Настройки» — в правом верхнем углу, на уровне заголовка, без круглой подложки; уезжают вверх вместе с заголовком */
@@ -1614,7 +1614,7 @@ html.stk #sbw{position:sticky;top:var(--stk2,calc(var(--sat) + 8px + var(--toph,
 html:not(.stk) #stkbg{display:none}
 #stkbg{height:var(--stkh,0px)}
 /* v231: главный блок — один сплошной цвет, без тени и без просвечивания; в «Аналитике»/«Планах» он поверх строки разделов — она заезжает под него */
-html:root #top{background:color-mix(in srgb,var(--tp1) 58%,var(--bg));box-shadow:none}
+html:root #top{background:color-mix(in srgb,var(--tp1) 58%,var(--bg));box-shadow:none!important}   /* v232: тени у главного блока нет нигде, ни в одной теме */
 html.stk #top{z-index:9}
 /* v165: окно «Что нового» */
 #bq .wnh{font-size:22px;font-weight:700;letter-spacing:-.01em;margin:2px 2px 12px}
