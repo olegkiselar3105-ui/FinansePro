@@ -28,3 +28,8 @@ id = "36a1f124d42d43f08f0e2a562be85eca"
 binding = "DB"
 database_name = "finanse_inbox"
 database_id = "86448de3-bd97-4f7b-9128-5b091074a69d"
+
+# Раз в сутки (00:10 UTC): итоги статистики за вчера и уборка старых данных (функция scheduled в worker.js).
+# tools/deployworker.sh ставит это расписание через API при каждой выкладке.
+[triggers]
+crons = ["10 0 * * *"]

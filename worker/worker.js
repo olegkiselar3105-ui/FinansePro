@@ -10,6 +10,9 @@
 //   Variable      DAILY_LIMIT      — сообщений в сутки на человека (по умолчанию 30)
 //   Variable      APP_URL          — адрес Mini App (https://…pages.dev): кнопка «Открыть финансы» и ссылка на политику (APP_URL + privacy.html)
 
+//   Secret        STATS_SALT       — соль для обезличенной статистики (длинная случайная строка; НЕ менять — иначе все посчитаются новыми). Нет соли — статистика не собирается
+//   Variable      OWNER_ID         — Telegram id владельца: только ему отвечает /stats
+//   Cron trigger  10 0 * * *       — раз в сутки итоги дня и уборка (ставит tools/deployworker.sh)
 //   D1 database     DB             — (желательно) мгновенная очередь без задержек KV. Таблицы создаются сами. Без неё работает старый режим на KV (с задержкой до ~минуты)
 
 const kv = env => env.INBOX || env.FIN;   // KV-привязка может называться INBOX или FIN
@@ -24,11 +27,14 @@ export default {
       if (url.pathname === '/webhook' && req.method === 'POST') {
         if (req.headers.get('X-Telegram-Bot-Api-Secret-Token') !== env.WEBHOOK_SECRET) return new Response('no', { status: 403 });
         const upd = await req.json();
+        const fm = upd.message;
+        if (fm && fm.from && fm.chat && fm.chat.type === 'private') ctx.waitUntil(mark(env, fm.from.id, 'bot').catch(e => console.error('mark', e && e.stack || e)));
         ctx.waitUntil(handleUpdate(upd, env).catch(e => console.error('handleUpdate', e && e.stack || e)));
         return new Response('ok');                       // Telegram всегда получает 200 быстро
       }
       if (url.pathname === '/api/pending' && req.method === 'GET') {
         const uid = await authUser(req, env); if (!uid) return cors(json({ error: 'auth' }, 401));
+        ctx.waitUntil(mark(env, uid, 'app').catch(e => console.error('mark', e && e.stack || e)));
         const wait = Number(url.searchParams.get('wait')) || 0;
         const res = await store(env, uid).list(wait, req.signal, url.searchParams.get('fast') === '1');
         res.uid = String(uid);                          // приложение показывает его в «Бот: проверить сейчас» — сверьте с командой /id в боте
@@ -49,7 +55,8 @@ export default {
       }
       return new Response('finance bot', { status: 200 });
     } catch (e) { console.error('fetch', e && e.stack || e); return cors(json({ error: 'server' }, 500)); }
-  }
+  },
+  async scheduled(ev, env, ctx) { ctx.waitUntil(rollup(env).catch(e => console.error('rollup', e && e.stack || e))); }
 };
 
 
@@ -61,7 +68,10 @@ const d1Init = env => d1Ready || (d1Ready = env.DB.batch([
   env.DB.prepare('CREATE TABLE IF NOT EXISTS cnt (uid TEXT, day TEXT, n INTEGER, PRIMARY KEY (uid, day))'),
   // «квитанции»: какое сообщение бота нужно переписать на «Записано», когда приложение заберёт запись
   env.DB.prepare('CREATE TABLE IF NOT EXISTS rcpt (uid TEXT, id TEXT, chat INTEGER, mid INTEGER, text TEXT, at INTEGER, PRIMARY KEY (uid, id))')
-]).catch(e => { d1Ready = null; throw e; }));
+]).then(async () => {
+  // v-колонка: голосовые за день (для статистики) — той же записью, что и счётчик лимита; на старой таблице добавляется один раз
+  try { await env.DB.prepare('ALTER TABLE cnt ADD COLUMN v INTEGER DEFAULT 0').run(); } catch {}
+}).catch(e => { d1Ready = null; throw e; }));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const d1Store = (env, uid) => {
   const q = (sql, ...a) => env.DB.prepare(sql).bind(...a);
@@ -97,11 +107,11 @@ const d1Store = (env, uid) => {
       if (ids.length) await env.DB.batch(ids.map(id => q('DELETE FROM msgs WHERE uid = ? AND id = ?', uid, String(id))));
       return { ok: true };
     },
-    async inc(day, limit) {
+    async inc(day, limit, voice) {
       await d1Init(env);
       const r = await q('SELECT n FROM cnt WHERE uid = ? AND day = ?', uid, day).first();
       if (r && Number(r.n) >= limit) return { ok: false };
-      await env.DB.batch([q('INSERT INTO cnt (uid, day, n) VALUES (?, ?, 1) ON CONFLICT(uid, day) DO UPDATE SET n = n + 1', uid, day),
+      await env.DB.batch([q('INSERT INTO cnt (uid, day, n, v) VALUES (?, ?, 1, ?) ON CONFLICT(uid, day) DO UPDATE SET n = n + 1, v = COALESCE(v, 0) + excluded.v', uid, day, voice ? 1 : 0),
         q('DELETE FROM cnt WHERE uid = ? AND day < ?', uid, new Date(Date.now() - 2 * 864e5).toISOString().slice(0, 10))]);   // счётчики старше 2 дней не храним (политика)
       return { ok: true };
     }
@@ -203,6 +213,7 @@ async function handleUpdate(upd, env) {
   const priv = env.APP_URL ? new URL('privacy.html', env.APP_URL).href : '';
   if (t === '/privacy') return reply(priv ? `🔒 Политика конфиденциальности: ${priv}` : 'Политика конфиденциальности пока не опубликована.');
   if (t === '/help' || t === '/помощь') return reply(HELP + (priv ? `\n\n🔒 Политика конфиденциальности: /privacy` : ''));
+  if (t === '/stats') return isOwner(env, uid) ? reply(await statsText(env)) : undefined;   // только владельцу (OWNER_ID); остальным — молчание
   if (t === '/queue') return reply(`В очереди на запись в приложение: ${await store(env, uid).count()}`);   // 0 = всё забрано приложением
   if (t === '/start') return reply('Привет! Я записываю ваши доходы и расходы.\n\n' +
     '✍️ Пишите или говорите: заметка, сумма, категория — «кофе 300 кафе», «такси 120 транспорт».\nЕщё: «одолжил Ивану 500», «цель отпуск 50000», «лимит еда 3000».\n' +
@@ -213,7 +224,7 @@ async function handleUpdate(upd, env) {
   if (t.startsWith('/')) return;
   // защита квоты: у каждого человека не больше DAILY_LIMIT сообщений в сутки (по умолчанию 30); ответ о лимите лимит не тратит
   const day = new Date().toISOString().slice(0, 10), box = store(env, uid), lim = Number(env.DAILY_LIMIT || 30);
-  if (!(await box.inc(day, lim)).ok) return reply(`🌙 На сегодня всё — лимит ${lim} сообщений в день исчерпан.\n\n` +
+  if (!(await box.inc(day, lim, !t && !!(msg.voice || msg.audio))).ok) return reply(`🌙 На сегодня всё — лимит ${lim} сообщений в день исчерпан.\n\n` +
     'Записывать можно и дальше, прямо в приложении: нажмите «＋» в правом верхнем углу и напишите запись в строку ввода — так же, как боту.\n\n' +
     'Завтра бот снова будет принимать сообщения ✨', open);
 
@@ -260,4 +271,83 @@ async function transcribe(fileId, env) {
   fd.append('model', 'whisper-large-v3-turbo'); fd.append('language', 'ru'); fd.append('temperature', '0');
   const r = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', { method: 'POST', headers: { Authorization: `Bearer ${env.GROQ_KEY}` }, body: fd });
   if (!r.ok) return ''; const j = await r.json(); return String(j.text || '').trim();
+}
+
+
+// ---------- обезличенная статистика: только счётчики, без текстов, сумм и имён ----------
+// act (день, хэш, бот, приложение) — кто был активен; usr (хэш, первый день) — новые; agg — итоги дня (хранятся всегда).
+// Вместо Telegram id — HMAC-SHA256(STATS_SALT, id), 16 знаков: уникальных посчитать можно, узнать человека по таблице — нет.
+// Запись в D1 — только при первом событии дня (≤2 на человека в день: бот + приложение); сообщения/голос — колонки n/v таблицы лимита cnt.
+// Сутки — UTC (как дневной лимит). Подробные данные (act, usr неактивных) — 90 дней; cnt — 2 дня.
+const KEEP = 90;
+const dstr = ms => new Date(ms).toISOString().slice(0, 10);
+const ago = (n, now = Date.now()) => dstr(now - n * 864e5);
+const isOwner = (env, uid) => !!env.OWNER_ID && String(env.OWNER_ID).trim() === String(uid);
+let stReady = null, saltKey = null, saltOf = null;
+const stInit = env => stReady || (stReady = d1Init(env).then(() => env.DB.batch([
+  env.DB.prepare('CREATE TABLE IF NOT EXISTS act (day TEXT, h TEXT, bot INTEGER DEFAULT 0, app INTEGER DEFAULT 0, PRIMARY KEY (day, h))'),
+  env.DB.prepare('CREATE TABLE IF NOT EXISTS usr (h TEXT PRIMARY KEY, first TEXT)'),
+  env.DB.prepare('CREATE TABLE IF NOT EXISTS agg (day TEXT PRIMARY KEY, users INTEGER, bot INTEGER, app INTEGER, new INTEGER, msgs INTEGER, voice INTEGER)')
+])).catch(e => { stReady = null; throw e; }));
+async function uhash(env, uid) {
+  if (saltOf !== env.STATS_SALT) { saltKey = await crypto.subtle.importKey('raw', new TextEncoder().encode(env.STATS_SALT), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']); saltOf = env.STATS_SALT; }
+  const b = new Uint8Array(await crypto.subtle.sign('HMAC', saltKey, new TextEncoder().encode(String(uid))));
+  return [...b.slice(0, 8)].map(x => x.toString(16).padStart(2, '0')).join('');
+}
+const seen = new Set(); let seenDay = '';   // память экземпляра воркера: уже отмечен сегодня — в D1 не идём
+async function mark(env, uid, src) {
+  if (!env.DB || !env.STATS_SALT || !uid) return;
+  const day = dstr(Date.now()), k = `${uid}|${src}`;
+  if (seenDay !== day) { seen.clear(); seenDay = day; }
+  if (seen.has(k)) return;
+  await stInit(env);
+  const h = await uhash(env, uid), col = src === 'app' ? 'app' : 'bot';
+  // повтор в другом экземпляре воркера ничего не пишет: WHERE col = 0 / OR IGNORE
+  await env.DB.batch([
+    env.DB.prepare(`INSERT INTO act (day, h, ${col}) VALUES (?, ?, 1) ON CONFLICT(day, h) DO UPDATE SET ${col} = 1 WHERE ${col} = 0`).bind(day, h),
+    env.DB.prepare('INSERT OR IGNORE INTO usr (h, first) VALUES (?, ?)').bind(h, day)
+  ]);
+  if (seen.size > 20000) seen.clear();
+  seen.add(k);
+}
+// итоги дня: вчера — пересчёт, позавчера — только если пропущен (cnt позавчера ещё цел); затем уборка
+const aggSql = how => `INSERT OR ${how} INTO agg (day, users, bot, app, new, msgs, voice) SELECT ?1,
+  (SELECT COUNT(*) FROM act WHERE day = ?1), (SELECT COUNT(*) FROM act WHERE day = ?1 AND bot = 1), (SELECT COUNT(*) FROM act WHERE day = ?1 AND app = 1),
+  (SELECT COUNT(*) FROM usr WHERE first = ?1), (SELECT COALESCE(SUM(n), 0) FROM cnt WHERE day = ?1), (SELECT COALESCE(SUM(v), 0) FROM cnt WHERE day = ?1)`;
+async function rollup(env, now = Date.now()) {
+  if (!env.DB) return;
+  await stInit(env);
+  const q = (sql, ...a) => env.DB.prepare(sql).bind(...a);
+  await env.DB.batch([
+    q(aggSql('REPLACE'), ago(1, now)), q(aggSql('IGNORE'), ago(2, now)),
+    q('DELETE FROM act WHERE day < ?', ago(KEEP, now)),
+    q('DELETE FROM usr WHERE first < ? AND h NOT IN (SELECT h FROM act)', ago(KEEP, now)),
+    q('DELETE FROM cnt WHERE day < ?', ago(2, now))                 // счётчики лимита старше 2 дней — и у тех, кто больше не пишет
+  ]);
+}
+async function statsText(env, now = Date.now()) {
+  if (!env.DB) return 'Статистика работает только с базой D1.';
+  if (!env.STATS_SALT) return 'Статистика не собирается: добавьте секрет STATS_SALT в Cloudflare (Settings → Variables and Secrets).';
+  await stInit(env);
+  const one = (sql, ...a) => env.DB.prepare(sql).bind(...a).first();
+  const D = ago(0, now), D2 = ago(2, now);
+  const period = async n => {   // n дней, включая сегодня
+    const from = ago(n - 1, now);
+    const u = await one('SELECT COUNT(DISTINCT h) AS a, COUNT(DISTINCT CASE WHEN bot = 1 THEN h END) AS b, COUNT(DISTINCT CASE WHEN app = 1 THEN h END) AS p FROM act WHERE day >= ?', from);
+    const nw = await one('SELECT COUNT(*) AS c FROM usr WHERE first >= ?', from);
+    // сообщения: старые дни — из итогов agg, последние 3 дня — из cnt (итог за вчера может быть ещё не посчитан)
+    const ag = await one('SELECT COALESCE(SUM(msgs), 0) AS m, COALESCE(SUM(voice), 0) AS v FROM agg WHERE day >= ? AND day < ?', from, D2);
+    const cn = await one('SELECT COALESCE(SUM(n), 0) AS m, COALESCE(SUM(v), 0) AS v FROM cnt WHERE day >= ?', from > D2 ? from : D2);
+    return `${u.a} чел. (бот ${u.b}, приложение ${u.p}), новых ${nw.c}\n   сообщений ${Number(ag.m) + Number(cn.m)}, из них голосовых ${Number(ag.v) + Number(cn.v)}`;
+  };
+  const ret = async n => {      // пришли n…n+6 дней назад → сколько были активны через n и более дней после первого раза
+    const r = await one(`SELECT COUNT(*) AS c, COALESCE(SUM(EXISTS (SELECT 1 FROM act a WHERE a.h = u.h AND a.day >= date(u.first, '+${n} day'))), 0) AS r
+      FROM usr u WHERE u.first BETWEEN ? AND ?`, ago(n + 6, now), ago(n, now));
+    return r.c ? `${r.r} из ${r.c} (${Math.round(100 * r.r / r.c)}%)` : 'пока нет данных';
+  };
+  const first = await one('SELECT MIN(day) AS d FROM act');
+  return `📊 Статистика (сутки по UTC)\n\nСегодня: ${await period(1)}\n\n7 дней: ${await period(7)}\n\n30 дней: ${await period(30)}\n\n` +
+    `↩️ Возврат 7д: ${await ret(7)} — пришли 7–13 дней назад, заходили через 7+ дней\n` +
+    `↩️ Возврат 30д: ${await ret(30)} — пришли 30–36 дней назад, заходили через 30+ дней` +
+    (!first || !first.d ? '\n\nДанных пока нет.' : first.d > ago(30, now) ? `\n\nСчёт идёт с ${first.d} (в первый день «новые» — все активные).` : '');
 }

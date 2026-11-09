@@ -26,4 +26,8 @@ META=$(python3 -c "import json,sys;print(json.dumps({'main_module':'worker.js','
  "$(toml binding <(sed -n '/d1_databases/,$p' worker/wrangler.toml))" "$(toml database_id <(sed -n '/d1_databases/,$p' worker/wrangler.toml))")
 curl -sf -X PUT "$S" -H "$H" -F "metadata=$META;type=application/json" -F "worker.js=@$SRC;type=application/javascript+module;filename=worker.js" \
  | python3 -c "import sys,json;d=json.load(sys.stdin);print('Выложено' if d['success'] else d['errors'])"
+# расписание (cron) — из [triggers] crons в wrangler.toml: итоги статистики и уборка раз в сутки
+CRONS=$(python3 -c "import tomllib,json;print(json.dumps([{'cron':c} for c in tomllib.load(open('worker/wrangler.toml','rb')).get('triggers',{}).get('crons',[])]))")
+curl -sf -X PUT "$S/schedules" -H "$H" -H 'Content-Type: application/json' -d "$CRONS" \
+ | python3 -c "import sys,json;d=json.load(sys.stdin);print('Расписание:',', '.join(x['cron'] for x in d['result']['schedules']) if d['success'] else d['errors'])"
 curl -sf "$S/settings" -H "$H" | python3 -c "import sys,json;print('Привязки:',', '.join(b['name'] for b in json.load(sys.stdin)['result']['bindings']))"
