@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v245';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v246';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -1613,6 +1613,8 @@ html.stk #sbw{position:sticky;top:var(--stk2,calc(var(--sat) + 8px + var(--toph,
 #stkbg.on{opacity:1;visibility:visible;transition:opacity .22s ease,visibility 0s}
 html:not(.stk) #stkbg{display:none}
 #stkbg{height:var(--stkh,0px)}
+/* v246: смена вкладки — страница сразу готова: диаграммы и графики без анимаций появления (прорисовки, проявления, масштаба) */
+html.tsw :is(.tl,.pmk){animation:none!important;stroke-dashoffset:0!important}html.tsw :is(.ta,.pgl){animation:none!important;opacity:1!important}html.tsw .pgs{animation:none!important}
 /* v239: нижняя панель — только значки (33 px), компактная, по центру, ниже к краю экрана; стекло прозрачнее — как панель Safari (видео пользователя).
    При прокрутке вниз сжимается в капсулу со значком текущей вкладки, вверх (и наверху/внизу страницы) — разворачивается (код — tbCompact) */
 html:root body #tabs{left:0!important;right:0!important;width:max-content!important;margin:0 auto!important;gap:0!important;padding:4px!important;bottom:calc(var(--sab,0px)*.3 + 8px)!important;
@@ -3903,7 +3905,8 @@ function subIn(dir){if(RM||!bodyEl.animate)return;try{if(softA)softA.cancel()}ca
   const a=bodyEl.animate(fr,{duration:D,easing:'linear'});softA=a;a.onfinish=a.oncancel=()=>{if(softA===a)softA=null}}
 // v234: переход на «Настройки» и обратно — страница мягко проявляется с небольшим подъёмом (было: появлялась сразу на 55% яркости
 // и за 0,2 с дотягивалась — выглядело как мигание)
-function tabIn(){if(RM||!bodyEl.animate)return;try{if(softA)softA.cancel()}catch{}
+function tabIn(){return;   // v246: смена вкладки — без анимации, страница сразу готова
+  if(RM||!bodyEl.animate)return;try{if(softA)softA.cancel()}catch{}
   const a=bodyEl.animate([{opacity:0,transform:'translate3d(0,10px,0)'},{opacity:1,transform:'none'}],{duration:380,easing:'cubic-bezier(.22,1,.36,1)'});
   softA=a;a.onfinish=a.oncancel=()=>{if(softA===a)softA=null}}
 function softIn(strong){if(RM||!bodyEl.animate)return;try{if(softA)softA.cancel()}catch{}
@@ -3914,7 +3917,7 @@ function settleAll(){if(softA){try{softA.cancel()}catch{}softA=null}settleFlight
 function pgSettle(){
   if(tpRaf){cancelAnimationFrame(tpRaf);tpRaf=0}
   if(tp&&tp.on){tp=null;bodyEl.style.transform='';bodyEl.style.willChange='';const i=tabInd();if(i)i.style.transition='';moveInd();sbSync(false)}}
-function slideTo(t){document.documentElement.classList.remove('intro');   // v51: смена вкладки во время заставки — без повторного «появления» (оно и давало мерцание)
+function slideTo(t){document.documentElement.classList.remove('intro');{const R_=document.documentElement;R_.classList.add('tsw');clearTimeout(window.__tswT);window.__tswT=setTimeout(()=>R_.classList.remove('tsw'),900)}   // v246: 0,9 с после смены вкладки — без анимаций появления диаграмм   // v51: смена вкладки во время заставки — без повторного «появления» (оно и давало мерцание)
   pgSave();
 
   const s=TABS.indexOf(t)>TABS.indexOf(tab)?1:-1;
