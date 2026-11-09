@@ -52,6 +52,6 @@ await botMsg(1, 'a 1'); await botMsg(1, null, true); await botMsg(2, 'b 2'); awa
 for (let i = 1; i <= 9; i++) { await day(1); await botMsg(2, 'x ' + i); }
 await botMsg(1, 'вернулся 5');   // день 9: uid1 через 9 дней
 const s = await W._t.statsText(env);
-assert(/Люди +2 +2 +3/.test(s), 'users today 2 / 7d 2 / 30d 3');
-assert(/Сообщения +2 +8 +14/.test(s) && / голосовые +0 +0 +1/.test(s), 'msgs 2/8/14, voice 0/0/1'); 
-assert(/7 дн +▓{7}░{3} +67% +2 из 3/.test(s), 'ret7 = 2 of 3');
+assert(/Всего людей +2 +2 +3/.test(s), 'users today 2 / 7d 2 / 30d 3');
+assert(/Сообщений боту +2 +8 +14/.test(s) && / из них голосом +0 +0 +1/.test(s), 'msgs 2/8/14, voice 0/0/1'); 
+assert(/7 дн +▓{7}░{3} +67% +2 из 3/.test(s), 'ret7 = 2 of 3'); assert(s.length < 4096, 'fits telegram ' + s.length); if (process.env.SHOW) console.log(s);

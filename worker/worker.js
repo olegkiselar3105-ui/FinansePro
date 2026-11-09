@@ -350,24 +350,37 @@ async function statsText(env, now = Date.now()) {
   const [d1, d7, d30, w0] = [await period(ago(0, now)), await period(ago(6, now)), await period(ago(29, now)), await period(ago(13, now), ago(7, now))];
   const days = (await env.DB.prepare('SELECT day, COUNT(*) AS c FROM act WHERE day >= ? GROUP BY day').bind(ago(6, now)).all()).results || [];
   const r7 = await ret(7), r30 = await ret(30), first = await one('SELECT MIN(day) AS d FROM act');
-  // вид: моноширинные блоки <pre> (Telegram HTML) — колонки ровные; эмодзи внутри <pre> не ставим (ломают выравнивание)
-  const pad = (x, w) => String(x).padStart(w), lab = (x, w = 13) => String(x).padEnd(w);
-  const row = (l, k) => lab(l) + pad(d1[k], 5) + pad(d7[k], 6) + pad(d30[k], 6);
-  const table = [lab('') + pad('сег', 5) + pad('7 дн', 6) + pad('30 дн', 6), row('Люди', 'u'), row(' бот', 'b'), row(' приложение', 'p'),
-    row('Новые', 'n'), row('Сообщения', 'm'), row(' голосовые', 'v')].join('\n');
+  // вид: сначала вывод словами, потом блоки с цифрами (<pre> — ровные колонки; эмодзи внутри <pre> не ставим — ломают выравнивание) и пояснение под каждым
+  const pad = (x, w) => String(x).padStart(w), lab = (x, w = 16) => String(x).padEnd(w);
+  const pl = (n, a, b, c) => { const m = n % 10, h = n % 100; return `${n} ${m === 1 && h !== 11 ? a : m >= 2 && m <= 4 && (h < 12 || h > 14) ? b : c}`; };
+  const ppl = n => pl(n, 'человек', 'человека', 'человек'), msg = n => pl(n, 'сообщение', 'сообщения', 'сообщений');
+  const row = (l, k) => lab(l) + pad(d1[k], 4) + pad(d7[k], 5) + pad(d30[k], 5);
+  const table = [lab('') + pad('сег', 4) + pad('7дн', 5) + pad('30дн', 5), row('Всего людей', 'u'), row(' писали боту', 'b'), row(' открывали прил', 'p'),
+    row('Новые', 'n'), row('Сообщений боту', 'm'), row(' из них голосом', 'v')].join('\n');
   const bar = (x, max, w) => '█'.repeat(max ? Math.round(w * x / max) : 0) || (x ? '▏' : '');
   const cnt = Object.fromEntries(days.map(r => [r.day, N(r.c)])), list = [...Array(7)].map((_, i) => ago(6 - i, now));
   const mx = Math.max(0, ...list.map(d => cnt[d] || 0)), WD = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
   const chart = list.map(d => { const c = cnt[d] || 0; return `${WD[new Date(d + 'T12:00:00Z').getUTCDay()]} ${d.slice(8)}.${d.slice(5, 7)} ${lab(bar(c, mx, 12), 12)} ${pad(c, 3)}`; }).join('\n');
-  const delta = (a, b) => !b ? (a ? 'новое' : '—') : a === b ? '= 0%' : `${a > b ? '▲ +' : '▼ −'}${Math.round(Math.abs(a - b) * 100 / b)}%`;
-  const rline = (l, r, n) => r.c ? `${lab(l, 6)} ${'▓'.repeat(Math.round(10 * r.r / r.c))}${'░'.repeat(10 - Math.round(10 * r.r / r.c))} ${pad(Math.round(100 * r.r / r.c) + '%', 4)}  ${r.r} из ${r.c}`
-    : `${lab(l, 6)} нет данных (нужно ${n}+ дней)`;
+  const best = list.reduce((a, d) => (cnt[d] || 0) > (cnt[a] || 0) ? d : a, list[6]);
+  const cmp = (a, b, f) => !b ? (a ? `${f(a)}, неделей раньше не было никого — сравнивать пока не с чем` : 'пока ноль') :
+    a === b ? `${f(a)} — столько же, сколько неделей раньше` : `${f(a)}, неделей раньше ${b} — ${a > b ? '▲ больше' : '▼ меньше'} на ${Math.round(Math.abs(a - b) * 100 / b)}%`;
+  const rline = (l, r) => r.c ? `${lab(l, 6)} ${'▓'.repeat(Math.round(10 * r.r / r.c))}${'░'.repeat(10 - Math.round(10 * r.r / r.c))} ${pad(Math.round(100 * r.r / r.c) + '%', 4)}  ${r.r} из ${r.c}` : `${lab(l, 6)} пока рано`;
+  const rtext = (r, n, w) => r.c ? `• ${w}: из ${r.c} ${r.c % 10 === 1 && r.c % 100 !== 11 ? 'человека' : 'человек'}, впервые пришедших ${n}–${n + 6} дней назад, снова заходили ${r.r} (${Math.round(100 * r.r / r.c)}%).` +
+      (r.c < 10 ? ' Людей пока мало — процент случайный.' : '') : `• ${w}: пока рано — нужно, чтобы со старта прошло ${n + 7}+ дней.`;
   const MON = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'], t = new Date(now);
+  const dm = d => `${Number(d.slice(8))} ${MON[Number(d.slice(5, 7)) - 1]}`;
   return `📊 <b>Статистика</b> · ${t.getUTCDate()} ${MON[t.getUTCMonth()]}, ${String(t.getUTCHours()).padStart(2, '0')}:${String(t.getUTCMinutes()).padStart(2, '0')} UTC\n\n` +
-    `<pre>${table}</pre>\n\n` +
-    `📈 <b>Неделя к прошлой</b>\nЛюди: ${d7.u} (было ${w0.u}) · ${delta(d7.u, w0.u)}\nСообщения: ${d7.m} (было ${w0.m}) · ${delta(d7.m, w0.m)}\n\n` +
-    `📅 <b>Люди по дням</b>\n<pre>${chart}</pre>\n\n` +
-    `↩️ <b>Возврат</b>\n<pre>${rline('7 дн', r7, 14)}\n${rline('30 дн', r30, 37)}</pre>\n` +
-    `<i>Из пришедших 7–13 (30–36) дней назад — сколько заходили снова через 7 (30) и более дней.</i>\n\n` +
-    `<i>Сутки по UTC${first && first.d && first.d > ago(30, now) ? ` · счёт с ${first.d.slice(8)}.${first.d.slice(5, 7)}, в первый день «новые» — все активные` : ''}${!first || !first.d ? ' · данных пока нет' : ''}</i>`;
+    `💬 <b>Коротко</b>\nСегодня заходили ${ppl(d1.u)}, за 7 дней — ${ppl(d7.u)}, из них новых ${d7.n}. ` +
+    `Боту за неделю пришло ${msg(d7.m)}, из них голосом ${d7.v}.\n\n` +
+    `🔢 <b>Цифры</b>\n<pre>${table}</pre>\n` +
+    `<i>Колонки: сегодня, последние 7 дней, последние 30 дней (включая сегодня). «Всего людей» — разные люди: кто и писал боту, и открывал приложение, считается один раз. ` +
+    `«Новые» — пришли впервые. «Сообщений боту» — принятые записи текстом и голосом, без команд.</i>\n\n` +
+    `📈 <b>Эта неделя и прошлая</b>\nЛюдей: ${cmp(d7.u, w0.u, String)}.\nСообщений: ${cmp(d7.m, w0.m, String)}.\n\n` +
+    `📅 <b>Сколько людей заходило по дням</b>\n<pre>${chart}</pre>\n` +
+    (mx ? `<i>Больше всего — ${dm(best)}: ${ppl(cnt[best])}.</i>\n\n` : '\n') +
+    `↩️ <b>Возвращаются ли люди</b>\n<pre>${rline('7 дн', r7)}\n${rline('30 дн', r30)}</pre>\n` +
+    `${rtext(r7, 7, 'Через неделю')}\n${rtext(r30, 30, 'Через месяц')}\n` +
+    `<i>Это главный показатель спроса: пробуют многие, нужен бот тем, кто возвращается. Грубый ориентир: через неделю меньше 10% — пробуют и бросают, 25% и выше — хороший знак.</i>\n\n` +
+    `<i>Сутки — по UTC (в Молдове день меняется в 2–3 часа ночи). Ваши заходы тоже считаются.` +
+    (!first || !first.d ? ' Данных пока нет.' : first.d > ago(30, now) ? ` Счёт идёт с ${dm(first.d)}; в первый день все активные посчитаны новыми.` : '') + `</i>`;
 }
