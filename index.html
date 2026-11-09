@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v228';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v229';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -4333,11 +4333,17 @@ topEl.addEventListener('click',e=>{if(msBlock){e.stopPropagation();e.preventDefa
   // v222: «Аналитика» и «Планы» — при прокрутке нижняя полоса блока («Осталось потратить») уезжает под верхнюю часть блока, следом под блок
   // заезжает строка разделов; всё идёт ровно за пальцем (1:1 с прокруткой), место под содержимое растёт. Высоты не меняются (страница не прыгает):
   // блок подрезается по фигуре со скруглёнными нижними углами, полоса и строка сдвигаются и гаснут. Наверху — всё на местах.
+  let cT=0,cC=NaN,cA=0,cL=0;
   let cS=-1,cB=-1,cR=0,cAp=false;   // v226: cAp — стили сворачивания стоят на элементах (кэш cS/cB сбрасывается перерисовкой, по нему снимать нельзя)
   function colClear(){const bl=topEl.querySelector('.bln'),sb=sbwEl();topEl.style.clipPath='';if(bl){bl.style.transform='';bl.style.opacity=''}
-    if(sb){sb.style.transform='';sb.style.clipPath='';sb.style.opacity='';sb.style.pointerEvents=''}cS=cB=-1;cAp=false}
-  function colApply(y){const bl=topEl.querySelector('.bln'),sb=sbwEl(),hS=bl&&bl.offsetHeight?bl.offsetHeight+12:0,hB=sb?sb.offsetHeight:0;
-    const c=Math.max(0,Math.min(y,hS+hB)),pS=Math.round(Math.min(c,hS)*2)/2,pB=Math.round(Math.max(0,c-hS)*2)/2;
+    if(sb){sb.style.transform='';sb.style.clipPath='';sb.style.opacity='';sb.style.pointerEvents=''}cS=cB=-1;cAp=false;cC=NaN;if(cA){cancelAnimationFrame(cA);cA=0}}
+  // v229: заезд не привязан к прокрутке 1:1 — положение блока и строк догоняет прокрутку с мягкой инерцией (экспоненциальное сглаживание, τ≈95 мс):
+  // рывки прокрутки и шаги в полпикселя не доходят до глаз; при первом показе страницы встаёт сразу, без «доезда»
+  function colApply(y){cT=y;if(isNaN(cC)){cC=y;colRaw(y);return}if(!cA){cL=performance.now();cA=requestAnimationFrame(colLoop)}}
+  function colLoop(n){cA=0;const dt=Math.min(64,Math.max(1,n-cL));cL=n;const k=1-Math.exp(-dt/95);cC+=(cT-cC)*k;
+    if(Math.abs(cT-cC)<.12){cC=cT;colRaw(cC);return}colRaw(cC);cA=requestAnimationFrame(colLoop)}
+  function colRaw(y){const bl=topEl.querySelector('.bln'),sb=sbwEl(),hS=bl&&bl.offsetHeight?bl.offsetHeight+12:0,hB=sb?sb.offsetHeight:0;
+    const c=Math.max(0,Math.min(y,hS+hB)),pS=Math.round(Math.min(c,hS)*4)/4,pB=Math.round(Math.max(0,c-hS)*4)/4;
     if(pS===cS&&pB===cB)return;cS=pS;cB=pB;cAp=pS>0||pB>0;
     if(pS>0){if(!cR)cR=parseFloat(getComputedStyle(topEl).borderBottomLeftRadius)||20;const W=topEl.offsetWidth,Hc=topEl.offsetHeight-pS,r=cR,m=40;
       topEl.style.clipPath=`path('M${-m} ${-m}H${W+m}V${Hc-r}H${W}A${r} ${r} 0 0 1 ${W-r} ${Hc}H${r}A${r} ${r} 0 0 1 0 ${Hc-r}H${-m}Z')`}else topEl.style.clipPath='';
@@ -4362,11 +4368,11 @@ topEl.addEventListener('click',e=>{if(msBlock){e.stopPropagation();e.preventDefa
     const y=pgY(),P_=colPts(),H=P_[P_.length-1];if(!(H>0)||y>=H-.5||y<=.5)return;let a=0,b=H;for(let i=1;i<P_.length;i++)if(y<P_[i]){a=P_[i-1];b=P_[i];break}
     if(y-a<.5||b-y<.5)return;
     // v228: цель — по месту, куда доехала бы прокрутка по инерции (скорость × 140 мс), с учётом направления
-    const v0=Math.abs(vY)<2.5?vY:0,yp=y+v0*140,L=b-a,to=(dirY>0?(yp>a+L*.3?b:a):(yp<a+L*.7?a:b)),max=(document.scrollingElement||document.documentElement).scrollHeight-innerHeight;if(to>max+1)return;
+    const v0=Math.abs(vY)<2.5?vY:0,yp=y+v0*160,L=b-a,to=(dirY>0?(yp>a+L*.3?b:a):(yp<a+L*.7?a:b)),max=(document.scrollingElement||document.documentElement).scrollHeight-innerHeight;if(to>max+1)return;
     // доводка — критически затухающая пружина: подхватывает текущую скорость прокрутки (без остановки и рывка), подходит к цели без перелёта
-    const w=2*Math.PI/.62,C1=y-to,C2=v0*1000+w*C1,t0=performance.now();snOn=true;
+    const w=2*Math.PI/.95,C1=y-to,C2=v0*1000+w*C1,t0=performance.now();snOn=true;
     const st=n=>{const t=(n-t0)/1000,e=Math.exp(-w*t),x=to+(C1+C2*t)*e,v=(C2-w*(C1+C2*t))*e;
-      if(!snOn)return;if((Math.abs(x-to)<.35&&Math.abs(v)<12)||t>1.4){pgTo(to);snA=0;snOn=false;return}pgTo(Math.round(x*2)/2);snA=requestAnimationFrame(st)};snA=requestAnimationFrame(st)}
+      if(!snOn)return;if((Math.abs(x-to)<.35&&Math.abs(v)<12)||t>2.1){pgTo(to);snA=0;snOn=false;return}pgTo(Math.round(x*2)/2);snA=requestAnimationFrame(st)};snA=requestAnimationFrame(st)}
   // скорость прокрутки (px/мс, сглаженная); пока палец не касается и инерция уже почти погасла внутри зоны сворачивания — доводка стартует сразу,
   // подхватывая скорость (без паузы «остановилось — поехало»); иначе — через 120 мс тишины
   let vY=0,lt_=0,tEnd=0;
