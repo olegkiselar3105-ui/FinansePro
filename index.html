@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v233';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v234';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -3868,6 +3868,11 @@ function subIn(dir){if(RM||!bodyEl.animate)return;try{if(softA)softA.cancel()}ca
   const f=sprK(.8,.52),D=660,N=36,X=dir*44,fr=[];for(let i=0;i<=N;i++){const t=i/N,k=i===N?1:f(t*D/1000),op=1-Math.pow(1-Math.min(1,t/.32),2);
     fr.push({transform:i===N?'none':`translate3d(${(X*(1-k)).toFixed(2)}px,0,0)`,opacity:+op.toFixed(3)})}
   const a=bodyEl.animate(fr,{duration:D,easing:'linear'});softA=a;a.onfinish=a.oncancel=()=>{if(softA===a)softA=null}}
+// v234: переход на «Настройки» и обратно — страница мягко проявляется с небольшим подъёмом (было: появлялась сразу на 55% яркости
+// и за 0,2 с дотягивалась — выглядело как мигание)
+function tabIn(){if(RM||!bodyEl.animate)return;try{if(softA)softA.cancel()}catch{}
+  const a=bodyEl.animate([{opacity:0,transform:'translate3d(0,10px,0)'},{opacity:1,transform:'none'}],{duration:380,easing:'cubic-bezier(.22,1,.36,1)'});
+  softA=a;a.onfinish=a.oncancel=()=>{if(softA===a)softA=null}}
 function softIn(strong){if(RM||!bodyEl.animate)return;try{if(softA)softA.cancel()}catch{}
   const a=bodyEl.animate(strong?[{opacity:0,transform:'translate3d(0,10px,0)'},{opacity:1,transform:'none'}]:[{opacity:.55},{opacity:1}],{duration:strong?300:200,easing:'cubic-bezier(.16,1,.3,1)'});
   softA=a;a.onfinish=a.oncancel=()=>{if(softA===a)softA=null}}
@@ -3885,7 +3890,7 @@ function slideTo(t){document.documentElement.classList.remove('intro');   // v51
   if(tab==='list'){flk=null;fcat=null;ftag=null;fday=null}
   tab=t;const ind=tabInd();if(ind)ind.style.transition='';moveInd();$('#ttl').textContent=ttlOf(t);
   if(clamp){
-    setLt0(t);render();pgApply();softIn(false);return}   // v163: «Настройки» открываются сразу, с коротким проявлением (было: старая страница 0,25 с гасла, новая 0,5 с проявлялась)
+    setLt0(t);render();pgApply();tabIn();return}   // v163: «Настройки» открываются сразу, с коротким проявлением (было: старая страница 0,25 с гасла, новая 0,5 с проявлялась)
   // между «Операциями», «Аналитикой» и «Планами» страница меняется сразу, без сдвига; анимируются только заголовок и нижняя плашка
   setLt0(t);ltPop(s);render();pgApply()}
 function snapBack(){
@@ -4211,30 +4216,14 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
     const n=performance.now();if(n-wt>400)wa=0;wt=n;wa-=e.deltaY;if(wa>110){wa=0;setSearch(true)}},{passive:true});
   // ---- отскок на инерции: бросок доехал до края — страница чуть выходит за край и пружиной возвращается ----
   // Работает на всех вкладках (прокручивается всё окно). Касание пальцем, программные прокрутки (смена вкладки, scrollTo) и открытые окна не отскакивают.
-  const RMq=matchMedia('(prefers-reduced-motion:reduce)');let wcT=0,touching=false,lastTE=0,lastWh=0,py=pgY(),pt=performance.now(),pv=0,run=0,pvf=0;
+  let touching=false,py=pgY(),pt=performance.now(),pv=0;
   document.addEventListener('touchstart',()=>{touching=true},{passive:true,capture:true});
-  const te=()=>{touching=false;lastTE=Date.now()};
+  const te=()=>{touching=false};
   document.addEventListener('touchend',te,{passive:true,capture:true});document.addEventListener('touchcancel',te,{passive:true,capture:true});
-  addEventListener('wheel',()=>{lastWh=Date.now()},{passive:true,capture:true});
-  addEventListener('scroll',()=>{
-    const y=pgY(),now=performance.now(),dt=Math.max(1,now-pt);
-    const v=(y-py)/dt*1000;if(dt>100){pv=0;run=0}pv=lpf(pv,v,dt,24);run=dt<64&&Math.abs(v)>120?run+1:0;
-    const prev=py,pt0=pt;py=y;pt=now;
-    {const mxf=Math.max(0,document.documentElement.scrollHeight-innerHeight);if(dt>100)pvf=0;if(y>0&&y<mxf-1)pvf=v}   // v194: скорость последнего полного шага (шаг, упёршийся в край, короче и занижает скорость)
-    // перф: перед краем заранее выносим страницу в отдельный слой — иначе в момент удара о край слой создаётся посреди анимации и кадр «залипает»
-    if(!touching&&!OS.raf&&Math.abs(pv)>600){const mx0=document.documentElement.scrollHeight-innerHeight;
-      if(mx0>0&&(y<700||y>mx0-700)){0;clearTimeout(wcT);wcT=setTimeout(()=>{if(!OS.raf&&!OS.y&&!OS.drag&&!MM.raf)0},900)}}
-    if(touching||OS.drag||isModalOpen())return;const maxY=Math.max(0,document.documentElement.scrollHeight-innerHeight);if(maxY<=0||y<0||y>maxY)return;
-    if(Date.now()-lastTE>3000&&Date.now()-lastWh>250)return;      // не после касания/колеса — значит прокрутка программная
-    if(run<3)return;                                              // резкий прыжок (смена вкладки) — не инерция
-    if(RMq.matches)return;
-    const hitTop=prev>0&&y<=0&&pv<-250,hitBot=prev<maxY-1&&y>=maxY-1&&pv>250;
-    if(!hitTop&&!hitBot)return;
-    if(MM.raf||performance.now()<MM.skip)return;                  // v49: край в ручной инерции обрабатывает она сама
-    const vf=Math.max(Math.abs(pv),Math.sign(pvf)===Math.sign(pv)?Math.abs(pvf):0),v0=Math.min(4200,vf);if(v0<260)return;         // v49: выход за край = скорость/(ω·e): 3000 px/с ≈ 90 px, как на видео
-    // v194: событие прокрутки приходит уже после удара о край (на кадр позже) — пружину запускаем с прошедшим временем: момент удара — по доле последнего шага
-    const step=Math.abs(y-prev),full=vf*(now-pt0)/1000,tHit=pt0+(now-pt0)*(full>0?Math.min(1,step/full):1);
-    stop();OS.k=121;OS.y=0;OS.v=hitTop?v0:-v0;spring(Math.max(8,Math.min(50,now-tHit)))},{passive:true});
+  // v234: отскок у края после броска (инерция iOS) убран: инерцию ведёт сам телефон, она доезжает до края и останавливается, а событие об ударе
+  // приходит кадром позже — отскок запускался отдельно, после остановки, с микрофризом. Остались растяжение пальцем у края и его пружина.
+  // Здесь только скорость прокрутки — по ней касание во время движения не нажимает строку
+  addEventListener('scroll',()=>{const y=pgY(),now=performance.now(),dt=Math.max(1,now-pt),v=(y-py)/dt*1000;if(dt>100)pv=0;pv=lpf(pv,v,dt,24);py=y;pt=now},{passive:true});
   // v49: касание во время движения (пружина, инерция) только ловит список — строка при этом не нажимается
   let guard=false,gT=0;
   const moving=()=>!!(OS.raf||OS.y||MM.raf||(!touching&&performance.now()-pt<110&&Math.abs(pv)>180));
