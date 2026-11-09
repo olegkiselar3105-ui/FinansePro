@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v246';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v247';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -1613,8 +1613,7 @@ html.stk #sbw{position:sticky;top:var(--stk2,calc(var(--sat) + 8px + var(--toph,
 #stkbg.on{opacity:1;visibility:visible;transition:opacity .22s ease,visibility 0s}
 html:not(.stk) #stkbg{display:none}
 #stkbg{height:var(--stkh,0px)}
-/* v246: смена вкладки — страница сразу готова: диаграммы и графики без анимаций появления (прорисовки, проявления, масштаба) */
-html.tsw :is(.tl,.pmk){animation:none!important;stroke-dashoffset:0!important}html.tsw :is(.ta,.pgl){animation:none!important;opacity:1!important}html.tsw .pgs{animation:none!important}
+
 /* v239: нижняя панель — только значки (33 px), компактная, по центру, ниже к краю экрана; стекло прозрачнее — как панель Safari (видео пользователя).
    При прокрутке вниз сжимается в капсулу со значком текущей вкладки, вверх (и наверху/внизу страницы) — разворачивается (код — tbCompact) */
 html:root body #tabs{left:0!important;right:0!important;width:max-content!important;margin:0 auto!important;gap:0!important;padding:4px!important;bottom:calc(var(--sab,0px)*.3 + 8px)!important;
@@ -2871,7 +2870,7 @@ function trendHtml(peek){
   const agg={};tx.forEach(t=>{const m=mOf(t.date),a=agg[m]||(agg[m]={i:0,x:0});if(t.type==='income')a.i+=t.amount;else a.x+=t.amount});
   const I=ms.map(m=>(agg[m]||{}).i||0),X=ms.map(m=>(agg[m]||{}).x||0),top=niceTop(Math.max(1,...I,...X));
   const W=360,H=210,l=36,r=12,t=14,b=28,pw=W-l-r,ph=H-t-b,n=ms.length,cw=pw/n,px=i=>l+pw*i/(n-1),py=v=>t+ph*(1-v/top);
-  const sel=TSEL&&ms.includes(TSEL)?TSEL:month,si=ms.indexOf(sel),key=TN+'|'+month,an=!peek&&key!==trK;if(!peek)trK=key;
+  const sel=TSEL&&ms.includes(TSEL)?TSEL:month,si=ms.indexOf(sel),key=TN+'|'+month,an=!peek&&!_trSeen.has(key);if(!peek){trK=key;_trSeen.add(key)}   // v247: график — один раз на месяц (как круговая и календарь)
   const lc=an?' class="tl"':'',ac=an?' class="ta"':'',pI=I.map((v,i)=>[px(i),py(v)]),pX=X.map((v,i)=>[px(i),py(v)]);
   let s=`<svg class="tch" viewBox="0 0 ${W} ${H}" role="img" aria-label="Доходы и расходы по месяцам"><defs><linearGradient id="tgx" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--rd)" stop-opacity=".30"/><stop offset="1" stop-color="var(--rd)" stop-opacity="0"/></linearGradient><linearGradient id="tgi" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--g)" stop-opacity=".22"/><stop offset="1" stop-color="var(--g)" stop-opacity="0"/></linearGradient></defs>`;
   [0,.5,1].forEach(f=>{const y=py(top*f).toFixed(1);s+=`<line x1="${l}" x2="${W-r}" y1="${y}" y2="${y}" stroke="var(--l)" stroke-width=".7"/><text x="${l-6}" y="${(+y+3).toFixed(1)}" text-anchor="end" font-size="9" fill="var(--m)">${kfmt(top*f)}</text>`});
@@ -2901,6 +2900,7 @@ function monthSum(m){const st=monthStats(m);if(!st.ex.length&&!st.I)return'';
    ['📅','Самый дорогой день',st.hv?fmt(Math.round(st.hv))+C:'—',st.hd?dLbl(pDates(st.m)[st.hd-1]):'',null],
    ['🌿','Дни без трат',st.zero+' из '+st.el,st.streak>1?'серия до '+dayWord(st.streak)+' подряд':'',st.zero>0?'var(--g)':null],
    ['📊','В среднем в день',fmt(Math.round(st.X/Math.max(1,st.el)))+C,'за '+dayWord(st.el),null]])}
+const _trSeen=new Set();
 let _calK='',_calT=0;const _calSeen=new Set();
 // анимация календаря: один раз при первом заходе в каждый месяц; не во время свайпа (там страница-превью), а после остановки;
 // перерисовка посреди анимации продолжает её, а не запускает заново; при повторных заходах в месяц анимации нет
@@ -3917,7 +3917,7 @@ function settleAll(){if(softA){try{softA.cancel()}catch{}softA=null}settleFlight
 function pgSettle(){
   if(tpRaf){cancelAnimationFrame(tpRaf);tpRaf=0}
   if(tp&&tp.on){tp=null;bodyEl.style.transform='';bodyEl.style.willChange='';const i=tabInd();if(i)i.style.transition='';moveInd();sbSync(false)}}
-function slideTo(t){document.documentElement.classList.remove('intro');{const R_=document.documentElement;R_.classList.add('tsw');clearTimeout(window.__tswT);window.__tswT=setTimeout(()=>R_.classList.remove('tsw'),900)}   // v246: 0,9 с после смены вкладки — без анимаций появления диаграмм   // v51: смена вкладки во время заставки — без повторного «появления» (оно и давало мерцание)
+function slideTo(t){document.documentElement.classList.remove('intro');   // v51: смена вкладки во время заставки — без повторного «появления» (оно и давало мерцание)
   pgSave();
 
   const s=TABS.indexOf(t)>TABS.indexOf(tab)?1:-1;
