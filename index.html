@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v242';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v243';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -3331,7 +3331,7 @@ function swapAnim(dir,fn,els,from,op,soft){els=els.filter(Boolean);settleAll();
     const inn=els.map(e=>e.animate([{transform:T(dir*iX),opacity:0},{transform:'translate3d(0,0,0)',opacity:1}],{duration:iD,easing:iE,fill:'backwards'}));
     out.forEach(x=>x.cancel());f.anims=inn;
     inn[0].onfinish=()=>{if(flight===f){flight=null;f.hide=false;els.forEach(e=>{e.style.opacity=''});wc(els,false)}}}}
-function setTab(t){settleAll();
+function setTab(t){settleAll();scrKill();
   // повторное нажатие на открытую вкладку возвращает наверх — но не во время/сразу после прокрутки: палец, которым гасят инерцию у нижней панели, не должен кидать список в начало
   if(t===tab){let sc=0;try{sc=_scT}catch{}if(Date.now()-sc<900)return;window.scrollTo({top:0,behavior:'smooth'});return}
   slideTo(t)}
@@ -3874,11 +3874,19 @@ function pgKey(t,sub){t=t||tab;
   if(t==='tags')return 'tags:'+(sub||ps);
   if(t==='list')return 'list'+(flk?'~'+flk.id:'')+(ftag?'#'+ftag:'')+(fcat?'|'+fcat.id:'')+(fday?'@'+fday:'');
   return t}
-function pgSave(){if(pgCur==null)pgCur=pgKey();PGY[pgCur]=Math.max(0,pgY());pgFresh=true}
+function pgSave(){if(pgCur==null)pgCur=pgKey();PGY[pgCur]=Math.max(0,pgY());pgFresh=true;
+  try{if(window.tbState)TBS[pgCur]=tbState()}catch(e){}try{sessionStorage.setItem('finapp.pgy',JSON.stringify(PGY))}catch(e){}}
+// v243: позиция каждой страницы переживает перезагрузку в той же сессии; состояние нижней панели (свёрнута/развёрнута) — своё у каждой страницы
+const TBS={};try{Object.assign(PGY,JSON.parse(sessionStorage.getItem('finapp.pgy')||'{}'))}catch(e){}
+// погасить инерцию прокрутки: на миг сделать страницу непрокручиваемой — WebKit/Chrome сразу останавливают бросок (и родной, и «доезд»)
+function scrKill(){try{if(window.__scrStop)window.__scrStop()}catch(e){}const de=document.documentElement;if(de.classList.contains('wlk'))return;
+  const o=de.style.overflow,ob=document.body.style.overflow;de.style.overflow='hidden';document.body.style.overflow='hidden';void de.offsetHeight;de.style.overflow=o;document.body.style.overflow=ob}
 // v191: прокрутка каждой страницы своя. После смены страницы её позиция удерживается ~0,45 с, пока нет касания:
 // инерция прокрутки прошлой страницы (или колесо мыши) не утащит новую
 let pgG=null;
-function pgApply(){window.scrollTo(0,PGY[pgKey()]||0);pgG={y:pgY(),until:Date.now()+450}}
+function pgApply(){const k=pgKey();scrKill();window.__pgJump=performance.now();window.scrollTo(0,PGY[k]||0);
+  pgG={y:pgY(),until:Date.now()+1200};   // v243: удержание до 1,2 с (касание или колесо снимают его сразу)
+  try{if(window.tbSet)tbSet(!!TBS[k]&&pgY()>12)}catch(e){}}
 addEventListener('scroll',()=>{const g=pgG;if(!g)return;if(Date.now()>g.until){pgG=null;return}if(Math.abs(pgY()-g.y)>1)window.scrollTo(0,g.y)},{passive:true});
 ['touchstart','wheel','keydown'].forEach(ev=>addEventListener(ev,()=>{pgG=null},{passive:true,capture:true}));
 let softA=null;
@@ -4159,6 +4167,7 @@ var OS={y:0,v:0,raf:0,last:0,drag:0,k:0};
     if(Math.abs(MM.v)<24){momStop();return}
     MM.raf=requestAnimationFrame(momTick)}
   function momStart(v){momStop();MM.p=pgY();MM.v=Math.max(-8000,Math.min(8000,v));MM.last=performance.now();MM.raf=requestAnimationFrame(momTick)}
+  window.__scrStop=()=>{momStop();if(OS.wa||OS.raf||OS.y)rest()};   // v243: смена вкладки/раздела — своя инерция и пружина у края останавливаются
   function toScroll(t){const sy=pgY();OS.y=0;OS.v=0;paint(0);
     g.mode='scroll';g.on=true;g.p0=sy;g.base=t.clientY;g.lp=sy;g.vp=0;g.vy=0;g.ly=0;g.lt=performance.now()}
   let g=null,lastSc=0;
@@ -7338,7 +7347,7 @@ window.openTips=function(){
   const at=(g,p)=>({clip:`inset(${(g.sy*p).toFixed(2)}px ${(g.sx*p).toFixed(2)}px ${(g.sy*p).toFixed(2)}px ${(g.sx*p).toFixed(2)}px round 999px)`,
     tbT:`translate3d(0,${(g.dy*p).toFixed(2)}px,0)`,actT:`translate3d(${(g.dx*p).toFixed(2)}px,0,0) scale(${(1-.12*p).toFixed(4)})`,
     oth:Math.max(0,1-p*2.2).toFixed(3),othT:`scale(${(1-.3*Math.min(1,p*1.6)).toFixed(4)})`,ind:Math.max(0,1-p*1.8).toFixed(3)});
-  function play(to){stopAll();const g=geo(),pts=to?CP:EP,D=RMq.matches?1:(to?CD:ED),P=q=>to?q:1-q;
+  function play(to,dur){stopAll();const g=geo(),pts=to?CP:EP,D=dur||(RMq.matches?1:(to?CD:ED)),P=q=>to?q:1-q;
     const F=pts.map(([o,q])=>[o,at(g,P(q))]),opt={duration:D,easing:'linear',fill:'forwards'};
     run.push(tb.animate(F.map(([o,v])=>({offset:o,clipPath:v.clip,transform:v.tbT})),opt));
     tb.querySelectorAll('[data-t]').forEach(b=>{if(b===g.act)run.push(b.animate(F.map(([o,v])=>({offset:o,transform:v.actT})),opt));
@@ -7347,9 +7356,11 @@ window.openTips=function(){
     if(!to){const last=run.slice();last[0].onfinish=()=>{if(!small&&run[0]===last[0])stopAll()}}}
   function collapse(){if(small)return;small=true;tb.classList.add('tbs');play(true)}
   function expand(){if(!small)return;small=false;tb.classList.remove('tbs');play(false)}
-  window.tbExpand=expand;
+  window.tbExpand=expand;window.tbState=()=>small;
+  // v243: при входе на страницу — её собственное состояние панели, сразу, без анимации; прыжок прокрутки при смене страницы не считается листанием
+  window.tbSet=v=>{v=!!v;ly=pgY();acc=0;if(v===small)return;small=v;tb.classList.toggle('tbs',v);if(v)play(true,1);else stopAll()};
   let ly=pgY(),acc=0;
-  addEventListener('scroll',()=>{const y=pgY(),d=y-ly;ly=y;if(!d)return;let mo=false;try{mo=isModalOpen()}catch(e){}if(mo)return;
+  addEventListener('scroll',()=>{const y=pgY(),d=y-ly;ly=y;if(!d)return;if(performance.now()-(window.__pgJump||0)<250){acc=0;return}let mo=false;try{mo=isModalOpen()}catch(e){}if(mo)return;
     const max=Math.max(0,document.documentElement.scrollHeight-innerHeight);
     if(y<=12){acc=0;expand();return}   // v240: наверху — развёрнута; в самом низу остаётся как есть (упёрлись — не разворачивается)
     if(y>=max-4&&d<0)return;           // отскок от низа — не считается прокруткой вверх
