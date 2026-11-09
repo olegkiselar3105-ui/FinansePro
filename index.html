@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v230';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v231';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -1607,16 +1607,15 @@ html.stk #lt0{position:sticky;top:var(--stk0,0px);z-index:8}
 html.stk #topact{position:fixed;z-index:9}
 html.stk #top{position:sticky;top:var(--stk1,calc(var(--sat) + 8px))}
 html.stk #sbw{position:sticky;top:var(--stk2,calc(var(--sat) + 8px + var(--toph,0px)));z-index:8}
-#stkbg{position:fixed;left:0;right:0;top:0;height:var(--stkh,0px);z-index:7;pointer-events:none;background:rgba(var(--bgr),.62);
-  -webkit-backdrop-filter:blur(16px) saturate(1.5);backdrop-filter:blur(16px) saturate(1.5);
+#stkbg{position:fixed;left:0;right:0;top:0;height:var(--stkh,0px);z-index:7;pointer-events:none;background:rgb(var(--bgr));   /* v231: сплошной фон без размытия — дешевле и без второго оттенка */
   -webkit-mask-image:linear-gradient(#000 calc(100% - 50px),rgba(0,0,0,.6) calc(100% - 26px),rgba(0,0,0,.18) calc(100% - 10px),transparent);mask-image:linear-gradient(#000 calc(100% - 50px),rgba(0,0,0,.6) calc(100% - 26px),rgba(0,0,0,.18) calc(100% - 10px),transparent);   /* v226: стык блока и содержимого — длинная мягкая растушёвка */
   opacity:0;visibility:hidden;transition:opacity .22s ease,visibility 0s .22s}
 #stkbg.on{opacity:1;visibility:visible;transition:opacity .22s ease,visibility 0s}
 html:not(.stk) #stkbg{display:none}
 #stkbg{height:var(--stkh,0px)}
-/* v230: подложка с тенью под свёрнутым блоком: «прилипает» на том же месте, что и блок, высоту ведёт анимация сворачивания (#colkf) */
-#colsw{display:none;position:sticky;height:0;z-index:8;pointer-events:none}html.colon #colsw{display:block}
-#colsh{position:absolute;display:block;background:none;pointer-events:none}
+/* v231: главный блок — один сплошной цвет, без тени и без просвечивания; в «Аналитике»/«Планах» он поверх строки разделов — она заезжает под него */
+html:root #top{background:color-mix(in srgb,var(--tp1) 58%,var(--bg));box-shadow:none}
+html.stk #top{z-index:9}
 /* v165: окно «Что нового» */
 #bq .wnh{font-size:22px;font-weight:700;letter-spacing:-.01em;margin:2px 2px 12px}
 #bq .wnl{display:flex;flex-direction:column;gap:12px;max-height:min(62vh,520px);overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;margin:0 -2px;padding:0 2px 4px}
@@ -1702,7 +1701,7 @@ html:root #gd .hops{display:flex;align-items:center;justify-content:center;gap:4
 html:root #gd .hops:active{opacity:.6}
 /* v201: постоянно видимые размытые панели — без дополнительного фильтра насыщенности и не сильнее 16 px: на iPhone размытие считается заново каждый кадр прокрутки */
 html:root #nb .nbg{-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
-html:root #stkbg{-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+
 html:root #totop{-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
 html:root #bq label.ef{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:50px;margin:0;border-bottom:1px solid var(--sep);font-size:15px;color:var(--m2)}
 html:root #bq label.ef input{flex:1;min-width:0;width:auto;text-align:right;font-size:16px!important;color:var(--t);background:none;border:0;padding:10px 0;outline:0;-webkit-appearance:none;appearance:none}
@@ -4318,39 +4317,30 @@ topEl.addEventListener('click',e=>{if(msBlock){e.stopPropagation();e.preventDefa
 // заезжает строка разделов (сужаясь до прямого участка его нижнего края). Движение ведёт сам браузер: CSS-анимации, привязанные к прокрутке
 // (animation-timeline: scroll()), идут в такт прокрутке без кода на каждом кадре — поэтому не отстают и не дёргаются. Где такой поддержки нет —
 // те же анимации стоят на паузе, кадр выбирает прокрутка (одна переменная на четырёх элементах, без замеров). Пиксельные значения пишутся
-// в стиль #colkf только при пересчёте мест шапки. Тень: у блока остаётся внутренняя подсветка края, внешняя — на подложке #colsh под блоком,
-// она укорачивается вместе с ним (подрезка срезала бы собственную тень блока). Доводка — встроенная плавная прокрутка, только после полной остановки.
+// в стиль #colkf только при пересчёте мест шапки. Доводка — встроенная плавная прокрутка, только после полной остановки.
+// v231: блок сплошной, без тени; строка разделов — под ним (z-index), поэтому ни подложки с тенью, ни подрезки строки не нужно.
 (function(){const R=document.documentElement,bg=document.createElement('div');bg.id='stkbg';document.body.appendChild(bg);let raf=0,dirty=true;
   const SD=!!(window.CSS&&CSS.supports&&CSS.supports('animation-timeline','scroll()'))&&!window.__colNoSD;
   const ks=document.createElement('style');ks.id='colkf';document.head.appendChild(ks);
-  const sw=document.createElement('div');sw.id='colsw';sw.setAttribute('aria-hidden','true');sw.innerHTML='<i id="colsh"></i>';topEl.parentNode.insertBefore(sw,topEl);
-  const sh=sw.firstChild;
-  // тень блока делим на внешнюю (на подложку) и внутреннюю (подсветка края — на блоке); берётся заново при смене темы
-  let shO='',shI='';const shRead=()=>{const was=topEl.style.boxShadow;topEl.style.boxShadow='';const v=getComputedStyle(topEl).boxShadow;topEl.style.boxShadow=was;shO='';shI='none';
-    if(v&&v!=='none'){const p=[];let d=0,b='';for(const ch of v){if(ch==='(')d++;if(ch===')')d--;if(ch===','&&!d){p.push(b.trim());b=''}else b+=ch}if(b.trim())p.push(b.trim());
-      shO=p.filter(x=>!/\binset\b/.test(x)).join(', ');shI=p.filter(x=>/\binset\b/.test(x)).join(', ')||'none'}
-    sh.style.boxShadow=shO||'none';if(R.classList.contains('colon'))topEl.style.boxShadow=shI};
-  try{new MutationObserver(shRead).observe(R,{attributes:true,attributeFilter:['data-theme']})}catch(e){}
   let colR=0,colS=0,colCss='',colY=-1;
   // --- кадр для запасного варианта: переменная --coly на элементах (не на корне — иначе пересчёт стилей всей страницы) ---
   function colSet(y){const v=Math.round(Math.max(0,Math.min(y,colR))*4)/4;if(v===colY)return;colY=v;const s=String(v);
-    [topEl,sw,sbwEl(),bg].forEach(e=>{if(e)e.style.setProperty('--coly',s)})}
+    [topEl,sbwEl(),bg].forEach(e=>{if(e)e.style.setProperty('--coly',s)})}
   // --- ключевые кадры по замерам; o: hS — полоса, hB — строка разделов, H — высота блока, g — зазор блок/строка, r — скругление ---
   function colBuild(o){const hS=Math.max(0,Math.round(o.hS)),hB=Math.max(0,Math.round(o.hB)),RR=hS+hB;
     if(RR<8){colR=colS=0;if(colCss){colCss='';ks.textContent=''}return}
-    const pc=v=>(Math.max(0,Math.min(1,v))*100).toFixed(3)+'%',s=hS/RR,g=Math.max(0,o.g||0),r=o.r,H=o.H,ins=r+3,sx=o.sbW?Math.max(.5,1-2*ins/o.sbW):1;
+    const pc=v=>(Math.max(0,Math.min(1,v))*100).toFixed(3)+'%',s=hS/RR,r=o.r,ins=r+3,sx=o.sbW?Math.max(.5,1-2*ins/o.sbW):1;
     const A=n=>SD?`animation:${n} linear both;animation-timeline:scroll(root block);animation-range:0px ${RR}px;`
       :`animation:${n} ${RR}ms linear both paused;animation-delay:calc(var(--coly,0) * -1ms);`;
-    let c=`#colsw{top:var(--stk1,0px)}#colsh{top:${o.tt}px;left:${o.tl}px;width:${o.W}px;height:${H}px;border-radius:${r}px}\n`;
+    let c='';
     if(hS){const so=s;
       c+=`@keyframes colTop{0%{clip-path:inset(0px 0px 0px 0px round ${r}px)}${pc(so)},100%{clip-path:inset(0px 0px ${hS}px 0px round ${r}px)}}\n`;
-      c+=`@keyframes colSh{0%{height:${H}px}${pc(so)},100%{height:${H-hS}px}}\n`;
       c+=`@keyframes colBl{0%{transform:translate3d(0,0,0);opacity:1}${pc(so*.45)}{opacity:.62}${pc(so*.72)}{opacity:.14}${pc(so*.86)}{opacity:0}${pc(so)},100%{transform:translate3d(0,${-(hS*.35).toFixed(1)}px,0);opacity:0}}\n`;
-      c+=`html.colon #top{${A('colTop')}}html.colon #colsh{${A('colSh')}}html.colon #sum .bln{${A('colBl')}}\n`}
-    if(hB){const at=f=>s+(1-s)*f,ty=f=>-(hS+hB*f),cl=f=>Math.max(0,hB*f-g),sc=f=>1-(1-sx)*Math.min(1,f/.6);
+      c+=`html.colon #top{${A('colTop')}}html.colon #sum .bln{${A('colBl')}}\n`}
+    if(hB){const at=f=>s+(1-s)*f,ty=f=>-(hS+hB*f),sc=f=>1-(1-sx)*Math.min(1,f/.6);   // строка под блоком (z-index), сплошной блок её закрывает — подрезка не нужна
       const fr=[0,.25,.45,.6,.8,1],op=[1,.9,.62,.38,.12,0];
-      c+=`@keyframes colSb{0%{transform:translate3d(0,0,0) scaleX(1);clip-path:inset(0px 0px 0px 0px);opacity:1}`+
-        fr.map((f,i)=>`${pc(at(f))}{transform:translate3d(0,${ty(f).toFixed(2)}px,0) scaleX(${sc(f).toFixed(4)});clip-path:inset(${cl(f).toFixed(2)}px 0px 0px 0px);opacity:${op[i]}}`).join('')+`}\n`;
+      c+=`@keyframes colSb{0%{transform:translate3d(0,0,0) scaleX(1);opacity:1}`+
+        fr.map((f,i)=>`${pc(at(f))}{transform:translate3d(0,${ty(f).toFixed(2)}px,0) scaleX(${sc(f).toFixed(4)});opacity:${op[i]}}`).join('')+`}\n`;
       c+=`html.colon #sbw{${A('colSb')}}\n`}
     c+=`@keyframes colBg{0%{height:${o.base}px}100%{height:${o.base-RR}px}}html.colon #stkbg{${A('colBg')}}\n`;
     colR=RR;colS=hS;if(c!==colCss){colCss=c;ks.textContent=c}if(!SD){colY=-1;colSet(pgY())}}
@@ -4365,7 +4355,7 @@ topEl.addEventListener('click',e=>{if(msBlock){e.stopPropagation();e.preventDefa
   addEventListener('touchstart',()=>{tch=true;clearTimeout(snT)},{passive:true,capture:true});
   addEventListener('touchend',()=>{tch=false;clearTimeout(snT);snT=setTimeout(snapGo,220)},{passive:true,capture:true});
   addEventListener('touchcancel',()=>{tch=false},{passive:true,capture:true});
-  function colOn(on){if(on===R.classList.contains('colon'))return;R.classList.toggle('colon',on);if(on){if(!shO)shRead();topEl.style.boxShadow=shI;if(!SD){colY=-1;colSet(pgY())}}else topEl.style.boxShadow=''}
+  function colOn(on){if(on===R.classList.contains('colon'))return;R.classList.toggle('colon',on);if(on&&!SD){colY=-1;colSet(pgY())}}
   // v157: места шапки без прокрутки: на миг снимаем закрепление и меряем (в одном кадре, на экране не видно)
   // v178: меряем заново, только если изменилось то, от чего зависят места; v230: свои анимации сворачивания (col…) замеру не мешают
   let mk='',hard=true;const s0=[null,null,null];
@@ -4376,8 +4366,7 @@ topEl.addEventListener('click',e=>{if(msBlock){e.stopPropagation();e.preventDefa
   function meas(){const y=pgY(),lt=document.getElementById('lt0'),sb=sbwEl(),was=R.classList.contains('colon');R.classList.remove('stk','colon');
     const at=e=>e&&e.offsetHeight?Math.round(e.getBoundingClientRect().top+y):null,a=at(lt),b=at(topEl),c=at(sb);
     const bl=topEl.querySelector('.bln'),cs=getComputedStyle(topEl),H=topEl.offsetHeight,hB=sb&&sb.offsetHeight?sb.offsetHeight:0;
-    const o={hS:bl&&bl.offsetHeight?bl.offsetHeight+(parseFloat(getComputedStyle(bl).marginTop)||0):0,hB,H,g:(c!=null&&b!=null)?c-(b+H):0,r:parseFloat(cs.borderBottomLeftRadius)||20,
-      tt:parseFloat(cs.marginTop)||0,tl:parseFloat(cs.marginLeft)||0,W:topEl.offsetWidth,sbW:sb?sb.offsetWidth:0,base:Math.round(Math.max((b||0)+H,(c||0)+hB)+30)};
+    const o={hS:bl&&bl.offsetHeight?bl.offsetHeight+(parseFloat(getComputedStyle(bl).marginTop)||0):0,hB,r:parseFloat(cs.borderBottomLeftRadius)||20,sbW:sb?sb.offsetWidth:0,base:Math.round(Math.max((b||0)+H,(c||0)+hB)+30)};
     R.classList.add('stk');if(was)R.classList.add('colon');
     [a,b,c].forEach((v,i)=>{if(v!=null&&v!==s0[i]){s0[i]=v;R.style.setProperty('--stk'+i,v+'px')}});colBuild(o);dirty=false}
   // v163: переменные пишутся только при изменении, высота подложки — на самой подложке
