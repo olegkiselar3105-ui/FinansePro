@@ -68,7 +68,10 @@ assert(sm && sm.reply_markup.inline_keyboard[0][0].callback_data === 'st:upd' &&
 await cb(42, 'st:upd'); assert(sent.some(x => x.m === 'editMessageText' && x.message_id === 7 && /Статистика/.test(x.text)) && sent.some(x => x.m === 'answerCallbackQuery'), 'owner refresh edits message');
 await cb(5, 'st:upd'); assert(!sent.some(x => x.m === 'editMessageText') && sent.some(x => x.m === 'answerCallbackQuery'), 'non-owner refresh ignored');
 await cb(42, 'st:new'); assert(sent.some(x => x.m === 'sendMessage' && /Статистика/.test(x.text)), 'details sends full stats');
-sent = []; await W.default.scheduled({ cron: '5 6 * * 1' }, env, ctx); await flush();
+const keepNow = NOW, wsend = async iso => { NOW = Date.parse(iso); sent = []; await W.default.scheduled({ cron: '0 5,6 * * 6' }, env, ctx); await flush(); return sent.some(x => x.m === 'sendMessage'); };
+assert(await wsend('2026-11-14T06:00:00Z') && !(await wsend('2026-11-14T05:00:00Z')), 'weekly: winter — 06:00 UTC sends, 05:00 skips');
+assert(await wsend('2026-04-11T05:00:00Z') && !(await wsend('2026-04-11T06:00:00Z')), 'weekly: summer — 05:00 UTC sends, 06:00 skips');
+await wsend('2026-10-10T05:00:00Z'); NOW = keepNow;   // сб 10.10, летнее время → 08:00 по Кишинёву
 const wk = sent.find(x => x.m === 'sendMessage');
 assert(wk && wk.chat_id === 42 && /Неделя/.test(wk.text) && /Неделя 3 октября — 9 октября/.test(wk.text) && /Людей: <b>1<\/b>/.test(wk.text) && wk.reply_markup.inline_keyboard[0][0].callback_data === 'st:new', 'weekly summary to owner');
 if (process.env.SHOW) console.log(wk.text);

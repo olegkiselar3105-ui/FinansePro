@@ -12,7 +12,7 @@
 
 //   Secret        STATS_SALT       — соль для обезличенной статистики (длинная случайная строка; НЕ менять — иначе все посчитаются новыми). Нет соли — статистика не собирается
 //   Variable      OWNER_ID         — Telegram id владельца: только ему отвечает /stats
-//   Cron trigger  10 0 * * *       — раз в сутки итоги дня и уборка; 5 6 * * 1 — недельная сводка владельцу (оба ставит tools/deployworker.sh)
+//   Cron trigger  10 0 * * *       — раз в сутки итоги дня и уборка; 0 5,6 * * 6 — недельная сводка владельцу в сб 08:00 по Кишинёву (оба ставит tools/deployworker.sh)
 //   D1 database     DB             — (желательно) мгновенная очередь без задержек KV. Таблицы создаются сами. Без неё работает старый режим на KV (с задержкой до ~минуты)
 
 const kv = env => env.INBOX || env.FIN;   // KV-привязка может называться INBOX или FIN
@@ -396,8 +396,10 @@ async function statsText(env, now = Date.now()) {
     (!first || !first.d ? ' Данных пока нет.' : first.d > ago(30, now) ? ` Счёт идёт с ${dm(first.d)}; в первый день все активные посчитаны новыми.` : '') + `</i>`;
 }
 
-// недельная сводка (понедельник утром, cron WEEKLY): прошлая полная неделя пн–вс, коротко; «📊 Подробно» — полный /stats
-const WEEKLY = '5 6 * * 1';   // 06:05 UTC = 08:05 зимой / 09:05 летом по Молдове
+// недельная сводка (суббота 08:00 по времени владельца, cron WEEKLY): последние 7 полных дней (сб–пт), коротко; «📊 Подробно» — полный /stats
+// cron только в UTC: срабатывает в 05:00 и 06:00 UTC, отправка — только когда в OWNER_TZ 8 часов (зимой UTC+2 → 06:00, летом UTC+3 → 05:00)
+const WEEKLY = '0 5,6 * * 6', OWNER_TZ = 'Europe/Chisinau', WEEKLY_HOUR = '08';
+const localHour = (ms, tz) => new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', hourCycle: 'h23' }).format(new Date(ms));
 async function weekText(env, now = Date.now()) {
   await stInit(env);
   const to = ago(1, now), from = ago(7, now), w = await period(env, from, to), w0 = await period(env, ago(14, now), ago(8, now)), r7 = await ret(env, 7, now);
@@ -406,10 +408,10 @@ async function weekText(env, now = Date.now()) {
     `🆕 Новых: <b>${w.n}</b>\n` +
     `💬 Сообщений боту: <b>${w.m}</b>, из них голосом ${w.v}${delta(w.m, w0.m)}\n` +
     `↩️ Вернулись через неделю: ${r7.c ? `<b>${Math.round(100 * r7.r / r7.c)}%</b> — ${r7.r} из ${r7.c}${r7.c < 10 ? ' (людей мало, процент случайный)' : ''}` : 'пока рано'}\n\n` +
-    `<i>Сводка приходит по понедельникам. Подробности и пояснения — кнопка ниже или /stats.</i>`;
+    `<i>Сводка приходит по субботам в 8:00. Подробности и пояснения — кнопка ниже или /stats.</i>`;
 }
-async function sendWeekly(env) {
-  if (!env.DB || !env.STATS_SALT || !env.OWNER_ID || !env.BOT_TOKEN) return;
+async function sendWeekly(env, now = Date.now()) {
+  if (!env.DB || !env.STATS_SALT || !env.OWNER_ID || !env.BOT_TOKEN || localHour(now, OWNER_TZ) !== WEEKLY_HOUR) return;
   await tg(env, 'sendMessage', { chat_id: Number(String(env.OWNER_ID).trim()), text: await weekText(env), parse_mode: 'HTML', reply_markup: WEEK_KB });
 }
 // нажатия кнопок статистики (только владельцу): «Обновить» — переписать это же сообщение, «Подробно» — новое сообщение с полным /stats
