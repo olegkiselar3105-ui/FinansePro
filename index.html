@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v229';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v230';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -1614,10 +1614,9 @@ html.stk #sbw{position:sticky;top:var(--stk2,calc(var(--sat) + 8px + var(--toph,
 #stkbg.on{opacity:1;visibility:visible;transition:opacity .22s ease,visibility 0s}
 html:not(.stk) #stkbg{display:none}
 #stkbg{height:var(--stkh,0px)}
-/* v225: тень свёрнутого блока — подложка ровно по видимой части блока (под ним), с той же тенью, что у самого блока: тень идёт по новому краю,
-   без срезов и резких границ; у блока на это время своя внешняя тень снимается (её срезала бы подрезка) */
-#colsh{position:fixed;left:0;top:0;width:0;height:0;z-index:7;pointer-events:none;display:none;background:none}
-#colsh.on{display:block}
+/* v230: подложка с тенью под свёрнутым блоком: «прилипает» на том же месте, что и блок, высоту ведёт анимация сворачивания (#colkf) */
+#colsw{display:none;position:sticky;height:0;z-index:8;pointer-events:none}html.colon #colsw{display:block}
+#colsh{position:absolute;display:block;background:none;pointer-events:none}
 /* v165: окно «Что нового» */
 #bq .wnh{font-size:22px;font-weight:700;letter-spacing:-.01em;margin:2px 2px 12px}
 #bq .wnl{display:flex;flex-direction:column;gap:12px;max-height:min(62vh,520px);overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;margin:0 -2px;padding:0 2px 4px}
@@ -4315,101 +4314,88 @@ topEl.addEventListener('click',e=>{if(msBlock){e.stopPropagation();e.preventDefa
   satM();kick();window.__totopKick=kick;
 })();
 // v155: закреплённая шапка «Аналитики» и «Планов» и размытая подложка под ней
+// v230: сворачивание блока пересобрано с нуля. При прокрутке полоса «Осталось потратить» уезжает под верх главного блока, следом под блок
+// заезжает строка разделов (сужаясь до прямого участка его нижнего края). Движение ведёт сам браузер: CSS-анимации, привязанные к прокрутке
+// (animation-timeline: scroll()), идут в такт прокрутке без кода на каждом кадре — поэтому не отстают и не дёргаются. Где такой поддержки нет —
+// те же анимации стоят на паузе, кадр выбирает прокрутка (одна переменная на четырёх элементах, без замеров). Пиксельные значения пишутся
+// в стиль #colkf только при пересчёте мест шапки. Тень: у блока остаётся внутренняя подсветка края, внешняя — на подложке #colsh под блоком,
+// она укорачивается вместе с ним (подрезка срезала бы собственную тень блока). Доводка — встроенная плавная прокрутка, только после полной остановки.
 (function(){const R=document.documentElement,bg=document.createElement('div');bg.id='stkbg';document.body.appendChild(bg);let raf=0,dirty=true;
-  const sh=document.createElement('div');sh.id='colsh';sh.setAttribute('aria-hidden','true');bg.after(sh);
-  // тень блока делим на внешнюю (уходит на подложку) и внутреннюю (подсветка края — остаётся на блоке); берётся заново при смене темы
-  let shO='',shI='';const shRead=()=>{topEl.style.boxShadow='';const v=getComputedStyle(topEl).boxShadow;shO='';shI='';if(!v||v==='none')return;
-    const parts=[];let d=0,b='';for(const ch of v){if(ch==='(')d++;if(ch===')')d--;if(ch===','&&!d){parts.push(b.trim());b=''}else b+=ch}if(b.trim())parts.push(b.trim());
-    shO=parts.filter(x=>!/\binset\b/.test(x)).join(', ');shI=parts.filter(x=>/\binset\b/.test(x)).join(', ')||'none'};
-  try{new MutationObserver(()=>{sh.classList.remove('on');shRead()}).observe(R,{attributes:true,attributeFilter:['data-theme']})}catch(e){}
-  // v157: места шапки без прокрутки: на миг снимаем закрепление и меряем (в одном кадре, на экране не видно)
-  // v178: снятие «stk» с корня — пересчёт стилей всей страницы, поэтому меряем заново, только если изменилось то, от чего зависят места:
-  // высоты и классы блоков над содержимым, классы страницы, вкладка, ширина экрана; после resize и событий Telegram (безопасная зона) — всегда.
-  // Пока на блоках идёт анимация (появление, выезд шапки), замер не запоминается — иначе запомнилось бы смещённое положение.
-  let mk='',hard=true;const s0=[null,null,null];
-  const mkey=()=>{const w=document.getElementById('w'),hd=w&&w.querySelector('.hd'),els=[hd,document.getElementById('lt0'),document.getElementById('tps'),topEl,document.getElementById('sp'),sbwEl()];
-    if(els.some(e=>e&&e.getAnimations&&e.getAnimations().length))return '';
-    return [tab,R.className.replace(/\bstk\b/g,''),document.body.className,w?w.className:'',innerWidth].concat(els.map(e=>e?e.offsetHeight+':'+e.className:'-')).join('|')};
-  // v222: «Аналитика» и «Планы» — при прокрутке нижняя полоса блока («Осталось потратить») уезжает под верхнюю часть блока, следом под блок
-  // заезжает строка разделов; всё идёт ровно за пальцем (1:1 с прокруткой), место под содержимое растёт. Высоты не меняются (страница не прыгает):
-  // блок подрезается по фигуре со скруглёнными нижними углами, полоса и строка сдвигаются и гаснут. Наверху — всё на местах.
-  let cT=0,cC=NaN,cA=0,cL=0;
-  let cS=-1,cB=-1,cR=0,cAp=false;   // v226: cAp — стили сворачивания стоят на элементах (кэш cS/cB сбрасывается перерисовкой, по нему снимать нельзя)
-  function colClear(){const bl=topEl.querySelector('.bln'),sb=sbwEl();topEl.style.clipPath='';if(bl){bl.style.transform='';bl.style.opacity=''}
-    if(sb){sb.style.transform='';sb.style.clipPath='';sb.style.opacity='';sb.style.pointerEvents=''}cS=cB=-1;cAp=false;cC=NaN;if(cA){cancelAnimationFrame(cA);cA=0}}
-  // v229: заезд не привязан к прокрутке 1:1 — положение блока и строк догоняет прокрутку с мягкой инерцией (экспоненциальное сглаживание, τ≈95 мс):
-  // рывки прокрутки и шаги в полпикселя не доходят до глаз; при первом показе страницы встаёт сразу, без «доезда»
-  function colApply(y){cT=y;if(isNaN(cC)){cC=y;colRaw(y);return}if(!cA){cL=performance.now();cA=requestAnimationFrame(colLoop)}}
-  function colLoop(n){cA=0;const dt=Math.min(64,Math.max(1,n-cL));cL=n;const k=1-Math.exp(-dt/95);cC+=(cT-cC)*k;
-    if(Math.abs(cT-cC)<.12){cC=cT;colRaw(cC);return}colRaw(cC);cA=requestAnimationFrame(colLoop)}
-  function colRaw(y){const bl=topEl.querySelector('.bln'),sb=sbwEl(),hS=bl&&bl.offsetHeight?bl.offsetHeight+12:0,hB=sb?sb.offsetHeight:0;
-    const c=Math.max(0,Math.min(y,hS+hB)),pS=Math.round(Math.min(c,hS)*4)/4,pB=Math.round(Math.max(0,c-hS)*4)/4;
-    if(pS===cS&&pB===cB)return;cS=pS;cB=pB;cAp=pS>0||pB>0;
-    if(pS>0){if(!cR)cR=parseFloat(getComputedStyle(topEl).borderBottomLeftRadius)||20;const W=topEl.offsetWidth,Hc=topEl.offsetHeight-pS,r=cR,m=40;
-      topEl.style.clipPath=`path('M${-m} ${-m}H${W+m}V${Hc-r}H${W}A${r} ${r} 0 0 1 ${W-r} ${Hc}H${r}A${r} ${r} 0 0 1 0 ${Hc-r}H${-m}Z')`}else topEl.style.clipPath='';
-    // v228: прозрачность и сдвиги — по плавной кривой (smoothstep), а не по прямой: начало и конец заезда мягче
-    const sm=q=>{q=Math.max(0,Math.min(1,q));return q*q*(3-2*q)};
-    if(bl){const q=hS?pS/hS:0;bl.style.transform=pS?`translate3d(0,${(-pS*.35).toFixed(1)}px,0)`:'';bl.style.opacity=pS?(1-sm(q*1.15)).toFixed(3):''}
-    // v227: строку разделов подрезаем по фактическому видимому низу блока (без отрицательных отступов — Safari их не принимает, и строка просвечивала сквозь блок)
-    // v228: строка разделов, заезжая под блок, сужается до прямого участка его нижнего края (между скруглениями углов) —
-    // концы строки не торчат по бокам из-под скруглённых углов, она уходит целиком под ровный край
-    if(sb){const t=pS+pB,q=hB?pB/hB:0,W=sb.offsetWidth||1,ins=(cR||20)+3,sx=1-(2*ins/W)*sm(Math.min(1,q*1.6));
-      sb.style.transform=t?`translate3d(0,${-t}px,0)${pB?` scaleX(${sx.toFixed(4)})`:''}`:'';
-      let ov=0;if(t){const tb=topEl.getBoundingClientRect().bottom-pS,st=sb.getBoundingClientRect().top;ov=Math.max(0,Math.ceil(tb-st+.5))}
-      sb.style.clipPath=ov?`inset(${ov}px 0 0 0)`:'';
-      sb.style.opacity=pB?(1-sm(q*1.1)).toFixed(3):'';sb.style.pointerEvents=pB>hB*.5?'none':''}}
-  // v223: доводка — прокрутка остановилась посреди сворачивания: страница плавно докатывается до ближайшего края (с учётом направления,
-  // в котором листали), чтобы блок не оставался наполовину свёрнутым. Касание или колесо сразу останавливает доводку
-  let snT=0,snA=0,snOn=false,tch=false,lastY=0,dirY=0;
-  const colPts=()=>{const bl=topEl.querySelector('.bln'),sb=sbwEl(),a=bl&&bl.offsetHeight?bl.offsetHeight+12:0,b=sb?sb.offsetHeight:0;return a>0?[0,a,a+b]:[0,b]};
-  function snStop(){if(snA){cancelAnimationFrame(snA);snA=0}snOn=false}
-  function snCheck(){snT=0;if(tch||snOn||R.classList.contains('wlk'))return;let ok=false;try{ok=(tab==='stats'||tab==='tags')&&!isModalOpen()}catch(e){}if(!ok)return;
-    // v225: две независимые остановки — полоса «Осталось потратить» и строка разделов докатываются каждая отдельно, не утягивая друг друга
-    const y=pgY(),P_=colPts(),H=P_[P_.length-1];if(!(H>0)||y>=H-.5||y<=.5)return;let a=0,b=H;for(let i=1;i<P_.length;i++)if(y<P_[i]){a=P_[i-1];b=P_[i];break}
-    if(y-a<.5||b-y<.5)return;
-    // v228: цель — по месту, куда доехала бы прокрутка по инерции (скорость × 140 мс), с учётом направления
-    const v0=Math.abs(vY)<2.5?vY:0,yp=y+v0*160,L=b-a,to=(dirY>0?(yp>a+L*.3?b:a):(yp<a+L*.7?a:b)),max=(document.scrollingElement||document.documentElement).scrollHeight-innerHeight;if(to>max+1)return;
-    // доводка — критически затухающая пружина: подхватывает текущую скорость прокрутки (без остановки и рывка), подходит к цели без перелёта
-    const w=2*Math.PI/.95,C1=y-to,C2=v0*1000+w*C1,t0=performance.now();snOn=true;
-    const st=n=>{const t=(n-t0)/1000,e=Math.exp(-w*t),x=to+(C1+C2*t)*e,v=(C2-w*(C1+C2*t))*e;
-      if(!snOn)return;if((Math.abs(x-to)<.35&&Math.abs(v)<12)||t>2.1){pgTo(to);snA=0;snOn=false;return}pgTo(Math.round(x*2)/2);snA=requestAnimationFrame(st)};snA=requestAnimationFrame(st)}
-  // скорость прокрутки (px/мс, сглаженная); пока палец не касается и инерция уже почти погасла внутри зоны сворачивания — доводка стартует сразу,
-  // подхватывая скорость (без паузы «остановилось — поехало»); иначе — через 120 мс тишины
-  let vY=0,lt_=0,tEnd=0;
-  addEventListener('scroll',()=>{const y=pgY(),n=performance.now(),dt=n-lt_;if(dt>0&&dt<100)vY=vY*.6+((y-lastY)/dt)*.4;else vY=0;lt_=n;
-    if(Math.abs(y-lastY)>.3)dirY=y>lastY?1:-1;lastY=y;if(snOn)return;clearTimeout(snT);
-    let early=false;if(!tch&&n-tEnd<2500&&Math.abs(vY)<.35&&(tab==='stats'||tab==='tags')){const P_=colPts(),H=P_[P_.length-1];early=H>0&&y>1&&y<H-1}
-    if(early)snCheck();else snT=setTimeout(()=>{vY=0;snCheck()},120)},{passive:true});
-  addEventListener('touchstart',()=>{tch=true;snStop();clearTimeout(snT)},{passive:true,capture:true});
-  addEventListener('touchend',()=>{tch=false;tEnd=performance.now();clearTimeout(snT);snT=setTimeout(snCheck,150)},{passive:true,capture:true});
+  const SD=!!(window.CSS&&CSS.supports&&CSS.supports('animation-timeline','scroll()'))&&!window.__colNoSD;
+  const ks=document.createElement('style');ks.id='colkf';document.head.appendChild(ks);
+  const sw=document.createElement('div');sw.id='colsw';sw.setAttribute('aria-hidden','true');sw.innerHTML='<i id="colsh"></i>';topEl.parentNode.insertBefore(sw,topEl);
+  const sh=sw.firstChild;
+  // тень блока делим на внешнюю (на подложку) и внутреннюю (подсветка края — на блоке); берётся заново при смене темы
+  let shO='',shI='';const shRead=()=>{const was=topEl.style.boxShadow;topEl.style.boxShadow='';const v=getComputedStyle(topEl).boxShadow;topEl.style.boxShadow=was;shO='';shI='none';
+    if(v&&v!=='none'){const p=[];let d=0,b='';for(const ch of v){if(ch==='(')d++;if(ch===')')d--;if(ch===','&&!d){p.push(b.trim());b=''}else b+=ch}if(b.trim())p.push(b.trim());
+      shO=p.filter(x=>!/\binset\b/.test(x)).join(', ');shI=p.filter(x=>/\binset\b/.test(x)).join(', ')||'none'}
+    sh.style.boxShadow=shO||'none';if(R.classList.contains('colon'))topEl.style.boxShadow=shI};
+  try{new MutationObserver(shRead).observe(R,{attributes:true,attributeFilter:['data-theme']})}catch(e){}
+  let colR=0,colS=0,colCss='',colY=-1;
+  // --- кадр для запасного варианта: переменная --coly на элементах (не на корне — иначе пересчёт стилей всей страницы) ---
+  function colSet(y){const v=Math.round(Math.max(0,Math.min(y,colR))*4)/4;if(v===colY)return;colY=v;const s=String(v);
+    [topEl,sw,sbwEl(),bg].forEach(e=>{if(e)e.style.setProperty('--coly',s)})}
+  // --- ключевые кадры по замерам; o: hS — полоса, hB — строка разделов, H — высота блока, g — зазор блок/строка, r — скругление ---
+  function colBuild(o){const hS=Math.max(0,Math.round(o.hS)),hB=Math.max(0,Math.round(o.hB)),RR=hS+hB;
+    if(RR<8){colR=colS=0;if(colCss){colCss='';ks.textContent=''}return}
+    const pc=v=>(Math.max(0,Math.min(1,v))*100).toFixed(3)+'%',s=hS/RR,g=Math.max(0,o.g||0),r=o.r,H=o.H,ins=r+3,sx=o.sbW?Math.max(.5,1-2*ins/o.sbW):1;
+    const A=n=>SD?`animation:${n} linear both;animation-timeline:scroll(root block);animation-range:0px ${RR}px;`
+      :`animation:${n} ${RR}ms linear both paused;animation-delay:calc(var(--coly,0) * -1ms);`;
+    let c=`#colsw{top:var(--stk1,0px)}#colsh{top:${o.tt}px;left:${o.tl}px;width:${o.W}px;height:${H}px;border-radius:${r}px}\n`;
+    if(hS){const so=s;
+      c+=`@keyframes colTop{0%{clip-path:inset(0px 0px 0px 0px round ${r}px)}${pc(so)},100%{clip-path:inset(0px 0px ${hS}px 0px round ${r}px)}}\n`;
+      c+=`@keyframes colSh{0%{height:${H}px}${pc(so)},100%{height:${H-hS}px}}\n`;
+      c+=`@keyframes colBl{0%{transform:translate3d(0,0,0);opacity:1}${pc(so*.45)}{opacity:.62}${pc(so*.72)}{opacity:.14}${pc(so*.86)}{opacity:0}${pc(so)},100%{transform:translate3d(0,${-(hS*.35).toFixed(1)}px,0);opacity:0}}\n`;
+      c+=`html.colon #top{${A('colTop')}}html.colon #colsh{${A('colSh')}}html.colon #sum .bln{${A('colBl')}}\n`}
+    if(hB){const at=f=>s+(1-s)*f,ty=f=>-(hS+hB*f),cl=f=>Math.max(0,hB*f-g),sc=f=>1-(1-sx)*Math.min(1,f/.6);
+      const fr=[0,.25,.45,.6,.8,1],op=[1,.9,.62,.38,.12,0];
+      c+=`@keyframes colSb{0%{transform:translate3d(0,0,0) scaleX(1);clip-path:inset(0px 0px 0px 0px);opacity:1}`+
+        fr.map((f,i)=>`${pc(at(f))}{transform:translate3d(0,${ty(f).toFixed(2)}px,0) scaleX(${sc(f).toFixed(4)});clip-path:inset(${cl(f).toFixed(2)}px 0px 0px 0px);opacity:${op[i]}}`).join('')+`}\n`;
+      c+=`html.colon #sbw{${A('colSb')}}\n`}
+    c+=`@keyframes colBg{0%{height:${o.base}px}100%{height:${o.base-RR}px}}html.colon #stkbg{${A('colBg')}}\n`;
+    colR=RR;colS=hS;if(c!==colCss){colCss=c;ks.textContent=c}if(!SD){colY=-1;colSet(pgY())}}
+  // --- доводка: остановились посреди сворачивания — плавная прокрутка браузера до ближайшего края (полоса и строка — отдельные остановки) ---
+  const HAS_END='onscrollend' in window;let tch=false,ly=0,dir=0,snT=0;
+  function snapGo(){snT=0;if(tch||!colR||!R.classList.contains('colon')||R.classList.contains('wlk'))return;try{if(isModalOpen())return}catch(e){}
+    const y=pgY(),P=colS>0&&colS<colR?[0,colS,colR]:[0,colR];if(y<=.5||y>=colR-.5)return;let a=0,b=colR;for(let i=1;i<P.length;i++)if(y<P[i]){a=P[i-1];b=P[i];break}
+    if(y-a<.5||b-y<.5)return;const L=b-a,to=dir>0?(y>a+L*.3?b:a):(y<a+L*.7?a:b),max=(document.scrollingElement||R).scrollHeight-innerHeight;if(to>max+.5)return;
+    try{window.scrollTo({top:to,behavior:'smooth'})}catch(e){pgTo(to)}}
+  addEventListener('scroll',()=>{const y=pgY();if(Math.abs(y-ly)>.3)dir=y>ly?1:-1;ly=y;if(!SD&&colR)colSet(y);clearTimeout(snT);if(!HAS_END&&!tch)snT=setTimeout(snapGo,180)},{passive:true});
+  if(HAS_END)addEventListener('scrollend',()=>{clearTimeout(snT);if(!tch)snT=setTimeout(snapGo,40)});
+  addEventListener('touchstart',()=>{tch=true;clearTimeout(snT)},{passive:true,capture:true});
+  addEventListener('touchend',()=>{tch=false;clearTimeout(snT);snT=setTimeout(snapGo,220)},{passive:true,capture:true});
   addEventListener('touchcancel',()=>{tch=false},{passive:true,capture:true});
-  addEventListener('wheel',()=>{snStop()},{passive:true,capture:true});
-  function meas(){colClear();const y=pgY(),lt=document.getElementById('lt0'),sb=sbwEl();R.classList.remove('stk');
-    const at=e=>e&&e.offsetHeight?Math.round(e.getBoundingClientRect().top+y):null,a=at(lt),b=at(topEl),c=at(sb);R.classList.add('stk');
-    [a,b,c].forEach((v,i)=>{if(v!=null&&v!==s0[i]){s0[i]=v;R.style.setProperty('--stk'+i,v+'px')}});dirty=false}
-  // v163: переменные пишутся только при изменении, высота подложки — на самой подложке. Раньше каждый кадр прокрутки менялись переменные корня документа —
-  // браузер пересчитывал стили всей страницы, прокрутка в «Аналитике» и «Планах» шла через кадр
+  function colOn(on){if(on===R.classList.contains('colon'))return;R.classList.toggle('colon',on);if(on){if(!shO)shRead();topEl.style.boxShadow=shI;if(!SD){colY=-1;colSet(pgY())}}else topEl.style.boxShadow=''}
+  // v157: места шапки без прокрутки: на миг снимаем закрепление и меряем (в одном кадре, на экране не видно)
+  // v178: меряем заново, только если изменилось то, от чего зависят места; v230: свои анимации сворачивания (col…) замеру не мешают
+  let mk='',hard=true;const s0=[null,null,null];
+  const busy=e=>e&&e.getAnimations&&e.getAnimations().some(a=>!/^col/.test(a.animationName||a.id||''));
+  const mkey=()=>{const w=document.getElementById('w'),hd=w&&w.querySelector('.hd'),els=[hd,document.getElementById('lt0'),document.getElementById('tps'),topEl,document.getElementById('sp'),sbwEl()];
+    if(els.some(busy))return '';
+    return [tab,R.className.replace(/\b(stk|colon)\b/g,''),document.body.className,w?w.className:'',innerWidth].concat(els.map(e=>e?e.offsetHeight+':'+e.className:'-')).join('|')};
+  function meas(){const y=pgY(),lt=document.getElementById('lt0'),sb=sbwEl(),was=R.classList.contains('colon');R.classList.remove('stk','colon');
+    const at=e=>e&&e.offsetHeight?Math.round(e.getBoundingClientRect().top+y):null,a=at(lt),b=at(topEl),c=at(sb);
+    const bl=topEl.querySelector('.bln'),cs=getComputedStyle(topEl),H=topEl.offsetHeight,hB=sb&&sb.offsetHeight?sb.offsetHeight:0;
+    const o={hS:bl&&bl.offsetHeight?bl.offsetHeight+(parseFloat(getComputedStyle(bl).marginTop)||0):0,hB,H,g:(c!=null&&b!=null)?c-(b+H):0,r:parseFloat(cs.borderBottomLeftRadius)||20,
+      tt:parseFloat(cs.marginTop)||0,tl:parseFloat(cs.marginLeft)||0,W:topEl.offsetWidth,sbW:sb?sb.offsetWidth:0,base:Math.round(Math.max((b||0)+H,(c||0)+hB)+30)};
+    R.classList.add('stk');if(was)R.classList.add('colon');
+    [a,b,c].forEach((v,i)=>{if(v!=null&&v!==s0[i]){s0[i]=v;R.style.setProperty('--stk'+i,v+'px')}});colBuild(o);dirty=false}
+  // v163: переменные пишутся только при изменении, высота подложки — на самой подложке
   let lh=-1,lk=-1,lon=null,lpk='',jOn=false;const sv=(el,k,v,o)=>{if(v!==o)el.style.setProperty(k,v+'px');return v};
   function upd(){raf=0;let on=false;try{on=((tab==='stats'||tab==='tags')||(tab==='list'&&R.classList.contains('rvl')))&&!!topEl.offsetHeight}catch(e){}
-    if(!on){if(lon!==false){R.classList.remove('stk');bg.classList.remove('on');lon=false}if(cAp)colClear();if(sh.classList.contains('on')){sh.classList.remove('on');topEl.style.boxShadow=''}dirty=true;return}
+    if(!on){colOn(false);if(lon!==false){R.classList.remove('stk');bg.classList.remove('on');lon=false}dirty=true;return}
     if(lon!==true){R.classList.add('stk');lon=true;hard=true;jOn=true}
     if(dirty){const k=mkey();if(hard||!k||k!==mk){meas();mk=k;hard=false}dirty=false}
-    if(!shO&&!sh.classList.contains('on'))shRead();
-    if(tab==='stats'||tab==='tags')colApply(pgY());else if(cAp)colClear();
-    // сначала читаем, потом пишем: если высота блока не изменилась, переменная не трогается и второго пересчёта нет
-    const th=topEl.offsetHeight,sb=sbwEl(),rd=()=>[topEl.getBoundingClientRect(),sb&&sb.offsetHeight?sb.getBoundingClientRect():null];
-    let [tr,sr]=rd();if(th!==lh){lh=sv(R,'--toph',th,lh);[tr,sr]=rd()}if(!sr)sr=tr;
-    lk=sv(bg,'--stkh',Math.round(Math.max(tr.bottom-(cS>0?cS:0),sr.bottom)+30),lk);window.__stkh=lk-20;   // v226: подложка на 30 px ниже блока (мягкий стык); для стрелки — прежняя граница   // v222: видимый низ блока — с учётом подрезки
-    // v224: мягкая тень по новому нижнему краю блока, пока он подрезан (своя тень блока при подрезке срезается) — видно, что содержимое уходит под блок
-    {const pS_=cS>0?cS:0;if(pS_>0&&shO){sh.style.transform=`translate3d(${tr.left.toFixed(1)}px,${tr.top.toFixed(1)}px,0)`;sh.style.width=tr.width.toFixed(1)+'px';
-      sh.style.height=Math.max(0,tr.height-pS_).toFixed(1)+'px';if(!sh.classList.contains('on')){sh.style.borderRadius=(cR||20)+'px';sh.style.boxShadow=shO;topEl.style.boxShadow=shI;sh.classList.add('on')}}
-     else if(sh.classList.contains('on')){sh.classList.remove('on');topEl.style.boxShadow=''}}
-    // v191: при смене страницы («Аналитика», «Планы», их разделы) подложка встаёт сразу — раньше она проявлялась 0,22 с,
-    // и первые кадры содержимое (диаграмма) было видно резко сквозь шапку: мерцание под главным блоком. Плавно — только при прокрутке на той же странице
+    const col=(tab==='stats'||tab==='tags')&&colR>0;colOn(col);
+    if(!col){// «Операции» с опущенным блоком: высота подложки — по замеру
+      const th=topEl.offsetHeight,sb=sbwEl(),rd=()=>[topEl.getBoundingClientRect(),sb&&sb.offsetHeight?sb.getBoundingClientRect():null];
+      let [tr,sr]=rd();if(th!==lh){lh=sv(R,'--toph',th,lh);[tr,sr]=rd()}if(!sr)sr=tr;
+      lk=sv(bg,'--stkh',Math.round(Math.max(tr.bottom,sr.bottom)+30),lk);window.__stkh=lk-20}
+    // v191: при смене страницы подложка встаёт сразу; плавно — только при прокрутке на той же странице
     const bo=pgY()>2,pk=typeof pgKey==='function'?pgKey():tab,inst=pk!==lpk||jOn;lpk=pk;jOn=false;
     if(bo!==bg.classList.contains('on')){if(inst){bg.style.transition='none';bg.classList.toggle('on',bo);void bg.offsetWidth;requestAnimationFrame(()=>{bg.style.transition=''})}else bg.classList.toggle('on',bo)}}
   window.__stkKick=()=>{dirty=true;kick()};window.__stkNow=()=>{dirty=true;upd()};
-  const kick=()=>{if(!raf)raf=requestAnimationFrame(upd)},re=()=>{dirty=true;cS=cB=-1;kick()},reH=()=>{hard=true;cR=0;re()};
+  const kick=()=>{if(!raf)raf=requestAnimationFrame(upd)},re=()=>{dirty=true;kick()},reH=()=>{hard=true;re()};
   addEventListener('scroll',kick,{passive:true});addEventListener('resize',reH);
   try{const r0=render;render=function(){const v=r0.apply(this,arguments);re();if(window.__totopKick)window.__totopKick();return v}}catch(e){}
   try{['safeAreaChanged','contentSafeAreaChanged','fullscreenChanged'].forEach(ev=>TGW.onEvent(ev,reH))}catch(e){}
