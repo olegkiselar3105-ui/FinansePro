@@ -111,7 +111,10 @@ const d1Store = (env, uid) => {
       await d1Init(env);
       const r = await q('SELECT n FROM cnt WHERE uid = ? AND day = ?', uid, day).first();
       if (r && Number(r.n) >= limit) return { ok: false };
-      await env.DB.batch([q('INSERT INTO cnt (uid, day, n, v) VALUES (?, ?, 1, ?) ON CONFLICT(uid, day) DO UPDATE SET n = n + 1, v = COALESCE(v, 0) + excluded.v', uid, day, voice ? 1 : 0),
+      // страховка: если колонки v нет (ALTER не прошёл) — счётчик лимита по-старому, без голосовых в статистике
+      await q('INSERT INTO cnt (uid, day, n, v) VALUES (?, ?, 1, ?) ON CONFLICT(uid, day) DO UPDATE SET n = n + 1, v = COALESCE(v, 0) + excluded.v', uid, day, voice ? 1 : 0).run()
+        .catch(e => (console.error('cnt v', e && e.message), q('INSERT INTO cnt (uid, day, n) VALUES (?, ?, 1) ON CONFLICT(uid, day) DO UPDATE SET n = n + 1', uid, day).run()));
+      await env.DB.batch([
         q('DELETE FROM cnt WHERE uid = ? AND day < ?', uid, new Date(Date.now() - 2 * 864e5).toISOString().slice(0, 10))]);   // счётчики старше 2 дней не храним (политика)
       return { ok: true };
     }
