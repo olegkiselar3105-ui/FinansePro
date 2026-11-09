@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v239';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v240';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -1616,8 +1616,8 @@ html:not(.stk) #stkbg{display:none}
 /* v239: нижняя панель — только значки (33 px), компактная, по центру, ниже к краю экрана; стекло прозрачнее — как панель Safari (видео пользователя).
    При прокрутке вниз сжимается в капсулу со значком текущей вкладки, вверх (и наверху/внизу страницы) — разворачивается (код — tbCompact) */
 html:root body #tabs{left:0!important;right:0!important;width:max-content!important;margin:0 auto!important;gap:0!important;padding:4px!important;bottom:calc(var(--sab,0px)*.3 + 8px)!important;
-  background:rgba(34,34,38,.42)!important;-webkit-backdrop-filter:blur(14px) saturate(1.9)!important;backdrop-filter:blur(14px) saturate(1.9)!important}
-:root[data-theme=light] body #tabs{background:rgba(250,250,252,.5)!important}
+  background:rgba(34,34,38,.36)!important;-webkit-backdrop-filter:blur(7px) saturate(1.6)!important;backdrop-filter:blur(7px) saturate(1.6)!important}   /* v240: прозрачнее — стекло, сквозь него видно ≈ половину */
+:root[data-theme=light] body #tabs{background:rgba(250,250,252,.42)!important}
 html:root body #tabs button[data-t]{flex:0 0 auto!important;width:58px!important;min-width:0!important;height:48px;padding:0!important;justify-content:center;gap:0}
 html:root body #tabs button[data-t] svg{width:33px;height:33px;flex:none}
 /* v231: главный блок — один сплошной цвет, без тени и без просвечивания; в «Аналитике»/«Планах» он поверх строки разделов — она заезжает под него */
@@ -7323,7 +7323,7 @@ window.openTips=function(){
 <script>
 // ---------- v239: нижняя панель как в Safari: прокрутка вниз — сжимается в капсулу со значком текущей вкладки, вверх — разворачивается ----------
 // Кривые сняты покадрово (30 к/с) с видео пользователя: сжатие ≈0,4 с — быстрый старт, мягкое торможение; разворот ≈0,5 с — медленный старт, разгон.
-// Наверху и в самом низу страницы панель развёрнута; нажатие на капсулу — развернуть (без перехода на вкладку). Только transform/opacity/clip-path.
+// Наверху страницы панель развёрнута (в самом низу — нет, v240); нажатие на капсулу — развернуть (без перехода на вкладку). Только transform/opacity/clip-path.
 (function(){
   const tb=document.getElementById('tabs');if(!tb||!tb.animate)return;
   const RMq=matchMedia('(prefers-reduced-motion:reduce)');
@@ -7350,7 +7350,8 @@ window.openTips=function(){
   let ly=pgY(),acc=0;
   addEventListener('scroll',()=>{const y=pgY(),d=y-ly;ly=y;if(!d)return;let mo=false;try{mo=isModalOpen()}catch(e){}if(mo)return;
     const max=Math.max(0,document.documentElement.scrollHeight-innerHeight);
-    if(y<=12||y>=max-4){acc=0;expand();return}
+    if(y<=12){acc=0;expand();return}   // v240: наверху — развёрнута; в самом низу остаётся как есть (упёрлись — не разворачивается)
+    if(y>=max-4&&d<0)return;           // отскок от низа — не считается прокруткой вверх
     acc=(acc&&Math.sign(d)!==Math.sign(acc))?d:acc+d;
     if(acc>18)collapse();else if(acc<-18)expand()},{passive:true});
   tb.addEventListener('click',e=>{if(small){e.stopImmediatePropagation();e.preventDefault();acc=0;expand()}},true);
