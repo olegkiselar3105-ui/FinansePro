@@ -2,9 +2,9 @@
 import { DatabaseSync } from 'node:sqlite';
 const db = new DatabaseSync(':memory:'); let writes = 0;
 const mk = sql => { const st = { a: [], bind(...a) { return { ...st, a }; },
-  run() { const r = db.prepare(sql).run(...this.a); writes += Number(r.changes); return { meta: { changes: r.changes } }; },
-  first() { return db.prepare(sql).get(...this.a) ?? null; }, all() { return { results: db.prepare(sql).all(...this.a) }; } }; return st; };
-const DB = { prepare: mk, batch: async l => { db.exec('BEGIN'); try { const o = l.map(s => /^\s*(SELECT)/i.test(s.sql) ? s.all() : s.run()); db.exec('COMMIT'); return o; } catch (e) { db.exec('ROLLBACK'); throw e; } } };
+  runS() { const r = db.prepare(sql).run(...this.a); writes += Number(r.changes); return { meta: { changes: r.changes } }; },
+  async run() { return this.runS(); }, async first() { return db.prepare(sql).get(...this.a) ?? null; }, async all() { return { results: db.prepare(sql).all(...this.a) }; } }; return st; };
+const DB = { prepare: mk, batch: async l => { db.exec('BEGIN'); try { const o = l.map(s => s.runS()); db.exec('COMMIT'); return o; } catch (e) { db.exec('ROLLBACK'); throw e; } } };
 mk.prototype; const P = DB.prepare; DB.prepare = sql => { const s = P(sql); s.sql = sql; const b = s.bind; s.bind = (...a) => { const r = b.call(s, ...a); r.sql = sql; return r; }; return s; };
 let sent = []; globalThis.fetch = async (u, o) => { sent.push(JSON.parse(o.body)); return new Response(JSON.stringify({ ok: true, result: { message_id: 1 } })); };
 import fs from 'node:fs'; import os from 'node:os'; import path from 'node:path';
@@ -52,6 +52,6 @@ await botMsg(1, 'a 1'); await botMsg(1, null, true); await botMsg(2, 'b 2'); awa
 for (let i = 1; i <= 9; i++) { await day(1); await botMsg(2, 'x ' + i); }
 await botMsg(1, 'вернулся 5');   // день 9: uid1 через 9 дней
 const s = await W._t.statsText(env);
-assert(/7 дней: 2 чел/.test(s), '7d users = 2 (1 и 2)');
-assert(/30 дней: 3 чел\. \(бот 3, приложение 0\), новых 3\n   сообщений 14, из них голосовых 1/.test(s), '30d: 3 users, 14 msgs (4+9+1), 1 voice');
-assert(/Возврат 7д: 2 из 3 \(67%\)/.test(s), 'ret7 = 2 of 3');
+assert(/Люди +2 +2 +3/.test(s), 'users today 2 / 7d 2 / 30d 3');
+assert(/Сообщения +2 +8 +14/.test(s) && / голосовые +0 +0 +1/.test(s), 'msgs 2/8/14, voice 0/0/1'); 
+assert(/7 дн +▓{7}░{3} +67% +2 из 3/.test(s), 'ret7 = 2 of 3');

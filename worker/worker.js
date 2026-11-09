@@ -216,7 +216,7 @@ async function handleUpdate(upd, env) {
   const priv = env.APP_URL ? new URL('privacy.html', env.APP_URL).href : '';
   if (t === '/privacy') return reply(priv ? `🔒 Политика конфиденциальности: ${priv}` : 'Политика конфиденциальности пока не опубликована.');
   if (t === '/help' || t === '/помощь') return reply(HELP + (priv ? `\n\n🔒 Политика конфиденциальности: /privacy` : ''));
-  if (t === '/stats') return isOwner(env, uid) ? reply(await statsText(env)) : undefined;   // только владельцу (OWNER_ID); остальным — молчание
+  if (t === '/stats') return isOwner(env, uid) ? reply(await statsText(env), { parse_mode: 'HTML' }) : undefined;   // только владельцу (OWNER_ID); остальным — молчание
   if (t === '/queue') return reply(`В очереди на запись в приложение: ${await store(env, uid).count()}`);   // 0 = всё забрано приложением
   if (t === '/start') return reply('Привет! Я записываю ваши доходы и расходы.\n\n' +
     '✍️ Пишите или говорите: заметка, сумма, категория — «кофе 300 кафе», «такси 120 транспорт».\nЕщё: «одолжил Ивану 500», «цель отпуск 50000», «лимит еда 3000».\n' +
@@ -333,24 +333,41 @@ async function statsText(env, now = Date.now()) {
   if (!env.STATS_SALT) return 'Статистика не собирается: добавьте секрет STATS_SALT в Cloudflare (Settings → Variables and Secrets).';
   await stInit(env);
   const one = (sql, ...a) => env.DB.prepare(sql).bind(...a).first();
-  const D = ago(0, now), D2 = ago(2, now);
-  const period = async n => {   // n дней, включая сегодня
-    const from = ago(n - 1, now);
-    const u = await one('SELECT COUNT(DISTINCT h) AS a, COUNT(DISTINCT CASE WHEN bot = 1 THEN h END) AS b, COUNT(DISTINCT CASE WHEN app = 1 THEN h END) AS p FROM act WHERE day >= ?', from);
-    const nw = await one('SELECT COUNT(*) AS c FROM usr WHERE first >= ?', from);
-    // сообщения: старые дни — из итогов agg, последние 3 дня — из cnt (итог за вчера может быть ещё не посчитан)
-    const ag = await one('SELECT COALESCE(SUM(msgs), 0) AS m, COALESCE(SUM(voice), 0) AS v FROM agg WHERE day >= ? AND day < ?', from, D2);
-    const cn = await one('SELECT COALESCE(SUM(n), 0) AS m, COALESCE(SUM(v), 0) AS v FROM cnt WHERE day >= ?', from > D2 ? from : D2);
-    return `${u.a} чел. (бот ${u.b}, приложение ${u.p}), новых ${nw.c}\n   сообщений ${Number(ag.m) + Number(cn.m)}, из них голосовых ${Number(ag.v) + Number(cn.v)}`;
+  const D2 = ago(2, now), N = x => Number(x) || 0;
+  // период [from, to] (дни YYYY-MM-DD): люди, новые, сообщения; сообщения — старые дни из agg, последние 3 дня из cnt (итог за вчера может быть ещё не посчитан)
+  const period = async (from, to = ago(0, now)) => {
+    const u = await one('SELECT COUNT(DISTINCT h) AS a, COUNT(DISTINCT CASE WHEN bot = 1 THEN h END) AS b, COUNT(DISTINCT CASE WHEN app = 1 THEN h END) AS p FROM act WHERE day BETWEEN ? AND ?', from, to);
+    const nw = await one('SELECT COUNT(*) AS c FROM usr WHERE first BETWEEN ? AND ?', from, to);
+    const ag = await one('SELECT COALESCE(SUM(msgs), 0) AS m, COALESCE(SUM(voice), 0) AS v FROM agg WHERE day BETWEEN ? AND ? AND day < ?', from, to, D2);
+    const cn = to < D2 ? { m: 0, v: 0 } : await one('SELECT COALESCE(SUM(n), 0) AS m, COALESCE(SUM(v), 0) AS v FROM cnt WHERE day BETWEEN ? AND ?', from > D2 ? from : D2, to);
+    return { u: N(u.a), b: N(u.b), p: N(u.p), n: N(nw.c), m: N(ag.m) + N(cn.m), v: N(ag.v) + N(cn.v) };
   };
   const ret = async n => {      // пришли n…n+6 дней назад → сколько были активны через n и более дней после первого раза
     const r = await one(`SELECT COUNT(*) AS c, COALESCE(SUM(EXISTS (SELECT 1 FROM act a WHERE a.h = u.h AND a.day >= date(u.first, '+${n} day'))), 0) AS r
       FROM usr u WHERE u.first BETWEEN ? AND ?`, ago(n + 6, now), ago(n, now));
-    return r.c ? `${r.r} из ${r.c} (${Math.round(100 * r.r / r.c)}%)` : 'пока нет данных';
+    return { c: N(r.c), r: N(r.r) };
   };
-  const first = await one('SELECT MIN(day) AS d FROM act');
-  return `📊 Статистика (сутки по UTC)\n\nСегодня: ${await period(1)}\n\n7 дней: ${await period(7)}\n\n30 дней: ${await period(30)}\n\n` +
-    `↩️ Возврат 7д: ${await ret(7)} — пришли 7–13 дней назад, заходили через 7+ дней\n` +
-    `↩️ Возврат 30д: ${await ret(30)} — пришли 30–36 дней назад, заходили через 30+ дней` +
-    (!first || !first.d ? '\n\nДанных пока нет.' : first.d > ago(30, now) ? `\n\nСчёт идёт с ${first.d} (в первый день «новые» — все активные).` : '');
+  const [d1, d7, d30, w0] = [await period(ago(0, now)), await period(ago(6, now)), await period(ago(29, now)), await period(ago(13, now), ago(7, now))];
+  const days = (await env.DB.prepare('SELECT day, COUNT(*) AS c FROM act WHERE day >= ? GROUP BY day').bind(ago(6, now)).all()).results || [];
+  const r7 = await ret(7), r30 = await ret(30), first = await one('SELECT MIN(day) AS d FROM act');
+  // вид: моноширинные блоки <pre> (Telegram HTML) — колонки ровные; эмодзи внутри <pre> не ставим (ломают выравнивание)
+  const pad = (x, w) => String(x).padStart(w), lab = (x, w = 13) => String(x).padEnd(w);
+  const row = (l, k) => lab(l) + pad(d1[k], 5) + pad(d7[k], 6) + pad(d30[k], 6);
+  const table = [lab('') + pad('сег', 5) + pad('7 дн', 6) + pad('30 дн', 6), row('Люди', 'u'), row(' бот', 'b'), row(' приложение', 'p'),
+    row('Новые', 'n'), row('Сообщения', 'm'), row(' голосовые', 'v')].join('\n');
+  const bar = (x, max, w) => '█'.repeat(max ? Math.round(w * x / max) : 0) || (x ? '▏' : '');
+  const cnt = Object.fromEntries(days.map(r => [r.day, N(r.c)])), list = [...Array(7)].map((_, i) => ago(6 - i, now));
+  const mx = Math.max(0, ...list.map(d => cnt[d] || 0)), WD = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+  const chart = list.map(d => { const c = cnt[d] || 0; return `${WD[new Date(d + 'T12:00:00Z').getUTCDay()]} ${d.slice(8)}.${d.slice(5, 7)} ${lab(bar(c, mx, 12), 12)} ${pad(c, 3)}`; }).join('\n');
+  const delta = (a, b) => !b ? (a ? 'новое' : '—') : a === b ? '= 0%' : `${a > b ? '▲ +' : '▼ −'}${Math.round(Math.abs(a - b) * 100 / b)}%`;
+  const rline = (l, r, n) => r.c ? `${lab(l, 6)} ${'▓'.repeat(Math.round(10 * r.r / r.c))}${'░'.repeat(10 - Math.round(10 * r.r / r.c))} ${pad(Math.round(100 * r.r / r.c) + '%', 4)}  ${r.r} из ${r.c}`
+    : `${lab(l, 6)} нет данных (нужно ${n}+ дней)`;
+  const MON = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'], t = new Date(now);
+  return `📊 <b>Статистика</b> · ${t.getUTCDate()} ${MON[t.getUTCMonth()]}, ${String(t.getUTCHours()).padStart(2, '0')}:${String(t.getUTCMinutes()).padStart(2, '0')} UTC\n\n` +
+    `<pre>${table}</pre>\n\n` +
+    `📈 <b>Неделя к прошлой</b>\nЛюди: ${d7.u} (было ${w0.u}) · ${delta(d7.u, w0.u)}\nСообщения: ${d7.m} (было ${w0.m}) · ${delta(d7.m, w0.m)}\n\n` +
+    `📅 <b>Люди по дням</b>\n<pre>${chart}</pre>\n\n` +
+    `↩️ <b>Возврат</b>\n<pre>${rline('7 дн', r7, 14)}\n${rline('30 дн', r30, 37)}</pre>\n` +
+    `<i>Из пришедших 7–13 (30–36) дней назад — сколько заходили снова через 7 (30) и более дней.</i>\n\n` +
+    `<i>Сутки по UTC${first && first.d && first.d > ago(30, now) ? ` · счёт с ${first.d.slice(8)}.${first.d.slice(5, 7)}, в первый день «новые» — все активные` : ''}${!first || !first.d ? ' · данных пока нет' : ''}</i>`;
 }
