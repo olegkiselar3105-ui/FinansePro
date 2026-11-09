@@ -12,7 +12,7 @@
 
 //   Secret        STATS_SALT       — соль для обезличенной статистики (длинная случайная строка; НЕ менять — иначе все посчитаются новыми). Нет соли — статистика не собирается
 //   Variable      OWNER_ID         — Telegram id владельца: только ему отвечает /stats
-//   Cron trigger  10 0 * * *       — раз в сутки итоги дня и уборка (ставит tools/deployworker.sh)
+//   Cron trigger  10 0 * * *       — раз в сутки итоги дня и уборка; 5 6 * * 1 — недельная сводка владельцу (оба ставит tools/deployworker.sh)
 //   D1 database     DB             — (желательно) мгновенная очередь без задержек KV. Таблицы создаются сами. Без неё работает старый режим на KV (с задержкой до ~минуты)
 
 const kv = env => env.INBOX || env.FIN;   // KV-привязка может называться INBOX или FIN
@@ -56,7 +56,10 @@ export default {
       return new Response('finance bot', { status: 200 });
     } catch (e) { console.error('fetch', e && e.stack || e); return cors(json({ error: 'server' }, 500)); }
   },
-  async scheduled(ev, env, ctx) { ctx.waitUntil(rollup(env).catch(e => console.error('rollup', e && e.stack || e))); }
+  async scheduled(ev, env, ctx) {
+    if (ev.cron === WEEKLY) ctx.waitUntil(sendWeekly(env).catch(e => console.error('weekly', e && e.stack || e)));
+    else ctx.waitUntil(rollup(env).catch(e => console.error('rollup', e && e.stack || e)));
+  }
 };
 
 
@@ -206,6 +209,7 @@ const HELP = `Что можно написать или сказать боту:
 Суммы можно словами: «пятьсот», «две тысячи». Записи появляются в приложении, когда оно открыто. /queue — сколько ждёт в очереди.`;
 
 async function handleUpdate(upd, env) {
+  if (upd.callback_query) return onCallback(upd.callback_query, env);
   const msg = upd.message; if (!msg || !msg.from || msg.chat.type !== 'private') return;
   const uid = msg.from.id, chat = msg.chat.id, reply = (text, extra) => tg(env, 'sendMessage', { chat_id: chat, text, ...extra });
   const t = (msg.text || '').trim();
@@ -216,7 +220,7 @@ async function handleUpdate(upd, env) {
   const priv = env.APP_URL ? new URL('privacy.html', env.APP_URL).href : '';
   if (t === '/privacy') return reply(priv ? `🔒 Политика конфиденциальности: ${priv}` : 'Политика конфиденциальности пока не опубликована.');
   if (t === '/help' || t === '/помощь') return reply(HELP + (priv ? `\n\n🔒 Политика конфиденциальности: /privacy` : ''));
-  if (t === '/stats') return isOwner(env, uid) ? reply(await statsText(env), { parse_mode: 'HTML' }) : undefined;   // только владельцу (OWNER_ID); остальным — молчание
+  if (t === '/stats') { if (!isOwner(env, uid)) return; await ensureCallbacks(env).catch(e => console.error('hook', e && e.message)); return reply(await statsText(env), { parse_mode: 'HTML', reply_markup: STATS_KB }); }   // только владельцу (OWNER_ID); остальным — молчание
   if (t === '/queue') return reply(`В очереди на запись в приложение: ${await store(env, uid).count()}`);   // 0 = всё забрано приложением
   if (t === '/start') return reply('Привет! Я записываю ваши доходы и расходы.\n\n' +
     '✍️ Пишите или говорите: заметка, сумма, категория — «кофе 300 кафе», «такси 120 транспорт».\nЕщё: «одолжил Ивану 500», «цель отпуск 50000», «лимит еда 3000».\n' +
@@ -328,32 +332,40 @@ async function rollup(env, now = Date.now()) {
     q('DELETE FROM cnt WHERE day < ?', ago(2, now))                 // счётчики лимита старше 2 дней — и у тех, кто больше не пишет
   ]);
 }
+const N = x => Number(x) || 0;
+// период [from, to] (YYYY-MM-DD): люди, новые, сообщения. Сообщения: старые дни — из agg, последние 3 дня (по настоящей дате) — из cnt
+async function period(env, from, to) {
+  const one = (sql, ...a) => env.DB.prepare(sql).bind(...a).first(), D2 = ago(2);
+  const u = await one('SELECT COUNT(DISTINCT h) AS a, COUNT(DISTINCT CASE WHEN bot = 1 THEN h END) AS b, COUNT(DISTINCT CASE WHEN app = 1 THEN h END) AS p FROM act WHERE day BETWEEN ? AND ?', from, to);
+  const nw = await one('SELECT COUNT(*) AS c FROM usr WHERE first BETWEEN ? AND ?', from, to);
+  const ag = await one('SELECT COALESCE(SUM(msgs), 0) AS m, COALESCE(SUM(voice), 0) AS v FROM agg WHERE day BETWEEN ? AND ? AND day < ?', from, to, D2);
+  const cn = to < D2 ? { m: 0, v: 0 } : await one('SELECT COALESCE(SUM(n), 0) AS m, COALESCE(SUM(v), 0) AS v FROM cnt WHERE day BETWEEN ? AND ?', from > D2 ? from : D2, to);
+  return { u: N(u.a), b: N(u.b), p: N(u.p), n: N(nw.c), m: N(ag.m) + N(cn.m), v: N(ag.v) + N(cn.v) };
+}
+// возврат: пришли n…n+6 дней назад → сколько были активны через n и более дней после первого раза
+async function ret(env, n, now = Date.now()) {
+  const r = await env.DB.prepare(`SELECT COUNT(*) AS c, COALESCE(SUM(EXISTS (SELECT 1 FROM act a WHERE a.h = u.h AND a.day >= date(u.first, '+${n} day'))), 0) AS r
+    FROM usr u WHERE u.first BETWEEN ? AND ?`).bind(ago(n + 6, now), ago(n, now)).first();
+  return { c: N(r.c), r: N(r.r) };
+}
+const MON = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+const dm = d => `${Number(d.slice(8))} ${MON[Number(d.slice(5, 7)) - 1]}`;
+const plural = (n, a, b, c) => { const m = n % 10, h = n % 100; return `${n} ${m === 1 && h !== 11 ? a : m >= 2 && m <= 4 && (h < 12 || h > 14) ? b : c}`; };
+const ppl = n => plural(n, 'человек', 'человека', 'человек'), msgN = n => plural(n, 'сообщение', 'сообщения', 'сообщений');
+const delta = (a, b) => !b ? '' : a === b ? ' (столько же, сколько неделей раньше)' : ` (неделей раньше ${b}, ${a > b ? '▲ больше' : '▼ меньше'} на ${Math.round(Math.abs(a - b) * 100 / b)}%)`;
+const STATS_KB = { inline_keyboard: [[{ text: '🔄 Обновить', callback_data: 'st:upd' }]] };
+const WEEK_KB = { inline_keyboard: [[{ text: '📊 Подробно', callback_data: 'st:new' }]] };
+
 async function statsText(env, now = Date.now()) {
   if (!env.DB) return 'Статистика работает только с базой D1.';
   if (!env.STATS_SALT) return 'Статистика не собирается: добавьте секрет STATS_SALT в Cloudflare (Settings → Variables and Secrets).';
   await stInit(env);
-  const one = (sql, ...a) => env.DB.prepare(sql).bind(...a).first();
-  const D2 = ago(2, now), N = x => Number(x) || 0;
-  // период [from, to] (дни YYYY-MM-DD): люди, новые, сообщения; сообщения — старые дни из agg, последние 3 дня из cnt (итог за вчера может быть ещё не посчитан)
-  const period = async (from, to = ago(0, now)) => {
-    const u = await one('SELECT COUNT(DISTINCT h) AS a, COUNT(DISTINCT CASE WHEN bot = 1 THEN h END) AS b, COUNT(DISTINCT CASE WHEN app = 1 THEN h END) AS p FROM act WHERE day BETWEEN ? AND ?', from, to);
-    const nw = await one('SELECT COUNT(*) AS c FROM usr WHERE first BETWEEN ? AND ?', from, to);
-    const ag = await one('SELECT COALESCE(SUM(msgs), 0) AS m, COALESCE(SUM(voice), 0) AS v FROM agg WHERE day BETWEEN ? AND ? AND day < ?', from, to, D2);
-    const cn = to < D2 ? { m: 0, v: 0 } : await one('SELECT COALESCE(SUM(n), 0) AS m, COALESCE(SUM(v), 0) AS v FROM cnt WHERE day BETWEEN ? AND ?', from > D2 ? from : D2, to);
-    return { u: N(u.a), b: N(u.b), p: N(u.p), n: N(nw.c), m: N(ag.m) + N(cn.m), v: N(ag.v) + N(cn.v) };
-  };
-  const ret = async n => {      // пришли n…n+6 дней назад → сколько были активны через n и более дней после первого раза
-    const r = await one(`SELECT COUNT(*) AS c, COALESCE(SUM(EXISTS (SELECT 1 FROM act a WHERE a.h = u.h AND a.day >= date(u.first, '+${n} day'))), 0) AS r
-      FROM usr u WHERE u.first BETWEEN ? AND ?`, ago(n + 6, now), ago(n, now));
-    return { c: N(r.c), r: N(r.r) };
-  };
-  const [d1, d7, d30, w0] = [await period(ago(0, now)), await period(ago(6, now)), await period(ago(29, now)), await period(ago(13, now), ago(7, now))];
+  const one = (sql, ...a) => env.DB.prepare(sql).bind(...a).first(), D = ago(0, now);
+  const [d1, d7, d30, w0] = [await period(env, D, D), await period(env, ago(6, now), D), await period(env, ago(29, now), D), await period(env, ago(13, now), ago(7, now))];
   const days = (await env.DB.prepare('SELECT day, COUNT(*) AS c FROM act WHERE day >= ? GROUP BY day').bind(ago(6, now)).all()).results || [];
-  const r7 = await ret(7), r30 = await ret(30), first = await one('SELECT MIN(day) AS d FROM act');
+  const r7 = await ret(env, 7, now), r30 = await ret(env, 30, now), first = await one('SELECT MIN(day) AS d FROM act');
   // вид: сначала вывод словами, потом блоки с цифрами (<pre> — ровные колонки; эмодзи внутри <pre> не ставим — ломают выравнивание) и пояснение под каждым
   const pad = (x, w) => String(x).padStart(w), lab = (x, w = 16) => String(x).padEnd(w);
-  const pl = (n, a, b, c) => { const m = n % 10, h = n % 100; return `${n} ${m === 1 && h !== 11 ? a : m >= 2 && m <= 4 && (h < 12 || h > 14) ? b : c}`; };
-  const ppl = n => pl(n, 'человек', 'человека', 'человек'), msg = n => pl(n, 'сообщение', 'сообщения', 'сообщений');
   const row = (l, k) => lab(l) + pad(d1[k], 4) + pad(d7[k], 5) + pad(d30[k], 5);
   const table = [lab('') + pad('сег', 4) + pad('7дн', 5) + pad('30дн', 5), row('Всего людей', 'u'), row(' писали боту', 'b'), row(' открывали прил', 'p'),
     row('Новые', 'n'), row('Сообщений боту', 'm'), row(' из них голосом', 'v')].join('\n');
@@ -367,11 +379,10 @@ async function statsText(env, now = Date.now()) {
   const rline = (l, r) => r.c ? `${lab(l, 6)} ${'▓'.repeat(Math.round(10 * r.r / r.c))}${'░'.repeat(10 - Math.round(10 * r.r / r.c))} ${pad(Math.round(100 * r.r / r.c) + '%', 4)}  ${r.r} из ${r.c}` : `${lab(l, 6)} пока рано`;
   const rtext = (r, n, w) => r.c ? `• ${w}: из ${r.c} ${r.c % 10 === 1 && r.c % 100 !== 11 ? 'человека' : 'человек'}, впервые пришедших ${n}–${n + 6} дней назад, снова заходили ${r.r} (${Math.round(100 * r.r / r.c)}%).` +
       (r.c < 10 ? ' Людей пока мало — процент случайный.' : '') : `• ${w}: пока рано — нужно, чтобы со старта прошло ${n + 7}+ дней.`;
-  const MON = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'], t = new Date(now);
-  const dm = d => `${Number(d.slice(8))} ${MON[Number(d.slice(5, 7)) - 1]}`;
+  const t = new Date(now);
   return `📊 <b>Статистика</b> · ${t.getUTCDate()} ${MON[t.getUTCMonth()]}, ${String(t.getUTCHours()).padStart(2, '0')}:${String(t.getUTCMinutes()).padStart(2, '0')} UTC\n\n` +
     `💬 <b>Коротко</b>\nСегодня заходили ${ppl(d1.u)}, за 7 дней — ${ppl(d7.u)}, из них новых ${d7.n}. ` +
-    `Боту за неделю пришло ${msg(d7.m)}, из них голосом ${d7.v}.\n\n` +
+    `Боту за неделю пришло ${msgN(d7.m)}, из них голосом ${d7.v}.\n\n` +
     `🔢 <b>Цифры</b>\n<pre>${table}</pre>\n` +
     `<i>Колонки: сегодня, последние 7 дней, последние 30 дней (включая сегодня). «Всего людей» — разные люди: кто и писал боту, и открывал приложение, считается один раз. ` +
     `«Новые» — пришли впервые. «Сообщений боту» — принятые записи текстом и голосом, без команд.</i>\n\n` +
@@ -383,4 +394,40 @@ async function statsText(env, now = Date.now()) {
     `<i>Это главный показатель спроса: пробуют многие, нужен бот тем, кто возвращается. Грубый ориентир: через неделю меньше 10% — пробуют и бросают, 25% и выше — хороший знак.</i>\n\n` +
     `<i>Сутки — по UTC (в Молдове день меняется в 2–3 часа ночи). Ваши заходы тоже считаются.` +
     (!first || !first.d ? ' Данных пока нет.' : first.d > ago(30, now) ? ` Счёт идёт с ${dm(first.d)}; в первый день все активные посчитаны новыми.` : '') + `</i>`;
+}
+
+// недельная сводка (понедельник утром, cron WEEKLY): прошлая полная неделя пн–вс, коротко; «📊 Подробно» — полный /stats
+const WEEKLY = '5 6 * * 1';   // 06:05 UTC = 08:05 зимой / 09:05 летом по Молдове
+async function weekText(env, now = Date.now()) {
+  await stInit(env);
+  const to = ago(1, now), from = ago(7, now), w = await period(env, from, to), w0 = await period(env, ago(14, now), ago(8, now)), r7 = await ret(env, 7, now);
+  return `🗓 <b>Неделя ${dm(from)} — ${dm(to)}</b>\n\n` +
+    `👥 Людей: <b>${w.u}</b>${delta(w.u, w0.u)}\n` +
+    `🆕 Новых: <b>${w.n}</b>\n` +
+    `💬 Сообщений боту: <b>${w.m}</b>, из них голосом ${w.v}${delta(w.m, w0.m)}\n` +
+    `↩️ Вернулись через неделю: ${r7.c ? `<b>${Math.round(100 * r7.r / r7.c)}%</b> — ${r7.r} из ${r7.c}${r7.c < 10 ? ' (людей мало, процент случайный)' : ''}` : 'пока рано'}\n\n` +
+    `<i>Сводка приходит по понедельникам. Подробности и пояснения — кнопка ниже или /stats.</i>`;
+}
+async function sendWeekly(env) {
+  if (!env.DB || !env.STATS_SALT || !env.OWNER_ID || !env.BOT_TOKEN) return;
+  await tg(env, 'sendMessage', { chat_id: Number(String(env.OWNER_ID).trim()), text: await weekText(env), parse_mode: 'HTML', reply_markup: WEEK_KB });
+}
+// нажатия кнопок статистики (только владельцу): «Обновить» — переписать это же сообщение, «Подробно» — новое сообщение с полным /stats
+async function onCallback(cq, env) {
+  const ok = isOwner(env, cq.from && cq.from.id) && /^st:/.test(cq.data || ''), m = cq.message;
+  if (ok && m && cq.data === 'st:upd') {
+    const r = await (await tg(env, 'editMessageText', { chat_id: m.chat.id, message_id: m.message_id, text: await statsText(env), parse_mode: 'HTML', reply_markup: STATS_KB })).json().catch(() => ({}));
+    return tg(env, 'answerCallbackQuery', { callback_query_id: cq.id, text: r.ok ? 'Обновлено' : /not modified/.test(r.description || '') ? 'Новых данных нет' : 'Не получилось обновить' });
+  }
+  if (ok && m && cq.data === 'st:new') await tg(env, 'sendMessage', { chat_id: m.chat.id, text: await statsText(env), parse_mode: 'HTML', reply_markup: STATS_KB });
+  return tg(env, 'answerCallbackQuery', { callback_query_id: cq.id });
+}
+// чтобы нажатия кнопок доходили: если webhook подписан на список типов без callback_query — добавить его (адрес и секрет те же). Раз на экземпляр
+let hookChecked = false;
+async function ensureCallbacks(env) {
+  if (hookChecked) return; hookChecked = true;
+  const info = await (await tg(env, 'getWebhookInfo', {})).json().catch(() => null), r = info && info.result;
+  if (!r || !r.url || !Array.isArray(r.allowed_updates) || !r.allowed_updates.length || r.allowed_updates.includes('callback_query')) return;
+  await tg(env, 'setWebhook', { url: r.url, secret_token: env.WEBHOOK_SECRET, allowed_updates: [...new Set([...r.allowed_updates, 'message', 'callback_query'])],
+    ...(r.max_connections ? { max_connections: r.max_connections } : {}) });
 }

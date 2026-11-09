@@ -6,7 +6,10 @@ const mk = sql => { const st = { a: [], bind(...a) { return { ...st, a }; },
   async run() { return this.runS(); }, async first() { return db.prepare(sql).get(...this.a) ?? null; }, async all() { return { results: db.prepare(sql).all(...this.a) }; } }; return st; };
 const DB = { prepare: mk, batch: async l => { db.exec('BEGIN'); try { const o = l.map(s => s.runS()); db.exec('COMMIT'); return o; } catch (e) { db.exec('ROLLBACK'); throw e; } } };
 mk.prototype; const P = DB.prepare; DB.prepare = sql => { const s = P(sql); s.sql = sql; const b = s.bind; s.bind = (...a) => { const r = b.call(s, ...a); r.sql = sql; return r; }; return s; };
-let sent = []; globalThis.fetch = async (u, o) => { sent.push(JSON.parse(o.body)); return new Response(JSON.stringify({ ok: true, result: { message_id: 1 } })); };
+let hooks = [], sent = [], hook = { url: 'https://w/webhook', allowed_updates: ['message'] };
+globalThis.fetch = async (u, o) => { const m = String(u).split('/').pop(), b = JSON.parse(o.body); sent.push({ m, ...b }); if (m === 'setWebhook') hooks.push(b);
+  if (m === 'getWebhookInfo') return new Response(JSON.stringify({ ok: true, result: hook }));
+  return new Response(JSON.stringify({ ok: true, result: { message_id: 1 } })); };
 import fs from 'node:fs'; import os from 'node:os'; import path from 'node:path';
 const src = new URL('../worker/worker.js', import.meta.url), tmp = path.join(os.tmpdir(), 'fp-worker-test-' + process.pid + '.mjs');
 fs.writeFileSync(tmp, fs.readFileSync(src, 'utf8') + '\nexport const _t = { mark, rollup, statsText };\n');
@@ -36,7 +39,7 @@ await day(7); await botMsg(1, 'хлеб 20');
 await day(1); await day(30); await botMsg(2, 'ещё 1');
 
 // владелец/чужой
-sent = []; await botMsg(5, '/stats'); assert(sent.length === 0, 'non-owner silent');
+sent = []; await botMsg(5, '/stats'); assert(sent.filter(x => x.m === 'sendMessage').length === 0, 'non-owner silent');
 await botMsg(42, '/stats'); assert(sent.some(m => /Статистика/.test(m.text)), 'owner gets stats');
 // уборка 90 дней
 await day(95); assert(db.prepare("SELECT COUNT(*) c FROM act WHERE day < '2026-10-05'").get().c === 0, 'act >90 deleted');
@@ -55,3 +58,19 @@ const s = await W._t.statsText(env);
 assert(/Всего людей +2 +2 +3/.test(s), 'users today 2 / 7d 2 / 30d 3');
 assert(/Сообщений боту +2 +8 +14/.test(s) && / из них голосом +0 +0 +1/.test(s), 'msgs 2/8/14, voice 0/0/1'); 
 assert(/7 дн +▓{7}░{3} +67% +2 из 3/.test(s), 'ret7 = 2 of 3'); assert(s.length < 4096, 'fits telegram ' + s.length); if (process.env.SHOW) console.log(s);
+// --- кнопки и недельная сводка ---
+const cb = async (uid, data) => { sent = []; await W.default.fetch(new Request('https://w/webhook', { method: 'POST', headers: { 'X-Telegram-Bot-Api-Secret-Token': 's' },
+  body: JSON.stringify({ callback_query: { id: 'q1', from: { id: uid }, data, message: { message_id: 7, chat: { id: uid } } } }) }), env, ctx); await flush(); };
+sent = []; await botMsg(42, '/stats');
+const sw = hooks[0], sm = sent.find(x => x.m === 'sendMessage');
+assert(hooks.length === 1 && sw && sw.allowed_updates.includes('callback_query') && sw.secret_token === 's' && sw.url === hook.url, 'webhook gets callback_query once');
+assert(sm && sm.reply_markup.inline_keyboard[0][0].callback_data === 'st:upd' && sm.parse_mode === 'HTML', 'stats has refresh button');
+await cb(42, 'st:upd'); assert(sent.some(x => x.m === 'editMessageText' && x.message_id === 7 && /Статистика/.test(x.text)) && sent.some(x => x.m === 'answerCallbackQuery'), 'owner refresh edits message');
+await cb(5, 'st:upd'); assert(!sent.some(x => x.m === 'editMessageText') && sent.some(x => x.m === 'answerCallbackQuery'), 'non-owner refresh ignored');
+await cb(42, 'st:new'); assert(sent.some(x => x.m === 'sendMessage' && /Статистика/.test(x.text)), 'details sends full stats');
+sent = []; await W.default.scheduled({ cron: '5 6 * * 1' }, env, ctx); await flush();
+const wk = sent.find(x => x.m === 'sendMessage');
+assert(wk && wk.chat_id === 42 && /Неделя/.test(wk.text) && /Неделя 3 октября — 9 октября/.test(wk.text) && /Людей: <b>1<\/b>/.test(wk.text) && wk.reply_markup.inline_keyboard[0][0].callback_data === 'st:new', 'weekly summary to owner');
+if (process.env.SHOW) console.log(wk.text);
+const aggN = db.prepare('SELECT COUNT(*) c FROM agg').get().c; await W.default.scheduled({ cron: '10 0 * * *' }, env, ctx); await flush();
+assert(db.prepare('SELECT COUNT(*) c FROM agg').get().c >= aggN, 'daily cron still rolls up');
