@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v243';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v244';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -1616,8 +1616,10 @@ html:not(.stk) #stkbg{display:none}
 /* v239: нижняя панель — только значки (33 px), компактная, по центру, ниже к краю экрана; стекло прозрачнее — как панель Safari (видео пользователя).
    При прокрутке вниз сжимается в капсулу со значком текущей вкладки, вверх (и наверху/внизу страницы) — разворачивается (код — tbCompact) */
 html:root body #tabs{left:0!important;right:0!important;width:max-content!important;margin:0 auto!important;gap:0!important;padding:4px!important;bottom:calc(var(--sab,0px)*.3 + 8px)!important;
-  background:rgba(34,34,38,.22)!important;-webkit-backdrop-filter:blur(5px) saturate(1.5)!important;backdrop-filter:blur(5px) saturate(1.5)!important}   /* v242: ещё прозрачнее — 22% / 28% */
-:root[data-theme=light] body #tabs{background:rgba(250,250,252,.28)!important}
+  background:rgba(30,30,34,.5)!important;-webkit-backdrop-filter:blur(22px) saturate(1.8)!important;backdrop-filter:blur(22px) saturate(1.8)!important;
+  border:.5px solid rgba(255,255,255,.16)!important;box-shadow:0 8px 26px rgba(0,0,0,.32),inset 0 .5px 0 rgba(255,255,255,.12)!important}   /* v244: читаемое стекло — плотнее, сильное размытие, рамка и тень по краю */
+:root[data-theme=light] body #tabs{background:rgba(252,252,254,.6)!important;border-color:rgba(0,0,0,.09)!important;box-shadow:0 8px 24px rgba(30,30,50,.14),inset 0 .5px 0 rgba(255,255,255,.7)!important}
+html:root body #tabs button[data-t]{color:var(--t)!important}html:root body #tabs button[data-t]:not(.on) svg{opacity:.62}   /* v244: значки контрастнее */
 html:root body #tabs button[data-t]{flex:0 0 auto!important;width:68px!important;min-width:0!important;height:56px;padding:0!important;justify-content:center;gap:0}   /* v242: крупнее */
 html:root body #tabs button[data-t] svg{width:40px;height:40px;flex:none}
 /* v231: главный блок — один сплошной цвет, без тени и без просвечивания; в «Аналитике»/«Планах» он поверх строки разделов — она заезжает под него */
@@ -1777,6 +1779,10 @@ html.selm #hdrv{display:none}
 #totop.on{visibility:visible;opacity:1;transform:none;pointer-events:auto;transition:opacity .2s ease,transform .44s cubic-bezier(.34,1.56,.64,1),visibility 0s}
 #totop.on:active{transform:scale(.88);transition:transform .12s ease}
 @media (prefers-reduced-motion:reduce){#totop,#totop.on{transition:none}}
+/* v244: «наверх» — просто тонкий уголок без подложки, у правого края над нижней панелью; тень-ореол цвета фона — читается на любом содержимом */
+html:root body #totop{right:14px!important;bottom:calc(var(--sab,0px)*.3 + 82px)!important;width:44px;height:44px;background:none!important;box-shadow:none!important;border:0!important;
+  -webkit-backdrop-filter:none!important;backdrop-filter:none!important;color:var(--t);filter:drop-shadow(0 0 1.5px rgb(var(--bgr))) drop-shadow(0 0 1.5px rgb(var(--bgr)))}
+html:root body #totop svg{width:30px;height:30px}
 /* v146: свой календарь (не забирает фокус — клавиатура остаётся); нативные поля даты в окнах не принимают касания, их берёт подпись */
 :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc,#fp) input[type=date]{pointer-events:none}
 #dpk{position:fixed;z-index:70;width:min(304px,calc(100vw - 16px));padding:12px 12px 10px;border-radius:22px;background:var(--sb,#1e1e22);color:var(--t);box-shadow:0 12px 40px rgba(0,0,0,.35),0 0 0 .5px var(--sbd,rgba(255,255,255,.12));
@@ -4314,7 +4320,7 @@ topEl.addEventListener('click',e=>{if(msBlock){e.stopPropagation();e.preventDefa
 // Когда он ушёл из вида, справа внизу (над вкладкой «Настройки») появляется кнопка «наверх».
 (function(){
   const b=document.createElement('button');b.id='totop';b.type='button';b.tabIndex=-1;b.setAttribute('aria-label','Наверх');
-  b.innerHTML='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5.5"/><path d="M5.5 12L12 5.5 18.5 12"/></svg>';
+  b.innerHTML='<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 15l6.5-6.5 6.5 6.5"/></svg>';   // v244: уголок
   document.body.appendChild(b);
   let raf=0,shown=false,sat=0;
   const satM=()=>{const d=document.createElement('div');d.style.cssText='position:fixed;height:var(--sat,0px)';document.body.appendChild(d);sat=d.offsetHeight;d.remove()};
@@ -7347,7 +7353,9 @@ window.openTips=function(){
   const at=(g,p)=>({clip:`inset(${(g.sy*p).toFixed(2)}px ${(g.sx*p).toFixed(2)}px ${(g.sy*p).toFixed(2)}px ${(g.sx*p).toFixed(2)}px round 999px)`,
     tbT:`translate3d(0,${(g.dy*p).toFixed(2)}px,0)`,actT:`translate3d(${(g.dx*p).toFixed(2)}px,0,0) scale(${(1-.12*p).toFixed(4)})`,
     oth:Math.max(0,1-p*2.2).toFixed(3),othT:`scale(${(1-.3*Math.min(1,p*1.6)).toFixed(4)})`,ind:Math.max(0,1-p*1.8).toFixed(3)});
-  function play(to,dur){stopAll();const g=geo(),pts=to?CP:EP,D=dur||(RMq.matches?1:(to?CD:ED)),P=q=>to?q:1-q;
+  // v244: длительность — от скорости прокрутки: медленно листаете — анимация длиннее (до ×1,3), быстро — короче (до ×0,45)
+  let vS=0;const spd=()=>Math.max(.45,Math.min(1.3,1/Math.max(.77,Math.min(2.2,vS/.9))));
+  function play(to,dur){stopAll();const g=geo(),pts=to?CP:EP,D=dur||(RMq.matches?1:Math.round((to?CD:ED)*spd())),P=q=>to?q:1-q;
     const F=pts.map(([o,q])=>[o,at(g,P(q))]),opt={duration:D,easing:'linear',fill:'forwards'};
     run.push(tb.animate(F.map(([o,v])=>({offset:o,clipPath:v.clip,transform:v.tbT})),opt));
     tb.querySelectorAll('[data-t]').forEach(b=>{if(b===g.act)run.push(b.animate(F.map(([o,v])=>({offset:o,transform:v.actT})),opt));
@@ -7360,7 +7368,9 @@ window.openTips=function(){
   // v243: при входе на страницу — её собственное состояние панели, сразу, без анимации; прыжок прокрутки при смене страницы не считается листанием
   window.tbSet=v=>{v=!!v;ly=pgY();acc=0;if(v===small)return;small=v;tb.classList.toggle('tbs',v);if(v)play(true,1);else stopAll()};
   let ly=pgY(),acc=0;
-  addEventListener('scroll',()=>{const y=pgY(),d=y-ly;ly=y;if(!d)return;if(performance.now()-(window.__pgJump||0)<250){acc=0;return}let mo=false;try{mo=isModalOpen()}catch(e){}if(mo)return;
+  let lt=0;
+  addEventListener('scroll',()=>{const y=pgY(),d=y-ly,n=performance.now(),dt=n-lt;lt=n;ly=y;if(!d)return;vS=dt>0&&dt<120?vS*.5+Math.abs(d)/dt*.5:Math.abs(d)/16;
+    if(n-(window.__pgJump||0)<250){acc=0;return}let mo=false;try{mo=isModalOpen()}catch(e){}if(mo)return;
     const max=Math.max(0,document.documentElement.scrollHeight-innerHeight);
     if(y<=12){acc=0;expand();return}   // v240: наверху — развёрнута; в самом низу остаётся как есть (упёрлись — не разворачивается)
     if(y>=max-4&&d<0)return;           // отскок от низа — не считается прокруткой вверх
