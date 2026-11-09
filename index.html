@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v237';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v238';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -1613,9 +1613,16 @@ html.stk #sbw{position:sticky;top:var(--stk2,calc(var(--sat) + 8px + var(--toph,
 #stkbg.on{opacity:1;visibility:visible;transition:opacity .22s ease,visibility 0s}
 html:not(.stk) #stkbg{display:none}
 #stkbg{height:var(--stkh,0px)}
-/* v237: нижняя панель — только значки, компактная, по центру; промежуток между значками ≈ ширине значка (кнопка 46 px, значок 22 px) */
+/* v237: нижняя панель — компактная, по центру (v238: кнопка 66 px, значок 33 px, название только у активной) */
 html:root body #tabs{left:0!important;right:0!important;width:max-content!important;margin:0 auto!important;gap:0!important;padding:5px!important}
-html:root body #tabs button[data-t]{flex:0 0 auto!important;width:46px!important;min-width:0!important;height:42px;padding:0!important;justify-content:center;gap:0}
+html:root body #tabs button[data-t]{flex:0 0 auto!important;width:66px!important;min-width:0!important;height:58px;padding:0!important;justify-content:center;gap:1px}
+/* v238: значки в 1,5 раза больше (33 px), промежуток чуть больше ширины значка; название — только у активной вкладки, мелко под значком.
+   Место под название есть у всех кнопок, поэтому значки стоят на одной высоте; название проявляется и чуть поднимается при выборе вкладки */
+html:root body #tabs button[data-t] svg{width:33px;height:33px;flex:none}
+html:root body #tabs button[data-t] .tl{display:block;max-width:100%;font-size:10px;line-height:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  opacity:0;transform:translate3d(0,3px,0) scale(.92);transition:opacity .22s ease,transform .32s cubic-bezier(.22,1,.36,1)}
+html:root body #tabs button[data-t].on .tl{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){html:root body #tabs button[data-t] .tl{transition:none}}
 /* v231: главный блок — один сплошной цвет, без тени и без просвечивания; в «Аналитике»/«Планах» он поверх строки разделов — она заезжает под него */
 html:root #top{background:color-mix(in srgb,var(--tp1) 58%,var(--bg));box-shadow:none!important}   /* v232: тени у главного блока нет нигде, ни в одной теме */
 html.stk #top{z-index:9}
@@ -3255,7 +3262,7 @@ function pie(items,tot,rs,an){
   const body=an&&!RM?(()=>{const id='pm'+(++_pmN);return `<defs><mask id="${id}" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><circle class="pmk" cx="${cx}" cy="${cy}" r="${r/2+1}" fill="none" stroke="#fff" stroke-width="${r+2}" pathLength="1" transform="rotate(-90 ${cx} ${cy})"/></mask></defs><g class="pgs" style="transform-origin:${cx}px ${cy}px"><g mask="url(#${id})">${sl}</g></g><g class="pgl">${out}</g>`})():sl+out;
   return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;display:block;margin:8px 0" role="img" aria-label="Диаграмма по категориям">${body}</svg>`}
 const TABS=['list','stats','tags','settings'];
-function buildTabs(){const tb=$('#tabs');if(!tb.querySelector('.ind')){tb.insertAdjacentHTML('afterbegin','<i class="ind"></i>'+[['list','Операции','<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>'],['stats','Аналитика','<path d="M5 20V11M12 20V4M19 20v-6"/>'],['tags','Планы','<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>'],['settings','Настройки','<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>']].map(([k,l,ic])=>`<button data-t="${k}"${k==='settings'?' id="gear"':''} aria-label="${l}" title="${l}" class="${tab===k?'on':''}"${tab===k?' aria-current="page"':''}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ic}</svg></button>`).join(''))}moveInd()}
+function buildTabs(){const tb=$('#tabs');if(!tb.querySelector('.ind')){tb.insertAdjacentHTML('afterbegin','<i class="ind"></i>'+[['list','Операции','<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>'],['stats','Аналитика','<path d="M5 20V11M12 20V4M19 20v-6"/>'],['tags','Планы','<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>'],['settings','Настройки','<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>']].map(([k,l,ic])=>`<button data-t="${k}"${k==='settings'?' id="gear"':''} aria-label="${l}" title="${l}" class="${tab===k?'on':''}"${tab===k?' aria-current="page"':''}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ic}</svg><span class="tl" aria-hidden="true">${l}</span></button>`).join(''))}moveInd()}
 // v178: места кнопок нижней панели запоминаются (меняются только при изменении размеров окна) — иначе чтение размеров
 // сразу после смены подсветки заставляло браузер пересчитывать раскладку всей страницы ещё до того, как построена новая
 let _indG=null;
