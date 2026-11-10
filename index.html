@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v255';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v256';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -21,6 +21,13 @@ if(/tgWebApp(Data|Platform|Version)/.test(_h)||_ss||window.TelegramWebviewProxy)
 var W=window.Telegram&&Telegram.WebApp,TGI=!!(W&&W.initData);window.__TG=TGI?W:null;
 window.tgChrome=function(l){if(!TGI)return;var c=l?"#e4e4e1":"#111111";try{W.setBackgroundColor(c)}catch(e){}try{W.isVersionAtLeast("6.9")&&W.setHeaderColor(c)}catch(e){}try{W.isVersionAtLeast("7.10")&&W.setBottomBarColor(c)}catch(e){}};
 if(TGI){document.documentElement.classList.add("tgapp");try{W.ready()}catch(e){}try{W.expand()}catch(e){}try{W.isVersionAtLeast("7.7")&&W.disableVerticalSwipes()}catch(e){}}
+/* v256: на телефоне — только вертикально (планшеты и компьютеры поворачиваются как угодно). Telegram 8.0+: lockOrientation закрепляет текущее положение —
+   вызываем, когда телефон стоит вертикально; вне Telegram — screen.orientation.lock, где браузер позволяет. Если всё же повернули — экран «Поверните телефон» (#rotx, CSS) */
+(function(){var ph=function(){var a=Math.min(screen.width||0,screen.height||0);return a>0&&a<600&&!!(window.matchMedia&&matchMedia("(pointer:coarse)").matches)};if(!ph())return;
+  var done=false,go=function(){if(innerHeight<innerWidth)return;
+    if(!done&&TGI){try{if(W.isVersionAtLeast&&W.isVersionAtLeast("8.0")&&W.lockOrientation){W.lockOrientation();done=true}}catch(e){}}
+    try{if(screen.orientation&&screen.orientation.lock)screen.orientation.lock("portrait").catch(function(){})}catch(e){}};
+  go();addEventListener("resize",go);addEventListener("orientationchange",function(){setTimeout(go,300)})})();
 var _s=JSON.parse(localStorage.getItem("finapp.settings")||"null"),_t=(_s&&_s.theme)||(TGI?"auto":""),_l=_t==="light"||(_t==="auto"&&(TGI?W.colorScheme==="light":(window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches)));if(_l){document.documentElement.setAttribute("data-theme","light");document.getElementById("tc").content="#e4e4e1"}window.tgChrome(_l)}catch(e){}</script>
 <script>
 /* ВИБРООТКЛИК. Порядок: Telegram HapticFeedback (Mini App, iPhone и Android) → navigator.vibrate (Android) → «свитч»-трюк iOS Safari/PWA (17.4+).
@@ -66,6 +73,18 @@ addEventListener('click',function(e){
 <script>document.documentElement.classList.add("splh");setTimeout(function(){document.documentElement.classList.remove("splh")},7000)</script>
 <title>FinansePro</title>
 <style>
+/* v256: телефон в горизонтальном положении — экран «Поверните телефон» (планшеты и компьютеры: высота окна > 500 px — не затрагиваются) */
+#rotx{display:none}
+@media (orientation:landscape) and (max-height:500px) and (pointer:coarse){
+  #rotx{display:flex;visibility:visible!important;opacity:1!important;position:fixed;inset:0;z-index:2147483646;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px;text-align:center;background:var(--bg,#111);color:var(--t,#fff)}
+  #rotx b{font-size:20px;font-weight:700}#rotx span{font-size:14px;opacity:.65}
+  #rotx .rph{transform-box:view-box;transform-origin:32px 30px;animation:rotPh 2.4s cubic-bezier(.65,0,.35,1) infinite}
+  #rotx .rar{opacity:.55;animation:rotAr 2.4s ease-in-out infinite}
+  html,body{overflow:hidden!important}}
+@keyframes rotPh{0%,20%{transform:rotate(-90deg)}55%,100%{transform:rotate(0)}}
+@keyframes rotAr{0%,20%{opacity:0}40%,70%{opacity:.6}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){#rotx .rph,#rotx .rar{animation:none}}
+
 :root{--sat:calc(max(env(safe-area-inset-top,0px),var(--tg-safe-area-inset-top,0px)) + var(--tg-content-safe-area-inset-top,0px));--sab:calc(max(env(safe-area-inset-bottom,0px),var(--tg-safe-area-inset-bottom,0px)) + var(--tg-content-safe-area-inset-bottom,0px));--g:#8fc9a0;--rd:#e39090;--bg:#111;--s:#181818;--l:#2a2a2a;--t:#f2f2f2;--m:#8a8a8a;--m2:#9a9a9a;--on:#111;--prh:#d8d8d8;--b1:#3a3a3a;--b2:#555;--b3:#333;--l2:#202020;--tx2:#c8c8c8;--wr:255,255,255;--gl:30,30,30;--gl2:30,30,32;--bgr:17,17,17;--tp1:#2b2b2b;--tp2:#202020;--tp3:#424242;--toast:#1c1c1c;color-scheme:dark;box-sizing:border-box;padding-top:var(--sat);padding-bottom:var(--sab)}
 :root[data-theme=light]{--g:#2e8b57;--rd:#c94a4a;--bg:#e4e4e1;--s:#fff;--l:#d3d3ce;--t:#161616;--m:#666;--m2:#555;--on:#fff;--prh:#333;--b1:#c6c6c1;--b2:#b3b3ad;--b3:#cdcdc8;--l2:#d9d9d4;--tx2:#444;--wr:0,0,0;--gl:255,255,255;--gl2:255,255,255;--bgr:228,228,225;--tp1:#fff;--tp2:#f7f7f4;--tp3:#cfcfca;--toast:#fff;color-scheme:light}
 :root[data-theme=light] .glass,:root[data-theme=light] #sh,:root[data-theme=light] #ed,:root[data-theme=light] #gd,:root[data-theme=light] #cf,:root[data-theme=light] #bq,:root[data-theme=light] #nc,:root[data-theme=light] #cp,:root[data-theme=light] #rc{border-color:rgba(0,0,0,.1);box-shadow:0 10px 30px rgba(0,0,0,.12)}
@@ -1861,7 +1880,7 @@ html:root #ed label.ef:focus-within,html:root #ed .ef.tgf:focus-within{border-bo
 html:root #ed #eam,html:root #ed label.ef,html:root #ed .ef.tgf,html:root #ed input{transition:none!important;-webkit-tap-highlight-color:transparent}
 </style>
 </head>
-<body><div id="lk" role="dialog" aria-modal="true" aria-label="PIN-код"></div><div id="vb" aria-hidden="true"></div><div id="spl" aria-hidden="true">
+<body><div id="rotx" aria-live="polite"><svg viewBox="0 0 64 64" width="72" height="72" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g class="rph"><rect x="20" y="8" width="24" height="44" rx="5"/><path d="M29 46h6"/></g><path class="rar" d="M50 30a18 18 0 0 0-14-17M36 9l0 5 5 0"/></svg><b>Поверните телефон</b><span>Приложение работает только вертикально</span></div><div id="lk" role="dialog" aria-modal="true" aria-label="PIN-код"></div><div id="vb" aria-hidden="true"></div><div id="spl" aria-hidden="true">
 <div class="spl-fx"><svg class="spl-logo" viewBox="96 96 320 320" width="132" height="132" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
 <defs><linearGradient id="splg" x1="0" x2="1"><stop offset="0" style="stop-color:var(--g);stop-opacity:.3"/><stop offset=".5" style="stop-color:var(--g)"/><stop offset="1" style="stop-color:var(--g);stop-opacity:.3"/></linearGradient>
 <clipPath id="splc"><rect x="96" y="96" width="320" height="104"/></clipPath></defs>
