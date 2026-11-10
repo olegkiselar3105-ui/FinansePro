@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v260';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v261';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -7329,14 +7329,7 @@ const SH=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-widt
 // шаги: h — заголовок, b() — содержимое, go — подпись кнопки, alt — вторая кнопка, w — приветствие (кнопка «Пропустить» — всё приветствие)
 const STEPS=[
  {w:1,go:'Далее',b:()=>`<div class="ob-v" style="position:relative"><div class="ob-glow"></div>${WAL}</div><h2>Деньги под&nbsp;контролем</h2><p class="ob-p">Записывайте доходы и расходы за секунду, видьте, куда уходят деньги, и копите на важное.</p>`},
- {w:1,go:'Далее',b:()=>`<div class="ob-v"><div class="ob-demo"><div class="ob-say ob-g"><span>кофе 300 кафе</span><s></s></div><div class="ob-rec ob-g"><i>☕</i><span><b>Кофе</b><small>Кафе и рестораны · сегодня</small></span><em>−300</em></div></div></div><h2>Пишите или говорите — как&nbsp;другу</h2><p class="ob-p">Заметка, сумма, категория — и запись готова. Так же можно писать боту в Telegram, текстом или голосом.</p>`},
- {k:'sec',go:'Далее',b:()=>{const pin=pinOn(),bioOk=pin&&BIO.ok,bio=pin&&pinOpt().bio;
-   return `<div class="ob-v ob-vs"><div class="ob-sh">${SH}</div></div><h2>Данные только у&nbsp;вас</h2><p class="ob-p">Записи хранятся в облаке Telegram и на вашем телефоне — на наших серверах их нет. <a href="privacy.html" target="_blank" rel="noopener">Политика конфиденциальности</a></p>
-   <div class="ob-grp ob-g">
-    <button type="button" class="ob-row obt${pin?' on':''}" data-pin="1"><i>🔒</i><span><b>PIN-код при входе</b><small>${pin?'Включён':'Код спрашивается при входе'}</small></span><em class="ob-sw"></em></button>
-    <button type="button" class="ob-row obt${bio?' on':''}${st.hl?' hl':''}" data-bio="1"${bioOk?'':' disabled'}><i>🙂</i><span><b>Вход по ${esc(BIO.ok?bioName():'Face ID')}</b><small>${!pin?'Сначала включите PIN-код':!BIO.inited?'Проверяем телефон…':BIO.ok?'Вместо кода':'Только в Telegram на телефоне'}</small></span><em class="ob-sw"></em></button>
-    <button type="button" class="ob-row obt${PRV?' on':''}" data-prv="1"><i>🙈</i><span><b>Скрывать суммы</b><small>Вместо цифр — •••</small></span><em class="ob-sw"></em></button>
-   </div>`}},
+ {w:1,go:'Настроить под себя',b:()=>`<div class="ob-v"><div class="ob-demo"><div class="ob-say ob-g"><span>кофе 300 кафе</span><s></s></div><div class="ob-rec ob-g"><i>☕</i><span><b>Кофе</b><small>Кафе и рестораны · сегодня</small></span><em>−300</em></div></div></div><h2>Пишите или говорите — как&nbsp;другу</h2><p class="ob-p">Заметка, сумма, категория — и запись готова. Так же можно писать боту в Telegram, текстом или голосом.</p>`},
  {k:'cur',go:'Далее',b:()=>{const lock=hasData(),cur=st.cur,other=!TOP.includes(cur);
    return `<h2>Ваша валюта</h2><p class="ob-p">В ней будут суммы, бюджет и итоги. Другие валюты тоже можно писать — «кофе 5 евро», курс подтянется сам.</p>
    <div class="ob-grid">${TOP.map(c=>`<button type="button" class="ob-o ob-g${c===cur?' on':''}" data-cur="${c}"${lock&&c!==cur?' disabled':''}><b>${esc(SY[c]||c)}</b><small>${c} · ${esc((CURS[c]||{}).n||'')}</small></button>`).join('')}</div>
@@ -7352,6 +7345,13 @@ const STEPS=[
  {k:'cat',go:'Далее',b:()=>{const set=catSet()==='v2'?CAT2:CAT3;
    return `<h2>Ваши категории</h2><p class="ob-p">Нажмите на то, что вам не нужно, — категория скроется. Ничего не удаляется, вернуть можно в настройках.</p>
    <div class="ob-cats">${set.e.filter(x=>x[0]!=='other').map((x,k)=>{let em=x[2]||'';try{em=em||(typeof EMO==='object'&&EMO[x[0]])||''}catch(e){}return `<button type="button" class="ob-c ob-g${st.hide.includes(x[0])?' off':''}" data-cat="${x[0]}" style="animation:obIn .5s cubic-bezier(.22,1,.36,1) ${(.05+k*.025).toFixed(3)}s backwards">${em?`<span>${em}</span>`:''}${esc(x[1])}</button>`}).join('')}</div>`}},
+ {k:'sec',go:'Далее',b:()=>{const pin=pinOn(),bioOk=pin&&BIO.ok,bio=pin&&pinOpt().bio;
+   return `<div class="ob-v ob-vs"><div class="ob-sh">${SH}</div></div><h2>Данные только у&nbsp;вас</h2><p class="ob-p">Записи хранятся в облаке Telegram и на вашем телефоне — на наших серверах их нет. <a href="privacy.html" target="_blank" rel="noopener">Политика конфиденциальности</a></p>
+   <div class="ob-grp ob-g">
+    <button type="button" class="ob-row obt${pin?' on':''}" data-pin="1"><i>🔒</i><span><b>PIN-код при входе</b><small>${pin?'Включён':'Код спрашивается при входе'}</small></span><em class="ob-sw"></em></button>
+    <button type="button" class="ob-row obt${bio?' on':''}${st.hl?' hl':''}" data-bio="1"${bioOk?'':' disabled'}><i>🙂</i><span><b>Вход по ${esc(BIO.ok?bioName():'Face ID')}</b><small>${!pin?'Сначала включите PIN-код':!BIO.inited?'Проверяем телефон…':BIO.ok?'Вместо кода':'Только в Telegram на телефоне'}</small></span><em class="ob-sw"></em></button>
+    <button type="button" class="ob-row obt${PRV?' on':''}" data-prv="1"><i>🙈</i><span><b>Скрывать суммы</b><small>Вместо цифр — •••</small></span><em class="ob-sw"></em></button>
+   </div>`}},
  {k:'pinin',go:'',alt:'Не сейчас',b:()=>`<h2 class="ob-ph">${st.pf?'Повторите код':'Придумайте код'}</h2><p class="ob-p ob-pm">${st.pm||'4 цифры — их будете вводить при входе'}</p>
    <div class="ob-dots${st.pok?' ok':''}">${[0,1,2,3].map(k=>`<i class="${k<st.pb.length?'f':''}"></i>`).join('')}</div>
    <div class="ob-kp">${[1,2,3,4,5,6,7,8,9,'',0,'⌫'].map(k=>k===''?'<span></span>':`<button type="button" class="ob-g" data-k="${k}"${k==='⌫'?' aria-label="Стереть"':''}>${k}</button>`).join('')}</div>`},
@@ -7361,7 +7361,7 @@ const STEPS=[
    <div class="ob-note">Можно и через бота: напишите ему так же — текстом или голосом, запись появится здесь.</div>`}
 ];
 const N=STEPS.length;
-function back(){if(i<=0)return;const k=STEPS[i].k;go(k==='pinin'?idx('sec'):i-1,-1)}
+function back(){if(i<=0)return;const k=STEPS[i].k;let t=k==='pinin'?idx('sec'):i-1;if(STEPS[t]&&STEPS[t].k==='pinin')t--;go(t,-1)}
 function fwdOk(){const k=STEPS[i].k;return k!=='first'&&k!=='pinin'}
 function build(){if(root)return;
   root=D.createElement('div');root.id='onb';root.setAttribute('role','dialog');root.setAttribute('aria-modal','true');root.setAttribute('aria-label','Знакомство и настройка');
@@ -7444,6 +7444,7 @@ function go(n,dir){if(busy||n<0||n>=N)return;const old=stEl.firstChild;i=n;
 function next(skip){const s=STEPS[i];
   if(s.k==='bud'&&!skip)applyBud();
   if(s.k==='pinin'){go(idx('sec'),-1);return}
+  if(s.k==='sec'){go(idx('first'),1);return}
   if(s.k==='first'){finish(skip?'':(st.txt||'').trim());return}
   go(i+1,1)}
 function finish(text){
