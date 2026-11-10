@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v253';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v254';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -2362,7 +2362,7 @@ function nomName(w){w=String(w).toLowerCase().replace(/ё/g,'е');if(NAMES.inclu
 const BM_=v=>fmt(Math.round(v*100)/100)+' '+cfg.cur;
 const MNP=['январе','феврале','марте','апреле','мае','июне','июле','августе','сентябре','октябре','ноябре','декабре'];
 function perKey(d){let k=mOf(d);try{if(d<pFrom(k))k=shiftMonth(k,-1)}catch(e){}return k}
-function spentIn(k,cat){const a=pFrom(k),b=pTo(k);return tx.filter(t=>t.type==='expense'&&!nbTx(t)&&t.date>=a&&t.date<=b&&(!cat||t.category===cat)).reduce((s,t)=>s+t.amount,0)}
+function spentIn(k,cat){const a=pFrom(k),b=pTo(k);return tx.filter(t=>(cat?limTx(t,cat):t.type==='expense'&&!nbTx(t))&&t.date>=a&&t.date<=b&&(!cat||t.category===cat)).reduce((s,t)=>s+t.amount,0)}
 const inMon=k=>'В '+MNP[+k.slice(5,7)-1];
 function bGoal(g,sg,v,lk){const p=g.target>0?Math.min(100,Math.round(g.saved/g.target*100)):0;
   return '🎯 Цель «'+g.name+'»: '+sg+BM_(v)+'\nНакоплено '+fmt(g.saved)+' из '+BM_(g.target)+' ('+p+'%)'+(g.target>0&&g.saved>=g.target?'\n🎉 Цель достигнута!':g.target>0?'\nОсталось собрать: '+BM_(g.target-g.saved):'')+(lk?'\nЗаписано и в расходы':'')}
@@ -2843,6 +2843,9 @@ const sumBy=(m,type,cat)=>txOfM(m).filter(t=>t.type===type&&(!cat||t.category===
 const NB_CATS=['debt','save','debtin'];
 const nbTx=t=>!!t&&(NB_CATS.includes(t.category)||!!(t.lk&&(t.lk.k==='d'||t.lk.k==='g')));
 const budX=(m,cat)=>txOfM(m).filter(t=>t.type==='expense'&&!nbTx(t)&&(!cat||t.category===cat)).reduce((s,t)=>s+t.amount,0);
+// v254: лимит на «Долг»/«Накопления» можно задать — он считает все траты своей категории; лимиты прочих категорий — без операций долгов и целей
+const limTx=(t,cat)=>t.type==='expense'&&t.category===cat&&(NB_CATS.includes(cat)||!nbTx(t));
+const limX=(m,cat)=>txOfM(m).filter(t=>limTx(t,cat)).reduce((s,t)=>s+t.amount,0);
 const sgn=d=>(d>=0?'+':'−')+Math.abs(Math.round(d))+'%';
 
 
@@ -2857,15 +2860,15 @@ const sumTo=(m,type,cat,upTo)=>txOfM(m).filter(t=>t.type===type&&(!cat||t.catego
 function cmpCat(type,id){const b=cmpBase(),cur=sumTo(month,type,id,b.upTo),prev=sumTo(b.pm,type,id,b.pup);return{cur,prev,d:prev>0?(cur-prev)/prev*100:null,partial:b.partial}}
 // карточки статистики: лимиты, сравнение
 function extraCards(it){let h='';
-  const lims=Object.entries(limOf(month)).filter(([id,v])=>v>0&&!NB_CATS.includes(id)&&ALL.some(c=>c.id===id&&!c.inc)).map(([id,v])=>{const sp=budX(month,id);return{id,v,sp,p:sp/v*100}}).sort((a,b)=>b.p-a.p);
+  const lims=Object.entries(limOf(month)).filter(([id,v])=>v>0&&ALL.some(c=>c.id===id&&!c.inc)).map(([id,v])=>{const sp=limX(month,id);return{id,v,sp,p:sp/v*100}}).sort((a,b)=>b.p-a.p);
   if(lims.length)h+=`<div class="cd"><h4>Лимиты · ${MN[+month.slice(5,7)-1]}</h4>`+lims.map(l=>{const c=cd(l.id),col=l.p>=100?'#ff6b6b':l.p>=80?'#f2c14e':'var(--g)';return `<div class="lr" data-cat="${l.id}" role="button" tabindex="0"><div class="lh"><span>${dot(l.id)}${E(c.l)}</span><span style="color:${l.p>=80?col:'var(--m2)'}">${fmt(l.sp)} / ${fmt(l.v)}${l.p>=100?' · +'+fmt(l.sp-l.v):''}</span></div><div class="lb"><i style="width:${Math.min(100,l.p)}%;background:${col}"></i></div></div>`}).join('')+`</div>`;
   const cs=it.map(([id])=>({id,...cmpCat('expense',id)})).filter(x=>x.d!=null&&Math.abs(x.d)>=10&&Math.abs(x.cur-x.prev)>=1).sort((a,b)=>Math.abs(b.cur-b.prev)-Math.abs(a.cur-a.prev)).slice(0,4);
   if(cs.length)h+=`<div class="cd"><h4>К прошлому месяцу${cs[0].partial?' (за те же дни)':''}</h4>`+cs.map(x=>`<div class="cmp"><span>${E(cd(x.id).l)}</span><span style="color:${x.d>0?'var(--rd)':'var(--g)'}">${sgn(x.d)} · ${x.cur>=x.prev?'+':'−'}${fmt(Math.abs(Math.round(x.cur-x.prev)))}</span></div>`).join('')+`</div>`;
   return h}
 // предупреждение при добавлении: 80% и 100% лимита
 function limitNote(list){const out=[],seen=new Set();
-  list.forEach(t=>{if(t.type!=='expense'||nbTx(t))return;const m=mOf(t.date),lim=limOf(m)[t.category];if(!(lim>0))return;const k=m+t.category;if(seen.has(k))return;seen.add(k);
-    const add=list.filter(x=>x.type==='expense'&&!nbTx(x)&&x.category===t.category&&mOf(x.date)===m).reduce((s,x)=>s+x.amount,0),after=budX(m,t.category),before=after-add;
+  list.forEach(t=>{if(!limTx(t,t.category))return;const m=mOf(t.date),lim=limOf(m)[t.category];if(!(lim>0))return;const k=m+t.category;if(seen.has(k))return;seen.add(k);
+    const add=list.filter(x=>limTx(x,t.category)&&mOf(x.date)===m).reduce((s,x)=>s+x.amount,0),after=limX(m,t.category),before=after-add;
     if(before<lim&&after>=lim)out.push(`«${cd(t.category).l}»: лимит превышен на ${fmt(Math.round(after-lim))}`);
     else if(before<lim*.8&&after>=lim*.8)out.push(`«${cd(t.category).l}»: ${Math.round(after/lim*100)}% лимита`)});
   return out[0]||''}
@@ -3102,14 +3105,14 @@ function budgetHtml(){const X=budX(month),XN=sumBy(month,'expense')-X,Bd=budgetO
     h+=`<div class="cd"><div class="gh"><b>Бюджет · ${mn}</b><span>${fmt(X)} / ${fmt(Bd)} ${cfg.cur}</span></div><div class="lb"><i style="width:${Math.min(100,p)}%;background:${limCol(p)}"></i></div><div class="gx">${Math.round(p)}% · ${p>=100?'Превышен на '+fmt(Math.round(X-Bd)):'Осталось '+fmt(Math.round(Bd-X))} ${cfg.cur}</div><div class="gx" style="margin-top:2px">${own?'Только для этого месяца':'Общий бюджет — для месяцев без своего'}</div>${XN>=.5?`<div class="gx" style="margin-top:2px">Долги и накопления не входят: ${fmt(Math.round(XN))} ${cfg.cur}</div>`:''}<div class="gb"><button class="sm" data-la="bud">Изменить</button></div></div>`}
   {const ks=Object.keys(cfg.bm||{}).filter(k=>Number(cfg.bm[k])>0).sort().reverse().slice(0,6);if(ks.length)h+=`<div class="gx" style="margin:6px 2px 0">Свои бюджеты: ${ks.map(k=>E(MS[+k.slice(5,7)-1]+(k.slice(0,4)!==month.slice(0,4)?' '+k.slice(2,4):'')+' '+fmt(cfg.bm[k]))).join(' · ')}${Number(cfg.budget)>0?' · общий '+fmt(cfg.budget):''}</div>`}
   h+=`<div class="gsh" style="margin-top:14px">${mtg('cl',carryLimOn(),'Переносить лимиты на следующие месяцы')}<button class="gp" data-la="new" aria-label="Добавить лимит">+</button></div>`;
-  const ls=Object.entries(limOf(month)).filter(([id,v])=>v>0&&!NB_CATS.includes(id)&&ALL.some(c=>c.id===id&&!c.inc)).map(([id,v])=>{const sp=budX(month,id);return{id,v,sp,p:sp/v*100}}).sort((a,b)=>b.p-a.p);
+  const ls=Object.entries(limOf(month)).filter(([id,v])=>v>0&&ALL.some(c=>c.id===id&&!c.inc)).map(([id,v])=>{const sp=limX(month,id);return{id,v,sp,p:sp/v*100}}).sort((a,b)=>b.p-a.p);
   if(!ls.length&&limOwnMode(month)&&Object.values(cfg.limits||{}).some(v=>v>0))h+=`<div class="cd" style="color:var(--m);font-size:13px;line-height:1.45">Перенос лимитов выключен — на ${mn.toLowerCase()} лимитов нет. Нажмите «+», чтобы задать их для этого месяца.</div>`;
   else if(!ls.length)h+=`<div class="cd" style="color:var(--m);font-size:13px;line-height:1.45">Например: «Продукты 3 000 в месяц». Нажмите «+» — покажу, сколько уже потрачено и когда подойдёте к лимиту.</div>`;
   else h+=ls.map(l=>{const c=cd(l.id);
     return `<div class="cd"><div class="gh"><b>${dot(l.id)}${E(c.l)}</b><span>${fmt(l.sp)} / ${fmt(l.v)} ${cfg.cur}</span></div><div class="lb"><i style="width:${Math.min(100,l.p)}%;background:${limCol(l.p)}"></i></div><div class="gx">${Math.round(l.p)}% · ${l.p>=100?'Превышен на '+fmt(Math.round(l.sp-l.v)):'Осталось '+fmt(Math.round(l.v-l.sp))} ${cfg.cur}</div><div class="gb"><button class="sm" data-la="edit" data-cid="${l.id}">Изменить</button></div></div>`}).join('');
   return h+`</div>`}
 function limAct(el){const a=el.dataset.la;if(a==='bud')openBud(el);else if(a==='new')openLim(null,el);else if(a==='edit')openLim(el.dataset.cid,el)}
-function openLim(id,src){if(isModalOpen())return;const used=limOf(month),cats=ALL.filter(c=>!c.inc&&!NB_CATS.includes(c.id)&&(c.id===id||!(used[c.id]>0)));
+function openLim(id,src){if(isModalOpen())return;const used=limOf(month),cats=ALL.filter(c=>!c.inc&&(c.id===id||!(used[c.id]>0)));
   if(!cats.length){toast('Лимиты заданы для всех категорий');return}
   cancelGestures();lockBg(true);gT={mode:'lim',id:id||null};
   gd.innerHTML=`<div class="eh"><b>${id?'Лимит':'Новый лимит'}</b><button class="x" id="gcl" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div>
