@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v258';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v259';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -1887,15 +1887,18 @@ html:root #ed #eam,html:root #ed label.ef,html:root #ed .ef.tgf,html:root #ed in
 #onb .ob-top{display:flex;align-items:center;gap:10px;height:40px;flex:none}
 #onb .ob-bk{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(var(--wr),.08);color:var(--t);transition:opacity .2s ease,transform .3s cubic-bezier(.34,1.56,.64,1)}
 #onb .ob-bk.hid{opacity:0;pointer-events:none;transform:scale(.6)}
-#onb .ob-pr{flex:1;display:flex;gap:4px}#onb .ob-pr i{flex:1;height:4px;border-radius:2px;background:rgba(var(--wr),.14);overflow:hidden}
-#onb .ob-pr i::after{content:"";display:block;height:100%;width:100%;background:var(--t);transform:scaleX(0);transform-origin:0 50%;transition:transform .5s cubic-bezier(.22,1,.36,1)}
+#onb .ob-pr{flex:1;display:flex;gap:4px}#onb .ob-pr i{flex:1;height:4px;border-radius:2px;background:rgba(var(--wr),.14)}
+#onb .ob-pr i::after{content:"";display:block;height:100%;width:100%;border-radius:2px;background:linear-gradient(90deg,color-mix(in srgb,var(--g) 60%,transparent),var(--g));transform:scaleX(0);transform-origin:0 50%;transition:transform .5s cubic-bezier(.22,1,.36,1),box-shadow .5s ease}
+#onb .ob-pr i.d::after{box-shadow:0 0 6px rgba(143,201,160,.35)}
+#onb .ob-pr i.cur::after{box-shadow:0 0 9px 1px rgba(143,201,160,.6),0 0 18px 3px rgba(143,201,160,.28)}   /* как у текущей точки в «Обучении» */
+:root[data-theme=light] #onb .ob-pr i.d::after{box-shadow:0 0 6px rgba(46,139,87,.3)}:root[data-theme=light] #onb .ob-pr i.cur::after{box-shadow:0 0 9px 1px rgba(46,139,87,.5),0 0 18px 3px rgba(46,139,87,.22)}
 #onb .ob-pr i.d::after{transform:scaleX(1)}
 #onb .ob-sk{height:40px;padding:0 4px 0 10px;font-size:15px;font-weight:500;color:var(--m2);background:none}
 #onb .ob-st{flex:1;position:relative;min-height:0}
 #onb .ob-s{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-start;overflow-y:auto;overscroll-behavior:contain;padding:8px 0;scrollbar-width:none}
 #onb .ob-s::-webkit-scrollbar{display:none}
 #onb .ob-s[hidden]{display:none}
-#onb .ob-s>:first-child{margin-top:auto}#onb .ob-s>:last-child{margin-bottom:auto}   /* по центру, а длинное — листается с начала, заголовок не уезжает за верх */
+#onb .ob-s>:first-child{margin-top:clamp(12px,7vh,64px)}#onb .ob-s>:last-child{margin-bottom:auto}   /* по центру, а длинное — листается с начала, заголовок не уезжает за верх */
 #onb .ob-s>*{animation:obIn .6s cubic-bezier(.22,1,.36,1) backwards;animation-delay:calc(.05s + var(--i,0)*.07s)}
 @keyframes obIn{from{opacity:0;transform:translate3d(0,18px,0)}}
 #onb h2{font-size:30px;line-height:1.12;font-weight:750;letter-spacing:-.02em;margin:0 0 12px}
@@ -5235,9 +5238,9 @@ function stHtml(){
   const ri=()=>'';
   const CH='';
   const tgRow=(id,label,on,lk)=>`<div class="rw tr"><span class="rl" style="white-space:normal;line-height:1.25">${label}</span><button type="button" class="tg${on?' on':''}" id="${id}"${lk?` data-lk="${lk}"`:''} role="switch" aria-checked="${!!on}" aria-label="${label}" style="flex:none"></button></div>`;
-  const ICN={"pol":"<rect x='5' y='10.5' width='14' height='10' rx='2.2'/><path d='M8.5 10.5V7.8a3.5 3.5 0 0 1 7 0v2.7'/>","tou":"<path d='M5 5.5A1.5 1.5 0 0 1 6.5 4H19v13H6.5A1.5 1.5 0 0 0 5 18.5z'/><path d='M5 18.5A1.5 1.5 0 0 0 6.5 20H19v-3M9 8h6'/>","prv":"<path d='M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z'/><circle cx='12' cy='12' r='2.6'/><path d='M4.5 19.5l15-15'/>","mst":"<rect x=\"4\" y=\"5.5\" width=\"16\" height=\"14\" rx=\"2.5\"/><path d=\"M8 3.5v4M16 3.5v4M4 10h16\"/><circle cx=\"8.5\" cy=\"14.5\" r=\"1.1\"/>","pin":"<rect x=\"5\" y=\"10.5\" width=\"14\" height=\"9.5\" rx=\"2.5\"/><path d=\"M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5M12 14v2.3\"/>","cub": "<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M14.8 9.4c-.5-.9-1.4-1.4-2.8-1.4-1.6 0-2.7.8-2.7 2s1 1.7 2.7 2.1 2.9.9 2.9 2.2-1.2 2.1-2.9 2.1c-1.4 0-2.4-.5-2.9-1.5M12 6.4v1.6M12 16v1.6\"/>", "tpr": "<path d=\"M13 3L5 13.5h6L10 21l8-10.5h-6z\"/>", "thm": "<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M12 3.5a8.5 8.5 0 0 1 0 17z\"/>", "hlp": "<path d=\"M5 5.5A1.5 1.5 0 0 1 6.5 4H19v13H6.5A1.5 1.5 0 0 0 5 18.5z\"/><path d=\"M5 18.5A1.5 1.5 0 0 0 6.5 20H19v-3M9 8h6\"/>", "ctc": "<path d=\"M5 6.5A2.5 2.5 0 0 1 7.5 4h9A2.5 2.5 0 0 1 19 6.5v7a2.5 2.5 0 0 1-2.5 2.5H11l-4 3.5V16a2 2 0 0 1-2-2z\"/>", "cin": "<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M12 8v8M9 13l3 3 3-3\"/>", "cex": "<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M12 16V8M9 11l3-3 3 3\"/>", "lkr": "<path d=\"M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3\"/><path d=\"M4 7.5V17a2 2 0 0 0 2 2h12.5a1.5 1.5 0 0 0 1.5-1.5v-8A1.5 1.5 0 0 0 18.5 8h-12A2.5 2.5 0 0 1 4 7.5z\"/><circle cx=\"16\" cy=\"13.5\" r=\"1\"/>", "crs": "<rect x=\"4\" y=\"5.5\" width=\"16\" height=\"14\" rx=\"2.5\"/><path d=\"M8 3.5v4M16 3.5v4M4 10h16M9.5 14.5h5M12.5 12.5l2 2-2 2\"/>", "bki": "<path d=\"M12 4v10M8 10.2l4 4 4-4M5 19.5h14\"/>", "bke": "<path d=\"M12 15V5M8 8.8l4-4 4 4M5 19.5h14\"/>", "bkr": "<path d=\"M5 7h14M10 7V4.8h4V7M7 7l.8 12h8.4L17 7M10.3 11v5M13.7 11v5\"/>"};
+  const ICN={"onbr":"<path d='M11 4l1.7 4.3L17 10l-4.3 1.7L11 16l-1.7-4.3L5 10l4.3-1.7z'/><path d='M18 14.5l.8 1.9 1.9.8-1.9.8-.8 1.9-.8-1.9-1.9-.8 1.9-.8z'/>","rcs":"<path d='M17 3l3 3-3 3'/><path d='M4 11V9.5A3.5 3.5 0 0 1 7.5 6H20'/><path d='M7 21l-3-3 3-3'/><path d='M20 13v1.5a3.5 3.5 0 0 1-3.5 3.5H4'/>","pol":"<rect x='5' y='10.5' width='14' height='10' rx='2.2'/><path d='M8.5 10.5V7.8a3.5 3.5 0 0 1 7 0v2.7'/>","tou":"<path d='M5 5.5A1.5 1.5 0 0 1 6.5 4H19v13H6.5A1.5 1.5 0 0 0 5 18.5z'/><path d='M5 18.5A1.5 1.5 0 0 0 6.5 20H19v-3M9 8h6'/>","prv":"<path d='M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z'/><circle cx='12' cy='12' r='2.6'/><path d='M4.5 19.5l15-15'/>","mst":"<rect x=\"4\" y=\"5.5\" width=\"16\" height=\"14\" rx=\"2.5\"/><path d=\"M8 3.5v4M16 3.5v4M4 10h16\"/><circle cx=\"8.5\" cy=\"14.5\" r=\"1.1\"/>","pin":"<rect x=\"5\" y=\"10.5\" width=\"14\" height=\"9.5\" rx=\"2.5\"/><path d=\"M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5M12 14v2.3\"/>","cub": "<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M14.8 9.4c-.5-.9-1.4-1.4-2.8-1.4-1.6 0-2.7.8-2.7 2s1 1.7 2.7 2.1 2.9.9 2.9 2.2-1.2 2.1-2.9 2.1c-1.4 0-2.4-.5-2.9-1.5M12 6.4v1.6M12 16v1.6\"/>", "tpr": "<path d=\"M13 3L5 13.5h6L10 21l8-10.5h-6z\"/>", "thm": "<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M12 3.5a8.5 8.5 0 0 1 0 17z\"/>", "hlp": "<path d=\"M5 5.5A1.5 1.5 0 0 1 6.5 4H19v13H6.5A1.5 1.5 0 0 0 5 18.5z\"/><path d=\"M5 18.5A1.5 1.5 0 0 0 6.5 20H19v-3M9 8h6\"/>", "ctc": "<path d=\"M5 6.5A2.5 2.5 0 0 1 7.5 4h9A2.5 2.5 0 0 1 19 6.5v7a2.5 2.5 0 0 1-2.5 2.5H11l-4 3.5V16a2 2 0 0 1-2-2z\"/>", "cin": "<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M12 8v8M9 13l3 3 3-3\"/>", "cex": "<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M12 16V8M9 11l3-3 3 3\"/>", "lkr": "<path d=\"M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3\"/><path d=\"M4 7.5V17a2 2 0 0 0 2 2h12.5a1.5 1.5 0 0 0 1.5-1.5v-8A1.5 1.5 0 0 0 18.5 8h-12A2.5 2.5 0 0 1 4 7.5z\"/><circle cx=\"16\" cy=\"13.5\" r=\"1\"/>", "crs": "<rect x=\"4\" y=\"5.5\" width=\"16\" height=\"14\" rx=\"2.5\"/><path d=\"M8 3.5v4M16 3.5v4M4 10h16M9.5 14.5h5M12.5 12.5l2 2-2 2\"/>", "bki": "<path d=\"M12 4v10M8 10.2l4 4 4-4M5 19.5h14\"/>", "bke": "<path d=\"M12 15V5M8 8.8l4-4 4 4M5 19.5h14\"/>", "bkr": "<path d=\"M5 7h14M10 7V4.8h4V7M7 7l.8 12h8.4L17 7M10.3 11v5M13.7 11v5\"/>"};
   const IC=id=>ICN[id]?`<span class="rwi"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICN[id]}</svg></span>`:'';
-  const row=(id,col,g,label,val,cls)=>`<button type="button" class="rw${cls?' '+cls:''}" id="${id}">${IC(id)}<span class="rl">${label}</span>${val!=null?`<span class="rv">${val}</span>`:''}${CH}</button>`;
+  const row=(id,col,g,label,val,cls)=>`<button type="button" class="rw${cls?' '+cls:''}" id="${id}">${IC(id)}<span class="rl">${label}</span>${CH}</button>`;   // v259: без подписи справа (значение видно, когда нажмёте на строку)
   let nm='Гость',sub='Данные хранятся на этом устройстве',ph='',ini='',un=false,avc='';
   try{const u=IN_TG&&TGW.initDataUnsafe&&TGW.initDataUnsafe.user;
     if(u){nm=[u.first_name,u.last_name].filter(Boolean).join(' ')||u.username||'Гость';un=!!u.username;sub=u.username?'@'+u.username:'Telegram';if(u.photo_url&&/^https:\/\//.test(u.photo_url))ph=u.photo_url;ini=(Array.from(nm.trim())[0]||'').toUpperCase();const P=['#e17076','#faa774','#a695e7','#7bc862','#6ec9cb','#65aadd','#ee7aae'];avc=P[Math.abs(Number(u.id)||0)%P.length]}}catch(e){}
@@ -7328,7 +7331,7 @@ const STEPS=[
  {k:'ms',go:'Далее',b:()=>`<h2>Когда начинается ваш месяц?</h2><p class="ob-p">Если получаете зарплату, например, 10-го — пусть месяц и бюджет считаются с этого дня.</p>
    <button type="button" class="ob-row ob-g${st.ms<2?' on':''}" data-ms="1"><i>1️⃣</i><span><b>С 1-го числа</b><small>Обычный календарный месяц</small></span></button>
    <button type="button" class="ob-row ob-g${st.ms>=2?' on':''}" data-ms="pay"><i>💰</i><span><b>С дня зарплаты</b><small>Выберите число ниже</small></span></button>
-   <div class="ob-day${st.ms>=2?'':' off'}"><button type="button" class="ob-g" data-md="-1" aria-label="Раньше">−</button><b id="obmd">${Math.max(2,st.ms)} число</b><button type="button" class="ob-g" data-md="1" aria-label="Позже">+</button></div>`},
+   <div class="ob-day${st.ms>=2?'':' off'}"><button type="button" class="ob-g" data-md="-1" aria-label="Раньше">−</button><b id="obmd">${st.ms>=2?st.ms:(st.msPay||10)} число</b><button type="button" class="ob-g" data-md="1" aria-label="Позже">+</button></div>`},
  {k:'bud',go:'Далее',alt:'Не сейчас',b:()=>`<h2>Сколько хотите тратить в&nbsp;месяц?</h2><p class="ob-p">Покажу, сколько осталось и сколько можно тратить в день. Долги и накопления в бюджет не входят.</p>
    <label class="ob-in ob-g" for="obbud"><input id="obbud" type="text" inputmode="decimal" autocomplete="off" placeholder="0" value="${st.bud>0?esc(st.bud):''}"><em>${esc(st.cur||cfg.cur)}</em></label>
    <div class="ob-chips">${[5000,10000,15000,20000].map(v=>`<button type="button" data-bv="${v}">${fmtN(v)}</button>`).join('')}</div><div class="ob-note">Можно изменить в любой момент: «Планы → Бюджет».</div>`},
@@ -7379,7 +7382,7 @@ function build(){if(root)return;
   root.addEventListener('change',e=>{if(e.target.id==='obcs'&&e.target.value){st.cur=e.target.value;applyCur();paint()}})}
 function onPick(e){if(Date.now()-swT<400)return;const b=e.target.closest('button');if(!b||b.disabled||!root.contains(b))return;
   if(b.dataset.cur){st.cur=b.dataset.cur;applyCur();vib();root.querySelectorAll('[data-cur]').forEach(x=>x.classList.toggle('on',x===b));const s=$q('#obcs');if(s)s.value='';const n=$q('.ob-note',stEl);if(n&&!hasData())n.remove()}
-  else if(b.dataset.ms){vib();st.ms=b.dataset.ms==='1'?1:Math.max(2,st.msPay||10);if(st.ms>=2)st.msPay=st.ms;applyMs();root.querySelectorAll('[data-ms]').forEach(x=>x.classList.toggle('on',x===b));$q('.ob-day',stEl).classList.toggle('off',st.ms<2);$q('#obmd').textContent=Math.max(2,st.ms)+' число'}
+  else if(b.dataset.ms){vib();st.ms=b.dataset.ms==='1'?1:Math.max(2,st.msPay||10);if(st.ms>=2)st.msPay=st.ms;applyMs();root.querySelectorAll('[data-ms]').forEach(x=>x.classList.toggle('on',x===b));$q('.ob-day',stEl).classList.toggle('off',st.ms<2);$q('#obmd').textContent=(st.ms>=2?st.ms:(st.msPay||10))+' число'}
   else if(b.dataset.md){vib();st.ms=Math.min(28,Math.max(2,(st.ms>=2?st.ms:10)+(+b.dataset.md)));st.msPay=st.ms;applyMs();$q('#obmd').textContent=st.ms+' число'}
   else if(b.dataset.bv){vib();st.bud=+b.dataset.bv;const f=$q('#obbud');if(f)f.value=st.bud}
   else if(b.dataset.cat){vib();const id=b.dataset.cat,k=st.hide.indexOf(id);if(k>=0)st.hide.splice(k,1);else st.hide.push(id);b.classList.toggle('off',k<0);applyCat()}
@@ -7417,7 +7420,7 @@ function sync(){const s=STEPS[i];goEl.disabled=s.k==='first'&&!(st.txt&&st.txt.t
 function paint(){const s=STEPS[i];
   stEl.innerHTML=`<section class="ob-s">${s.b()}</section>`;
   [...stEl.firstChild.children].forEach((c,k)=>c.style.setProperty('--i',k));
-  prEl.forEach((p,k)=>p.classList.toggle('d',k<=i));
+  prEl.forEach((p,k)=>{p.classList.toggle('d',k<=i);p.classList.toggle('cur',k===i)});
   bkEl.classList.toggle('hid',i===0);
   skEl.textContent='Пропустить';
   const gl=typeof s.go==='function'?s.go():s.go,al=typeof s.alt==='function'?s.alt():s.alt;goEl.textContent=gl;goEl.style.display=gl?'':'none';altEl.textContent=al||'';altEl.style.display=al?'':'none';skEl.style.visibility=s.k==='first'||s.k==='pinin'?'hidden':'';
