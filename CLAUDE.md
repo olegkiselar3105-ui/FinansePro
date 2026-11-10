@@ -8,7 +8,7 @@
 - `index.html` (~830 КБ) — всё приложение. Читать только поиском (grep по имени функции/строке), не целиком.
 - `sw.js`, `manifest.webmanifest`, `icons/`, `mail.html` (мост для письма; почта зашита и тут, и в `SUPPORT.email`), `_headers` (CSP, действует на Cloudflare).
 - `worker/` — бот (Cloudflare Workers): webhook, голос → Groq Whisper, очередь фраз, `/api/pending`, `/api/ack`, обезличенная статистика. Данных пользователей не хранит; разбор фраз и все данные — в `index.html` (CloudStorage Telegram + localStorage).
-- `tools/pagesworker.py` — сборка сайта для выкладки; `tools/codebackup.sh` — копии кода; `tools/diffpage.py` — страница изменений; `tools/stattest.mjs` — проверка статистики бота.
+- `tools/pagesworker.py` — сборка сайта для выкладки; `tools/codebackup.sh` — копии кода; `tools/diffpage.py` — страница изменений; `tools/stattest.mjs` — проверка статистики бота. `tools/codeaudit.py` — поиск мусора (функции без вызовов, стили для несуществующих классов/id).
 
 ## Выкладка и хранение (Cloudflare вместо GitHub)
 

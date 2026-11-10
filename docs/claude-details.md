@@ -9,10 +9,10 @@
 
 | Путь | Что это | Где работает |
 |---|---|---|
-| `index.html` | Всё приложение: интерфейс, разбор фраз, хранение, синхронизация с ботом | GitHub Pages (из корня) |
-| `sw.js`, `manifest.webmanifest`, `icons/` | Офлайн-режим и установка как приложение | GitHub Pages |
-| `mail.html` | Мост для письма в поддержку: внутри Telegram `mailto:` не открывается, приложение открывает эту страницу через `Telegram.WebApp.openLink`, она открывает почту телефона. Адрес зашит в ней — при смене почты менять и здесь, и `SUPPORT.email` в `index.html` | GitHub Pages |
-| `_headers` | Заголовки безопасности (CSP). GitHub Pages этот файл игнорирует, он для Cloudflare Pages/Netlify | — |
+| `index.html` | Всё приложение: интерфейс, разбор фраз, хранение, синхронизация с ботом | Cloudflare Pages (из корня) |
+| `sw.js`, `manifest.webmanifest`, `icons/` | Офлайн-режим и установка как приложение | Cloudflare Pages |
+| `mail.html` | Мост для письма в поддержку: внутри Telegram `mailto:` не открывается, приложение открывает эту страницу через `Telegram.WebApp.openLink`, она открывает почту телефона. Адрес зашит в ней — при смене почты менять и здесь, и `SUPPORT.email` в `index.html` | Cloudflare Pages |
+| `_headers` | Заголовки безопасности (CSP), действуют на Cloudflare Pages | — |
 | `worker/worker.js` | Бот: webhook Telegram, расшифровка голоса (Groq Whisper), очередь сообщений, API для приложения | Cloudflare Workers |
 | `worker/wrangler.toml` | Настройки деплоя воркера: имя, compatibility_date, привязки KV/D1 | Cloudflare Workers Builds |
 | `worker/.dev.vars.example` | Образец переменных для локального запуска, без значений | — |
@@ -20,10 +20,10 @@
 | `DECISIONS.md` | Журнал решений | — |
 | `tools/diffpage.py` | Страница изменений PR (HTML) для просмотра в чате — см. «Правила работы со мной» | — |
 
-Приложение лежит в корне, потому что GitHub Pages раздаёт сайт из корня, а адрес Mini App
+Приложение лежит в корне (исторически — для GitHub Pages; сейчас сайт собирает tools/pagesworker.py), а адрес Mini App
 прописан в BotFather. Не переносить файлы приложения в подпапку.
 
-Адрес приложения (BotFather и `APP_URL`): `https://olegkiselar3105-ui.github.io/FinansePro/` — без метки `?v=`.
+Адрес приложения (BotFather и `APP_URL`): `https://finansepro.pages.dev/` — без метки `?v=`.
 Не советовать добавлять `?v=N` в адрес: метка вызывала двойной запуск из-за старой копии страницы в кэше Telegram.
 Обновления приложение подхватывает само по `IB_VER`.
 
@@ -69,7 +69,7 @@ id привязок KV/D1 в `worker/wrangler.toml` допустимы: это �
 ## Как обновлять
 
 Приложение:
-- правки в `index.html` / `sw.js` → коммит в `main` → GitHub Pages обновится сам за 1–2 минуты;
+- правки в `index.html` / `sw.js` → коммит → выкладка на Cloudflare Pages через API (раздел «Выкладка сайта» выше);
 - при каждой правке `index.html` поднимать `IB_VER` (формат `v`+число) — по нему приложение
   замечает новую версию и перезапускается; `APP_VER` — видимая версия, менять по смыслу;
 - `sw.js` берёт версию кэша из `IB_VER`, отдельно её не трогать.

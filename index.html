@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v262';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v263';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -177,7 +177,7 @@ html:root #nc .ncs,html:root #rc div.rch{opacity:.62}   /* v191: пояснен�
 #carry.on i,.mtg.on i{transform:translateX(13px)}
 .gsh .gtg{display:inline-flex;align-items:center;gap:8px;min-width:0}.gsh .gtg>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.gsh .mtg{flex:none}
 @media (prefers-reduced-motion:reduce){#carry,#carry i,.mtg,.mtg i{transition:none}}
-.sum .cry{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--m);cursor:pointer}
+
 .sum .tot{white-space:nowrap;display:block;font-size:40px;font-weight:500;line-height:1.1;letter-spacing:-.02em;margin:4px 0 10px}
 .io{display:flex;gap:20px;font-size:15px;color:var(--m)}.io b{font-weight:500;color:var(--t);margin-left:4px;display:inline-block;font-variant-numeric:tabular-nums}
 .tabs{display:flex;gap:6px;margin:4px 0 8px}
@@ -205,12 +205,11 @@ html:root #nc .ncs,html:root #rc div.rch{opacity:.62}   /* v191: пояснен�
 .tip{padding:12px 0;border-bottom:.5px solid var(--l);color:var(--tx2)}
 #stw{position:fixed;z-index:14;top:calc(var(--sat) + 58px);right:var(--rx);width:min(340px,calc(100vw - 32px));display:block;visibility:hidden;pointer-events:none;transition:visibility 0s .5s}
 #stw.on{visibility:visible;pointer-events:auto;transition:visibility 0s}
-#sti{overflow:visible}
+
 #st{margin:0;max-height:calc(100vh - var(--sat) - 58px - 130px);overflow-y:auto;overscroll-behavior:contain;border:.5px solid var(--l);border-radius:14px;background:var(--s);padding:6px 14px;box-shadow:0 18px 40px rgba(0,0,0,.55);transform-origin:100% 0;transform:scale(.35) translateY(-10px);opacity:0;will-change:transform,opacity;transition:transform .5s cubic-bezier(.22,1,.36,1),opacity .3s ease,filter .35s ease}
 #stw.on #st{transform:none;opacity:1}
 #stw.on.cov #st{transform:none;opacity:1}
 #st label{display:flex;justify-content:space-between;align-items:center;padding:9px 0;color:var(--m2);font-size:13px}
-#st .bkrow{display:block;width:100%;text-align:left;padding:9px 0;color:var(--m2);font-size:13px;background:none;border:0;cursor:pointer;font-family:inherit}
 #st input,#st select{width:110px;text-align:right;border-bottom:.5px solid var(--l);color:var(--t);padding:2px 0;font-size:14px}
 .tg{width:34px!important;height:20px;border:1px solid var(--b2)!important;border-radius:12px;position:relative;cursor:pointer;padding:0!important}
 .tg:after{content:"";position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;background:#777;transition:.15s}
@@ -419,7 +418,7 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:calc(110px 
 #nc input[type=color]::-webkit-color-swatch-wrapper{padding:0}
 #nc input[type=color]::-webkit-color-swatch{border:0;border-radius:50%}
 #nc .ncs{margin-top:12px;font-size:12.5px;color:var(--m2);line-height:1.35}   /* v165: подсказка вместо ключевых слов */
-#nc #ncn,#nc #ncw{width:100%;text-align:left;color:var(--t);font-size:16px;border-bottom:.5px solid var(--l);padding:4px 0}
+#nc #ncn{width:100%;text-align:left;color:var(--t);font-size:16px;border-bottom:.5px solid var(--l);padding:4px 0}
 #nc .ncb{display:flex;gap:8px;margin-top:18px}
 #nc .ncb .sm{flex:1;padding:10px 12px;font-size:14px;text-align:center}
 
@@ -444,7 +443,7 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:calc(110px 
 #cp input[type=color]{width:26px;height:26px;padding:0;border:0;border-radius:50%;background:none;cursor:pointer}
 #cp input[type=color]::-webkit-color-swatch-wrapper{padding:0}
 #cp input[type=color]::-webkit-color-swatch{border:0;border-radius:50%}
-#cp #cpk{display:block;margin-top:12px}
+
 #cp .cpg0{font-size:11.5px;color:var(--m);line-height:1.4;margin-top:8px}
 .cpb{display:block;width:100%;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;font-size:12px;color:var(--m2);padding:0}
 #sh .r .cpb{grid-area:c;font-size:11px}
@@ -542,7 +541,7 @@ html.ncv .dg{content-visibility:visible}
 #toast.on{visibility:visible;opacity:1;pointer-events:auto;transform:translate(-50%,0) scale(1);animation:none;transition:opacity .2s ease,transform .42s cubic-bezier(.16,1,.3,1),visibility 0s}
 @media (prefers-reduced-motion:reduce){#toast,#toast.on{transition:none!important}}
 
-#st .thr{display:flex;justify-content:space-between;align-items:center;padding:9px 0;color:var(--m2);font-size:13px}
+
 #st .thm{position:relative;display:grid;grid-template-columns:repeat(3,38px);padding:2px;border-radius:17px;background:rgba(var(--wr),.08)}
 #st .thm i{position:absolute;top:2px;bottom:2px;left:2px;width:38px;border-radius:15px;background:var(--t);transition:transform .38s cubic-bezier(.3,1.25,.4,1),background-color .3s;will-change:transform}
 #st .thm[data-v=a] i{transform:translateX(100%)}
@@ -553,7 +552,7 @@ html.ncv .dg{content-visibility:visible}
 @media (prefers-reduced-motion:reduce){#st .thm i{transition:none}}
 /* --- повторяющиеся операции --- */
 #rc .rcr{display:flex;align-items:center;border-bottom:.5px solid rgba(var(--wr),.1)}#rc .rcr:last-child{border-bottom:0}
-#rc .rcr .rci{flex:1;min-width:0;border-bottom:0}#rc .rcr.ps .rci{opacity:.5}
+
 #rc .rcp{flex:none;width:40px;height:40px;margin-right:-8px;color:var(--m2);display:flex;align-items:center;justify-content:center;padding:0}#rc .rcp:active{opacity:.5}
 #rc .ef input[type=date]{min-width:0;max-width:62%;color:var(--t);font-size:16px}
 #rc .shf .sm{padding:7px 12px}
@@ -564,12 +563,12 @@ html.ncv .dg{content-visibility:visible}
 #rc.on{visibility:visible;opacity:1;pointer-events:auto;transform:none;transition:transform .5s cubic-bezier(.2,.95,.25,1.06),opacity .2s ease,visibility 0s,translate .45s cubic-bezier(.22,1,.36,1)}
 #rc .rct{display:flex;justify-content:space-between;align-items:center;font-size:15px;font-weight:500;margin-bottom:6px}
 #rc .rcl{display:flex;flex-direction:column}
-#rc .rci{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 12px;align-items:baseline;width:100%;padding:11px 0;border-bottom:.5px solid rgba(var(--wr),.1);text-align:left;color:var(--t)}
-#rc .rci:last-child{border-bottom:0}
-#rc .rci:active{opacity:.6}
+
+
+
 #rc .rcn{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #rc .rca{font-size:14px;font-weight:500;white-space:nowrap}
-#rc .rci small{grid-column:1/-1;font-size:11.5px;color:var(--m)}
+
 #rc .rch{font-size:12px;color:var(--m);line-height:1.45;padding:10px 0 2px}
 #rc .rcf{display:flex;margin-top:12px}
 #rc .rcf .sm{flex:1;padding:11px 12px;font-size:14px;text-align:center}
@@ -756,9 +755,9 @@ html.ncv .dg{content-visibility:visible}
 :root #cf label{border-bottom:1px solid var(--sep)}
 :root #cf label:last-of-type{border-bottom:0}
 :root #ed .ef,:root #gd .ef,:root #rc .ef{border-bottom:1px solid var(--sep)}
-:root #rc .rcr,:root #rc .rci{border-bottom:1px solid var(--sep)}
-:root #rc .rcr:last-child,:root #rc .rci:last-child{border-bottom:0}
-:root #rc .rcr .rci{border-bottom:0}
+:root #rc .rcr{border-bottom:1px solid var(--sep)}
+:root #rc .rcr:last-child{border-bottom:0}
+
 :root #rev .sw,:root #rev .rh,:root #rev .dl{border-bottom:1px solid var(--sep)}
 :root #rev .sw:last-child{border-bottom:0}
 :root #rev .sw>.r{border-bottom:0}
@@ -843,12 +842,12 @@ html.intro #tabs,html.intro #fab{animation:inUp .9s cubic-bezier(.22,1,.36,1) .4
 #tour .tr-dots i.on{width:22px}
 #tour .tr-dots i.on::before{background:var(--g);box-shadow:0 0 0 .5px rgba(var(--wr),.18),0 0 9px 1px rgba(143,201,160,.6),0 0 18px 3px rgba(143,201,160,.28)}
 :root[data-theme=light] #tour .tr-dots i.on::before{box-shadow:0 0 9px 1px rgba(46,139,87,.5),0 0 18px 3px rgba(46,139,87,.22)}
-#tour .tr-btns{display:flex;align-items:center;gap:4px;margin-left:auto}
-#tour .tr-skip{padding:9px 12px;border-radius:18px;font-size:13px;color:var(--m2);transition:color .2s ease,background .2s ease}
-#tour .tr-skip[hidden]{display:none}
-#tour .tr-skip:hover{color:var(--t)}
+
+
+
+
 #tour .tr-next{padding:9px 20px;border-radius:20px;font-size:13.5px;font-weight:600;background:var(--t);color:var(--on);transition:transform .2s var(--tre),opacity .2s ease}
-#tour .tr-next:active,#tour .tr-skip:active{transform:scale(.95)}
+#tour .tr-next:active{transform:scale(.95)}
 #tour .tr-card button:focus-visible{outline:2px solid rgba(var(--wr),.55);outline-offset:2px}
 
 /* знакомство: карточка по центру */
@@ -921,10 +920,10 @@ html.intro #tabs,html.intro #fab{animation:inUp .9s cubic-bezier(.22,1,.36,1) .4
 
 
 /* строка с переключателем на страницах «Долги» и «Цели» */
-.swr{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 2px 2px;font-size:13px;color:var(--m2)}
+
 /* галочка (больше не используется в окнах) */
-.lnk{display:flex;align-items:center;gap:10px;padding:10px 2px;font-size:13px;color:var(--m2);cursor:pointer;line-height:1.35}
-.lnk input[type=checkbox]{flex:none;width:19px;height:19px;min-width:0;max-width:none;padding:0;margin:0;accent-color:var(--g);text-align:left}
+
+
 
 #st input.sm{width:58%;min-width:0;background:transparent;text-align:right;font:inherit;font-size:12px;outline:none}#st input.sm::placeholder{color:var(--m)}#st input.sm:focus{border-color:var(--m2)}
 
@@ -1006,7 +1005,7 @@ html.selm #selbar,html.selm #selmore{opacity:1;pointer-events:auto;transform:non
 #fab{right:calc(var(--rx) + min(100vw - 32px,528px)/8 - 28px);bottom:calc(14px + var(--tbh) + var(--fabg) + var(--sab))}
 /* v91: «+» ушёл наверх — запас снизу под него не нужен; остаётся только место под нижнюю панель вкладок */
 #w{padding-bottom:calc(var(--tbh) + 14px + var(--sab) + 22px)}
-#st .trw{display:flex;gap:6px}
+
 :root #toast{bottom:calc(160px + var(--sab))}
 
 /* v29: всплывающие окна в стиле Apple (как папки на домашнем экране iOS): рост из источника с лёгкой пружиной, быстрое закрытие, размытие фона */
@@ -1025,15 +1024,13 @@ html.selm #selbar,html.selm #selmore{opacity:1;pointer-events:auto;transform:non
 /* v31: «Настройки» — обычная вкладка-страница (четвёртая в нижней панели) */
 :root #body #st{max-height:none;overflow:visible;transform:none;opacity:1;filter:none;transition:none;will-change:auto;margin:0;padding:2px 16px;border-radius:22px;background:var(--s);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;border:.5px solid var(--l)}
 #body #st>*+*{border-top:.5px solid var(--l)}
-:root #body #st label,:root #body #st .thr,:root #body #st .bkrow{padding:15px 0;font-size:15px;color:var(--t)}
-:root #body #st .bkrow{width:100%}
+:root #body #st label{padding:15px 0;font-size:15px;color:var(--t)}
 
 /* v32: категории доходов/расходов и резервная копия в настройках */
-#body #st>.sth{border-top:0;padding:16px 0 6px;font-size:12.5px;color:var(--m);letter-spacing:.2px}
-#body #st>.sth:first-child{padding-top:10px}
-:root #body #st .bkrow.ico{display:flex;align-items:center;gap:14px}
-:root #body #st .bkrow.ico svg{flex:none;color:var(--m2)}
-:root #body #st .bkrow.rd{color:var(--rd)}
+
+
+
+
 #cf .crl{margin:4px -4px 6px}
 #cf .crw{display:flex;align-items:center;gap:10px;padding:6px 4px;border-bottom:.5px solid var(--l);background:transparent;position:relative;touch-action:pan-y}
 #cf .crw:last-child{border-bottom:0}
@@ -1064,8 +1061,8 @@ html.selm #selbar,html.selm #selmore{opacity:1;pointer-events:auto;transform:non
 
 /* v34: лупы в шапке больше нет — поиск открывается жестом «потянуть вниз» */
 .hd #srch{visibility:hidden;pointer-events:none}
-#sp .spx{flex:none;width:32px;height:32px;display:flex;align-items:center;justify-content:center;margin-right:-6px;color:var(--m2);font-size:22px;line-height:1;background:none;border:0;padding:0}
-#sp .spx:active{opacity:.5}
+
+
 
 /* v38: верхняя строка как в iOS — прозрачная и без названия вверху страницы; при прокрутке плавно появляется матовая плашка с названием */
 #nb{position:fixed;left:0;right:0;top:0;height:calc(var(--sat) + 46px);z-index:9;pointer-events:none;--p:0;--pb:0}
@@ -1098,7 +1095,7 @@ html.selm #selbar,html.selm #selmore{opacity:1;pointer-events:auto;transform:non
 #st .ii{flex:none;width:30px;height:30px;border-radius:8.5px;display:flex;align-items:center;justify-content:center;font-style:normal}
 #st .ii svg{width:18px;height:18px;display:block}
 #st .rl{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#st .rv{flex:none;max-width:48%;font-size:16px;color:var(--m2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
 #st .ch{flex:none;color:var(--m);opacity:.75;margin-right:-2px}
 #st .rw.rd .rl{color:var(--rd)}
 #st .rw.tr{cursor:default}
@@ -1496,10 +1493,10 @@ html:root #ov.on{transition:opacity .25s var(--m-ov-in),visibility 0s}
 #st .pf0 .pn small{display:block;max-width:100%;margin-top:6px;font-size:15px;line-height:20px;color:var(--m2)}
 #st .pf0 .pn small.un{color:#4a9be8}
 :root[data-theme=light] #st .pf0 .pn small.un{color:#2a7bd0}
-html.pfp #nb{display:block!important;height:calc(var(--sat) + 44px);--pq:0}
-html.pfp #nb #ttl{display:none}
+
+
 #nbp{position:absolute;left:56px;right:56px;top:var(--sat);height:44px;display:none;align-items:center;justify-content:center;gap:10px;min-width:0;opacity:var(--pq,0);transform:translate3d(0,calc((1 - var(--pq,0))*6px),0);pointer-events:none}
-html.pfp #nbp{display:flex}
+
 #nbp .av{position:relative;flex:none;width:30px;height:30px;border-radius:50%;background:rgba(var(--wr),.1);color:var(--m2);display:flex;align-items:center;justify-content:center;overflow:hidden}
 #nbp .av.ini{color:#fff}
 #nbp .av svg{width:16px;height:16px;display:block}
@@ -1751,7 +1748,7 @@ html:root #gd .jr .jd{flex:none;width:62px;color:var(--m2);font-size:13px;font-v
 html:root #gd .jr .jt{flex:1;min-width:0;font-size:15px}
 html:root #gd .jr .jt small{display:block;color:var(--m2);font-size:11.5px;margin-top:1px}
 html:root #gd .jr b{flex:none;font-weight:600;font-variant-numeric:tabular-nums}
-html:root #gd .jr b.jn{color:var(--rd)}
+
 html:root #gd .jz{color:var(--m);font-size:13px;padding:14px 2px}
 html:root .cd .gx.gl{margin-top:2px;opacity:.85}
 /* v200: плитка долга — «осталось» справа, тип долга и срок отдельной строкой; история — цвет по направлению денег */
@@ -1802,9 +1799,9 @@ html:root :is(#sh #rev,#gd #bvl) .rv2 .rcur{order:8}
 html:root :is(#sh #rev,#gd #bvl) .rv2 .rtl{order:9;color:var(--t)}
 html:root :is(#sh #rev,#gd #bvl) .rv2 .rtl .rtin{width:56px;font-size:16px;background:none;border:0;border-bottom:1px solid var(--b2);text-align:center}
 html:root :is(#sh #rev,#gd #bvl) .dl:empty{display:none}
-html:root #gd #bvl .swb{display:none}
-html:root #gd #bvl{max-height:min(58vh,var(--kmax,100vh));overflow-y:auto;overscroll-behavior:contain;margin:6px -2px 0;padding:0 2px}
-html:root #gd .bvs{font-size:13px;color:var(--m2);line-height:1.35;margin:2px 2px 10px}
+
+
+
 html:root :is(#sh #rev,#gd #bvl) .rv2 .rdel{order:10;margin-left:auto;padding:0 9px;color:var(--rd)}
 html:root :is(#sh #rev,#gd #bvl) .rv2 .rdel svg{width:15px;height:15px}
 html:root :is(#sh #rev,#gd #bvl) .rh{border:0!important;padding:2px 4px 8px;font-size:12.5px;color:var(--m2)}
@@ -1941,7 +1938,7 @@ html:root #ed #eam,html:root #ed label.ef,html:root #ed .ef.tgf,html:root #ed in
 #onb .ob-c.off{opacity:.38;box-shadow:none;transform:scale(.96)}
 #onb .ob-c:active{transform:scale(.92)}
 /* тема и PIN */
-#onb .ob-th{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+
 #onb .ob-sw{width:52px;height:32px;border-radius:999px;background:rgba(var(--wr),.18);position:relative;flex:none;transition:background-color .25s ease}
 #onb .ob-sw::after{content:"";position:absolute;left:3px;top:3px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.25);transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
 #onb .ob-row.on .ob-sw{background:var(--g)}#onb .ob-row.on .ob-sw::after{transform:translateX(20px)}
@@ -1967,12 +1964,12 @@ html:root #ed #eam,html:root #ed label.ef,html:root #ed .ef.tgf,html:root #ed in
 #onb .ob-sh .ck2{stroke-dasharray:1;stroke-dashoffset:1;animation:obDraw .7s cubic-bezier(.65,0,.35,1) .7s forwards}
 #onb .ob-sh::before{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid var(--g);opacity:0;animation:obRing 2.6s ease-out 1s infinite}
 @keyframes obRing{0%{opacity:.6;transform:scale(.7)}100%{opacity:0;transform:scale(1.35)}}
-#onb .ob-lk{position:relative;width:150px;height:150px;display:flex;align-items:center;justify-content:center;color:var(--g)}
-#onb .ob-lk svg{width:110px;height:110px}
-#onb .ob-lk .sh{transform-box:view-box;transform-origin:16px 11px;animation:obShk 2.8s cubic-bezier(.34,1.56,.64,1) .6s infinite}
-#onb .ob-lk.on .sh{animation:none}
+
+
+
+
 @keyframes obShk{0%,55%,100%{transform:none}65%{transform:translateY(-2.2px) rotate(-14deg)}80%{transform:none}}
-#onb .ob-lk::before{content:"";position:absolute;inset:6px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--g) 26%,transparent),transparent 68%);animation:obGlow 3.4s ease-in-out infinite}
+
 #onb .ob-dots{display:flex;justify-content:center;gap:18px;margin:6px 0 26px}
 #onb .ob-dots i{width:16px;height:16px;border-radius:50%;box-shadow:inset 0 0 0 1.6px rgba(var(--wr),.45);transition:background-color .2s ease,box-shadow .2s ease}
 #onb .ob-dots i.f{background:var(--t);box-shadow:none}
@@ -2235,8 +2232,6 @@ function limOf(m){m=m||month;const own=_obj(cfg.lm)&&_obj(cfg.lm[m])?cfg.lm[m]:{
 function setLimit(m,id,v){v=Number(v)||0;if(limOwnMode(m)){if(!_obj(cfg.lm))cfg.lm={};const o=cfg.lm[m]=_obj(cfg.lm[m])?cfg.lm[m]:{};if(v>0)o[id]=v;else delete o[id]}else{cfg.limits=cfg.limits||{};if(v>0)cfg.limits[id]=v;else delete cfg.limits[id];if(_obj(cfg.lm)&&_obj(cfg.lm[m]))delete cfg.lm[m][id]}}
 function setCarryLim(on){cfg.carryLim=!!on;if(!on)cfg.limOffFrom=shiftMonth(curM(),1);save()}
 function setCarryBal(on){cfg.carry=!!on;if(on)cfg.carryFrom=curM();save()}
-const linkSum=()=>{const g=linkGoalOn(),d=linkDebtOn();return g&&d?'Вкл':g?'Цели':d?'Долги':'Выкл'};
-const carrySum=()=>carryBudOn()?'Вкл':'Выкл';   // v160: в настройках — только перенос бюджета; перенос остатка — переключатель в главном блоке
 // долги и взносы в цели → настоящие расходы (видны бюджету, прогнозу, лимитам); включается галочкой «Записать как расход»
 try{localStorage.removeItem('finapp.lock')}catch{}
 // «записывать в расходы» — два отдельных переключателя: на странице «Долги» и на странице «Цели» (старая общая настройка cfg.link — запасное значение)
@@ -2354,7 +2349,7 @@ function rangeOf(r){const now=new Date(),td=ymd(now),[y]=month.split('-').map(Nu
   if(r==='year')return{from:y+'-01-01',to:y+'-12-31'};
   return{from:'0000-01-01',to:'9999-12-31'}}
 
-function kwHit(t,k){const L=/[\p{L}\d]/u;let i=t.indexOf(k);while(i>=0){if(i===0||!L.test(t[i-1]))return true;i=t.indexOf(k,i+1)}return false}
+
 // v165: без ключевых слов: память (какую категорию выбирали для такой же заметки) → иначе «Прочее»/«Другой доход».
 // Явная категория («… категория плюшки») разбирается в parse и сюда не доходит
 function detect(piece,note,type){
@@ -2893,7 +2888,7 @@ ov.onclick=()=>{const a=document.activeElement;
   if(a&&a!==document.body&&a.closest&&a.closest('#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc')&&/^(INPUT|TEXTAREA)$/.test(a.tagName)&&!/^(checkbox|radio|button|color|range|file|submit|reset)$/.test(a.type||'')&&!a.readOnly){kbDown=Date.now();a.blur();return}
   if(Date.now()-kbDown<380)return;   // двойной клик/дребезг сразу после скрытия клавиатуры окно не закрывает
   if(!closeTopModal())unlockIfIdle()};
-function root_kbo(){return document.documentElement.classList.contains('kbo')}
+
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&isModalOpen()){e.preventDefault();closeTopModal()}});
 // перф: блокирующий touchmove на документе заставляет iOS ждать JS перед каждым стартом прокрутки — вешаем его только на жесты, начатые при открытом окне
 {const modalTM=e=>{if(isModalOpen()&&!e.target.closest('#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc,#rev,#tpv'))e.preventDefault()};let mtOn=false;
@@ -2904,7 +2899,7 @@ document.addEventListener('pointerdown',e=>{if(isModalOpen()&&!e.target.closest(
 
 
 // ---------- строки ----------
-function opts(type,sel){return ALL.filter(c=>c.inc===(type==='income')).map(c=>`<option value="${c.id}"${c.id===sel?' selected':''}>${E(c.l)}</option>`).join('')}
+
 const ICAL='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>';
 const ITR='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>';
 // v165: черновик — карточка: сверху «−/+», заметка и сумма; снизу чипы: категория (её цветом), дата, «+ тег», теги, сумма в валюте и курс
@@ -3165,15 +3160,8 @@ function remList(){const out=[];
   return out.sort((a,b)=>a.n-b.n)}
 function debtNote(){if(month!==curM())return'';const l=remList();if(!l.length)return'';const x=l[0];
   return `<div class="fc dn${x.n<0?' o':x.n<=1?' w':''}" data-go="${x.go}" role="button" tabindex="0">🔔 ${E(x.t+(l.length>1?' · ещё '+(l.length-1):''))}</div>`}
-function debtPace(d){const now=new Date(),from=new Date(now);from.setDate(from.getDate()-90);const cr=new Date((d.created||ymd(now))+'T00:00:00'),st=cr>from?cr:from,days=Math.max(1,(now-st)/864e5),span=Math.min(3,Math.max(1,days/30.4)),f=ymd(st);
-  return Math.max(0,(d.log||[]).filter(e=>e&&e.d>=f).reduce((a,e)=>a+(+e.a||0),0)/span)}
-function debtFc(d){const rem=dRem(d);if(!(rem>0))return'';const pace=debtPace(d),n=d.due?dueRel(d.due):null;let t='';
-  if(pace>0){const m=Math.ceil(rem/pace),x=new Date();x.setDate(1);x.setMonth(x.getMonth()+m);
-    t=m<=1?`При таком темпе ${d.dir==='in'?'вернут':'вернёте'} уже в ближайший месяц`:m>600?'':`При таком темпе ${d.dir==='in'?'вернут':'вернёте'} к ${MND[x.getMonth()]} ${x.getFullYear()}`;
-    if(t&&d.due&&n>=0){const end=new Date();end.setDate(end.getDate()+m*30.4);t+=ymd(end)>d.due?' — позже срока':' — в срок ✓'}
-    if(t)t+='.'}
-  else if(d.due&&n>=0){const mo=Math.max(1,Math.ceil(n/30.4));t=`Чтобы успеть к ${byTxt(d.due)}: ≈${fmt(Math.ceil(rem/mo))} ${cfg.cur} в мес.`}
-  return t?`<div class="gx" style="margin-top:2px">${E(t)}</div>`:''}
+
+
 // ===== v199: история долга и цели — окно по нажатию на плитку; запись можно исправить (дата, сумма) или удалить, связанная операция меняется следом =====
 const dFmt=v=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(String(v||'')))return '';const [y,m,d]=v.split('-');return d+'.'+m+(+y!==new Date().getFullYear()?'.'+y.slice(2):'')};
 const jSum=L=>r2((Array.isArray(L)?L:[]).reduce((s,e)=>s+(e&&+e.a||0),0));
@@ -3654,7 +3642,7 @@ function gaugeHtml(X){const Bd=budgetOf(month);if(!(Bd>0))return'';const p=X/Bd*
 const CHV='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>';
 // v181: кривая для цифр — резкий старт и плавное торможение (ease-out quart); speedOf — её скорость (0…1) для эффекта «смазывания»
 const smoother=k=>1-Math.pow(1-k,4),speedOf=k=>Math.pow(1-k,3);
-const blurOf=s=>s>.05?'blur('+(s*1.1).toFixed(2)+'px)':'';
+ 
 function swallowClick(){const f=ev=>{ev.stopPropagation();ev.preventDefault()};document.addEventListener('click',f,{capture:true,once:true});setTimeout(()=>document.removeEventListener('click',f,true),450)}
 function setBlur(el,s){const px=s>.05?s*1.5:0;
   if(!px){if(el._bl){el.style.color=el._bc0;el.style.textShadow='';el._bl=0}return}
@@ -4174,7 +4162,7 @@ function slideTo(t){document.documentElement.classList.remove('intro');   // v51
 function snapBack(){
   const ind=tabInd();if(ind)ind.style.transition='';moveInd();sbSync(true);
   bodyEl.style.transform='';bodyEl.style.willChange=''}
-const rubber=dx=>dx?Math.sign(dx)*36*(1-Math.exp(-Math.abs(dx)/120)):0;
+ 
 function paintTp(){tpRaf=0;if(!tp||!tp.on)return;
   const dx=tp.dx,nt=subNb(dx<0?1:-1),W=bodyEl.offsetWidth+GAP;
   sbDrag(nt?Math.max(-W,Math.min(W,dx)):0,W,nt)}
@@ -5285,7 +5273,6 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&cfg.theme
 function stHtml(){
   const ri=()=>'';
   const CH='';
-  const tgRow=(id,label,on,lk)=>`<div class="rw tr"><span class="rl" style="white-space:normal;line-height:1.25">${label}</span><button type="button" class="tg${on?' on':''}" id="${id}"${lk?` data-lk="${lk}"`:''} role="switch" aria-checked="${!!on}" aria-label="${label}" style="flex:none"></button></div>`;
   const ICN={"onbr":"<path d='M11 4l1.7 4.3L17 10l-4.3 1.7L11 16l-1.7-4.3L5 10l4.3-1.7z'/><path d='M18 14.5l.8 1.9 1.9.8-1.9.8-.8 1.9-.8-1.9-1.9-.8 1.9-.8z'/>","rcs":"<path d='M17 3l3 3-3 3'/><path d='M4 11V9.5A3.5 3.5 0 0 1 7.5 6H20'/><path d='M7 21l-3-3 3-3'/><path d='M20 13v1.5a3.5 3.5 0 0 1-3.5 3.5H4'/>","pol":"<rect x='5' y='10.5' width='14' height='10' rx='2.2'/><path d='M8.5 10.5V7.8a3.5 3.5 0 0 1 7 0v2.7'/>","tou":"<path d='M5 5.5A1.5 1.5 0 0 1 6.5 4H19v13H6.5A1.5 1.5 0 0 0 5 18.5z'/><path d='M5 18.5A1.5 1.5 0 0 0 6.5 20H19v-3M9 8h6'/>","prv":"<path d='M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z'/><circle cx='12' cy='12' r='2.6'/><path d='M4.5 19.5l15-15'/>","mst":"<rect x=\"4\" y=\"5.5\" width=\"16\" height=\"14\" rx=\"2.5\"/><path d=\"M8 3.5v4M16 3.5v4M4 10h16\"/><circle cx=\"8.5\" cy=\"14.5\" r=\"1.1\"/>","pin":"<rect x=\"5\" y=\"10.5\" width=\"14\" height=\"9.5\" rx=\"2.5\"/><path d=\"M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5M12 14v2.3\"/>","cub": "<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M14.8 9.4c-.5-.9-1.4-1.4-2.8-1.4-1.6 0-2.7.8-2.7 2s1 1.7 2.7 2.1 2.9.9 2.9 2.2-1.2 2.1-2.9 2.1c-1.4 0-2.4-.5-2.9-1.5M12 6.4v1.6M12 16v1.6\"/>", "tpr": "<path d=\"M13 3L5 13.5h6L10 21l8-10.5h-6z\"/>", "thm": "<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M12 3.5a8.5 8.5 0 0 1 0 17z\"/>", "hlp": "<path d=\"M5 5.5A1.5 1.5 0 0 1 6.5 4H19v13H6.5A1.5 1.5 0 0 0 5 18.5z\"/><path d=\"M5 18.5A1.5 1.5 0 0 0 6.5 20H19v-3M9 8h6\"/>", "ctc": "<path d=\"M5 6.5A2.5 2.5 0 0 1 7.5 4h9A2.5 2.5 0 0 1 19 6.5v7a2.5 2.5 0 0 1-2.5 2.5H11l-4 3.5V16a2 2 0 0 1-2-2z\"/>", "cin": "<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M12 8v8M9 13l3 3 3-3\"/>", "cex": "<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M12 16V8M9 11l3-3 3 3\"/>", "lkr": "<path d=\"M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3\"/><path d=\"M4 7.5V17a2 2 0 0 0 2 2h12.5a1.5 1.5 0 0 0 1.5-1.5v-8A1.5 1.5 0 0 0 18.5 8h-12A2.5 2.5 0 0 1 4 7.5z\"/><circle cx=\"16\" cy=\"13.5\" r=\"1\"/>", "crs": "<rect x=\"4\" y=\"5.5\" width=\"16\" height=\"14\" rx=\"2.5\"/><path d=\"M8 3.5v4M16 3.5v4M4 10h16M9.5 14.5h5M12.5 12.5l2 2-2 2\"/>", "bki": "<path d=\"M12 4v10M8 10.2l4 4 4-4M5 19.5h14\"/>", "bke": "<path d=\"M12 15V5M8 8.8l4-4 4 4M5 19.5h14\"/>", "bkr": "<path d=\"M5 7h14M10 7V4.8h4V7M7 7l.8 12h8.4L17 7M10.3 11v5M13.7 11v5\"/>"};
   const IC=id=>ICN[id]?`<span class="rwi"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICN[id]}</svg></span>`:'';
   const row=(id,col,g,label,val,cls)=>`<button type="button" class="rw${cls?' '+cls:''}" id="${id}">${IC(id)}<span class="rl">${label}</span>${CH}</button>`;   // v259: без подписи справа (значение видно, когда нажмёте на строку)
@@ -5316,7 +5303,7 @@ function bindSt(){
   if($('#lkr'))$('#lkr').onclick=()=>openBq('link');
   if($('#mst'))$('#mst').onclick=()=>{msV=mStart();openBq('mstart')};if($('#pin'))$('#pin').onclick=()=>openBq('pin');if($('#prv'))$('#prv').onclick=()=>openBq('prv');
   if($('#crs'))$('#crs').onclick=()=>{cbM=shiftMonth(curM(),1);openBq('carry')};
-  if($('#hsb'))homeBind();if($('#botu'))$('#botu').onchange=e=>{const v=String(e.target.value||'').trim();cfg.botUrl=v;save();if(ibBase()){window.__ibBusy=false;inboxPull()}}
+  if($('#botu'))$('#botu').onchange=e=>{const v=String(e.target.value||'').trim();cfg.botUrl=v;save();if(ibBase()){window.__ibBusy=false;inboxPull()}}
   if($('#tou'))$('#tou').onclick=()=>{if(window.AppTour)AppTour.show()};if($('#onbr'))$('#onbr').onclick=()=>{if(window.AppOnb)AppOnb.show()};$('#cin').onclick=e=>openCf('catsI',e.currentTarget);$('#cex').onclick=e=>openCf('catsE',e.currentTarget);if($('#rcs'))$('#rcs').onclick=()=>openRcSt();$('#bki').onclick=()=>openBq('import');$('#bke').onclick=()=>openBq('export');$('#bkr').onclick=()=>openBq('reset');$('#ctc').onclick=()=>openBq('contact');if($('#pol'))$('#pol').onclick=()=>{const u=new URL('privacy.html',location.href).href;   // v236: у политики свой код pol — раньше был prv, как у «Скрытия сумм», и та строка не открывалась
   try{if(IN_TG&&TGW.openLink){TGW.openLink(u);return}}catch(e){}window.open(u,'_blank')};}
 function renderSt(){const el=$('#st');if(!el||tab!=='settings')return;el.innerHTML=stHtml();bindSt();if(window.pfSync)window.pfSync()}
@@ -5325,7 +5312,7 @@ const bq=$('#bq');let bqT=null,bqCb=null;
 let cbM='',msV=1;
 function msHint(){const m=curM(),s=msV;if(s===1)return 'Месяц — с 1-го числа по последнее, как в календаре.';const a=m+'-'+pd2(s),b=dAdd(shiftMonth(m,1)+'-'+pd2(s),-1);return 'Месяц «'+MN[+m.slice(5,7)-1]+'» — с '+dLbl(a)+' по '+dLbl(b)+'. Бюджет, остаток, лимиты и аналитика считаются по такому периоду.'}
 const tgSet=(b,on)=>{b.classList.toggle('on',!!on);b.setAttribute('aria-checked',String(!!on))};
-const stRows=()=>{const l=$('#lkr .rv'),c=$('#crs .rv'),p=$('#pin .rv'),m=$('#mst .rv'),v=$('#prv .rv');if(l)l.textContent=linkSum();if(c)c.textContent=carrySum();if(p)p.textContent=pinOn()?'Вкл':'Выкл';if(m)m.textContent=mStart()+' число';if(v)v.textContent=PRV?'Вкл':'Выкл'};
+const stRows=()=>{};   // v263: подписей справа в настройках нет с v259 — обновлять нечего (вызовы оставлены)
 const bqTg=(act,label,sub,on)=>`<div class="bqr"><span>${label}${sub?`<small>${sub}</small>`:''}</span><button type="button" class="tg${on?' on':''}" data-bq="${act}" role="switch" aria-checked="${!!on}" aria-label="${label}"></button></div>`;
 function cbHint(){const m=cbM,mn=MN[+m.slice(5,7)-1].toLowerCase(),own=bmOwn(m),g=budgetOf(m);
   if(own)return 'Свой бюджет на '+mn+'. Другие месяцы не меняются.';
@@ -5640,8 +5627,8 @@ $('#nc').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='ncn')
 $('#nc').addEventListener('input',e=>{if(e.target.id==='ncn'){const s=$('#ncsn');if(s)s.textContent=noEmo(e.target.value.trim()).toLowerCase().slice(0,30)||'название';
     if(!ncEmo){const g=guessEmo(e.target.value,'');$('#nce').textContent=g||(ncType==='income'?'💸':'🏷️')}}   // пока стикер не выбран — подбираем по названию
   else if(e.target.id==='nceo'){const v=leadEmo(e.target.value);if(v){ncEmo=v;$('#nce').textContent=v}}});
-function openSettings(){setTab('settings')}
-function closeSettings(){if(tab==='settings')setTab('list')}
+
+
 let tt;const TIC={del:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>',
  save:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 20h14"/></svg>',
  add:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.5"/></svg>'};
@@ -6233,19 +6220,7 @@ function ratesBind(){
 setTimeout(()=>{ratesRefresh(false)},2500);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)ratesRefresh(false)});
 
-// ================= Telegram: «Добавить на экран „Домой“» (Bot API 8.0+) =================
-// Пункт в меню «⋯» Telegram показывает сам клиент; здесь — то же действие кнопкой в настройках.
-const HS={st:'',ok:false};
-function hsInit(){
-  if(!IN_TG||!(TGW.isVersionAtLeast&&TGW.isVersionAtLeast('8.0'))||typeof TGW.addToHomeScreen!=='function')return;
-  HS.ok=true;
-  try{TGW.checkHomeScreenStatus(s=>{HS.st=s||'';try{if($('#settings')||$('#st'))renderSt()}catch{}})}catch{HS.ok=false}
-  try{TGW.onEvent('homeScreenAdded',()=>{HS.st='added';try{renderSt()}catch{}})}catch{}
-  try{TGW.onEvent('homeScreenChecked',e=>{if(e&&e.status){HS.st=e.status}})}catch{}}
-function homeBtn(){return HS.ok&&HS.st!=='unsupported'&&HS.st!=='added'
-  ?'<button class="bkrow" id="hsb">Добавить на экран «Домой»</button>':''}
-function homeBind(){const b=$('#hsb');if(b)b.onclick=()=>{try{TGW.addToHomeScreen()}catch{toast('Не удалось открыть окно добавления')}}}
-hsInit();
+// v263: кнопка «Добавить на экран „Домой“» в настройках не показывалась (homeBtn не вызывался) — код проверки статуса убран; пункт есть в меню «⋯» Telegram
 
 // ================= Ящик бота: записи, присланные боту текстом или голосом =================
 // Бот (см. worker/worker.js) складывает сообщения в очередь. При запуске приложение, пока идёт заставка,

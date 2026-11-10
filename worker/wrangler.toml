@@ -1,7 +1,6 @@
-# Настройки воркера finansepro. Деплой — автоматически через Cloudflare Workers Builds
-# при слиянии в main (корневая папка сборки в настройках Builds: `worker`).
+# Настройки воркера finansepro. Выкладка — tools/deployworker.sh (API Cloudflare; GitHub и Workers Builds отключены с ноября 2026).
 #
-# Что берётся из этого файла при каждом деплое: код, имя, compatibility_date, привязки KV и D1.
+# Что берётся из этого файла при каждой выкладке: имя, compatibility_date, привязки KV и D1, расписание (crons).
 # Привязки в панели, которых нет здесь, будут УДАЛЕНЫ при деплое (данные в KV/D1 при этом не стираются).
 # Что остаётся из панели: секреты (BOT_TOKEN, GROQ_KEY, WEBHOOK_SECRET) — деплой их не трогает;
 # переменные (ALLOWED_IDS, DAILY_LIMIT, APP_URL) — сохраняются благодаря keep_vars = true.
