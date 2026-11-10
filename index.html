@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v254';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v255';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -936,7 +936,7 @@ html.splh body>*:not(#spl){visibility:hidden!important}
 #cm .cmi.dis{opacity:.35}
 #cm .cmi span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* кружки выбора, как в «Файлах» */
-.ck{flex:none;align-self:center;width:0;height:22px;margin:0;opacity:0;transform:scale(.4);border-radius:50%;box-sizing:border-box;transition:width .38s var(--ease),margin .38s var(--ease),opacity .25s ease,transform .45s var(--spring),background-color .2s ease,border-color .2s ease;position:relative;overflow:hidden}
+.ck{flex:none;align-self:center;width:0;height:22px;margin:-6px 0;opacity:0;transform:scale(.4);border-radius:50%;box-sizing:border-box;transition:width .38s var(--ease),margin .38s var(--ease),opacity .25s ease,transform .45s var(--spring),background-color .2s ease,border-color .2s ease;position:relative;overflow:hidden}
 html.selm .ck{width:22px;margin-right:12px;opacity:1;transform:none;border:1.5px solid var(--m2)}
 .ck::after{content:"";position:absolute;left:6px;top:3px;width:5px;height:10px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg) scale(0);transition:transform .3s var(--spring)}
 .sel>.ck,.sel .ck.me,.ck.on{background:#3b8cf5;border-color:#3b8cf5!important}
@@ -1635,6 +1635,31 @@ html:root body #tabs button[data-t] svg{width:30px;height:30px;flex:none;transit
 html:root body #tabs button[data-t] .tbt{display:block;max-width:64px;margin-top:1px;font-size:10.5px;line-height:12px;font-weight:600;letter-spacing:-.01em;transition:opacity .2s ease,transform .32s cubic-bezier(.22,1,.36,1)}
 html:root body #tabs button[data-t]:not(.on) .tbt{opacity:.62}
 html:root body #tabs.tbs button[data-t] .tbt{opacity:0;transform:translate3d(0,-4px,0)}html:root body #tabs.tbs button[data-t] svg{transform:translate3d(0,6.5px,0)}   /* в капсуле — только значок, по центру */
+/* v255: панель выбора — такая же капсула, как нижняя панель (ширина, место, стекло без размытия, рамка, тень); вкладки при входе в выбор
+   уменьшаются и гаснут (свойства scale/opacity — не transform: им управляет сжатие панели), панель выбора вырастает пружиной, её кнопки появляются по очереди */
+html:root body #tabs{transition:opacity .22s ease,scale .45s cubic-bezier(.22,1,.36,1)}
+html:root.selm body #tabs{opacity:0;scale:.86;pointer-events:none;transform:none}
+html:root body #selbar{left:0;right:0;margin:0 auto;width:280px;max-width:calc(100% - 32px);height:64px;box-sizing:border-box;bottom:calc(var(--sab,0px)*.3 + 8px);padding:4px;gap:4px;border-radius:999px;
+  background:rgba(30,30,34,.6);-webkit-backdrop-filter:none;backdrop-filter:none;border:.5px solid rgba(255,255,255,.16);box-shadow:0 8px 26px rgba(0,0,0,.32),inset 0 .5px 0 rgba(255,255,255,.12);
+  justify-content:space-between;opacity:0;transform:translate3d(0,14px,0) scale(.82);transition:opacity .2s ease,transform .62s cubic-bezier(.34,1.45,.64,1)}
+:root[data-theme=light] body #selbar{background:rgba(252,252,254,.6);border-color:rgba(0,0,0,.09);box-shadow:0 8px 24px rgba(30,30,50,.14),inset 0 .5px 0 rgba(255,255,255,.7)}
+html:root.selm body #selbar{opacity:1;transform:none}
+html:root body #selbar>*{opacity:0;transform:translate3d(0,8px,0) scale(.88);transition:opacity .16s ease,transform .5s cubic-bezier(.34,1.56,.64,1)}
+html:root.selm body #selbar>*{opacity:1;transform:none}
+html:root.selm body #selbar>:nth-child(1){transition-delay:.07s}html:root.selm body #selbar>:nth-child(2){transition-delay:.13s}html:root.selm body #selbar>:nth-child(3){transition-delay:.19s}
+html:root body #selbar #selx{height:56px;padding:0 18px;border-radius:999px;font-size:15px;font-weight:600;color:var(--t);background:rgba(var(--wr),.12);border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+html:root body #selbar #selc{flex:1;min-width:0;height:auto;display:block;padding:0 4px;text-align:center;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:none;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;border-radius:0}
+html:root body #selbar #selmore{position:static;flex:none;width:56px;height:56px;border-radius:50%;border:0;box-shadow:none;background:rgba(var(--wr),.12);-webkit-backdrop-filter:none;backdrop-filter:none;pointer-events:auto}
+html:root body #selbar #selmore svg{transition:transform .6s cubic-bezier(.34,1.56,.64,1) .19s;transform:rotate(-90deg)}html:root.selm body #selbar #selmore svg{transform:none}
+html:root.selm body #selbar :is(#selx,#selmore):active{transform:scale(.92);transition-delay:0s;transition-duration:.12s}
+/* v255: контекстное меню — то же стекло, что у нижней панели (фон за ним уже затемнён и размыт подложкой .cmb); пункты появляются по очереди сверху вниз */
+html:root #cm .cmm{background:rgba(30,30,34,.6);-webkit-backdrop-filter:none;backdrop-filter:none;border:.5px solid rgba(255,255,255,.16);box-shadow:0 8px 26px rgba(0,0,0,.32),inset 0 .5px 0 rgba(255,255,255,.12);border-radius:24px}
+:root[data-theme=light] #cm .cmm{background:rgba(252,252,254,.6);border-color:rgba(0,0,0,.09);box-shadow:0 8px 24px rgba(30,30,50,.14),inset 0 .5px 0 rgba(255,255,255,.7)}
+html:root #cm.on .cmi{animation:cmIn .5s cubic-bezier(.22,1,.36,1) backwards}
+html:root #cm.on .cmi:nth-child(2){animation-delay:.04s}html:root #cm.on .cmi:nth-child(3){animation-delay:.08s}html:root #cm.on .cmi:nth-child(4){animation-delay:.12s}
+html:root #cm.on .cmi:nth-child(5){animation-delay:.16s}html:root #cm.on .cmi:nth-child(6){animation-delay:.2s}html:root #cm.on .cmi:nth-child(n+7){animation-delay:.24s}
+@keyframes cmIn{from{opacity:0;transform:translate3d(0,-10px,0) scale(.96)}}
+@media (prefers-reduced-motion:reduce){html:root body :is(#selbar,#selbar>*,#selbar #selmore svg){transition:none}html:root #cm.on .cmi{animation:none}}
 #tabs .tbk{transform-box:view-box;transform-origin:12px 12px}#tabs :is(.gr,.ar){transform-box:view-box;transform-origin:12px 12px}html:root body #tabs button[data-t] svg{overflow:visible}
 #tabs .ln{transform-box:fill-box;transform-origin:0 50%}#tabs .br{transform-box:fill-box;transform-origin:50% 100%}#tabs :is(.dt,.rg){transform-box:fill-box;transform-origin:50% 50%}
 @media (prefers-reduced-motion:reduce){html:root body #tabs button[data-t] :is(svg,.tbt){transition:none}}
@@ -6866,7 +6891,7 @@ let bar,more;
 function buildBar(){if(bar)return;
   bar=D.createElement('div');bar.id='selbar';bar.innerHTML='<button type="button" id="selx">Отмена</button><b id="selc"></b>';
   more=D.createElement('button');more.id='selmore';more.type='button';more.setAttribute('aria-label','Действия');more.innerHTML='<svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">'+P.dots+'</svg>';
-  D.body.appendChild(bar);D.body.appendChild(more);
+  bar.appendChild(more);D.body.appendChild(bar);   // v255: «⋯» — внутри капсулы панели выбора
   bar.querySelector('#selx').addEventListener('click',()=>exit());
   more.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();openMore(e)});
   more.addEventListener('click',e=>{e.preventDefault();e.stopPropagation()})}
