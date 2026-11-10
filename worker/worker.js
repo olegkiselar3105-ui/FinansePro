@@ -276,6 +276,8 @@ async function transcribe(fileId, env) {
   const fd = new FormData();
   fd.append('file', new File([await audio.arrayBuffer()], 'voice.ogg', { type: 'audio/ogg' }));
   fd.append('model', 'whisper-large-v3-turbo'); fd.append('language', 'ru'); fd.append('temperature', '0');
+  // v262: образец фразы — распознавание чаще ставит точку после категории, и несколько записей в одном голосовом делятся верно («такси 200 плюшки. линелла 100 продукты»)
+  fd.append('prompt', 'Кофе 300 кафе. Такси 120 транспорт. Линелла 450 продукты. Зарплата 15000.');
   const r = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', { method: 'POST', headers: { Authorization: `Bearer ${env.GROQ_KEY}` }, body: fd });
   if (!r.ok) return ''; const j = await r.json(); return String(j.text || '').trim();
 }
