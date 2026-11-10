@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v252';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v253';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -2362,7 +2362,7 @@ function nomName(w){w=String(w).toLowerCase().replace(/ё/g,'е');if(NAMES.inclu
 const BM_=v=>fmt(Math.round(v*100)/100)+' '+cfg.cur;
 const MNP=['январе','феврале','марте','апреле','мае','июне','июле','августе','сентябре','октябре','ноябре','декабре'];
 function perKey(d){let k=mOf(d);try{if(d<pFrom(k))k=shiftMonth(k,-1)}catch(e){}return k}
-function spentIn(k,cat){const a=pFrom(k),b=pTo(k);return tx.filter(t=>t.type==='expense'&&t.date>=a&&t.date<=b&&(!cat||t.category===cat)).reduce((s,t)=>s+t.amount,0)}
+function spentIn(k,cat){const a=pFrom(k),b=pTo(k);return tx.filter(t=>t.type==='expense'&&!nbTx(t)&&t.date>=a&&t.date<=b&&(!cat||t.category===cat)).reduce((s,t)=>s+t.amount,0)}
 const inMon=k=>'В '+MNP[+k.slice(5,7)-1];
 function bGoal(g,sg,v,lk){const p=g.target>0?Math.min(100,Math.round(g.saved/g.target*100)):0;
   return '🎯 Цель «'+g.name+'»: '+sg+BM_(v)+'\nНакоплено '+fmt(g.saved)+' из '+BM_(g.target)+' ('+p+'%)'+(g.target>0&&g.saved>=g.target?'\n🎉 Цель достигнута!':g.target>0?'\nОсталось собрать: '+BM_(g.target-g.saved):'')+(lk?'\nЗаписано и в расходы':'')}
@@ -2838,6 +2838,11 @@ function txOfM(m){if(!TXM)return tx.filter(t=>mOf(t.date)===m);
   if(!TXM.size){for(const t of tx){const k=mOf(t.date);let a=TXM.get(k);if(!a)TXM.set(k,a=[]);a.push(t)}TXM.set('',[])}
   return TXM.get(m)||TXM.get('')}
 const sumBy=(m,type,cat)=>txOfM(m).filter(t=>t.type===type&&(!cat||t.category===cat)).reduce((s,t)=>s+t.amount,0);
+// v253: долги и накопления — обычные доход и расход (остаток, аналитика), но НЕ входят в бюджет и лимиты: дал/взял в долг, вернули/вернул, взнос в цель, снятие из цели.
+// Признак — категории «Долг»/«Накопления»/«Долг» (доход) или связь операции с долгом/целью (t.lk), даже если категорию потом сменили
+const NB_CATS=['debt','save','debtin'];
+const nbTx=t=>!!t&&(NB_CATS.includes(t.category)||!!(t.lk&&(t.lk.k==='d'||t.lk.k==='g')));
+const budX=(m,cat)=>txOfM(m).filter(t=>t.type==='expense'&&!nbTx(t)&&(!cat||t.category===cat)).reduce((s,t)=>s+t.amount,0);
 const sgn=d=>(d>=0?'+':'−')+Math.abs(Math.round(d))+'%';
 
 
@@ -2852,15 +2857,15 @@ const sumTo=(m,type,cat,upTo)=>txOfM(m).filter(t=>t.type===type&&(!cat||t.catego
 function cmpCat(type,id){const b=cmpBase(),cur=sumTo(month,type,id,b.upTo),prev=sumTo(b.pm,type,id,b.pup);return{cur,prev,d:prev>0?(cur-prev)/prev*100:null,partial:b.partial}}
 // карточки статистики: лимиты, сравнение
 function extraCards(it){let h='';
-  const lims=Object.entries(limOf(month)).filter(([id,v])=>v>0&&ALL.some(c=>c.id===id&&!c.inc)).map(([id,v])=>{const sp=sumBy(month,'expense',id);return{id,v,sp,p:sp/v*100}}).sort((a,b)=>b.p-a.p);
+  const lims=Object.entries(limOf(month)).filter(([id,v])=>v>0&&!NB_CATS.includes(id)&&ALL.some(c=>c.id===id&&!c.inc)).map(([id,v])=>{const sp=budX(month,id);return{id,v,sp,p:sp/v*100}}).sort((a,b)=>b.p-a.p);
   if(lims.length)h+=`<div class="cd"><h4>Лимиты · ${MN[+month.slice(5,7)-1]}</h4>`+lims.map(l=>{const c=cd(l.id),col=l.p>=100?'#ff6b6b':l.p>=80?'#f2c14e':'var(--g)';return `<div class="lr" data-cat="${l.id}" role="button" tabindex="0"><div class="lh"><span>${dot(l.id)}${E(c.l)}</span><span style="color:${l.p>=80?col:'var(--m2)'}">${fmt(l.sp)} / ${fmt(l.v)}${l.p>=100?' · +'+fmt(l.sp-l.v):''}</span></div><div class="lb"><i style="width:${Math.min(100,l.p)}%;background:${col}"></i></div></div>`}).join('')+`</div>`;
   const cs=it.map(([id])=>({id,...cmpCat('expense',id)})).filter(x=>x.d!=null&&Math.abs(x.d)>=10&&Math.abs(x.cur-x.prev)>=1).sort((a,b)=>Math.abs(b.cur-b.prev)-Math.abs(a.cur-a.prev)).slice(0,4);
   if(cs.length)h+=`<div class="cd"><h4>К прошлому месяцу${cs[0].partial?' (за те же дни)':''}</h4>`+cs.map(x=>`<div class="cmp"><span>${E(cd(x.id).l)}</span><span style="color:${x.d>0?'var(--rd)':'var(--g)'}">${sgn(x.d)} · ${x.cur>=x.prev?'+':'−'}${fmt(Math.abs(Math.round(x.cur-x.prev)))}</span></div>`).join('')+`</div>`;
   return h}
 // предупреждение при добавлении: 80% и 100% лимита
 function limitNote(list){const out=[],seen=new Set();
-  list.forEach(t=>{if(t.type!=='expense')return;const m=mOf(t.date),lim=limOf(m)[t.category];if(!(lim>0))return;const k=m+t.category;if(seen.has(k))return;seen.add(k);
-    const add=list.filter(x=>x.type==='expense'&&x.category===t.category&&mOf(x.date)===m).reduce((s,x)=>s+x.amount,0),after=sumBy(m,'expense',t.category),before=after-add;
+  list.forEach(t=>{if(t.type!=='expense'||nbTx(t))return;const m=mOf(t.date),lim=limOf(m)[t.category];if(!(lim>0))return;const k=m+t.category;if(seen.has(k))return;seen.add(k);
+    const add=list.filter(x=>x.type==='expense'&&!nbTx(x)&&x.category===t.category&&mOf(x.date)===m).reduce((s,x)=>s+x.amount,0),after=budX(m,t.category),before=after-add;
     if(before<lim&&after>=lim)out.push(`«${cd(t.category).l}»: лимит превышен на ${fmt(Math.round(after-lim))}`);
     else if(before<lim*.8&&after>=lim*.8)out.push(`«${cd(t.category).l}»: ${Math.round(after/lim*100)}% лимита`)});
   return out[0]||''}
@@ -2907,7 +2912,7 @@ const SHR={};
 const sumBox=(k,title,period,rows)=>{SHR[k]={title,period,rows};return `<div class="cd"><h4 class="shh"><span>${E(title)} · ${E(period)}</span><button type="button" class="shb" data-shr="${k}" aria-label="Поделиться"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3.5M8.2 7.3 12 3.5l3.8 3.8M8 10.5H7a2 2 0 0 0-2 2V18a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5.5a2 2 0 0 0-2-2h-1"/></svg></button></h4>`+sRows(rows)+`</div>`};
 // итоги месяца — внизу вкладки «Общая» при «Мес»
 function monthSum(m){const st=monthStats(m);if(!st.ex.length&&!st.I)return'';
-  const sv=st.I>0?st.I-st.X:(budgetOf(m)>0?budgetOf(m)-st.X:null),C=' '+cfg.cur;
+  const sv=st.I>0?st.I-st.X:(budgetOf(m)>0?budgetOf(m)-budX(m):null),C=' '+cfg.cur;
   return sumBox('m','Итоги месяца',MN[st.mo-1]+' '+st.y,[
    ['💸','Расходы',fmt(Math.round(st.X))+C,st.dlt==null?'':sgn(st.dlt)+' к прошлому месяцу','var(--rd)'],
    sv==null?['🐷','Сэкономили','—','нет доходов и бюджета',null]:['🐷',st.I>0?'Сэкономили':'Сэкономили от бюджета',(sv<0?'−':'')+fmt(Math.abs(Math.round(sv)))+C,sv>=0?(st.I>0?Math.round(sv/st.I*100)+'% дохода':'в рамках бюджета'):(st.I>0?'расходы выше доходов':'бюджет превышен'),sv>=0?'var(--g)':'var(--rd)'],
@@ -3090,21 +3095,21 @@ const subPl=()=>subBar([['goals','Цели'],['budget','Бюджет и лими
 const subAn=()=>subBar([['all','Общая'],['trend','Динамика'],['cal','Календарь'],['tags','Теги']],AS,'as');
 const mtg=(k,on,label)=>`<span class="gtg"><span>${label}</span><button type="button" class="mtg${on?' on':''}" data-mt="${k}" role="switch" aria-checked="${!!on}" aria-label="${label}"><i></i></button></span>`;   // v167: переключатель в заголовке раздела (как «Остаток» в главном блоке)
 const limCol=p=>p>=100?'#ff6b6b':p>=80?'#f2c14e':'var(--t)';
-function budgetHtml(){const X=sumBy(month,'expense'),Bd=budgetOf(month),mn=MN[+month.slice(5,7)-1],own=bmOwn(month);
+function budgetHtml(){const X=budX(month),XN=sumBy(month,'expense')-X,Bd=budgetOf(month),mn=MN[+month.slice(5,7)-1],own=bmOwn(month);
   let h=`<div class="gsec"><div class="gsh">${mtg('cb',carryBudOn(),'Переносить бюджет на следующие месяцы')}<span></span></div>`;
   if(!(Bd>0))h+=`<div class="cd" style="color:var(--m);font-size:13px;line-height:1.45">Задайте сумму, которую хотите тратить за месяц, — покажу, сколько осталось.<div class="gb"><button class="sm pr" data-la="bud">Задать бюджет</button></div></div>`;
   else{const p=X/Bd*100;
-    h+=`<div class="cd"><div class="gh"><b>Бюджет · ${mn}</b><span>${fmt(X)} / ${fmt(Bd)} ${cfg.cur}</span></div><div class="lb"><i style="width:${Math.min(100,p)}%;background:${limCol(p)}"></i></div><div class="gx">${Math.round(p)}% · ${p>=100?'Превышен на '+fmt(Math.round(X-Bd)):'Осталось '+fmt(Math.round(Bd-X))} ${cfg.cur}</div><div class="gx" style="margin-top:2px">${own?'Только для этого месяца':'Общий бюджет — для месяцев без своего'}</div><div class="gb"><button class="sm" data-la="bud">Изменить</button></div></div>`}
+    h+=`<div class="cd"><div class="gh"><b>Бюджет · ${mn}</b><span>${fmt(X)} / ${fmt(Bd)} ${cfg.cur}</span></div><div class="lb"><i style="width:${Math.min(100,p)}%;background:${limCol(p)}"></i></div><div class="gx">${Math.round(p)}% · ${p>=100?'Превышен на '+fmt(Math.round(X-Bd)):'Осталось '+fmt(Math.round(Bd-X))} ${cfg.cur}</div><div class="gx" style="margin-top:2px">${own?'Только для этого месяца':'Общий бюджет — для месяцев без своего'}</div>${XN>=.5?`<div class="gx" style="margin-top:2px">Долги и накопления не входят: ${fmt(Math.round(XN))} ${cfg.cur}</div>`:''}<div class="gb"><button class="sm" data-la="bud">Изменить</button></div></div>`}
   {const ks=Object.keys(cfg.bm||{}).filter(k=>Number(cfg.bm[k])>0).sort().reverse().slice(0,6);if(ks.length)h+=`<div class="gx" style="margin:6px 2px 0">Свои бюджеты: ${ks.map(k=>E(MS[+k.slice(5,7)-1]+(k.slice(0,4)!==month.slice(0,4)?' '+k.slice(2,4):'')+' '+fmt(cfg.bm[k]))).join(' · ')}${Number(cfg.budget)>0?' · общий '+fmt(cfg.budget):''}</div>`}
   h+=`<div class="gsh" style="margin-top:14px">${mtg('cl',carryLimOn(),'Переносить лимиты на следующие месяцы')}<button class="gp" data-la="new" aria-label="Добавить лимит">+</button></div>`;
-  const ls=Object.entries(limOf(month)).filter(([id,v])=>v>0&&ALL.some(c=>c.id===id&&!c.inc)).map(([id,v])=>{const sp=sumBy(month,'expense',id);return{id,v,sp,p:sp/v*100}}).sort((a,b)=>b.p-a.p);
+  const ls=Object.entries(limOf(month)).filter(([id,v])=>v>0&&!NB_CATS.includes(id)&&ALL.some(c=>c.id===id&&!c.inc)).map(([id,v])=>{const sp=budX(month,id);return{id,v,sp,p:sp/v*100}}).sort((a,b)=>b.p-a.p);
   if(!ls.length&&limOwnMode(month)&&Object.values(cfg.limits||{}).some(v=>v>0))h+=`<div class="cd" style="color:var(--m);font-size:13px;line-height:1.45">Перенос лимитов выключен — на ${mn.toLowerCase()} лимитов нет. Нажмите «+», чтобы задать их для этого месяца.</div>`;
   else if(!ls.length)h+=`<div class="cd" style="color:var(--m);font-size:13px;line-height:1.45">Например: «Продукты 3 000 в месяц». Нажмите «+» — покажу, сколько уже потрачено и когда подойдёте к лимиту.</div>`;
   else h+=ls.map(l=>{const c=cd(l.id);
     return `<div class="cd"><div class="gh"><b>${dot(l.id)}${E(c.l)}</b><span>${fmt(l.sp)} / ${fmt(l.v)} ${cfg.cur}</span></div><div class="lb"><i style="width:${Math.min(100,l.p)}%;background:${limCol(l.p)}"></i></div><div class="gx">${Math.round(l.p)}% · ${l.p>=100?'Превышен на '+fmt(Math.round(l.sp-l.v)):'Осталось '+fmt(Math.round(l.v-l.sp))} ${cfg.cur}</div><div class="gb"><button class="sm" data-la="edit" data-cid="${l.id}">Изменить</button></div></div>`}).join('');
   return h+`</div>`}
 function limAct(el){const a=el.dataset.la;if(a==='bud')openBud(el);else if(a==='new')openLim(null,el);else if(a==='edit')openLim(el.dataset.cid,el)}
-function openLim(id,src){if(isModalOpen())return;const used=limOf(month),cats=ALL.filter(c=>!c.inc&&(c.id===id||!(used[c.id]>0)));
+function openLim(id,src){if(isModalOpen())return;const used=limOf(month),cats=ALL.filter(c=>!c.inc&&!NB_CATS.includes(c.id)&&(c.id===id||!(used[c.id]>0)));
   if(!cats.length){toast('Лимиты заданы для всех категорий');return}
   cancelGestures();lockBg(true);gT={mode:'lim',id:id||null};
   gd.innerHTML=`<div class="eh"><b>${id?'Лимит':'Новый лимит'}</b><button class="x" id="gcl" aria-label="Закрыть" style="font-size:20px;padding:4px 6px">×</button></div>
@@ -3521,10 +3526,10 @@ function render(){
   if(month!==_wm){WO=woFor(month);_wm=month}
   const [y,mo]=month.split('-').map(Number);$('#mn').textContent=MN[mo-1]+' '+y;$('#mn').title=mStart()>1?dLbl(pFrom(month))+' – '+dLbl(pTo(month)):'';
   const mt=tx.filter(t=>mOf(t.date)===month).sort((a,b)=>b.date.localeCompare(a.date));
-  const I=mt.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0),X=mt.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const I=mt.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0),X=mt.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0),XBud=mt.filter(t=>t.type==='expense'&&!nbTx(t)).reduce((s,t)=>s+t.amount,0);   // XBud — для бюджета, без долгов и накоплений (v253)
   const sg_=t=>t.type==='income'?t.amount:-t.amount,cOn=cfg.carry&&month>=cfg.carryFrom,prior=cOn?tx.filter(t=>{const m_=mOf(t.date);return m_>=cfg.carryFrom&&m_<month}).reduce((s,t)=>s+sg_(t),0):0,bal=Math.round((prior+mt.reduce((s,t)=>s+sg_(t),0))*100)/100;
   const ex_=cOn&&Math.abs(prior)>=.005?`<small>С прошлых месяцев: ${prior<0?'−':'+'}${fmt(Math.round(Math.abs(prior)))}</small>`:'';
-  {const sm=$('#sum'),h=`<div class="sht"><small>Остаток</small><button type="button" id="carry" class="${cOn?'on':''}" role="switch" aria-checked="${cOn}" aria-label="Переносить остаток с этого месяца"><i></i></button></div><div class="bw"><div class="bl"><b class="tot" id="sbal" data-v="${bal}" style="font-size:${numSz((bal<0?'−':'')+fmt(Math.round(Math.abs(bal))))}px">${bal<0&&Math.round(Math.abs(bal))>0?'−':''}${fmt(Math.round(Math.abs(bal)))}</b><div class="io"><span>Доход<b class="inc" id="sinc" data-v="${I}">${fmt(Math.round(I))}</b></span><span>Расход<b class="exp" id="sexp" data-v="${X}">${fmt(Math.round(X))}</b></span></div></div>${gaugeHtml(X)}</div>${budgetLine(X)}${debtNote()}`;if(sm._h!==h){sm.innerHTML=h;sm._h=h;runNums();runGauge()}};
+  {const sm=$('#sum'),h=`<div class="sht"><small>Остаток</small><button type="button" id="carry" class="${cOn?'on':''}" role="switch" aria-checked="${cOn}" aria-label="Переносить остаток с этого месяца"><i></i></button></div><div class="bw"><div class="bl"><b class="tot" id="sbal" data-v="${bal}" style="font-size:${numSz((bal<0?'−':'')+fmt(Math.round(Math.abs(bal))))}px">${bal<0&&Math.round(Math.abs(bal))>0?'−':''}${fmt(Math.round(Math.abs(bal)))}</b><div class="io"><span>Доход<b class="inc" id="sinc" data-v="${I}">${fmt(Math.round(I))}</b></span><span>Расход<b class="exp" id="sexp" data-v="${X}">${fmt(Math.round(X))}</b></span></div></div>${gaugeHtml(XBud)}</div>${budgetLine(XBud)}${debtNote()}`;if(sm._h!==h){sm.innerHTML=h;sm._h=h;runNums();runGauge()}};
   buildTabs();
   $('#ttl').textContent=ttlOf(tab);setLt0(tab);
   const dlst=$('#tgl');if(dlst)dlst.innerHTML=allTags().map(g=>`<option value="${E(g)}">`).join('');
