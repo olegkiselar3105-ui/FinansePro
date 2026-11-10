@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v256';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v257';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -1879,6 +1879,94 @@ html:root #ed #eam:focus{border-bottom:1px solid var(--sep)!important;box-shadow
 html:root #ed label.ef:focus-within,html:root #ed .ef.tgf:focus-within{border-bottom:1px solid var(--sep)!important;box-shadow:none!important}
 html:root #ed #eam,html:root #ed label.ef,html:root #ed .ef.tgf,html:root #ed input{transition:none!important;-webkit-tap-highlight-color:transparent}
 </style>
+<style id="onbcss">
+/* v257: знакомство и первая настройка — на весь экран; стекло карточек и кнопок — как у нижней панели */
+#onb{position:fixed;inset:0;z-index:2147482500;display:flex;flex-direction:column;background:var(--bg);color:var(--t);opacity:0;visibility:hidden;transition:opacity .35s ease,visibility 0s .35s;
+  padding:calc(var(--sat,0px) + 10px) 20px calc(var(--sab,0px) + 14px);overflow:hidden;-webkit-user-select:none;user-select:none}
+#onb.on{opacity:1;visibility:visible;transition:opacity .35s ease,visibility 0s}
+#onb .ob-top{display:flex;align-items:center;gap:10px;height:40px;flex:none}
+#onb .ob-bk{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(var(--wr),.08);color:var(--t);transition:opacity .2s ease,transform .3s cubic-bezier(.34,1.56,.64,1)}
+#onb .ob-bk.hid{opacity:0;pointer-events:none;transform:scale(.6)}
+#onb .ob-pr{flex:1;display:flex;gap:4px}#onb .ob-pr i{flex:1;height:4px;border-radius:2px;background:rgba(var(--wr),.14);overflow:hidden}
+#onb .ob-pr i::after{content:"";display:block;height:100%;width:100%;background:var(--t);transform:scaleX(0);transform-origin:0 50%;transition:transform .5s cubic-bezier(.22,1,.36,1)}
+#onb .ob-pr i.d::after{transform:scaleX(1)}
+#onb .ob-sk{height:40px;padding:0 4px 0 10px;font-size:15px;font-weight:500;color:var(--m2);background:none}
+#onb .ob-st{flex:1;position:relative;min-height:0}
+#onb .ob-s{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-start;overflow-y:auto;overscroll-behavior:contain;padding:8px 0;scrollbar-width:none}
+#onb .ob-s::-webkit-scrollbar{display:none}
+#onb .ob-s[hidden]{display:none}
+#onb .ob-s>:first-child{margin-top:auto}#onb .ob-s>:last-child{margin-bottom:auto}   /* по центру, а длинное — листается с начала, заголовок не уезжает за верх */
+#onb .ob-s>*{animation:obIn .6s cubic-bezier(.22,1,.36,1) backwards;animation-delay:calc(.05s + var(--i,0)*.07s)}
+@keyframes obIn{from{opacity:0;transform:translate3d(0,18px,0)}}
+#onb h2{font-size:30px;line-height:1.12;font-weight:750;letter-spacing:-.02em;margin:0 0 12px}
+#onb .ob-p{font-size:16px;line-height:1.45;color:var(--m2);margin:0 0 22px}
+#onb .ob-v{display:flex;justify-content:center;align-items:center;min-height:200px;margin-bottom:26px}
+#onb .ob-f{flex:none;display:flex;flex-direction:column;gap:8px;padding-top:12px}
+#onb .ob-go{height:56px;border-radius:999px;font-size:17px;font-weight:650;background:var(--t);color:var(--bg);transition:transform .25s cubic-bezier(.34,1.56,.64,1),opacity .2s ease}
+#onb .ob-go:active{transform:scale(.96)}#onb .ob-go[disabled]{opacity:.35}
+#onb .ob-alt{height:44px;border-radius:999px;font-size:15px;font-weight:500;color:var(--m2);background:none}
+/* стекло — как нижняя панель */
+#onb .ob-g{background:rgba(30,30,34,.6);border:.5px solid rgba(255,255,255,.16);box-shadow:0 8px 26px rgba(0,0,0,.32),inset 0 .5px 0 rgba(255,255,255,.12)}
+:root[data-theme=light] #onb .ob-g{background:rgba(252,252,254,.6);border-color:rgba(0,0,0,.09);box-shadow:0 8px 24px rgba(30,30,50,.14),inset 0 .5px 0 rgba(255,255,255,.7)}
+/* выбор: сетка кнопок */
+#onb .ob-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+#onb .ob-o{min-height:66px;border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:8px 4px;color:var(--t);transition:transform .3s cubic-bezier(.34,1.56,.64,1),background-color .2s ease,box-shadow .2s ease}
+#onb .ob-o b{font-size:18px;font-weight:700}#onb .ob-o small{font-size:11px;color:var(--m2);line-height:1.2;text-align:center}
+#onb .ob-o.on{box-shadow:inset 0 0 0 2px var(--g),0 8px 26px rgba(0,0,0,.25);transform:scale(1.03)}
+#onb .ob-o:active{transform:scale(.95)}
+#onb .ob-o[disabled]{opacity:.4}
+#onb .ob-note{font-size:13px;line-height:1.45;color:var(--m2);margin-top:14px}
+#onb .ob-sel{margin-top:10px;width:100%;height:50px;border-radius:16px;padding:0 14px;font-size:16px;color:var(--t);background:rgba(var(--wr),.08);border:0}
+/* строки-варианты */
+#onb .ob-row{display:flex;align-items:center;gap:14px;width:100%;min-height:64px;border-radius:20px;padding:12px 16px;text-align:left;color:var(--t);margin-bottom:10px;transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .2s ease}
+#onb .ob-row.on{box-shadow:inset 0 0 0 2px var(--g),0 8px 26px rgba(0,0,0,.25)}
+#onb .ob-row:active{transform:scale(.97)}
+#onb .ob-row i{font-style:normal;font-size:24px;width:30px;text-align:center}#onb .ob-row span{flex:1;min-width:0}#onb .ob-row b{display:block;font-size:16px;font-weight:650}#onb .ob-row small{display:block;font-size:13px;color:var(--m2);margin-top:2px}
+#onb .ob-day{display:flex;align-items:center;justify-content:center;gap:18px;margin:6px 0 4px;transition:opacity .25s ease}
+#onb .ob-day.off{opacity:.3;pointer-events:none}
+#onb .ob-day button{width:48px;height:48px;border-radius:50%;font-size:24px;color:var(--t)}
+#onb .ob-day b{font-size:22px;font-weight:700;min-width:110px;text-align:center}
+/* поле ввода */
+#onb .ob-in{display:flex;align-items:center;gap:10px;border-radius:22px;padding:0 18px;height:64px}
+#onb .ob-in input{flex:1;min-width:0;height:100%;border:0;background:none;color:var(--t);font-size:22px;font-weight:650;outline:none;-webkit-user-select:text;user-select:text}
+#onb .ob-in em{font-style:normal;font-size:16px;color:var(--m2)}
+#onb .ob-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+#onb .ob-chips button{height:36px;padding:0 14px;border-radius:999px;font-size:14px;color:var(--t);background:rgba(var(--wr),.08)}
+/* категории */
+#onb .ob-cats{display:flex;flex-wrap:wrap;gap:8px}
+#onb .ob-c{height:42px;padding:0 14px 0 10px;border-radius:999px;display:flex;align-items:center;gap:6px;font-size:14px;color:var(--t);transition:transform .3s cubic-bezier(.34,1.56,.64,1),opacity .2s ease,box-shadow .2s ease}
+#onb .ob-c.off{opacity:.38;box-shadow:none;transform:scale(.96)}
+#onb .ob-c:active{transform:scale(.92)}
+/* тема и PIN */
+#onb .ob-th{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+#onb .ob-sw{width:52px;height:32px;border-radius:999px;background:rgba(var(--wr),.18);position:relative;flex:none;transition:background-color .25s ease}
+#onb .ob-sw::after{content:"";position:absolute;left:3px;top:3px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.25);transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
+#onb .ob-row.on .ob-sw{background:var(--g)}#onb .ob-row.on .ob-sw::after{transform:translateX(20px)}
+#onb .ob-row.obt.on{box-shadow:0 8px 26px rgba(0,0,0,.25)}
+/* картинки приветствия */
+#onb .ob-wal{width:150px;height:150px}
+#onb .ob-wal .wd{stroke-dasharray:1;stroke-dashoffset:1;animation:obDraw 1.2s cubic-bezier(.65,0,.35,1) .15s forwards}
+#onb .ob-wal .wb{animation:obBill 1.4s cubic-bezier(.22,1,.36,1) .9s backwards}
+@keyframes obDraw{to{stroke-dashoffset:0}}@keyframes obBill{from{transform:translateY(60px);opacity:0}}
+#onb .ob-glow{position:absolute;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--g) 30%,transparent),transparent 65%);animation:obGlow 3.4s ease-in-out infinite}
+@keyframes obGlow{50%{transform:scale(1.12);opacity:.7}}
+#onb .ob-demo{width:100%;max-width:330px;display:flex;flex-direction:column;gap:14px}
+#onb .ob-say{height:56px;border-radius:999px;display:flex;align-items:center;padding:0 20px;font-size:18px;font-weight:600}
+#onb .ob-say span{display:inline-block;white-space:nowrap;overflow:hidden;clip-path:inset(0 100% 0 0);animation:obType 5s steps(14,end) infinite}
+#onb .ob-say s{display:inline-block;width:2px;height:22px;margin-left:3px;background:var(--g);text-decoration:none;animation:obCar 1s steps(1) infinite}
+@keyframes obType{0%{clip-path:inset(0 100% 0 0)}30%,92%{clip-path:inset(0 0 0 0)}100%{clip-path:inset(0 0 0 0)}}
+@keyframes obCar{50%{opacity:0}}
+#onb .ob-rec{height:62px;border-radius:20px;display:flex;align-items:center;gap:12px;padding:0 16px;animation:obRec 5s cubic-bezier(.22,1,.36,1) infinite}
+#onb .ob-rec i{font-style:normal;font-size:22px}#onb .ob-rec span{flex:1}#onb .ob-rec b{display:block;font-size:16px}#onb .ob-rec small{font-size:12px;color:var(--m2)}#onb .ob-rec em{font-style:normal;font-weight:700;color:var(--rd)}
+@keyframes obRec{0%,34%{opacity:0;transform:translate3d(0,-16px,0) scale(.92)}46%,92%{opacity:1;transform:none}100%{opacity:0}}
+#onb .ob-sh{position:relative;width:150px;height:150px;display:flex;align-items:center;justify-content:center}
+#onb .ob-sh svg{width:120px;height:120px;color:var(--g)}
+#onb .ob-sh .ck2{stroke-dasharray:1;stroke-dashoffset:1;animation:obDraw .7s cubic-bezier(.65,0,.35,1) .7s forwards}
+#onb .ob-sh::before{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid var(--g);opacity:0;animation:obRing 2.6s ease-out 1s infinite}
+@keyframes obRing{0%{opacity:.6;transform:scale(.7)}100%{opacity:0;transform:scale(1.35)}}
+#onb a{color:var(--g)}
+@media (prefers-reduced-motion:reduce){#onb *{animation:none!important;transition:none!important}#onb .ob-say span{clip-path:none}#onb .ob-rec{opacity:1}#onb .ob-wal .wd,#onb .ob-sh .ck2{stroke-dashoffset:0}}
+</style>
 </head>
 <body><div id="rotx" aria-live="polite"><svg viewBox="0 0 64 64" width="72" height="72" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g class="rph"><rect x="20" y="8" width="24" height="44" rx="5"/><path d="M29 46h6"/></g><path class="rar" d="M50 30a18 18 0 0 0-14-17M36 9l0 5 5 0"/></svg><b>Поверните телефон</b><span>Приложение работает только вертикально</span></div><div id="lk" role="dialog" aria-modal="true" aria-label="PIN-код"></div><div id="vb" aria-hidden="true"></div><div id="spl" aria-hidden="true">
 <div class="spl-fx"><svg class="spl-logo" viewBox="96 96 320 320" width="132" height="132" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
@@ -2664,7 +2752,7 @@ const autoF=(sel,ms)=>{if(matchMedia('(pointer:coarse)').matches)return;setTimeo
 // v233: вызывается на каждом событии прокрутки (несколько обработчиков) — только поиск по id: прежний querySelector('#tpv:not(.cl),#shv')
 // обходил весь документ при каждом вызове и на длинном списке операций съедал большую часть времени прокрутки
 const MOD_IDS=['ed','gd','cf','bq','nc','cp','rc'];
-const isModalOpen=()=>{if(sh.classList.contains('on'))return true;for(const id of MOD_IDS){const e=document.getElementById(id);if(e&&e.classList.contains('on'))return true}
+const isModalOpen=()=>{if(sh.classList.contains('on')||window.__onbOn)return true;for(const id of MOD_IDS){const e=document.getElementById(id);if(e&&e.classList.contains('on'))return true}
   const t=document.getElementById('tpv');return !!(t&&!t.classList.contains('cl'))||!!document.getElementById('shv')};
 function cancelGestures(){
   try{if(typeof openSw!=='undefined'&&openSw)closeSw(openSw)}catch{}
@@ -4557,7 +4645,7 @@ function bhFinish(committed){const h=BH.get(),ids=Object.keys(h);if(!ids.length)
   if(fin.length)ibCall('/api/ack',{ids:fin,notes,drop}).catch(()=>{const b=BH.get();fin.forEach(i=>{b[i]=1});BH.set(b)})}   // нет связи — повторим при следующей записи
 // окно «+» с проверкой открывается само, когда приложение на экране и ничего не открыто
 let revT=0;function revOpen(){clearTimeout(revT);if(!drafts.length)return;
-  const busy=document.hidden||isModalOpen()||document.getElementById('spl')||(LKE&&LKE.classList.contains('on'))||(typeof tourOn==='function'&&tourOn());
+  const busy=document.hidden||isModalOpen()||document.getElementById('spl')||(LKE&&LKE.classList.contains('on'))||(typeof tourOn==='function'&&tourOn())||window.__onbOn||window.__onbWait;
   if(busy){if(!sh.classList.contains('on'))revT=setTimeout(revOpen,1500);return}
   if(!sh.classList.contains('on'))openSheet();if(cfg.auto&&!needRate.size)startAuto()}
 // черновики на телефоне
@@ -4584,7 +4672,7 @@ const WN=[
 // v211: заголовок по буквам, как название на заставке; «нового» — зелёным со свечением
 const wnTitle=()=>{let i=0;return ['Что','нового'].map((w,k)=>`<span class="wnw${k?' wng':''}" aria-hidden="true">${[...w].map(c=>`<span style="--j:${i++}">${c}</span>`).join('')}</span>`).join(' ')};
 function wnShow(){const w=WN[0];if(!w||cfg.wnSeen===w.id)return;
-  const busy=document.hidden||isModalOpen()||document.getElementById('spl')||(LKE&&LKE.classList.contains('on'))||(typeof tourOn==='function'&&tourOn());
+  const busy=document.hidden||isModalOpen()||document.getElementById('spl')||(LKE&&LKE.classList.contains('on'))||(typeof tourOn==='function'&&tourOn())||window.__onbOn||window.__onbWait;
   if(busy){setTimeout(wnShow,2000);return}
   bqShow(`<div class="wnx" style="--n:${w.items.length}"><div class="wnh" aria-label="Что нового">${wnTitle()}</div><div class="wnl">${w.items.map(([e,t,d],i)=>`<div class="wni" style="--i:${i}"><i>${e}</i><div><b>${E(t)}</b><span>${E(d)}</span></div></div>`).join('')}</div><div class="bqb"><button class="sm pr" data-bq="wnok">Понятно</button></div></div>`,'wn')}
 function wnDone(){const w=WN[0];if(w){cfg.wnSeen=w.id;save()}}
@@ -5140,7 +5228,7 @@ function stHtml(){
   return `<h1 class="lt">Настройки</h1>
 <div class="pf0"><span class="av${ini?' ini':''}"${ini?` style="background:linear-gradient(160deg,${avc},${avc}cc)"`:''}>${ini?`<i class="avi">${E(ini)}</i>`:person}${ph?`<img src="${E(ph)}" alt="" decoding="async" referrerpolicy="no-referrer" style="opacity:${(window._AV&&window._AV.url===ph&&window._AV.ok)?1:0}" onload="this.style.transition='opacity .25s';this.style.opacity=1" onerror="this.remove()">`:''}</span><span class="pn"><b>${E(nm)}</b><small${un?' class="un"':''}>${E(sub)}</small></span></div>
 <div class="sc">
-${row('cub','#2f6df6','<path d="M12 3.5v17M16.2 7.6c0-1.6-1.9-2.8-4.2-2.8s-4.2 1.2-4.2 2.9 1.9 2.5 4.2 3.1 4.2 1.4 4.2 3.2-1.9 3-4.2 3-4.2-1.3-4.2-3"/>','Валюта и курсы',E(cfg.cur))}${row('ctc','','','Написать нам')}${row('pol','','','Политика конфиденциальности')}${row('tou','','','Обучение','Пройти заново')}
+${row('cub','#2f6df6','<path d="M12 3.5v17M16.2 7.6c0-1.6-1.9-2.8-4.2-2.8s-4.2 1.2-4.2 2.9 1.9 2.5 4.2 3.1 4.2 1.4 4.2 3.2-1.9 3-4.2 3-4.2-1.3-4.2-3"/>','Валюта и курсы',E(cfg.cur))}${row('ctc','','','Написать нам')}${row('pol','','','Политика конфиденциальности')}${row('onbr','','','Знакомство и настройка','Настроить заново')}${row('tou','','','Обучение','Пройти заново')}
 </div>
 <div class="sgh">Внешний вид</div>
 <div class="sc">${thm}</div>
@@ -5159,7 +5247,7 @@ function bindSt(){
   if($('#mst'))$('#mst').onclick=()=>{msV=mStart();openBq('mstart')};if($('#pin'))$('#pin').onclick=()=>openBq('pin');if($('#prv'))$('#prv').onclick=()=>openBq('prv');
   if($('#crs'))$('#crs').onclick=()=>{cbM=shiftMonth(curM(),1);openBq('carry')};
   if($('#hsb'))homeBind();if($('#botu'))$('#botu').onchange=e=>{const v=String(e.target.value||'').trim();cfg.botUrl=v;save();if(ibBase()){window.__ibBusy=false;inboxPull()}}
-  if($('#tou'))$('#tou').onclick=()=>{if(window.AppTour)AppTour.show()};$('#cin').onclick=e=>openCf('catsI',e.currentTarget);$('#cex').onclick=e=>openCf('catsE',e.currentTarget);if($('#rcs'))$('#rcs').onclick=()=>openRcSt();$('#bki').onclick=()=>openBq('import');$('#bke').onclick=()=>openBq('export');$('#bkr').onclick=()=>openBq('reset');$('#ctc').onclick=()=>openBq('contact');if($('#pol'))$('#pol').onclick=()=>{const u=new URL('privacy.html',location.href).href;   // v236: у политики свой код pol — раньше был prv, как у «Скрытия сумм», и та строка не открывалась
+  if($('#tou'))$('#tou').onclick=()=>{if(window.AppTour)AppTour.show()};if($('#onbr'))$('#onbr').onclick=()=>{if(window.AppOnb)AppOnb.show()};$('#cin').onclick=e=>openCf('catsI',e.currentTarget);$('#cex').onclick=e=>openCf('catsE',e.currentTarget);if($('#rcs'))$('#rcs').onclick=()=>openRcSt();$('#bki').onclick=()=>openBq('import');$('#bke').onclick=()=>openBq('export');$('#bkr').onclick=()=>openBq('reset');$('#ctc').onclick=()=>openBq('contact');if($('#pol'))$('#pol').onclick=()=>{const u=new URL('privacy.html',location.href).href;   // v236: у политики свой код pol — раньше был prv, как у «Скрытия сумм», и та строка не открывалась
   try{if(IN_TG&&TGW.openLink){TGW.openLink(u);return}}catch(e){}window.open(u,'_blank')};}
 function renderSt(){const el=$('#st');if(!el||tab!=='settings')return;el.innerHTML=stHtml();bindSt();if(window.pfSync)window.pfSync()}
 // ---- маленькое окошко снизу: подтверждение сброса и резервная копия ----
@@ -6888,7 +6976,7 @@ function cancelPend(){clearTimeout(pT);clearTimeout(lT);pend=null;liftOff()}
 window.__cmCancel=()=>{cancelPend();liftOff(true)};   // v156: свайп месяца отменяет начатое долгое нажатие (и «приподнятую» строку)
 D.addEventListener('pointerdown',e=>{
   if(e.pointerType==='mouse'&&e.button!==0)return;
-  if(open||sel.on||modal()||D.getElementById('spl')||tourOn())return;
+  if(open||sel.on||modal()||D.getElementById('spl')||tourOn()||window.__onbOn)return;
   const w=whatIs(e.target);if(!w)return;
   pend={id:e.pointerId,x:e.clientX,y:e.clientY,w,type:e.pointerType};
   clearTimeout(pT);clearTimeout(lT);
@@ -7189,9 +7277,124 @@ function boot(){
 
 window.addEventListener('resize',()=>{if(active)fit()});
 window.AppTour={show};
-if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',boot);else boot();
+// v257: при первом запуске вместо этих 11 слайдов — знакомство и настройка (AppOnb); слайды остаются в «Настройки → Обучение»
 })();
 </script>
+<script>
+/* v257: знакомство и первая настройка (AppOnb). Показывается один раз каждому (отметка cfg.onb уходит в облако), в Telegram — только после первой сверки с облаком,
+   чтобы на новом устройстве старого пользователя не показать «пустые» настройки. Каждый шаг сохраняется сразу; «Пропустить» оставляет как есть.
+   У кого уже есть записи, валюта здесь не меняется (смена с пересчётом — в «Настройки → Валюта и курсы»). Повторить — «Настройки → Настроить заново». */
+(function(){'use strict';
+if(window.AppOnb)return;
+const D=document,$q=(s,r)=>(r||D).querySelector(s),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+window.__onbWait=true;   // пока не решено, показывать ли знакомство, окно «Что нового» и советы ждут
+let root,stEl,prEl,bkEl,skEl,goEl,altEl,i=0,busy=false,st={};
+const hasData=()=>{try{return tx.length>0||(cfg.goals||[]).length>0||(cfg.debts||[]).length>0||(cfg.rec||[]).length>0}catch(e){return false}};
+const TOP=['MDL','EUR','USD','RON','UAH','RUB'];
+const SY={MDL:'L',EUR:'€',USD:'$',RON:'lei',UAH:'₴',RUB:'₽'};
+const vib=()=>{try{hap.sw('select')}catch(e){}};
+const WAL=`<svg class="ob-wal" viewBox="96 96 320 320" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><linearGradient id="obg" x1="0" x2="1"><stop offset="0" style="stop-color:var(--g);stop-opacity:.3"/><stop offset=".5" style="stop-color:var(--g)"/><stop offset="1" style="stop-color:var(--g);stop-opacity:.3"/></linearGradient><clipPath id="obc"><rect x="96" y="96" width="320" height="104"/></clipPath></defs><g clip-path="url(#obc)"><rect class="wb" x="172" y="180" width="164" height="40" rx="10" fill="url(#obg)" stroke="none"/></g><path class="wd" pathLength="1" d="M146 214 L150 178 C151 160 160 152 175 148 L316 126 C329 124 338 133 338 147 L338 196"/><rect class="wd" pathLength="1" x="139" y="196" width="244" height="168" rx="40"/><circle cx="330" cy="280" r="10" fill="currentColor" stroke="none"/></svg>`;
+const SH=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6z"/><path class="ck2" pathLength="1" d="M8.5 12.2l2.4 2.4 4.6-4.8"/></svg>`;
+// шаги: h — заголовок, b() — содержимое, go — подпись кнопки, alt — вторая кнопка, w — приветствие (кнопка «Пропустить» — всё приветствие)
+const STEPS=[
+ {w:1,go:'Далее',b:()=>`<div class="ob-v" style="position:relative"><div class="ob-glow"></div>${WAL}</div><h2>Деньги под&nbsp;контролем</h2><p class="ob-p">Записывайте доходы и расходы за секунду, видьте, куда уходят деньги, и копите на важное.</p>`},
+ {w:1,go:'Далее',b:()=>`<div class="ob-v"><div class="ob-demo"><div class="ob-say ob-g"><span>кофе 300 кафе</span><s></s></div><div class="ob-rec ob-g"><i>☕</i><span><b>Кофе</b><small>Кафе и рестораны · сегодня</small></span><em>−300</em></div></div></div><h2>Пишите или говорите — как&nbsp;другу</h2><p class="ob-p">Заметка, сумма, категория — и запись готова. Так же можно писать боту в Telegram, текстом или голосом.</p>`},
+ {w:1,go:'Настроить под себя',b:()=>`<div class="ob-v"><div class="ob-sh">${SH}</div></div><h2>Данные только у&nbsp;вас</h2><p class="ob-p">Записи хранятся в облаке Telegram и на вашем телефоне. На наших серверах их нет. <a href="privacy.html" target="_blank" rel="noopener">Политика конфиденциальности</a></p>`},
+ {k:'cur',go:'Далее',b:()=>{const lock=hasData(),cur=st.cur,other=!TOP.includes(cur);
+   return `<h2>Ваша валюта</h2><p class="ob-p">В ней будут суммы, бюджет и итоги. Другие валюты тоже можно писать — «кофе 5 евро», курс подтянется сам.</p>
+   <div class="ob-grid">${TOP.map(c=>`<button type="button" class="ob-o ob-g${c===cur?' on':''}" data-cur="${c}"${lock&&c!==cur?' disabled':''}><b>${esc(SY[c]||c)}</b><small>${c} · ${esc((CURS[c]||{}).n||'')}</small></button>`).join('')}</div>
+   <label><select class="ob-sel" id="obcs"${lock?' disabled':''} aria-label="Другая валюта"><option value="">Другая валюта…</option>${codes().filter(c=>!TOP.includes(c)).map(c=>`<option value="${c}"${c===cur?' selected':''}>${c} — ${esc((CURS[c]||{}).n||c)}</option>`).join('')}</select></label>
+   ${lock?`<div class="ob-note">У вас уже есть записи в ${esc(cfg.cur)}. Сменить валюту с пересчётом сумм можно в «Настройки → Валюта и курсы».</div>`:other&&cur?`<div class="ob-note">Выбрано: ${esc(cur)}</div>`:''}`}},
+ {k:'ms',go:'Далее',b:()=>`<h2>Когда начинается ваш месяц?</h2><p class="ob-p">Если получаете зарплату, например, 10-го — пусть месяц и бюджет считаются с этого дня.</p>
+   <button type="button" class="ob-row ob-g${st.ms<2?' on':''}" data-ms="1"><i>1️⃣</i><span><b>С 1-го числа</b><small>Обычный календарный месяц</small></span></button>
+   <button type="button" class="ob-row ob-g${st.ms>=2?' on':''}" data-ms="pay"><i>💰</i><span><b>С дня зарплаты</b><small>Выберите число ниже</small></span></button>
+   <div class="ob-day${st.ms>=2?'':' off'}"><button type="button" class="ob-g" data-md="-1" aria-label="Раньше">−</button><b id="obmd">${Math.max(2,st.ms)} число</b><button type="button" class="ob-g" data-md="1" aria-label="Позже">+</button></div>`},
+ {k:'bud',go:'Далее',alt:'Не сейчас',b:()=>`<h2>Сколько хотите тратить в&nbsp;месяц?</h2><p class="ob-p">Покажу, сколько осталось и сколько можно тратить в день. Долги и накопления в бюджет не входят.</p>
+   <label class="ob-in ob-g" for="obbud"><input id="obbud" type="text" inputmode="decimal" autocomplete="off" placeholder="0" value="${st.bud>0?esc(st.bud):''}"><em>${esc(st.cur||cfg.cur)}</em></label>
+   <div class="ob-chips">${[5000,10000,15000,20000].map(v=>`<button type="button" data-bv="${v}">${fmtN(v)}</button>`).join('')}</div><div class="ob-note">Можно изменить в любой момент: «Планы → Бюджет».</div>`},
+ {k:'cat',go:'Далее',b:()=>{const set=catSet()==='v2'?CAT2:CAT3;
+   return `<h2>Ваши категории</h2><p class="ob-p">Нажмите на то, что вам не нужно, — категория скроется. Ничего не удаляется, вернуть можно в настройках.</p>
+   <div class="ob-cats">${set.e.filter(x=>x[0]!=='other').map((x,k)=>{let em=x[2]||'';try{em=em||(typeof EMO==='object'&&EMO[x[0]])||''}catch(e){}return `<button type="button" class="ob-c ob-g${st.hide.includes(x[0])?' off':''}" data-cat="${x[0]}" style="animation:obIn .5s cubic-bezier(.22,1,.36,1) ${(.05+k*.025).toFixed(3)}s backwards">${em?`<span>${em}</span>`:''}${esc(x[1])}</button>`}).join('')}</div>`}},
+ {k:'th',go:'Далее',b:()=>`<h2>Внешний вид и защита</h2><p class="ob-p">Тема меняется сразу — посмотрите, как вам больше нравится.</p>
+   <div class="ob-th">${[['auto','🌓','Авто'],['light','☀️','Светлая'],['dark','🌙','Тёмная']].map(([k,e,l])=>`<button type="button" class="ob-o ob-g${st.th===k?' on':''}" data-th="${k}"><b>${e}</b><small>${l}</small></button>`).join('')}</div>
+   <button type="button" class="ob-row obt ob-g${st.pin?' on':''}" data-pin="1"${st.pin0?' disabled':''}><i>🔒</i><span><b>PIN-код при входе</b><small>${st.pin0?'Уже включён':'Код зададите после настройки. Можно и позже — в «Настройки → PIN-код»'}</small></span><em class="ob-sw"></em></button>`},
+ {k:'first',go:'Записать',alt:'Позже',b:()=>`<h2>Запишите первую трату</h2><p class="ob-p">Как в примере: заметка, сумма, категория. Несколько трат — через запятую.</p>
+   <label class="ob-in ob-g" for="obtx"><input id="obtx" type="text" autocomplete="off" enterkeyhint="done" placeholder="кофе 300 кафе" value="${esc(st.txt||'')}"></label>
+   <div class="ob-chips">${['кофе 300 кафе','такси 120 транспорт','продукты 450'].map(v=>`<button type="button" data-tx="${esc(v)}">${esc(v)}</button>`).join('')}</div>
+   <div class="ob-note">Можно и через бота: напишите ему так же — текстом или голосом, запись появится здесь.</div>`}
+];
+const N=STEPS.length;
+function build(){if(root)return;
+  root=D.createElement('div');root.id='onb';root.setAttribute('role','dialog');root.setAttribute('aria-modal','true');root.setAttribute('aria-label','Знакомство и настройка');
+  root.innerHTML=`<div class="ob-top"><button type="button" class="ob-bk hid" aria-label="Назад"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div class="ob-pr">${STEPS.map(()=>'<i></i>').join('')}</div><button type="button" class="ob-sk">Пропустить</button></div><div class="ob-st"></div><div class="ob-f"><button type="button" class="ob-go"></button><button type="button" class="ob-alt"></button></div>`;
+  D.body.appendChild(root);
+  stEl=$q('.ob-st',root);prEl=[...root.querySelectorAll('.ob-pr i')];bkEl=$q('.ob-bk',root);skEl=$q('.ob-sk',root);goEl=$q('.ob-go',root);altEl=$q('.ob-alt',root);
+  bkEl.onclick=()=>{if(i>0)go(i-1,-1)};
+  skEl.onclick=()=>{vib();if(STEPS[i].w)go(STEPS.findIndex(s=>!s.w),1);else next(true)};
+  goEl.onclick=()=>{vib();next(false)};
+  altEl.onclick=()=>{vib();next(true)};
+  root.addEventListener('click',onPick);
+  root.addEventListener('input',e=>{if(e.target.id==='obbud'){st.bud=parseFloat(String(e.target.value).replace(',','.').replace(/[^\d.]/g,''))||0}if(e.target.id==='obtx'){st.txt=e.target.value;sync()}});
+  root.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'){e.preventDefault();e.target.blur();if(e.target.id==='obtx'&&st.txt&&st.txt.trim())next(false)}});
+  root.addEventListener('change',e=>{if(e.target.id==='obcs'&&e.target.value){st.cur=e.target.value;applyCur();paint()}})}
+function onPick(e){const b=e.target.closest('button');if(!b||b.disabled||!root.contains(b))return;
+  if(b.dataset.cur){st.cur=b.dataset.cur;applyCur();vib();root.querySelectorAll('[data-cur]').forEach(x=>x.classList.toggle('on',x===b));const s=$q('#obcs');if(s)s.value='';const n=$q('.ob-note',stEl);if(n&&!hasData())n.remove()}
+  else if(b.dataset.ms){vib();st.ms=b.dataset.ms==='1'?1:Math.max(2,st.msPay||10);if(st.ms>=2)st.msPay=st.ms;applyMs();root.querySelectorAll('[data-ms]').forEach(x=>x.classList.toggle('on',x===b));$q('.ob-day',stEl).classList.toggle('off',st.ms<2);$q('#obmd').textContent=Math.max(2,st.ms)+' число'}
+  else if(b.dataset.md){vib();st.ms=Math.min(28,Math.max(2,(st.ms>=2?st.ms:10)+(+b.dataset.md)));st.msPay=st.ms;applyMs();$q('#obmd').textContent=st.ms+' число'}
+  else if(b.dataset.bv){vib();st.bud=+b.dataset.bv;const f=$q('#obbud');if(f)f.value=st.bud}
+  else if(b.dataset.cat){vib();const id=b.dataset.cat,k=st.hide.indexOf(id);if(k>=0)st.hide.splice(k,1);else st.hide.push(id);b.classList.toggle('off',k<0);applyCat()}
+  else if(b.dataset.th){vib();st.th=b.dataset.th;root.querySelectorAll('[data-th]').forEach(x=>x.classList.toggle('on',x===b));cfg.theme=st.th;save();const r=b.getBoundingClientRect();try{applyTheme(true,{x:r.left+r.width/2,y:r.top+r.height/2})}catch(x){}}
+  else if(b.dataset.pin){vib();st.pin=!st.pin;b.classList.toggle('on',st.pin)}
+  else if(b.dataset.tx){vib();st.txt=b.dataset.tx;const f=$q('#obtx');if(f)f.value=st.txt;sync()}}
+// применение — сразу, как в настройках
+function applyCur(){if(hasData()||!st.cur||st.cur===cfg.cur)return;cfg.cur=st.cur;cfg.rates={};cfg.rman={};cfg.ratesAt=0;if(!(cfg.cc||[]).includes(st.cur)&&!CURS[st.cur]){cfg.cc=cfg.cc||[];cfg.cc.push(st.cur)}save()}
+function applyMs(){cfg.mStart=st.ms>=2?st.ms:1;save();try{month=curM()}catch(e){}}
+function applyCat(){cfg.hide=[...new Set([...(cfg.hide||[]).filter(x=>!(catSet()==='v2'?CAT2:CAT3).e.some(e=>e[0]===x)),...st.hide])];save();try{buildAll()}catch(e){}}
+function applyBud(){if(st.bud>0&&st.bud!==Number(cfg.budget)){cfg.budget=Math.round(st.bud*100)/100;save()}}
+function sync(){const s=STEPS[i];goEl.disabled=s.k==='first'&&!(st.txt&&st.txt.trim())}
+function paint(){const s=STEPS[i];
+  stEl.innerHTML=`<section class="ob-s">${s.b()}</section>`;
+  [...stEl.firstChild.children].forEach((c,k)=>c.style.setProperty('--i',k));
+  prEl.forEach((p,k)=>p.classList.toggle('d',k<=i));
+  bkEl.classList.toggle('hid',i===0);
+  skEl.textContent='Пропустить';skEl.style.visibility=s.k==='first'?'hidden':'';
+  goEl.textContent=s.go;altEl.textContent=s.alt||'';altEl.style.display=s.alt?'':'none';sync()}
+function go(n,dir){if(busy||n<0||n>=N)return;const old=stEl.firstChild;i=n;
+  if(!old||!old.animate||matchMedia('(prefers-reduced-motion:reduce)').matches){paint();return}
+  busy=true;const a=old.animate([{opacity:1,transform:'none'},{opacity:0,transform:`translate3d(${-40*dir}px,0,0)`}],{duration:220,easing:'cubic-bezier(.4,0,1,1)',fill:'forwards'});
+  a.onfinish=()=>{paint();const nw=stEl.firstChild;if(nw&&nw.animate)nw.animate([{transform:`translate3d(${40*dir}px,0,0)`},{transform:'none'}],{duration:520,easing:'cubic-bezier(.22,1,.36,1)'});busy=false}}
+function next(skip){const s=STEPS[i];
+  if(s.k==='bud'&&!skip)applyBud();
+  if(s.k==='first'){finish(skip?'':(st.txt||'').trim());return}
+  go(i+1,1)}
+function finish(text){
+  try{cfg.onb=1;const t=Object.assign({},cfg.tour||{},{welcome:1});cfg.tour=t;try{localStorage.setItem('finapp.tour',JSON.stringify(t))}catch(e){}save()}catch(e){}
+  root.classList.remove('on');window.__onbOn=false;window.__onbWait=false;
+  try{render()}catch(e){}
+  const pin=st.pin&&!st.pin0;
+  setTimeout(()=>{root.remove();root=null;
+    if(pin){try{lkShow('set1',()=>{try{stRows()}catch(e){}},4)}catch(e){}return}
+    if(text){try{openSheet();inp.value=text;run()}catch(e){}}},380)}
+function show(){if(root&&root.classList.contains('on'))return;
+  st={cur:cfg.cur,ms:mStart(),bud:Number(cfg.budget)||0,hide:(cfg.hide||[]).filter(x=>(catSet()==='v2'?CAT2:CAT3).e.some(e=>e[0]===x)),th:cfg.theme==='light'||cfg.theme==='auto'?cfg.theme:'dark',pin0:pinOn(),pin:pinOn(),txt:''};
+  if(st.ms>=2)st.msPay=st.ms;
+  build();i=0;paint();window.__onbOn=true;void root.offsetWidth;root.classList.add('on')}
+// первый запуск: ждём заставку, PIN-экран и первую сверку с облаком (в Telegram); облако так и не ответило — покажем в следующий раз
+function boot(){const t0=Date.now();
+  (function wait(){
+    let done=false;try{done=cfg.onb===1}catch(e){}
+    if(done){window.__onbWait=false;return}
+    const lk=D.getElementById('lk'),tgWait=!!window.__TG&&typeof CL==='object'&&!CL.ready;
+    let mo=false;try{mo=isModalOpen()}catch(e){}
+    if(Date.now()-t0>30000&&tgWait){window.__onbWait=false;return}
+    if(D.getElementById('spl')||tgWait||mo||(lk&&lk.classList.contains('on'))||D.hidden||D.readyState==='loading')return void setTimeout(wait,300);
+    try{if(cfg.onb===1){window.__onbWait=false;return}}catch(e){}
+    show()})()}
+window.AppOnb={show};
+if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',()=>setTimeout(boot,600));else setTimeout(boot,600);
+})();
+</script>
+
 <script>
 /* подписи полей на рамке: оборачиваем текст label в span (логика и значения полей не меняются) */
 (function(){var IDS=['ed','gd','rc','nc'],raf=0;
