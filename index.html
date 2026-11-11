@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v267';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v268';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -5358,7 +5358,7 @@ function cbHint(){const m=cbM,mn=MN[+m.slice(5,7)-1].toLowerCase(),own=bmOwn(m),
 function saveCb(){const inp=$('#cbam'),v=pn(inp&&inp.value);if(!(v>0)){toast('Укажите сумму бюджета');return}
   if(!_obj(cfg.bm))cfg.bm={};cfg.bm[cbM]=v;save();closeBq();toast('Бюджет · '+MN[+cbM.slice(5,7)-1]+': '+fmt(v)+' '+cfg.cur)}
 function bqHtml(kind){
-  if(kind==='bauto')return `<div class="bqt">Записи из бота</div>${bqTg('tgbau','Записывать сразу, если всё понятно','Без окна проверки',cfg.bAuto)}<div class="bqs" style="font-size:11px;line-height:1.45;margin-top:12px;opacity:.8">Сразу записывается фраза с одной операцией, где понятны сумма и категория — например, «кофе 300 кафе». На проверку по-прежнему уходят: незнакомое слово, запись без категории, другая валюта, несколько записей в одной фразе. Долги, цели, бюджет и лимиты работают как раньше. Записи появляются, когда приложение открыто.<br><br>Под ответом бота «✅ Записано» будут кнопки: 🏷 категория, 📅 дата и ↩ отмена. Изменение применится, когда вы откроете приложение.</div>`;
+  if(kind==='bauto')return `<div class="bqt">Записи из бота</div>${bqTg('tgbau','Записывать сразу, если всё понятно','Без окна проверки',bAuto())}<div class="bqs" style="font-size:11px;line-height:1.45;margin-top:12px;opacity:.8">Сразу записывается фраза с одной операцией, где понятны сумма и категория — например, «кофе 300 кафе». На проверку по-прежнему уходят: незнакомое слово, запись без категории, другая валюта, несколько записей в одной фразе. Долги, цели, бюджет и лимиты работают как раньше. Записи появляются, когда приложение открыто.<br><br>Под ответом бота «✅ Записано» будут кнопки: 🏷 категория, 📅 дата и ↩ отмена. Изменение применится, когда вы откроете приложение.</div>`;
   if(kind==='prv')return `<div class="bqt">Скрытие сумм</div>${bqTg('tgprv','Скрывать суммы','Вместо цифр показывается •••',PRV)}${bqTg('tgprf','Включать поворотом экрана','Переворот телефона экраном вниз',FLP.want)}<div class="bqs" style="font-size:11px;line-height:1.45;margin-top:12px;opacity:.8">Положите телефон экраном вниз примерно на секунду — суммы скроются, и вы почувствуете короткую вибрацию. Переверните экраном вниз ещё раз — суммы снова появятся. Телефон должен лежать почти горизонтально: наклон или положение в руке не считаются. Работает, пока приложение открыто.</div><div class="bqb"><button class="sm pr auto" data-bq="cancel">Готово</button></div>`;
   if(kind==='mstart')return `<div class="bqt">Начало месяца</div><div class="bqs">С какого числа начинается ваш месяц — например, день зарплаты.</div><div class="bqm"><button type="button" class="sm" data-bq="msm" aria-label="Раньше">−</button><span class="mn" id="msn">${msV} число</span><button type="button" class="sm" data-bq="msp" aria-label="Позже">+</button></div><div class="bqs" id="msh">${E(msHint())}</div><div class="bqb"><button class="sm" data-bq="cancel">Отмена</button><button class="sm pr" data-bq="mssave">Сохранить</button></div>`;
   if(kind==='pin'){   // v160
@@ -5434,7 +5434,7 @@ bq.addEventListener('click',e=>{
   else if(a==='pinbio'){const h=$('#pinbh');if(pinOpt().bio){bioOff();tgSet(b,false);if(h)h.textContent='';return}
     bioEnable((ok,why)=>{tgSet(b,ok);if(h)h.textContent=ok?'':why==='denied'?'Доступ к '+bioName()+' запрещён — разрешите его в настройках Telegram.':'Не удалось включить '+bioName()+'.';
       if(!ok&&why==='denied'){try{const m=BM();if(m&&m.openSettings)m.openSettings()}catch(e){}}})}
-  else if(a==='tgbau'){cfg.bAuto=!cfg.bAuto;save();tgSet(b,cfg.bAuto)}
+  else if(a==='tgbau'){cfg.bAuto=!bAuto();save();tgSet(b,bAuto())}
   else if(a==='tgprv'){prvSet(!PRV)}
   else if(a==='tgprf'){flToggle(b)}
   else if(a==='cbsave')saveCb()
@@ -6295,9 +6295,10 @@ function ibAt(ts,fn){
   globalThis.Date=FD;try{return fn()}finally{globalThis.Date=D0}}
 // долгий опрос «жив»: запрос сейчас в пути и ему меньше 20 с (сервер держит до 12 с) или только что закончился без ошибки
 const ibLpOk=()=>{const now=Date.now();return !!IB.lp&&!IB.fail&&(IB.lpBusy?now-(IB.lpAt||0)<20000:now-(IB.lpOk||0)<5000)};
-// v266: «Записи из бота — сразу» (cfg.bAuto, по умолчанию выкл): одна обычная операция, сумма и категория распознаны — в учёт без окна «+».
+// v266: «Записи из бота — сразу» (cfg.bAuto; с v268 включено по умолчанию, false — выключил сам): одна обычная операция, сумма и категория распознаны — в учёт без окна «+».
 // Остальное (незнакомое слово cw, «Прочее», новая категория addCat, другая валюта oc, несколько операций) — на проверку, как с v167; команды (долги/цели/бюджет) — как раньше
-const bAutoOk=(cm,r)=>!!cfg.bAuto&&!cm.msgs.length&&r.length===1&&r[0].amount>0&&!r[0].cw&&!r[0].addCat&&!r[0].oc&&!r[0].lk&&(r[0].type==='expense'||r[0].type==='income')&&!!r[0].category&&!/^(in_)?other$/.test(r[0].category);
+const bAuto=()=>cfg.bAuto!==false;   // v268: включено у всех по умолчанию; false — только если человек сам выключил
+const bAutoOk=(cm,r)=>bAuto()&&!cm.msgs.length&&r.length===1&&r[0].amount>0&&!r[0].cw&&!r[0].addCat&&!r[0].oc&&!r[0].lk&&(r[0].type==='expense'||r[0].type==='income')&&!!r[0].category&&!/^(in_)?other$/.test(r[0].category);
 async function inboxPull(fast,wait){
   if(!IN_TG||!ibBase()||IB.dead)return;
   if(document.hidden){window.__ibBusy=false;return}   // окно скрыто — воркер не опрашиваем; при возврате будет сразу один опрос
