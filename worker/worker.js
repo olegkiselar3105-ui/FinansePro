@@ -336,12 +336,12 @@ const useWQ = env => useW(env) && String(env.WQ ?? '1').trim() !== '0';
 let BOTU = null;   // имя бота — для «Открыть» в карточке (t.me/<бот>?startapp)
 async function botUser(env) { if (BOTU !== null) return BOTU; const r = await (await tg(env, 'getMe', {})).json().catch(() => null); BOTU = (r && r.ok && r.result && r.result.username) || ''; return BOTU; }
 // тексты статусов — в данных, не в HTML (экономия места в HTML)
-const RC_TX = { q: { q: 'Появится в приложении, когда оно откроется' }, h: { hn: 'Можно поправить здесь или в приложении.' }, drop: { hn: 'В учёт не попало.' },
+const RC_TX = { drop: { hn: 'В учёт не попало.' },
   bad: { hn: 'Напишите, например:\n• «кофе 300 кафе»\n• «Иван должен 500»' } };
 // меню карточки: k — [эмодзи, название] (запрос — по номеру), td/d — даты, st — q/h/ok, p — нажатое, но ещё не применённое
 const waOf = (act, pend) => { if (!act) return null; const p = { c: -1, d: '', x: 0 };
-  for (const x of pend || []) { if (x.op === 'cat') p.c = act.k.findIndex(c => c[0] === x.val); if (x.op === 'date') p.d = x.val; if (x.op === 'del') p.x = 1; }
-  return { k: act.k.map(c => [c[2] || '', c[3] || c[1]]), td: act.td, d: act.d, st: act.st || 'ok', p }; };
+  for (const x of pend || []) { if (x.op === 'cat') p.c = act.k.findIndex(c => c[0] === x.val); if (x.op === 'date') p.d = x.val; if (x.op === 'del') p.x = 1; if (x.op === 'type') p.t = 1; }
+  return { k: act.k.map(c => [c[2] || '', c[3] || c[1], c[5] ? 1 : 0]), i: incOf(act, pend) ? 1 : 0, td: act.td, d: act.d, st: act.st || 'ok', p }; };
 const RC_CAP = { q: '⏳ В очереди', h: '📝 Получено', ok: '✅ Записано', drop: '🗑 Не записано', bad: '⚠ Приложение не поняло' };
 const u8 = s => new TextEncoder().encode(s).length;
 const str = (v, n) => String(v ?? '').slice(0, n);
@@ -369,44 +369,51 @@ function rcData(s, card, note, x) {
 async function sendRcWidget(env, chat, shown, open, card, act) {
   const wq = useWQ(env), x = wq ? { u: await botUser(env), a: waOf(act, []) } : null;
   if (wq && !hookOk) { hookOk = true; await ensureCallbacks(env).catch(() => {}); }   // widget_query должен доходить до бота
-  const r = await (await tg(env, 'sendWidget', { chat_id: chat, html: RC_HTML, public_data: RC_PUB, chat_data: rcData('q', card, '', x), caption: `${RC_CAP.q}: «${shown}»`, show_caption_above_media: true,
+  const r = await (await tg(env, 'sendWidget', { chat_id: chat, html: RC_HTML, public_data: RC_PUB, chat_data: rcData('q', card, '', x), ...(wq ? {} : { caption: `${RC_CAP.q}: «${shown}»`, show_caption_above_media: true }),
     ...(wq ? { allow_queries: true } : open) })).json().catch(() => null);
   if (r && r.ok && r.result && r.result.message_id) return r.result.message_id;
   console.error('widget', r && r.description); return null;
 }
 // HTML карточки (≤32 КБ, ≤4 КБ после zlib — сейчас ~2 КБ); цвета — из темы Telegram (--tg-theme-*), есть светлая/тёмная
 const RC_HTML = String.raw`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
+:root{--B:var(--tg-theme-button-color,#3390ec);--S:var(--tg-theme-secondary-bg-color,#f0f0f2);--H:var(--tg-theme-hint-color,#8a8a8e);--G:var(--tg-theme-bg-color,#fff);--T:var(--tg-theme-text-color,#000);--R:#e5484d;--E:#2fa65a}
 *{box-sizing:border-box;margin:0}
-html,body{background:var(--tg-theme-bg-color,#fff)}
-body{font:14px/1.3 -apple-system,system-ui,"Segoe UI",Roboto,sans-serif;color:var(--tg-theme-text-color,#000);padding:8px 12px 10px;-webkit-user-select:none;user-select:none;}
+html,body{background:var(--G)}
+body{font:14px/1.3 -apple-system,system-ui,"Segoe UI",Roboto,sans-serif;color:var(--T);padding:8px 12px 10px;-webkit-user-select:none;user-select:none;}
 .r{display:flex;align-items:center;gap:10px;padding:5px 0}
-.i{flex:0 0 36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:19px;background:var(--tg-theme-secondary-bg-color,#f0f0f2);transition:background .3s}
+.i{flex:0 0 36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:19px;background:var(--S);transition:background .3s}
 .m{flex:1;min-width:0}
 .c,.s{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .c{font-weight:600}
-.s,.h{font-size:12px;color:var(--tg-theme-hint-color,#8a8a8e)}
+.s,.h{font-size:12px;color:var(--H)}
 .a{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
-.a.in{color:#2fa65a}
+.a.in{color:var(--E)}
 .l{padding:0 0 4px 46px}
-.bd{margin-top:8px;padding-top:8px;border-top:1px solid var(--tg-theme-section-separator-color,rgba(128,128,128,.2))}
+.bd{margin-top:8px;padding-top:8px;border-top:1px solid rgba(128,128,128,.2)}
 .k{display:flex;justify-content:space-between;gap:8px;font-size:13px}
 .k b{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
-.bar{height:6px;border-radius:3px;background:var(--tg-theme-secondary-bg-color,#ececef);overflow:hidden;margin:5px 0 3px}
-.bar i{display:block;height:100%;width:0;border-radius:3px;background:var(--tg-theme-button-color,#3390ec);transition:width .7s cubic-bezier(.2,.8,.2,1)}
-.bar.w i{background:#f2a516}.bar.x i{background:#e5484d}
+.bar{height:6px;border-radius:3px;background:var(--S);overflow:hidden;margin:5px 0 3px}
+.bar i{display:block;height:100%;width:0;border-radius:3px;background:var(--B);transition:width .7s cubic-bezier(.2,.8,.2,1)}
+.bar.x i{background:var(--R)}
 .t{white-space:pre-wrap;font-size:13px;margin-top:4px}
-.q{font-size:13px;color:var(--tg-theme-hint-color,#8a8a8e);padding:4px 0;animation:p 1.6s infinite}
 @keyframes p{50%{opacity:.5}}
 .n>*{animation:f .4s both;animation-delay:calc(var(--j)*60ms)}
 @keyframes f{from{opacity:0;transform:translateY(5px)}}
 .s-un .r{opacity:.45}.s-un .a{text-decoration:line-through}
 #mb{display:flex;gap:6px;margin-top:10px}
-button{font:inherit;color:inherit;border:0;background:var(--tg-theme-secondary-bg-color,#f0f0f2);border-radius:12px;transition:transform .15s,background .2s}
-#mb button{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 2px 6px;font-size:11px;color:var(--tg-theme-hint-color,#8a8a8e)}
+.sg{flex:0 0 30px;height:30px;border-radius:50%;font-size:20px;font-weight:600;line-height:1;color:var(--R);background:#e5484d24}
+.sg.in{color:var(--E);background:#2fa65a29}
+.sg.go{animation:sp .45s cubic-bezier(.3,1.6,.5,1)}
+@keyframes sp{40%{transform:rotate(180deg) scale(1.15)}}
+.a:after{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;margin-left:6px;vertical-align:2px;background:var(--E)}
+.s-q .a:after,.s-h .a:after{background:var(--H);animation:p 1.6s infinite}
+.s-un .a:after,.s-gone .a:after,.s-drop .a:after{display:none}
+button{font:inherit;color:inherit;border:0;background:var(--S);border-radius:12px;transition:transform .15s,background .2s}
+#mb button{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 2px 6px;font-size:11px;color:var(--H)}
 button:active{transform:scale(.93)}
-#mb button.on{background:color-mix(in srgb,var(--tg-theme-button-color,#3390ec) 18%,transparent);color:var(--tg-theme-button-color,#3390ec)}
-#mb svg{width:22px;height:22px;stroke:var(--tg-theme-button-color,#3390ec);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;overflow:visible}
-#mb .rd svg{stroke:#e5484d}
+#mb button.on{background:color-mix(in srgb,var(--B) 18%,transparent);color:var(--B)}
+#mb svg{width:22px;height:22px;stroke:var(--B);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;overflow:visible}
+#mb .rd svg{stroke:var(--R)}
 .go .g{animation:k .6s cubic-bezier(.3,1.6,.5,1)}
 @keyframes k{40%{transform:var(--k)}}
 .g{transform-box:fill-box;transform-origin:center}
@@ -416,42 +423,40 @@ button:active{transform:scale(.93)}
 .gr{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding-top:8px}
 .ch{display:flex;align-items:center;gap:6px;padding:9px 8px;font-size:13px;text-align:left;animation:f .3s backwards;animation-delay:calc(var(--j)*35ms)}
 .ch span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sel{background:var(--tg-theme-button-color,#3390ec);color:var(--tg-theme-button-text-color,#fff)}
+.sel{background:var(--B);color:#fff}
 .cl{padding-top:8px}
 .ch2{display:flex;justify-content:space-between;align-items:center;font-weight:600;padding:0 2px 6px}
 .ch2 button{width:34px;height:30px;background:0}
 .cg{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center;font-size:13px}
-.cg b{font-size:10px;font-weight:500;color:var(--tg-theme-hint-color,#8a8a8e);padding:2px 0}
+.cg b{font-size:10px;font-weight:500;color:var(--H);padding:2px 0}
 .cg button{height:32px;border-radius:9px;font-variant-numeric:tabular-nums}
 .cg button:disabled{opacity:.25}
-.cg .td{box-shadow:inset 0 0 0 1.5px var(--tg-theme-button-color,#3390ec)}
 .cf{display:flex;gap:6px;padding-top:8px}
 .cf .ch{flex:1;justify-content:center}
-.cf .rd{background:#e5484d;color:#fff}
-#ht{font-size:12px;color:var(--tg-theme-hint-color,#8a8a8e);text-align:center;margin-top:6px}
+.cf .rd{background:var(--R);color:#fff}
+#ht{font-size:12px;color:var(--H);text-align:center;margin-top:6px}
 .bz{opacity:.55;pointer-events:none}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style></head><body><div id="w"></div><div id="mb"></div><div id="pn"><div id="pc"></div></div><div id="ht"></div><script>
 var T=window.TelegramWidget||{},w=document.getElementById("w"),mb=document.getElementById("mb"),pn=document.getElementById("pn"),pc=document.getElementById("pc"),ht=document.getElementById("ht"),j=0,D={},P="",cm="",bz=0;
 function E(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
 function A(e){e.style.setProperty("--j",j++);w.appendChild(e);return e}
 function hp(k){try{var h=T.HapticFeedback;k?h.notificationOccurred(k):h.impactOccurred("light")}catch(e){}}
-function bar(r){var b=E("div","bar"+(r>1?" x":r>=.85?" w":"")),i=E("i");b.appendChild(i);setTimeout(function(){i.style.width=Math.max(3,Math.min(100,r*100))+"%"},60);return b}
-var IC={};try{IC=JSON.parse(T.publicData||"{}").i||{}}catch(e){}
+function bar(r){var b=E("div","bar"+(r>1?" x":"")),i=E("i");b.appendChild(i);setTimeout(function(){i.style.width=Math.max(3,Math.min(100,r*100))+"%"},60);return b}
+var IC={},TX=[];try{var PB=JSON.parse(T.publicData||"{}");IC=PB.i||{};TX=PB.t||[]}catch(e){}
 function btn(k,l,f,c){var b=E("button",c||"");b.type="button";var c=IC[k];if(c)b.innerHTML='<svg viewBox="0 0 24 24" style="--k:'+c[0]+'">'+c[1]+"</svg>";b.appendChild(E("span",0,l));
 b.onclick=function(){b.classList.remove("go");void b.offsetWidth;b.classList.add("go");hp();f(b)};return b}
 function say(t){ht.textContent=t||""}
-function rq(q,ok){if(bz)return;if(!T.request)return say("Обновите Telegram");bz=1;document.body.classList.add("bz");
+function rq(q,ok){if(bz)return;if(!T.request)return say(TX[3]);bz=1;document.body.classList.add("bz");
 T.request(q).then(function(){bz=0;document.body.classList.remove("bz");hp("success");if(ok)ok()}).catch(function(e){bz=0;document.body.classList.remove("bz");hp("error");
-say(e&&e.code==="RATE_LIMITED"?"Подождите пару секунд":"Не получилось, попробуйте ещё раз")})}
+say(TX[e&&e.code==="RATE_LIMITED"?0:1])})}
 function open(k){P=P===k?"":k;draw2()}
 function draw(){try{D=JSON.parse(T.chatData||"{}")||{}}catch(e){D={}}
 w.className="";w.textContent="";j=0;
-if(D.q)A(E("div","q",D.q));
+
 (D.o||[]).forEach(function(p){var r=A(E("div","r")),i=E("div","i",p[2]||"•"),m=E("div","m");
 if(/^#[0-9a-f]{6}$/i.test(p[3]||""))i.style.background=p[3]+"2e";
 m.appendChild(E("div","c",p[4]));if(p[5])m.appendChild(E("div","s",p[5]));
-r.appendChild(i);r.appendChild(m);r.appendChild(E("div","a"+(p[0]?" in":""),p[1]));
+if(!r.previousSibling&&D.a&&!D.a.p.x){var g=E("button","sg"+(D.a.i?" in":""),D.a.i?"+":"−");g.type="button";g.onclick=function(){var n=D.a.i?0:1;g.classList.remove("go");void g.offsetWidth;g.classList.add("go");hp();D.a.i=n;g.textContent=n?"+":"−";g.className="sg go"+(n?" in":"");rq("t:"+(n?"i":"e"),function(){P="K";draw2()})};r.appendChild(g)}r.appendChild(i);r.appendChild(m);r.appendChild(E("div","a"+(p[0]?" in":""),p[1]));
 if(p[7]){var l=A(E("div","l"));l.appendChild(bar(+p[6]||0));l.appendChild(E("div","h",p[7]))}});
 if(D.b){var b=A(E("div","bd")),k=E("div","k");k.appendChild(E("span",0,D.b[1]));k.appendChild(E("b",0,D.b[2]));b.appendChild(k);b.appendChild(bar(+D.b[0]||0));if(D.b[3])b.appendChild(E("div","h",D.b[3]))}
 if(D.n)A(E("div","t",D.n));
@@ -463,30 +468,31 @@ else{mb.appendChild(btn("K","Категория",function(){open("K")},P==="K"?"
 mb.appendChild(btn("X",q?"Убрать":"Отменить",function(){open("X")},"rd"+(P==="X"?" on":"")))}}
 if(D.u&&(!a||q))mb.appendChild(btn("O","Открыть",function(){try{T.openTelegramLink("https://t.me/"+D.u+"?startapp=1")}catch(e){}}));
 mb.style.display=mb.children.length?"":"none";
-if(a&&!p.x&&P==="K"){var g=E("div","gr");(a.k||[]).forEach(function(c,i){var b=E("button","ch"+(p.c===i?" sel":""));b.type="button";b.style.setProperty("--j",i);
+if(a&&!p.x&&P==="K"){var g=E("div","gr");(a.k||[]).forEach(function(c,i){if((c[2]?1:0)!==(a.i?1:0))return;var b=E("button","ch"+(p.c===i?" sel":""));b.type="button";b.style.setProperty("--j",i);
 b.appendChild(E("span",0,c[0]||"•"));b.appendChild(E("span",0,c[1]));b.onclick=function(){hp();rq("c:"+i,function(){P="";draw2()})};g.appendChild(b)});pc.appendChild(g)}
 if(a&&!p.x&&P==="D")pc.appendChild(cal(a,p));
 if(a&&!p.x&&P==="X"){var f=E("div","cf"),y=E("button","ch rd",q?"Да, не записывать":"Да, отменить"),n=E("button","ch","Нет");y.type=n.type="button";
 y.onclick=function(){rq("x",function(){P="";draw2()})};n.onclick=function(){P="";draw2()};f.appendChild(y);f.appendChild(n);pc.appendChild(f)}
-pn.className=pc.children.length?"op":"";say(a&&(p.c>=0||p.d||p.x)?"Применится, когда откроется приложение":"")}
+pn.className=pc.children.length?"op":"";say(a&&(p.c>=0||p.d||p.x||p.t)?TX[2]:"")}
 function cal(a,p){var c=E("div","cl"),y=+cm.slice(0,4),m=+cm.slice(5,7),h=E("div","ch2"),pv=E("button",0,"‹"),nx=E("button",0,"›"),td=a.td,cur=p.d||a.d,lo=(+td.slice(0,4)-1)+td.slice(4,7);
 var sh=function(n){var t=new Date(Date.UTC(y,m-1+n,1)).toISOString().slice(0,7);if(t>td.slice(0,7)||t<lo)return;cm=t;hp();pc.replaceChild(cal(a,p),c)};
 pv.type=nx.type="button";pv.onclick=function(){sh(-1)};nx.onclick=function(){sh(1)};pv.disabled=cm<=lo;nx.disabled=cm>=td.slice(0,7);
 h.appendChild(pv);var mn=new Date(Date.UTC(y,m-1,9)).toLocaleString("ru",{month:"long",timeZone:"UTC"});h.appendChild(E("span",0,mn[0].toUpperCase()+mn.slice(1)+" "+y));h.appendChild(nx);c.appendChild(h);
 var g=E("div","cg");"Пн Вт Ср Чт Пт Сб Вс".split(" ").forEach(function(x){g.appendChild(E("b",0,x))});
 var f=(new Date(Date.UTC(y,m-1,1)).getUTCDay()+6)%7,n=new Date(Date.UTC(y,m,0)).getUTCDate();for(var i=0;i<f;i++)g.appendChild(E("span"));
-for(var d=1;d<=n;d++){(function(d){var ds=cm+"-"+(d<10?"0":"")+d,b=E("button",(ds===cur?"sel":"")+(ds===td?" td":""),d);b.type="button";b.disabled=ds>td;
+for(var d=1;d<=n;d++){(function(d){var ds=cm+"-"+(d<10?"0":"")+d,b=E("button",ds===cur?"sel":"",d);b.type="button";b.disabled=ds>td;
 b.onclick=function(){hp();rq("d:"+ds,function(){P="";draw2()})};g.appendChild(b)})(d)}c.appendChild(g);return c}
 draw();if(T.onEvent)T.onEvent("chatDataChanged",draw);if(T.ready)T.ready();
 </script></body></html>`;
 // v270: значки меню карточки (svg) — в public_data сообщения (своё место 1024 байта), чтобы HTML уложился в 4 КБ после zlib
-const RC_PUB = JSON.stringify({ i: {"K":["rotate(-20deg)","<path class=\"g\" d=\"M3.5 12.2V4.6c0-.6.5-1.1 1.1-1.1h7.6l8.3 8.3-8.7 8.7z\"/><circle cx=\"8\" cy=\"8\" r=\"1.4\"/>"],"D":["scaleY(.5)","<rect x=\"3.5\" y=\"5\" width=\"17\" height=\"15\" rx=\"2.5\"/><path d=\"M8 3v4M16 3v4\"/><path class=\"g\" d=\"M3.5 10h17M8 14h2M14 14h2M8 17h2\"/>"],"X":["translate(2px,-4px) rotate(-22deg)","<path d=\"M6 8.5l1 11h10l1-11M10 12v5M14 12v5\"/><path class=\"g\" d=\"M4 6.5h16M9.5 6.5V4h5v2.5\"/>"],"U":["rotate(-60deg)","<path class=\"g\" d=\"M8 7L4 11l4 4\"/><path d=\"M4 11h10a5 5 0 0 1 0 10h-3\"/>"],"O":["translate(4px,-4px)","<path d=\"M14 4h6v6M20 4l-9 9\"/><path class=\"g\" d=\"M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5\"/>"]} });
+const RC_PUB = JSON.stringify({ i: {"K":["rotate(-20deg)","<path class=g d='M3.5 12.2V4.6c0-.6.5-1.1 1.1-1.1h7.6l8.3 8.3-8.7 8.7z'/><circle cx='8' cy='8' r='1.4'/>"],"D":["scaleY(.5)","<rect x='3.5' y='5' width='17' height='15' rx='2.5'/><path d='M8 3v4M16 3v4'/><path class=g d='M3.5 10h17M8 14h2M14 14h2M8 17h2'/>"],"X":["translate(2px,-4px) rotate(-22deg)","<path d='M6 8.5l1 11h10l1-11M10 12v5M14 12v5'/><path class=g d='M4 6.5h16M9.5 6.5V4h5v2.5'/>"],"U":["rotate(-60deg)","<path class=g d='M8 7L4 11l4 4'/><path d='M4 11h10a5 5 0 0 1 0 10h-3'/>"],"O":["translate(4px,-4px)","<path d='M14 4h6v6M20 4l-9 9'/><path class=g d='M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5'/>"]}, t: ["Подождите пару секунд", "Не получилось, попробуйте ещё раз", "Применится, когда откроется приложение", "Обновите Telegram"] });
+
 async function rcEdit(env, r, s, text, note, card, kb, cap, act) {
   const mk = kb ? { reply_markup: kb } : {}, wq = useWQ(env);
   if (useW(env)) {
     const x = wq ? { u: await botUser(env), a: act ? waOf(act, await rcPend(r)) : null } : null;
     const w = await (await tg(env, 'editMessageWidgetData', { chat_id: r.chat, message_id: r.mid, chat_data: rcData(s, card, note, x) })).json().catch(() => null);
-    if (w && w.ok) return tg(env, 'editMessageCaption', { chat_id: r.chat, message_id: r.mid, caption: cap || `${RC_CAP[s]}: «${r.text}»`, show_caption_above_media: true, ...(wq ? {} : mk) }).catch(() => {});
+    if (w && w.ok) return wq ? w : tg(env, 'editMessageCaption', { chat_id: r.chat, message_id: r.mid, caption: cap || `${RC_CAP[s]}: «${r.text}»`, show_caption_above_media: true, ...mk }).catch(() => {});   // v271: в режиме меню подписи нет — только карточка
   }
   return tg(env, 'editMessageText', { chat_id: r.chat, message_id: r.mid, text, ...mk }).catch(() => {});   // квитанция-текст (не виджет)
 }
@@ -528,20 +534,26 @@ function kbCal(ym, act) {
   rows.push([B('Сегодня', 'd:' + act.td), B('Вчера', 'd:' + dAdd(act.td, -1)), B('← Назад', 'B')]);
   return { inline_keyboard: rows };
 }
-// act: k — варианты [id, «🍽️ Кафе», эмодзи, название, цвет]; r — строка карточки, b — бюджет, n — заметка, w — неузнанное слово, st — q/h/ok
+// act: k — варианты [id, «🍽️ Кафе», эмодзи, название, цвет, доход?]; r — строка карточки, b — бюджет, n — заметка, w — неузнанное слово, st — q/h/ok
+// v271: варианты обоих типов — переключатель «−/+» в карточке меняет расход на доход и наоборот
 const actOf = card => { const a = card && card.a; if (!a || !Array.isArray(a.k) || !isD(a.td) || !isD(a.d)) return null;
-  const k = a.k.slice(0, 10).filter(c => Array.isArray(c) && c[0]).map(c => [str(c[0], 40), str(c[1], 30), str(c[2], 16), str(c[3], 30), /^#[0-9a-f]{6}$/i.test(c[4]) ? c[4] : '']);
+  const k = a.k.slice(0, 12).filter(c => Array.isArray(c) && c[0]).map(c => [str(c[0], 40), str(c[1], 30), str(c[2], 16), str(c[3], 30), /^#[0-9a-f]{6}$/i.test(c[4]) ? c[4] : '', c[5] ? 1 : 0]);
   const r = card.o && Array.isArray(card.o[0]) ? JSON.parse(rcData('ok', { o: [card.o[0]] })).o[0] : null;
   return { k, td: a.td, d: a.d, v: str(a.v, 20), ...(r ? { r } : {}), ...(Array.isArray(card.b) ? { b: JSON.parse(rcData('ok', { o: [], b: card.b })).b } : {}),
     n: str(a.n, 60), w: str(a.w, 30) }; };
 const dayLbl = (d, td) => (d === td ? 'сегодня, ' : d === dAdd(td, -1) ? 'вчера, ' : '') + dLbl(d);
 // карточка с учётом нажатий: выбранная категория и дата видны сразу, до открытия приложения
-const cardOf = (act, pend) => { if (!act.r) return null; const r = act.r.slice(); let d = act.d;
-  for (const p of pend) { if (p.op === 'cat') { const c = act.k.find(x => x[0] === p.val); if (c) { r[2] = c[2] || r[2]; r[3] = c[4] || ''; r[4] = c[3] || c[1]; } } if (p.op === 'date' && isD(p.val)) d = p.val; }
+const incOf = (act, pend) => { const t = (pend || []).find(p => p.op === 'type'); return t ? t.val === 'i' : !!(act.r && act.r[0]); };
+const cardOf = (act, pend) => { if (!act.r) return null; const r = act.r.slice(); let d = act.d, cat = false;
+  for (const p of pend) { if (p.op === 'cat') { const c = act.k.find(x => x[0] === p.val); if (c) { r[2] = c[2] || r[2]; r[3] = c[4] || ''; r[4] = c[3] || c[1]; cat = true; } } if (p.op === 'date' && isD(p.val)) d = p.val; }
+  const ty = pend.find(p => p.op === 'type');
+  if (ty) { const inc = ty.val === 'i'; r[0] = inc ? 1 : 0; r[1] = (inc ? '+' : '−') + String(r[1]).replace(/^[+−-]\s*/, '');
+    if (!cat && !!act.r[0] !== inc) { r[2] = '❓'; r[3] = ''; r[4] = 'Категория?'; } }
   r[5] = [act.n, dayLbl(d, act.td)].filter(Boolean).join(' · ');
   return { o: [r], ...(act.b ? { b: act.b } : {}) }; };
 const pendLine = (act, pend) => { const l = [];
   for (const p of pend) { if (p.op === 'del') return isQ(act) ? '🗑 Не будет записано' : '⏳ Запись отменится, когда откроется приложение';
+    if (p.op === 'type') l.push(p.val === 'i' ? 'доход' : 'расход');
     if (p.op === 'cat') { const c = (act.k || []).find(x => x[0] === p.val); l.push('категория — ' + (c ? c[1] : p.val)); }
     if (p.op === 'date' && isD(p.val)) l.push('дата — ' + dLbl(p.val)); }
   return l.length ? '⏳ Когда откроется приложение: ' + l.join(', ') : ''; };
@@ -566,6 +578,7 @@ async function cmdFinish(env, box, done, cres, cards) {
     await box.rc.drop(sid);
     const t = res === 'del' ? `↩ Отменено: «${r.text}»\nЗапись удалена из учёта.` : `✅ Записано: «${r.text}»\nℹ️ Запись уже изменили в приложении — кнопки отключены.`;
     if (res === 'del') { await rcEdit(env, r, 'un', t, 'Запись удалена из учёта.', null, null, `↩ Отменено: «${r.text}»`); continue; }
+    if (useWQ(env)) { await tg(env, 'editMessageWidgetData', { chat_id: r.chat, message_id: r.mid, chat_data: rcData('gone', null, 'Запись уже изменили в приложении — здесь её больше не поправить.') }).catch(() => {}); continue; }
     const c = await (await tg(env, 'editMessageCaption', cap(t))).json().catch(() => null);   // карточка остаётся как есть, меняется подпись, кнопки убираются
     if (!(c && c.ok)) await tg(env, 'editMessageText', { chat_id: r.chat, message_id: r.mid, text: t }).catch(() => {});
   }
@@ -613,9 +626,10 @@ function preview(P, text, ts) {
   const inc = sign ? sign > 0 : hit ? !!hit.c[3] : iw;
   const rest = [...cwords(before).filter(w => !DW.test(w)), ...cwords(after).filter(w => !DW.test(w)).slice(hit ? hit.n : cw ? 1 : 0)];
   let n = rest.join(' '); n = n ? n[0].toUpperCase() + n.slice(1) : '';
-  const k = P.c.filter(c => !!c[3] === inc).slice(0, 10).map(c => [c[0], (c[1] ? c[1] + ' ' : '') + c[2], c[1], c[2], c[4]]);
+  const kc = c => [c[0], (c[1] ? c[1] + ' ' : '') + c[2], c[1], c[2], c[4], c[3] ? 1 : 0];
+  const k = [...P.c.filter(c => !!c[3] === inc).slice(0, 8), ...P.c.filter(c => !!c[3] !== inc).slice(0, 4)].map(kc);
   const amt = (hit || cw || sign || iw ? (inc ? '+' : '−') : '') + fmtA(a, P.cur || '');
-  const r = hit ? [inc ? 1 : 0, amt, hit.c[1] || '•', hit.c[4], hit.c[2], '', 0, ''] : cw ? [0, amt, '❓', '', `«${cw}» — категория?`, '', 0, ''] : [inc ? 1 : 0, amt, '🔹', '', 'Категорию подберёт приложение', '', 0, ''];
+  const r = hit ? [inc ? 1 : 0, amt, hit.c[1] || '•', hit.c[4], hit.c[2], '', 0, ''] : cw ? [0, amt, '❓', '', 'Категория?', '', 0, ''] : [inc ? 1 : 0, amt, '🔹', '', 'Категорию подберёт приложение', '', 0, ''];
   const act = { k, td, d, v: 'q', st: 'q', r, n, w: cw };
   return { act, card: cardOf(act, []), cw: !!cw, hit: !!hit };
 }
@@ -629,7 +643,14 @@ async function wPaint(env, id, act, pend) {
 // одно действие из меню (кнопки Telegram или запрос виджета): c:<номер> — категория, d:<дата>, x — не записывать / отменить, u — вернуть
 async function rcDo(box, row, act, a, b) {
   const q = isQ(act), later = q ? 'Запишется так, когда откроется приложение' : 'Изменится, когда откроется приложение';
-  if (a === 'c') { const c = act.k[Number(b)]; if (!c) return null; await box.rc.cmd(row.id, 'cat', c[0], act.v); return later; }
+  const inc0 = !!(act.r && act.r[0]);
+  if (a === 't' && (b === 'i' || b === 'e')) {   // v271: «−/+»: расход ↔ доход; категория другого типа сбрасывается
+    if ((b === 'i') === inc0) await box.rc.unCmd(row.id, 'type'); else await box.rc.cmd(row.id, 'type', b, act.v);
+    const pc = (await box.rc.cmdsOf(row.id)).find(p => p.op === 'cat'), c = pc && act.k.find(x => x[0] === pc.val);
+    if (c && !!c[5] !== (b === 'i')) await box.rc.unCmd(row.id, 'cat');
+    return b === 'i' ? 'Доход' : 'Расход'; }
+  if (a === 'c') { const c = act.k[Number(b)]; if (!c) return null; await box.rc.cmd(row.id, 'cat', c[0], act.v);
+    if (!!c[5] === inc0) await box.rc.unCmd(row.id, 'type'); else await box.rc.cmd(row.id, 'type', c[5] ? 'i' : 'e', act.v); return later; }
   if (a === 'd' && isD(b) && b <= act.td) { if (b === act.d) await box.rc.unCmd(row.id, 'date'); else await box.rc.cmd(row.id, 'date', b, act.v); return b === act.d ? 'Дата остаётся прежней' : later; }
   if (a === 'x' || a === 'Y') { await box.rc.cmd(row.id, 'del', '1', act.v); return q ? 'Не будет записано' : 'Запись отменится, когда откроется приложение'; }
   if (a === 'u' || a === 'U') { await box.rc.unCmd(row.id, 'del'); return q ? 'Запишется' : 'Отмена снята'; }
@@ -646,7 +667,7 @@ async function onWidgetQuery(wq, env) {
   await ans({ ok: 1, t: say });   // ответ — сразу (виджет ждёт до 15 с), карточку перерисовываем следом
   const id = { chat_id: wq.chat.id, message_id: wq.message_id }, pend = await box.rc.cmdsOf(row.id), line = pendLine(act, pend);
   await wPaint(env, id, act, pend);
-  await tg(env, 'editMessageCaption', { ...id, caption: `${RC_CAP[act.st || 'ok']}: «${row.text}»` + (line ? '\n' + line : ''), show_caption_above_media: true }).catch(() => {});
+  if (!useWQ(env)) await tg(env, 'editMessageCaption', { ...id, caption: `${RC_CAP[act.st || 'ok']}: «${row.text}»` + (line ? '\n' + line : ''), show_caption_above_media: true }).catch(() => {});
 }
 async function onRcCallback(cq, env) {
   const m = cq.message, ans = t => tg(env, 'answerCallbackQuery', { callback_query_id: cq.id, ...(t ? { text: t } : {}) });

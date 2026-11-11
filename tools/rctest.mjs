@@ -20,10 +20,11 @@ const msg = async (uid, text) => W.default.fetch(new Request('https://w/webhook'
 const z = zlib.deflateSync(Buffer.from(W._t.RC_HTML), { level: 9 }).length;
 assert(Buffer.byteLength(W._t.RC_HTML) <= 32768 && z <= 4096, `html ${Buffer.byteLength(W._t.RC_HTML)} B, zlib ${z} B`);
 assert(W._t.RC_HTML.includes('TelegramWidget') && !/[а-я]{3,}/i.test(W._t.RC_HTML.replace(/Обновите Telegram|Подождите пару секунд|Не получилось, попробуйте ещё раз|Применится, когда откроется приложение|Категория|Дата|Не записывать|Убрать|Отменить|Записать|Не отменять|Открыть|Да, не записывать|Да, отменить|Нет|Пн Вт Ср Чт Пт Сб Вс/g, '')), 'в HTML — только подписи меню, тексты статусов приходят в данных');
-// 1) фраза → виджет «в очереди»
+// 1) фраза → виджет «в очереди» (режим кнопок Telegram, WQ=0 — с подписью; режим меню — ниже, v270)
+env.WQ = '0';
 await msg(7, 'кофе 300 кафе');
 const sw = sent.find(x => x.m === 'sendWidget');
-assert(sw && JSON.parse(sw.chat_data).s === 'q' && sw.caption.includes('кофе 300') && sw.allow_queries && JSON.parse(sw.public_data).i.K && !sw.reply_markup, 'sendWidget: статус q, подпись, запросы виджета, значки в public_data');
+assert(sw && JSON.parse(sw.chat_data).s === 'q' && sw.caption.includes('кофе 300') && sw.reply_markup && !sw.allow_queries, 'sendWidget (WQ=0): статус q, подпись, кнопка');
 assert(!sent.some(x => x.m === 'sendMessage'), 'текстом не дублируется');
 const box = W._t.store(env, 7), id = db.prepare('SELECT id FROM rcpt').get().id;
 // 2) на проверке → карточка с черновиком
@@ -115,7 +116,7 @@ let pv = await say('кофе 300 кафе');
 assert(pv.d.o[0][1] === '−300 MDL' && pv.d.o[0][4] === 'Кафе и рестораны' && /Кофе · сегодня/.test(pv.d.o[0][5]) && pv.kb.inline_keyboard[0][0].callback_data === 'rc:K', 'предпросмотр: сумма, категория, дата, кнопки');
 assert(pv.kb.inline_keyboard.at(-1)[0].web_app, 'в очереди — кнопка «Открыть финансы»');
 pv = await say('кофе 300 зузубра');
-assert(pv.d.o[0][2] === '❓' && /зузубра/.test(pv.d.o[0][4]) && pv.kb.inline_keyboard[0][0].callback_data === 'rc:c:0' && pv.kb.inline_keyboard.flat().some(b => b.callback_data === 'rc:X'), 'неузнанное слово: сразу сетка категорий');
+assert(pv.d.o[0][2] === '❓' && pv.d.o[0][4] === 'Категория?' && pv.kb.inline_keyboard[0][0].callback_data === 'rc:c:0' && pv.kb.inline_keyboard.flat().some(b => b.callback_data === 'rc:X'), 'неузнанное слово: сразу сетка категорий');
 const rz = db.prepare("SELECT id, mid FROM rcpt WHERE CAST(uid AS REAL) = 21 ORDER BY at DESC").get();
 const cbU = async (data, mid) => { sent = []; await W.default.fetch(new Request('https://w/webhook', { method: 'POST', headers: { 'X-Telegram-Bot-Api-Secret-Token': 's' },
   body: JSON.stringify({ callback_query: { id: 'q', from: { id: U }, data, message: { message_id: mid, chat: { id: U, type: 'private' }, widget: { html: '' } } } }) }), env, ctx).then(() => Promise.all(ctx.ps.splice(0))); };
@@ -134,7 +135,7 @@ pv = await say('зарплата 5000 зарплата'); assert(pv.d.o[0][1].re
 pv = await say('такси 100'); assert(pv.d.o[0][4] === 'Категорию подберёт приложение', '«такси 100»: слово до суммы — заметка');
 pv = await say('обед 1 200 кафе вчера'); assert(pv.d.o[0][1].replace(/\s/g, ' ') === '−1 200 MDL' && /вчера/.test(pv.d.o[0][5]), '«1 200» и «вчера»');
 for (const t of ['кофе 5 евро кафе', 'такси 100 и обед 200', 'одолжил Ивану 500', 'бюджет 20000', 'кофе 300 12.11', 'пятьсот на кафе']) {
-  pv = await say(t); assert(pv && !pv.d.o && !pv.d.a && pv.d.q && pv.kb.inline_keyboard.length === 1, `без предпросмотра: «${t}»`); }
+  pv = await say(t); assert(pv && !pv.d.o && !pv.d.a && pv.kb.inline_keyboard.length === 1, `без предпросмотра: «${t}»`); }
 // приложение забрало фразу и применило правки (preDone) — команды удаляются, квитанция по обычному пути
 sent = []; await W._t.cmdFinish(env, bU, pq, {}, {}); assert(!(await bU.list(0)).cmds, 'preDone: команды удалены');
 // черновик поправлен из бота, но всё ещё на проверке → «h» с кнопками
@@ -146,7 +147,7 @@ pv = await say.call(null, 'x'); await bU.rc.setProf(null); pv = await say('ко�
 env.WQ = '1'; const V = 31, bV = W._t.store(env, V); await bV.rc.setProf(JSON.stringify(W._t.profClean(PROF)));
 assert(Buffer.byteLength(W._t.RC_PUB) <= 1024, `значки в public_data: ${Buffer.byteLength(W._t.RC_PUB)} байт`);
 sent = []; await msg(V, 'кофе 300 зузубра'); let sw2 = sent.find(x => x.m === 'sendWidget'), d2 = JSON.parse(sw2.chat_data);
-assert(sw2.allow_queries && !sw2.reply_markup && d2.a && d2.a.k.length >= 3 && d2.a.st === 'q' && d2.a.p.c === -1 && d2.q, 'в очереди: меню в данных карточки, без кнопок Telegram');
+assert(sw2.allow_queries && !sw2.reply_markup && !sw2.caption && JSON.parse(sw2.public_data).i.K && d2.a && d2.a.k.length >= 3 && d2.a.st === 'q' && d2.a.p.c === -1 && d2.a.i === 0 && !d2.q, 'в очереди: только карточка — меню в данных, без подписи и кнопок Telegram');
 assert(Buffer.byteLength(sw2.chat_data) <= 1024, `chat_data ${Buffer.byteLength(sw2.chat_data)} байт`);
 const rv = db.prepare("SELECT id, mid FROM rcpt WHERE CAST(uid AS REAL) = 31").get();
 const wq = async data => { sent = []; await W.default.fetch(new Request('https://w/webhook', { method: 'POST', headers: { 'X-Telegram-Bot-Api-Secret-Token': 's' },
@@ -155,7 +156,7 @@ await wq('c:1');
 let an = sent.find(x => x.m === 'answerWidgetQuery'), ed2 = sent.find(x => x.m === 'editMessageWidgetData');
 assert(an && JSON.parse(an.data).ok && sent.indexOf(an) < sent.indexOf(ed2), 'запрос: ответ виджету — раньше перерисовки');
 let dd = JSON.parse(ed2.chat_data);
-assert(dd.a.p.c === 1 && dd.o[0][4] === dd.a.k[1][1] && /категория/.test(sent.find(x => x.m === 'editMessageCaption').caption), 'категория: карточка, меню (p.c) и подпись');
+assert(dd.a.p.c === 1 && dd.o[0][4] === dd.a.k[1][1] && !sent.some(x => x.m === 'editMessageCaption'), 'категория: карточка и меню (p.c), подпись не трогаем');
 const yd2 = new Date(Date.now() + 7200e3 - 864e5).toISOString().slice(0, 10);
 await wq('d:' + yd2); dd = JSON.parse(sent.find(x => x.m === 'editMessageWidgetData').chat_data);
 assert(dd.a.p.d === yd2 && /вчера/.test(dd.o[0][5]), 'дата: p.d и подпись строки');
@@ -172,4 +173,19 @@ assert(JSON.parse(sent.find(x => x.m === 'answerWidgetQuery').data).e === 'old' 
 const cmdsV = (await bV.list(0)).cmds; await W._t.cmdFinish(env, bV, cmdsV, {}, {});
 sent = []; await W._t.finishReceipts(env, bV, [rv.id], [], { [rv.id]: 'x' }, [], [], { [rv.id]: { o: [[0, '−300 MDL', '🛒', '#8a5cf0', 'Продукты', 'Кофе', 0, '']], a: { k: [['cafe', '🍽️ Кафе', '🍽️', 'Кафе', '']], td: '2026-11-11', d: '2026-11-10', v: '99', n: 'Кофе' } } });
 dd = JSON.parse(sent.find(x => x.m === 'editMessageWidgetData').chat_data); const capOk = sent.find(x => x.m === 'editMessageCaption');
-assert(dd.a.st === 'ok' && dd.a.k[0][1] === 'Кафе' && capOk.caption.startsWith('✅') && !capOk.reply_markup, 'записано: меню st:ok, без кнопок Telegram');
+assert(dd.a.st === 'ok' && dd.a.k[0][1] === 'Кафе' && !capOk, 'записано: меню st:ok, без подписи и кнопок Telegram');
+// ---------- v271: «−/+» — расход ↔ доход ----------
+sent = []; await msg(V, 'кофе 300 кафе'); const rt = db.prepare("SELECT id, mid FROM rcpt WHERE CAST(uid AS REAL) = 31 ORDER BY at DESC").get();
+const wq2 = async data => { sent = []; await W.default.fetch(new Request('https://w/webhook', { method: 'POST', headers: { 'X-Telegram-Bot-Api-Secret-Token': 's' },
+  body: JSON.stringify({ widget_query: { id: 'wq3', from: { id: V }, chat: { id: V, type: 'private' }, message_id: rt.mid, data } }) }), env, ctx).then(() => Promise.all(ctx.ps.splice(0)));
+  return JSON.parse(sent.find(x => x.m === 'editMessageWidgetData').chat_data); };
+let tdd = await wq2('t:i');
+assert(tdd.a.i === 1 && tdd.o[0][0] === 1 && tdd.o[0][1].startsWith('+') && tdd.o[0][4] === 'Категория?' && tdd.a.p.t === 1, '«+»: доход, знак +, категорию выбрать заново');
+const iInc = tdd.a.k.findIndex(c => c[2] === 1);
+assert(iInc >= 0, 'в меню есть категории дохода');
+tdd = await wq2('c:' + iInc); assert(tdd.o[0][4] === 'Зарплата' && tdd.a.i === 1, 'выбрал категорию дохода');
+const pT = (await W._t.store(env, V).list(0)).cmds.filter(c => c.sid === rt.id);
+assert(pT.some(c => c.op === 'type' && c.val === 'i') && pT.some(c => c.op === 'cat' && c.val === 'salary'), 'команды: type=i и cat=salary');
+tdd = await wq2('t:e'); const pT2 = ((await W._t.store(env, V).list(0)).cmds || []).filter(c => c.sid === rt.id);
+assert(tdd.a.i === 0 && tdd.o[0][1].startsWith('−') && tdd.o[0][4] === 'Кафе и рестораны' && !pT2.some(c => c.op === 'cat') && !pT2.some(c => c.op === 'type'), '«−» обратно: как было, лишние команды убраны');
+tdd = await wq2('c:' + tdd.a.k.findIndex(c => c[2] === 1)); assert(tdd.a.i === 1 && tdd.o[0][1].startsWith('+'), 'категория дохода сама переключает на «+»');
