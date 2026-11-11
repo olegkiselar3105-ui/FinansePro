@@ -60,7 +60,7 @@ function acts(x,i){var c=E("div");if(x.c||!x.n||!T.request)return c;if(x.x){c.ap
 var b=E("div","bt"),er=E("div","er");function go(q,el,t){if(b.classList.contains("bz"))return;b.classList.add("bz");try{T.HapticFeedback.impactOccurred("light")}catch(e){}
 T.request(q).then(function(){b.classList.remove("bz");if(t){el.textContent=t}}).catch(function(e){b.classList.remove("bz");er.textContent=e&&e.code==="RATE_LIMITED"?"Подождите пару секунд":"Не получилось, попробуйте ещё раз"})}
 function B(t,q,m,done){var e=E("button",m?"m":"",t);e.type="button";e.onclick=function(){go(q,e,done)};b.appendChild(e)}
-if(x.k==="d"){if(x.ln)B((x.i?"Вернули всё":"Вернул всё")+" · "+x.l,"r:"+i+":a",1);B("Другая сумма","r:"+i+":o",0,"Напишите сумму ↓")}else B("＋ Пополнить","p:"+i+":o",1,"Напишите сумму ↓");
+if(x.k==="d"){if(x.ln)B(x.i?"Вернули всё":"Вернул всё","r:"+i+":a",1);B("Другая сумма","r:"+i+":o",0,"Напишите сумму ↓")}else B("＋ Пополнить","p:"+i+":o",1,"Напишите сумму ↓");
 c.appendChild(b);c.appendChild(er);return c}
 function okRow(t){var o=E("div","ok");o.innerHTML='<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';o.appendChild(E("span",0,t));return o}
 function debt(x,I){var c=E("div","c"),h=E("div","hd"),av=E("div","av"+(x.i?"":" o"),(x.w||"?").trim().charAt(0).toUpperCase()),m=E("div","m"),bg=E("div","bg");
