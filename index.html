@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v265';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v266';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -5282,7 +5282,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&cfg.theme
 function stHtml(){
   const ri=()=>'';
   const CH='';
-  const ICN={"onbr":"<path d='M11 4l1.7 4.3L17 10l-4.3 1.7L11 16l-1.7-4.3L5 10l4.3-1.7z'/><path d='M18 14.5l.8 1.9 1.9.8-1.9.8-.8 1.9-.8-1.9-1.9-.8 1.9-.8z'/>","rcs":"<path d='M17 3l3 3-3 3'/><path d='M4 11V9.5A3.5 3.5 0 0 1 7.5 6H20'/><path d='M7 21l-3-3 3-3'/><path d='M20 13v1.5a3.5 3.5 0 0 1-3.5 3.5H4'/>","pol":"<rect x='5' y='10.5' width='14' height='10' rx='2.2'/><path d='M8.5 10.5V7.8a3.5 3.5 0 0 1 7 0v2.7'/>","tou":"<path d='M5 5.5A1.5 1.5 0 0 1 6.5 4H19v13H6.5A1.5 1.5 0 0 0 5 18.5z'/><path d='M5 18.5A1.5 1.5 0 0 0 6.5 20H19v-3M9 8h6'/>","prv":"<path d='M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z'/><circle cx='12' cy='12' r='2.6'/><path d='M4.5 19.5l15-15'/>","mst":"<rect x=\"4\" y=\"5.5\" width=\"16\" height=\"14\" rx=\"2.5\"/><path d=\"M8 3.5v4M16 3.5v4M4 10h16\"/><circle cx=\"8.5\" cy=\"14.5\" r=\"1.1\"/>","pin":"<rect x=\"5\" y=\"10.5\" width=\"14\" height=\"9.5\" rx=\"2.5\"/><path d=\"M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5M12 14v2.3\"/>","cub": "<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M14.8 9.4c-.5-.9-1.4-1.4-2.8-1.4-1.6 0-2.7.8-2.7 2s1 1.7 2.7 2.1 2.9.9 2.9 2.2-1.2 2.1-2.9 2.1c-1.4 0-2.4-.5-2.9-1.5M12 6.4v1.6M12 16v1.6\"/>", "tpr": "<path d=\"M13 3L5 13.5h6L10 21l8-10.5h-6z\"/>", "thm": "<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M12 3.5a8.5 8.5 0 0 1 0 17z\"/>", "hlp": "<path d=\"M5 5.5A1.5 1.5 0 0 1 6.5 4H19v13H6.5A1.5 1.5 0 0 0 5 18.5z\"/><path d=\"M5 18.5A1.5 1.5 0 0 0 6.5 20H19v-3M9 8h6\"/>", "ctc": "<path d=\"M5 6.5A2.5 2.5 0 0 1 7.5 4h9A2.5 2.5 0 0 1 19 6.5v7a2.5 2.5 0 0 1-2.5 2.5H11l-4 3.5V16a2 2 0 0 1-2-2z\"/>", "cin": "<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M12 8v8M9 13l3 3 3-3\"/>", "cex": "<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M12 16V8M9 11l3-3 3 3\"/>", "lkr": "<path d=\"M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3\"/><path d=\"M4 7.5V17a2 2 0 0 0 2 2h12.5a1.5 1.5 0 0 0 1.5-1.5v-8A1.5 1.5 0 0 0 18.5 8h-12A2.5 2.5 0 0 1 4 7.5z\"/><circle cx=\"16\" cy=\"13.5\" r=\"1\"/>", "crs": "<rect x=\"4\" y=\"5.5\" width=\"16\" height=\"14\" rx=\"2.5\"/><path d=\"M8 3.5v4M16 3.5v4M4 10h16M9.5 14.5h5M12.5 12.5l2 2-2 2\"/>", "bki": "<path d=\"M12 4v10M8 10.2l4 4 4-4M5 19.5h14\"/>", "bke": "<path d=\"M12 15V5M8 8.8l4-4 4 4M5 19.5h14\"/>", "bkr": "<path d=\"M5 7h14M10 7V4.8h4V7M7 7l.8 12h8.4L17 7M10.3 11v5M13.7 11v5\"/>"};
+  const ICN={"bau":"<path d='M5 5.5h14a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5H10l-4 3.5v-3.5H5A1.5 1.5 0 0 1 3.5 15V7A1.5 1.5 0 0 1 5 5.5z'/><path d='M8.5 11l2.3 2.3 4.7-4.6'/>","onbr":"<path d='M11 4l1.7 4.3L17 10l-4.3 1.7L11 16l-1.7-4.3L5 10l4.3-1.7z'/><path d='M18 14.5l.8 1.9 1.9.8-1.9.8-.8 1.9-.8-1.9-1.9-.8 1.9-.8z'/>","rcs":"<path d='M17 3l3 3-3 3'/><path d='M4 11V9.5A3.5 3.5 0 0 1 7.5 6H20'/><path d='M7 21l-3-3 3-3'/><path d='M20 13v1.5a3.5 3.5 0 0 1-3.5 3.5H4'/>","pol":"<rect x='5' y='10.5' width='14' height='10' rx='2.2'/><path d='M8.5 10.5V7.8a3.5 3.5 0 0 1 7 0v2.7'/>","tou":"<path d='M5 5.5A1.5 1.5 0 0 1 6.5 4H19v13H6.5A1.5 1.5 0 0 0 5 18.5z'/><path d='M5 18.5A1.5 1.5 0 0 0 6.5 20H19v-3M9 8h6'/>","prv":"<path d='M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z'/><circle cx='12' cy='12' r='2.6'/><path d='M4.5 19.5l15-15'/>","mst":"<rect x=\"4\" y=\"5.5\" width=\"16\" height=\"14\" rx=\"2.5\"/><path d=\"M8 3.5v4M16 3.5v4M4 10h16\"/><circle cx=\"8.5\" cy=\"14.5\" r=\"1.1\"/>","pin":"<rect x=\"5\" y=\"10.5\" width=\"14\" height=\"9.5\" rx=\"2.5\"/><path d=\"M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5M12 14v2.3\"/>","cub": "<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M14.8 9.4c-.5-.9-1.4-1.4-2.8-1.4-1.6 0-2.7.8-2.7 2s1 1.7 2.7 2.1 2.9.9 2.9 2.2-1.2 2.1-2.9 2.1c-1.4 0-2.4-.5-2.9-1.5M12 6.4v1.6M12 16v1.6\"/>", "tpr": "<path d=\"M13 3L5 13.5h6L10 21l8-10.5h-6z\"/>", "thm": "<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M12 3.5a8.5 8.5 0 0 1 0 17z\"/>", "hlp": "<path d=\"M5 5.5A1.5 1.5 0 0 1 6.5 4H19v13H6.5A1.5 1.5 0 0 0 5 18.5z\"/><path d=\"M5 18.5A1.5 1.5 0 0 0 6.5 20H19v-3M9 8h6\"/>", "ctc": "<path d=\"M5 6.5A2.5 2.5 0 0 1 7.5 4h9A2.5 2.5 0 0 1 19 6.5v7a2.5 2.5 0 0 1-2.5 2.5H11l-4 3.5V16a2 2 0 0 1-2-2z\"/>", "cin": "<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M12 8v8M9 13l3 3 3-3\"/>", "cex": "<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M12 16V8M9 11l3-3 3 3\"/>", "lkr": "<path d=\"M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3\"/><path d=\"M4 7.5V17a2 2 0 0 0 2 2h12.5a1.5 1.5 0 0 0 1.5-1.5v-8A1.5 1.5 0 0 0 18.5 8h-12A2.5 2.5 0 0 1 4 7.5z\"/><circle cx=\"16\" cy=\"13.5\" r=\"1\"/>", "crs": "<rect x=\"4\" y=\"5.5\" width=\"16\" height=\"14\" rx=\"2.5\"/><path d=\"M8 3.5v4M16 3.5v4M4 10h16M9.5 14.5h5M12.5 12.5l2 2-2 2\"/>", "bki": "<path d=\"M12 4v10M8 10.2l4 4 4-4M5 19.5h14\"/>", "bke": "<path d=\"M12 15V5M8 8.8l4-4 4 4M5 19.5h14\"/>", "bkr": "<path d=\"M5 7h14M10 7V4.8h4V7M7 7l.8 12h8.4L17 7M10.3 11v5M13.7 11v5\"/>"};
   const IC=id=>ICN[id]?`<span class="rwi"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICN[id]}</svg></span>`:'';
   const row=(id,col,g,label,val,cls)=>`<button type="button" class="rw${cls?' '+cls:''}" id="${id}">${IC(id)}<span class="rl">${label}</span>${CH}</button>`;   // v259: без подписи справа (значение видно, когда нажмёте на строку)
   let nm='Гость',sub='Данные хранятся на этом устройстве',ph='',ini='',un=false,avc='';
@@ -5301,7 +5301,7 @@ ${row('cub','#2f6df6','<path d="M12 3.5v17M16.2 7.6c0-1.6-1.9-2.8-4.2-2.8s-4.2 1
 <div class="sgh">Безопасность</div>
 <div class="sc">${row('pin','','','PIN-код',pinOn()?'Вкл':'Выкл')}${row('prv','','','Скрытие сумм',PRV?'Вкл':'Выкл')}</div>
 <div class="sgh">Категории и учёт</div>
-<div class="sc">${row('cin','#22a845','<path d="M12 4.5v10M7.8 10.6l4.2 4.2 4.2-4.2M5 19.5h14"/>','Категория доходов')}${row('cex','#f39a1f','<path d="M12 19.5v-10M7.8 13.4l4.2-4.2 4.2 4.2M5 4.5h14"/>','Категория расходов')}${row('rcs','','','Повторяющиеся операции',(cfg.rec||[]).length?String(cfg.rec.length):'Нет')}${row('mst','','','Начало месяца',mStart()+' число')}</div>
+<div class="sc">${row('cin','#22a845','<path d="M12 4.5v10M7.8 10.6l4.2 4.2 4.2-4.2M5 19.5h14"/>','Категория доходов')}${row('cex','#f39a1f','<path d="M12 19.5v-10M7.8 13.4l4.2-4.2 4.2 4.2M5 4.5h14"/>','Категория расходов')}${row('rcs','','','Повторяющиеся операции',(cfg.rec||[]).length?String(cfg.rec.length):'Нет')}${row('mst','','','Начало месяца',mStart()+' число')}${row('bau','','','Записи из бота')}</div>
 <div class="sgh">Резервная копия</div>
 <div class="sc">${row('bki','#3b8fd4','<path d="M12 4v10M8 10.2l4 4 4-4M5 19.5h14"/>','Импорт')}${row('bke','#2f6df6','<path d="M12 15V5M8 8.8l4-4 4 4M5 19.5h14"/>','Экспорт')}${row('bkr','#e5484d','<path d="M5 7h14M10 7V4.8h4V7M7 7l.8 12h8.4L17 7M10.3 11v5M13.7 11v5"/>','Сброс','','rd')}</div>`}
 function bindSt(){
@@ -5310,7 +5310,7 @@ function bindSt(){
     g.querySelectorAll('button').forEach(x=>{const on=x===b;x.classList.toggle('on',on);x.setAttribute('aria-checked',String(on))});{const r=b.getBoundingClientRect();applyTheme(true,{x:r.left+r.width/2,y:r.top+r.height/2})}};
   $('#cub').onclick=e=>openCf('cur',e.currentTarget);
   if($('#lkr'))$('#lkr').onclick=()=>openBq('link');
-  if($('#mst'))$('#mst').onclick=()=>{msV=mStart();openBq('mstart')};if($('#pin'))$('#pin').onclick=()=>openBq('pin');if($('#prv'))$('#prv').onclick=()=>openBq('prv');
+  if($('#mst'))$('#mst').onclick=()=>{msV=mStart();openBq('mstart')};if($('#pin'))$('#pin').onclick=()=>openBq('pin');if($('#prv'))$('#prv').onclick=()=>openBq('prv');if($('#bau'))$('#bau').onclick=()=>openBq('bauto');
   if($('#crs'))$('#crs').onclick=()=>{cbM=shiftMonth(curM(),1);openBq('carry')};
   if($('#botu'))$('#botu').onchange=e=>{const v=String(e.target.value||'').trim();cfg.botUrl=v;save();if(ibBase()){window.__ibBusy=false;inboxPull()}}
   if($('#tou'))$('#tou').onclick=()=>{if(window.AppTour)AppTour.show()};if($('#onbr'))$('#onbr').onclick=()=>{if(window.AppOnb)AppOnb.show()};$('#cin').onclick=e=>openCf('catsI',e.currentTarget);$('#cex').onclick=e=>openCf('catsE',e.currentTarget);if($('#rcs'))$('#rcs').onclick=()=>openRcSt();$('#bki').onclick=()=>openBq('import');$('#bke').onclick=()=>openBq('export');$('#bkr').onclick=()=>openBq('reset');$('#ctc').onclick=()=>openBq('contact');if($('#pol'))$('#pol').onclick=()=>{const u=new URL('privacy.html',location.href).href;   // v236: у политики свой код pol — раньше был prv, как у «Скрытия сумм», и та строка не открывалась
@@ -5330,6 +5330,7 @@ function cbHint(){const m=cbM,mn=MN[+m.slice(5,7)-1].toLowerCase(),own=bmOwn(m),
 function saveCb(){const inp=$('#cbam'),v=pn(inp&&inp.value);if(!(v>0)){toast('Укажите сумму бюджета');return}
   if(!_obj(cfg.bm))cfg.bm={};cfg.bm[cbM]=v;save();closeBq();toast('Бюджет · '+MN[+cbM.slice(5,7)-1]+': '+fmt(v)+' '+cfg.cur)}
 function bqHtml(kind){
+  if(kind==='bauto')return `<div class="bqt">Записи из бота</div>${bqTg('tgbau','Записывать сразу, если всё понятно','Без окна проверки',cfg.bAuto)}<div class="bqs" style="font-size:11px;line-height:1.45;margin-top:12px;opacity:.8">Сразу записывается фраза с одной операцией, где понятны сумма и категория — например, «кофе 300 кафе». На проверку по-прежнему уходят: незнакомое слово, запись без категории, другая валюта, несколько записей в одной фразе. Долги, цели, бюджет и лимиты работают как раньше. Записи появляются, когда приложение открыто.</div>`;
   if(kind==='prv')return `<div class="bqt">Скрытие сумм</div>${bqTg('tgprv','Скрывать суммы','Вместо цифр показывается •••',PRV)}${bqTg('tgprf','Включать поворотом экрана','Переворот телефона экраном вниз',FLP.want)}<div class="bqs" style="font-size:11px;line-height:1.45;margin-top:12px;opacity:.8">Положите телефон экраном вниз примерно на секунду — суммы скроются, и вы почувствуете короткую вибрацию. Переверните экраном вниз ещё раз — суммы снова появятся. Телефон должен лежать почти горизонтально: наклон или положение в руке не считаются. Работает, пока приложение открыто.</div><div class="bqb"><button class="sm pr auto" data-bq="cancel">Готово</button></div>`;
   if(kind==='mstart')return `<div class="bqt">Начало месяца</div><div class="bqs">С какого числа начинается ваш месяц — например, день зарплаты.</div><div class="bqm"><button type="button" class="sm" data-bq="msm" aria-label="Раньше">−</button><span class="mn" id="msn">${msV} число</span><button type="button" class="sm" data-bq="msp" aria-label="Позже">+</button></div><div class="bqs" id="msh">${E(msHint())}</div><div class="bqb"><button class="sm" data-bq="cancel">Отмена</button><button class="sm pr" data-bq="mssave">Сохранить</button></div>`;
   if(kind==='pin'){   // v160
@@ -5405,6 +5406,7 @@ bq.addEventListener('click',e=>{
   else if(a==='pinbio'){const h=$('#pinbh');if(pinOpt().bio){bioOff();tgSet(b,false);if(h)h.textContent='';return}
     bioEnable((ok,why)=>{tgSet(b,ok);if(h)h.textContent=ok?'':why==='denied'?'Доступ к '+bioName()+' запрещён — разрешите его в настройках Telegram.':'Не удалось включить '+bioName()+'.';
       if(!ok&&why==='denied'){try{const m=BM();if(m&&m.openSettings)m.openSettings()}catch(e){}}})}
+  else if(a==='tgbau'){cfg.bAuto=!cfg.bAuto;save();tgSet(b,cfg.bAuto)}
   else if(a==='tgprv'){prvSet(!PRV)}
   else if(a==='tgprf'){flToggle(b)}
   else if(a==='cbsave')saveCb()
@@ -6265,6 +6267,9 @@ function ibAt(ts,fn){
   globalThis.Date=FD;try{return fn()}finally{globalThis.Date=D0}}
 // долгий опрос «жив»: запрос сейчас в пути и ему меньше 20 с (сервер держит до 12 с) или только что закончился без ошибки
 const ibLpOk=()=>{const now=Date.now();return !!IB.lp&&!IB.fail&&(IB.lpBusy?now-(IB.lpAt||0)<20000:now-(IB.lpOk||0)<5000)};
+// v266: «Записи из бота — сразу» (cfg.bAuto, по умолчанию выкл): одна обычная операция, сумма и категория распознаны — в учёт без окна «+».
+// Остальное (незнакомое слово cw, «Прочее», новая категория addCat, другая валюта oc, несколько операций) — на проверку, как с v167; команды (долги/цели/бюджет) — как раньше
+const bAutoOk=(cm,r)=>!!cfg.bAuto&&!cm.msgs.length&&r.length===1&&r[0].amount>0&&!r[0].cw&&!r[0].addCat&&!r[0].oc&&!r[0].lk&&(r[0].type==='expense'||r[0].type==='income')&&!!r[0].category&&!/^(in_)?other$/.test(r[0].category);
 async function inboxPull(fast,wait){
   if(!IN_TG||!ibBase()||IB.dead)return;
   if(document.hidden){window.__ibBusy=false;return}   // окно скрыто — воркер не опрашиваем; при возврате будет сразу один опрос
@@ -6280,7 +6285,7 @@ async function inboxPull(fast,wait){
     if(IB.proc)return;IB.proc=true;     // записи разбирает кто-то один; остальное подберёт следующий опрос
     try{
     IB.procAt=Date.now();
-    const seen=new Set(ibSeen()),added=[],left=[],bad=[],badIds=[],okIds=[],fresh=[],notes={},cards={},nbuild={};let cmd=false;
+    const seen=new Set(ibSeen()),added=[],left=[],bad=[],badIds=[],okIds=[],fresh=[],notes={},cards={},nbuild={},autoL=[];let cmd=false;
     for(const it of items){
       if(!it||!it.id)continue;const sid=String(it.id);
       if(seen.has(sid)){okIds.push(sid);continue}                       // уже записано раньше — просто подтверждаем
@@ -6291,21 +6296,24 @@ async function inboxPull(fast,wait){
         if(needRate.size){try{await ratesRefresh(true)}catch{}needRate.clear();ibAt(it.ts,()=>{r=parse(cm.rest)})}
         if(cm.msgs.length)cmd=true;
         if(!r.length&&!cm.msgs.length){bad.push(text);badIds.push(sid);continue}
-        r.forEach(d=>{delete d.addCat;d.bsid=sid;if(d.amount>0)added.push(d);else left.push(d)});   // v167: операции из бота — на проверку (черновики)
-        nbuild[sid]={rich:cm.rich||cm.msgs,ops:r.filter(d=>d.amount>0)};   // v166: ответ бота собирается после записи — с итогами бюджета и лимитов
+        const au=bAutoOk(cm,r);   // v266: понятная запись — сразу в учёт
+        r.forEach(d=>{delete d.addCat;if(au){autoL.push(d);return}d.bsid=sid;if(d.amount>0)added.push(d);else left.push(d)});   // v167: операции из бота — на проверку (черновики)
+        nbuild[sid]={rich:cm.rich||cm.msgs,ops:r.filter(d=>d.amount>0),au};   // v166: ответ бота собирается после записи — с итогами бюджета и лимитов
       }catch(e){bad.push(text);badIds.push(sid)}}                           // одна «битая» запись не должна блокировать остальные
     for(let w=0;w<30&&typeof CL==='object'&&CL.busy;w++)await new Promise(r=>setTimeout(r,200));
     let saved=true;
     try{
+      if(autoL.length)commit(autoL,false);   // v266: без bsid — окно проверки и второй ack не нужны; квитанция «✅ Записано» — этим же ack
       if(cmd){save();render()}
       if(added.length||left.length){drafts.push(...added,...left);renderRev();revOpen()}   // v167: в общий список — только после «Записать» в окне «+»
     }catch(e){saved=false;IB.dbg={t:Date.now(),n:0,lp:IB.lp,err:'запись: '+String(e&&e.message||e).slice(0,50)}}
     if(!saved)return;                       // не сохранилось — в очереди запись остаётся, следующий опрос повторит (ничего не теряется)
     const hold=[],bh=BH.get();
-    Object.entries(nbuild).forEach(([sid,o])=>{try{const ops=drafts.filter(d=>d.bsid===sid);if(ops.length){hold.push(sid);bh[sid]=1}
+    Object.entries(nbuild).forEach(([sid,o])=>{try{if(o.au){notes[sid]=[...o.ops.map(botOpLine),botBudLine(o.ops)].filter(Boolean).join('\n\n').slice(0,1200);cards[sid]=botCard(o.ops,true);return}const ops=drafts.filter(d=>d.bsid===sid);if(ops.length){hold.push(sid);bh[sid]=1}
       const nt=[...o.rich,...(ops.length?['📝 На проверке в приложении:\n'+ops.map(botDraftLine).join('\n')+'\n\nПроверьте и нажмите «Записать».']:[])].filter(Boolean);if(nt.length)notes[sid]=nt.join('\n\n').slice(0,1200);if(ops.length||o.rich.length)cards[sid]={...botCard(ops,false),...(o.rich.length?{n:o.rich.join('\n\n').slice(0,600)}:{})}}catch(e){}});
     BH.set(bh);
     fresh.forEach(i=>seen.add(i));ibSeenSave([...seen]);
+    if(autoL.length&&!bad.length)toast(autoL.length===1?'Из бота записано: '+botDraftLine(autoL[0]).replace(/^\S+ /,''):'Из бота записано: '+autoL.length);
     if(bad.length)toast('Бот: не понял — «'+bad.slice(0,2).join('», «').slice(0,120)+'»');
     await ibCall('/api/ack',{ids:okIds,bad:badIds,notes,cards,hold})}finally{IB.proc=false}}
   catch(e){if(IB.wakeAbort){IB.wakeAbort=false}else if(wait)IB.fail=(IB.fail||0)+1;IB.dbg={t:Date.now(),n:0,lp:IB.lp,err:String(e&&e.message||e).slice(0,60)};/* нет связи — тихо, повторим; а вот просроченную подпись Telegram показываем один раз */
