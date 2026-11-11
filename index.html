@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v269';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v270';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -2577,8 +2577,8 @@ function botCard(ops,full,act){const o=ops.slice(0,4).map(d=>{const c=cd(d.categ
     if(b>0&&ops.some(d=>d.type==='expense'&&perKey(d.date)===k)){const sp=spentIn(k);r.b=[Math.round(sp/b*100)/100,'Бюджет на '+MN[+k.slice(5,7)-1].toLowerCase(),fmt(sp)+' из '+BM_(b),sp>b?'перерасход '+BM_(sp-b):'осталось '+BM_(b-sp)]}}
   if(act&&ops.length===1&&ops[0].bs)r.a=botAct(ops[0]);   // v267: кнопки «Категория/Дата/Отменить» в боте
   return r}
-// v267: дата в карточке бота — «📅 сегодня, 11 ноя» (для сегодня/вчера число тоже), иначе «📅 9 ноя»
-function bDay(d){const c=dChip(d),[,M,D]=d.split('-').map(Number);return '📅 '+c.toLowerCase()+(/^(Сегодня|Вчера)$/.test(c)?', '+D+' '+MGN[M-1].slice(0,3):'')}
+// v267: дата в карточке бота — «сегодня, 11 ноя» (v270: без 📅 — рисуется как «July») (для сегодня/вчера число тоже), иначе «📅 9 ноя»
+function bDay(d){const c=dChip(d),[,M,D]=d.split('-').map(Number);return c.toLowerCase()+(/^(Сегодня|Вчера)$/.test(c)?', '+D+' '+MGN[M-1].slice(0,3):'')}
 // v267: что можно сделать с записью «сразу» из чата: до 6 частых категорий того же типа (без долгов/накоплений), «сегодня» по телефону, версия записи u
 const BC_NO=new Set(['debt','save','debtin']);
 function botAct(t){const inc=t.type==='income',n={},old=ymd(new Date(Date.now()-90*864e5));
@@ -5388,7 +5388,7 @@ function cbHint(){const m=cbM,mn=MN[+m.slice(5,7)-1].toLowerCase(),own=bmOwn(m),
 function saveCb(){const inp=$('#cbam'),v=pn(inp&&inp.value);if(!(v>0)){toast('Укажите сумму бюджета');return}
   if(!_obj(cfg.bm))cfg.bm={};cfg.bm[cbM]=v;save();closeBq();toast('Бюджет · '+MN[+cbM.slice(5,7)-1]+': '+fmt(v)+' '+cfg.cur)}
 function bqHtml(kind){
-  if(kind==='bauto')return `<div class="bqt">Записи из бота</div>${bqTg('tgbau','Записывать сразу, если всё понятно','Без окна проверки',bAuto())}<div class="bqs" style="font-size:11px;line-height:1.45;margin-top:12px;opacity:.8">Сразу записывается фраза с одной операцией, где понятны сумма и категория — например, «кофе 300 кафе». На проверку по-прежнему уходят: незнакомое слово, запись без категории, другая валюта, несколько записей в одной фразе. Долги, цели, бюджет и лимиты работают как раньше. Записи появляются, когда приложение открыто.<br><br>Бот сразу показывает сумму и категорию; если слово не узнано — предлагает выбрать категорию. Кнопки 🏷 категория, 📅 дата и 🗑 «Не записывать» работают и до открытия приложения — правки применятся, когда вы его откроете.</div>`;
+  if(kind==='bauto')return `<div class="bqt">Записи из бота</div>${bqTg('tgbau','Записывать сразу, если всё понятно','Без окна проверки',bAuto())}<div class="bqs" style="font-size:11px;line-height:1.45;margin-top:12px;opacity:.8">Сразу записывается фраза с одной операцией, где понятны сумма и категория — например, «кофе 300 кафе». На проверку по-прежнему уходят: незнакомое слово, запись без категории, другая валюта, несколько записей в одной фразе. Долги, цели, бюджет и лимиты работают как раньше. Записи появляются, когда приложение открыто.<br><br>Бот сразу показывает сумму и категорию; если слово не узнано — предлагает выбрать категорию. Кнопки «Категория», «Дата» и «Убрать» прямо в карточке работают и до открытия приложения — правки применятся, когда вы его откроете.</div>`;
   if(kind==='prv')return `<div class="bqt">Скрытие сумм</div>${bqTg('tgprv','Скрывать суммы','Вместо цифр показывается •••',PRV)}${bqTg('tgprf','Включать поворотом экрана','Переворот телефона экраном вниз',FLP.want)}<div class="bqs" style="font-size:11px;line-height:1.45;margin-top:12px;opacity:.8">Положите телефон экраном вниз примерно на секунду — суммы скроются, и вы почувствуете короткую вибрацию. Переверните экраном вниз ещё раз — суммы снова появятся. Телефон должен лежать почти горизонтально: наклон или положение в руке не считаются. Работает, пока приложение открыто.</div><div class="bqb"><button class="sm pr auto" data-bq="cancel">Готово</button></div>`;
   if(kind==='mstart')return `<div class="bqt">Начало месяца</div><div class="bqs">С какого числа начинается ваш месяц — например, день зарплаты.</div><div class="bqm"><button type="button" class="sm" data-bq="msm" aria-label="Раньше">−</button><span class="mn" id="msn">${msV} число</span><button type="button" class="sm" data-bq="msp" aria-label="Позже">+</button></div><div class="bqs" id="msh">${E(msHint())}</div><div class="bqb"><button class="sm" data-bq="cancel">Отмена</button><button class="sm pr" data-bq="mssave">Сохранить</button></div>`;
   if(kind==='pin'){   // v160

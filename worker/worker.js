@@ -252,6 +252,7 @@ const HELP = `Что можно написать или сказать боту:
 
 async function handleUpdate(upd, env) {
   if (upd.callback_query) return onCallback(upd.callback_query, env);
+  if (upd.widget_query) return onWidgetQuery(upd.widget_query, env);   // v270: нажатия в меню карточки
   const msg = upd.message; if (!msg || !msg.from || msg.chat.type !== 'private') return;
   const uid = msg.from.id, chat = msg.chat.id, reply = (text, extra) => tg(env, 'sendMessage', { chat_id: chat, text, ...extra });
   const t = (msg.text || '').trim();
@@ -295,7 +296,7 @@ async function handleUpdate(upd, env) {
   // v269: предпросмотр — сумма и категория сразу, кнопки до открытия приложения (нужен словарь категорий от приложения)
   let pv = null; try { const pf = box.rc.prof && await box.rc.prof(); pv = pf && preview(pf, text, msg.date); } catch (e) { console.error('preview', e && e.message); }
   const kb = pv ? kbFor(env, pv.act, pv.cw ? kbCat(pv.act, true) : null) : open.reply_markup;
-  let mid = useW(env) ? await sendRcWidget(env, chat, shown, kb ? { reply_markup: kb } : {}, pv && pv.card) : null;
+  let mid = useW(env) ? await sendRcWidget(env, chat, shown, kb ? { reply_markup: kb } : {}, pv && pv.card, pv && pv.act) : null;
   if (!mid) { const sent = await (await reply(`⏳ В очереди: «${shown}»\n` + (pv ? pvText(pv) + '\n' : '') + 'Появится в приложении, когда оно откроется.', kb ? { reply_markup: kb } : {})).json().catch(() => null);
     mid = sent && sent.result && sent.result.message_id; }
   if (pv && mid) { if (!hookOk) { hookOk = true; await ensureCallbacks(env).catch(() => {}); } }
@@ -313,7 +314,7 @@ async function finishReceipts(env, box, ids, bad, notes = {}, hold = [], drop = 
   const held = await box.rc.take(ids.map(String).filter(i => holdSet.has(i)), true);
   await Promise.all(held.map(async r => { const act = actOf(cards[r.id]);   // v269: черновик можно поправить из чата (категория, дата, «не записывать»)
     await box.rc.setAct(r.id, act ? JSON.stringify({ ...act, st: 'h' }) : null);
-    return rcEdit(env, r, 'h', `📝 Получено: «${r.text}»` + (notes[r.id] ? `\n\n${notes[r.id]}` : ''), notes[r.id], cards[r.id], act ? kbFor(env, { ...act, st: 'h' }, act.w ? kbCat(act, true) : null) : null); }));
+    return rcEdit(env, r, 'h', `📝 Получено: «${r.text}»` + (notes[r.id] ? `\n\n${notes[r.id]}` : ''), notes[r.id], cards[r.id], act ? kbFor(env, { ...act, st: 'h' }, act.w ? kbCat(act, true) : null) : null, null, act ? { ...act, st: 'h' } : null); }));
   // v267: «✅ Записано» у записи «сразу» (card.a) — квитанция остаётся с кнопками; остальные — удаляются, как раньше
   const okA = i => !dropSet.has(i) && !badSet.has(i) && cards[i] && cards[i].a && box.rc.setAct;
   const kept = await box.rc.take(ids.map(String).filter(i => !holdSet.has(i) && okA(i)), true);
@@ -329,19 +330,34 @@ async function finishReceipts(env, box, ids, bad, notes = {}, hold = [], drop = 
 // Подпись над карточкой — статус и фраза (её же видят клиенты без виджетов). Сеть виджету недоступна: всё — из chat_data.
 // Квитанции-тексты (старые, или виджет не отправился) правятся по-старому, editMessageText. WIDGETS=0 в переменных — выключить.
 const useW = env => String(env.WIDGETS ?? '1').trim() !== '0';
+// v270: кнопки — внутри карточки (запросы виджета, widget_query); WQ=0 — как в v269, кнопками Telegram под сообщением
+const rcPend = async r => r.pend || [];
+const useWQ = env => useW(env) && String(env.WQ ?? '1').trim() !== '0';
+let BOTU = null;   // имя бота — для «Открыть» в карточке (t.me/<бот>?startapp)
+async function botUser(env) { if (BOTU !== null) return BOTU; const r = await (await tg(env, 'getMe', {})).json().catch(() => null); BOTU = (r && r.ok && r.result && r.result.username) || ''; return BOTU; }
+// тексты статусов — в данных, не в HTML (экономия места в HTML)
+const RC_TX = { q: { q: 'Появится в приложении, когда оно откроется' }, h: { hn: 'Можно поправить здесь или в приложении.' }, drop: { hn: 'В учёт не попало.' },
+  bad: { hn: 'Напишите, например:\n• «кофе 300 кафе»\n• «Иван должен 500»' } };
+// меню карточки: k — [эмодзи, название] (запрос — по номеру), td/d — даты, st — q/h/ok, p — нажатое, но ещё не применённое
+const waOf = (act, pend) => { if (!act) return null; const p = { c: -1, d: '', x: 0 };
+  for (const x of pend || []) { if (x.op === 'cat') p.c = act.k.findIndex(c => c[0] === x.val); if (x.op === 'date') p.d = x.val; if (x.op === 'del') p.x = 1; }
+  return { k: act.k.map(c => [c[2] || '', c[3] || c[1]]), td: act.td, d: act.d, st: act.st || 'ok', p }; };
 const RC_CAP = { q: '⏳ В очереди', h: '📝 Получено', ok: '✅ Записано', drop: '🗑 Не записано', bad: '⚠ Приложение не поняло' };
 const u8 = s => new TextEncoder().encode(s).length;
 const str = (v, n) => String(v ?? '').slice(0, n);
 // данные карточки: s — статус; o — операции [доход?, сумма, эмодзи, цвет, категория, подпись, доля лимита, текст лимита]; b — бюджет [доля, заголовок, значение, остаток]; n — текст
-function rcData(s, card, note) {
-  const d = { s }, c = card && typeof card === 'object' ? card : null;
+function rcData(s, card, note, x) {
+  const d = { s, ...(RC_TX[s] || {}) }, c = card && typeof card === 'object' ? card : null;
+  if (x && x.u) d.u = str(x.u, 40);
+  if (x && x.a) d.a = x.a;
   if (c && Array.isArray(c.o) && c.o.length) d.o = c.o.slice(0, 4).filter(Array.isArray).map(p => [p[0] ? 1 : 0, str(p[1], 40), str(p[2], 16), /^#[0-9a-f]{6}$/i.test(p[3]) ? p[3] : '', str(p[4], 40), str(p[5], 80), Math.max(0, Math.min(9, Number(p[6]) || 0)), str(p[7], 80)]);
   if (c && Array.isArray(c.b)) d.b = [Math.max(0, Math.min(9, Number(c.b[0]) || 0)), str(c.b[1], 40), str(c.b[2], 60), str(c.b[3], 60)];
   const n = c && c.n ? c.n : !d.o ? note : '';   // старое приложение: только текст notes
   if (n) d.n = str(n, 600);
   let j = JSON.stringify(d);
-  while (u8(j) > 1024) {                         // не влезло — сначала короче текст, потом меньше операций, потом без бюджета
-    if (d.n && d.n.length > 60) d.n = d.n.slice(0, Math.floor(d.n.length * 0.75)) + '…';
+  while (u8(j) > 1024) {                         // не влезло — сначала меньше вариантов меню, короче текст, меньше операций, без бюджета
+    if (d.a && d.a.k.length > 4) d.a.k.pop();
+    else if (d.n && d.n.length > 60) d.n = d.n.slice(0, Math.floor(d.n.length * 0.75)) + '…';
     else if (d.n) delete d.n;
     else if (d.o && d.o.length > 1) d.o.pop();
     else if (d.b) delete d.b;
@@ -350,8 +366,11 @@ function rcData(s, card, note) {
   }
   return j;
 }
-async function sendRcWidget(env, chat, shown, open, card) {
-  const r = await (await tg(env, 'sendWidget', { chat_id: chat, html: RC_HTML, chat_data: rcData('q', card), caption: `${RC_CAP.q}: «${shown}»`, show_caption_above_media: true, ...open })).json().catch(() => null);
+async function sendRcWidget(env, chat, shown, open, card, act) {
+  const wq = useWQ(env), x = wq ? { u: await botUser(env), a: waOf(act, []) } : null;
+  if (wq && !hookOk) { hookOk = true; await ensureCallbacks(env).catch(() => {}); }   // widget_query должен доходить до бота
+  const r = await (await tg(env, 'sendWidget', { chat_id: chat, html: RC_HTML, public_data: RC_PUB, chat_data: rcData('q', card, '', x), caption: `${RC_CAP.q}: «${shown}»`, show_caption_above_media: true,
+    ...(wq ? { allow_queries: true } : open) })).json().catch(() => null);
   if (r && r.ok && r.result && r.result.message_id) return r.result.message_id;
   console.error('widget', r && r.description); return null;
 }
@@ -359,9 +378,9 @@ async function sendRcWidget(env, chat, shown, open, card) {
 const RC_HTML = String.raw`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
 *{box-sizing:border-box;margin:0}
 html,body{background:var(--tg-theme-bg-color,#fff)}
-body{font:14px/1.3 -apple-system,system-ui,"Segoe UI",Roboto,sans-serif;color:var(--tg-theme-text-color,#000);padding:8px 12px 10px;-webkit-user-select:none;user-select:none}
+body{font:14px/1.3 -apple-system,system-ui,"Segoe UI",Roboto,sans-serif;color:var(--tg-theme-text-color,#000);padding:8px 12px 10px;-webkit-user-select:none;user-select:none;}
 .r{display:flex;align-items:center;gap:10px;padding:5px 0}
-.i{flex:0 0 36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:19px;background:var(--tg-theme-secondary-bg-color,#f0f0f2)}
+.i{flex:0 0 36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:19px;background:var(--tg-theme-secondary-bg-color,#f0f0f2);transition:background .3s}
 .m{flex:1;min-width:0}
 .c,.s{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .c{font-weight:600}
@@ -375,39 +394,99 @@ body{font:14px/1.3 -apple-system,system-ui,"Segoe UI",Roboto,sans-serif;color:va
 .bar{height:6px;border-radius:3px;background:var(--tg-theme-secondary-bg-color,#ececef);overflow:hidden;margin:5px 0 3px}
 .bar i{display:block;height:100%;width:0;border-radius:3px;background:var(--tg-theme-button-color,#3390ec);transition:width .7s cubic-bezier(.2,.8,.2,1)}
 .bar.w i{background:#f2a516}.bar.x i{background:#e5484d}
-.x2{color:#e5484d}
 .t{white-space:pre-wrap;font-size:13px;margin-top:4px}
-.q{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--tg-theme-hint-color,#8a8a8e);padding:4px 0}
-.d{flex:0 0 8px;height:8px;border-radius:50%;background:var(--tg-theme-button-color,#3390ec);animation:p 1.2s ease-in-out infinite}
-@keyframes p{50%{opacity:.25;transform:scale(.6)}}
+.q{font-size:13px;color:var(--tg-theme-hint-color,#8a8a8e);padding:4px 0;animation:p 1.6s infinite}
+@keyframes p{50%{opacity:.5}}
 .n>*{animation:f .4s both;animation-delay:calc(var(--j)*60ms)}
 @keyframes f{from{opacity:0;transform:translateY(5px)}}
-@media (prefers-reduced-motion:reduce){.n>*,.d{animation:none}.bar i{transition:none}}
-</style></head><body><div id="w"></div><script>
-var T=window.TelegramWidget||{},w=document.getElementById("w"),j=0;
+.s-un .r{opacity:.45}.s-un .a{text-decoration:line-through}
+#mb{display:flex;gap:6px;margin-top:10px}
+button{font:inherit;color:inherit;border:0;background:var(--tg-theme-secondary-bg-color,#f0f0f2);border-radius:12px;transition:transform .15s,background .2s}
+#mb button{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 2px 6px;font-size:11px;color:var(--tg-theme-hint-color,#8a8a8e)}
+button:active{transform:scale(.93)}
+#mb button.on{background:color-mix(in srgb,var(--tg-theme-button-color,#3390ec) 18%,transparent);color:var(--tg-theme-button-color,#3390ec)}
+#mb svg{width:22px;height:22px;stroke:var(--tg-theme-button-color,#3390ec);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;overflow:visible}
+#mb .rd svg{stroke:#e5484d}
+.go .g{animation:k .6s cubic-bezier(.3,1.6,.5,1)}
+@keyframes k{40%{transform:var(--k)}}
+.g{transform-box:fill-box;transform-origin:center}
+#pn{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s cubic-bezier(.2,.8,.2,1)}
+#pn.op{grid-template-rows:1fr}
+#pn>div{overflow:hidden}
+.gr{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding-top:8px}
+.ch{display:flex;align-items:center;gap:6px;padding:9px 8px;font-size:13px;text-align:left;animation:f .3s backwards;animation-delay:calc(var(--j)*35ms)}
+.ch span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sel{background:var(--tg-theme-button-color,#3390ec);color:var(--tg-theme-button-text-color,#fff)}
+.cl{padding-top:8px}
+.ch2{display:flex;justify-content:space-between;align-items:center;font-weight:600;padding:0 2px 6px}
+.ch2 button{width:34px;height:30px;background:0}
+.cg{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center;font-size:13px}
+.cg b{font-size:10px;font-weight:500;color:var(--tg-theme-hint-color,#8a8a8e);padding:2px 0}
+.cg button{height:32px;border-radius:9px;font-variant-numeric:tabular-nums}
+.cg button:disabled{opacity:.25}
+.cg .td{box-shadow:inset 0 0 0 1.5px var(--tg-theme-button-color,#3390ec)}
+.cf{display:flex;gap:6px;padding-top:8px}
+.cf .ch{flex:1;justify-content:center}
+.cf .rd{background:#e5484d;color:#fff}
+#ht{font-size:12px;color:var(--tg-theme-hint-color,#8a8a8e);text-align:center;margin-top:6px}
+.bz{opacity:.55;pointer-events:none}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head><body><div id="w"></div><div id="mb"></div><div id="pn"><div id="pc"></div></div><div id="ht"></div><script>
+var T=window.TelegramWidget||{},w=document.getElementById("w"),mb=document.getElementById("mb"),pn=document.getElementById("pn"),pc=document.getElementById("pc"),ht=document.getElementById("ht"),j=0,D={},P="",cm="",bz=0;
 function E(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
 function A(e){e.style.setProperty("--j",j++);w.appendChild(e);return e}
+function hp(k){try{var h=T.HapticFeedback;k?h.notificationOccurred(k):h.impactOccurred("light")}catch(e){}}
 function bar(r){var b=E("div","bar"+(r>1?" x":r>=.85?" w":"")),i=E("i");b.appendChild(i);setTimeout(function(){i.style.width=Math.max(3,Math.min(100,r*100))+"%"},60);return b}
-function draw(){var d={};try{d=JSON.parse(T.chatData||"{}")||{}}catch(e){}
-w.className="";w.textContent="";j=0;var s=d.s||"q";
-if(s==="q"){var q=A(E("div","q"));q.appendChild(E("span","d"));q.appendChild(E("span",0,"Появится в приложении, когда оно откроется"))}
-(d.o||[]).forEach(function(p){var r=A(E("div","r")),i=E("div","i",p[2]||"•"),m=E("div","m");
+var IC={};try{IC=JSON.parse(T.publicData||"{}").i||{}}catch(e){}
+function btn(k,l,f,c){var b=E("button",c||"");b.type="button";var c=IC[k];if(c)b.innerHTML='<svg viewBox="0 0 24 24" style="--k:'+c[0]+'">'+c[1]+"</svg>";b.appendChild(E("span",0,l));
+b.onclick=function(){b.classList.remove("go");void b.offsetWidth;b.classList.add("go");hp();f(b)};return b}
+function say(t){ht.textContent=t||""}
+function rq(q,ok){if(bz)return;if(!T.request)return say("Обновите Telegram");bz=1;document.body.classList.add("bz");
+T.request(q).then(function(){bz=0;document.body.classList.remove("bz");hp("success");if(ok)ok()}).catch(function(e){bz=0;document.body.classList.remove("bz");hp("error");
+say(e&&e.code==="RATE_LIMITED"?"Подождите пару секунд":"Не получилось, попробуйте ещё раз")})}
+function open(k){P=P===k?"":k;draw2()}
+function draw(){try{D=JSON.parse(T.chatData||"{}")||{}}catch(e){D={}}
+w.className="";w.textContent="";j=0;
+if(D.q)A(E("div","q",D.q));
+(D.o||[]).forEach(function(p){var r=A(E("div","r")),i=E("div","i",p[2]||"•"),m=E("div","m");
 if(/^#[0-9a-f]{6}$/i.test(p[3]||""))i.style.background=p[3]+"2e";
 m.appendChild(E("div","c",p[4]));if(p[5])m.appendChild(E("div","s",p[5]));
 r.appendChild(i);r.appendChild(m);r.appendChild(E("div","a"+(p[0]?" in":""),p[1]));
-if(p[7]){var l=A(E("div","l"));l.appendChild(bar(+p[6]||0));l.appendChild(E("div","h"+(p[6]>1?" x2":""),p[7]))}});
-if(d.b){var b=A(E("div","bd")),k=E("div","k");k.appendChild(E("span",0,d.b[1]));k.appendChild(E("b",0,d.b[2]));b.appendChild(k);b.appendChild(bar(+d.b[0]||0));if(d.b[3])b.appendChild(E("div","h"+(d.b[0]>1?" x2":""),d.b[3]))}
-if(d.n)A(E("div","t",d.n));
-var H={h:"Проверьте и нажмите «Записать» в приложении.",drop:"В учёт не попало.",bad:"Напишите, например:\n• «кофе 300 кафе» — заметка, сумма, категория\n• «бюджет 20000»\n• «Иван должен 500»"}[s];
-if(H)A(E("div","t h",H));
-void w.offsetWidth;w.className="n"}
-draw();if(T.onEvent)T.onEvent("chatDataChanged",draw);
+if(p[7]){var l=A(E("div","l"));l.appendChild(bar(+p[6]||0));l.appendChild(E("div","h",p[7]))}});
+if(D.b){var b=A(E("div","bd")),k=E("div","k");k.appendChild(E("span",0,D.b[1]));k.appendChild(E("b",0,D.b[2]));b.appendChild(k);b.appendChild(bar(+D.b[0]||0));if(D.b[3])b.appendChild(E("div","h",D.b[3]))}
+if(D.n)A(E("div","t",D.n));
+if(D.hn)A(E("div","t h",D.hn));
+void w.offsetWidth;w.className="n s-"+(D.s||"");draw2()}
+function draw2(){var a=D.a,p=a&&a.p||{},q=a&&a.st!=="ok";mb.textContent="";pc.textContent="";
+if(a){if(p.x)mb.appendChild(btn("U",q?"Записать":"Не отменять",function(){rq("u")}));
+else{mb.appendChild(btn("K","Категория",function(){open("K")},P==="K"?"on":""));mb.appendChild(btn("D","Дата",function(){cm=(p.d||a.d).slice(0,7);open("D")},P==="D"?"on":""));
+mb.appendChild(btn("X",q?"Убрать":"Отменить",function(){open("X")},"rd"+(P==="X"?" on":"")))}}
+if(D.u&&(!a||q))mb.appendChild(btn("O","Открыть",function(){try{T.openTelegramLink("https://t.me/"+D.u+"?startapp=1")}catch(e){}}));
+mb.style.display=mb.children.length?"":"none";
+if(a&&!p.x&&P==="K"){var g=E("div","gr");(a.k||[]).forEach(function(c,i){var b=E("button","ch"+(p.c===i?" sel":""));b.type="button";b.style.setProperty("--j",i);
+b.appendChild(E("span",0,c[0]||"•"));b.appendChild(E("span",0,c[1]));b.onclick=function(){hp();rq("c:"+i,function(){P="";draw2()})};g.appendChild(b)});pc.appendChild(g)}
+if(a&&!p.x&&P==="D")pc.appendChild(cal(a,p));
+if(a&&!p.x&&P==="X"){var f=E("div","cf"),y=E("button","ch rd",q?"Да, не записывать":"Да, отменить"),n=E("button","ch","Нет");y.type=n.type="button";
+y.onclick=function(){rq("x",function(){P="";draw2()})};n.onclick=function(){P="";draw2()};f.appendChild(y);f.appendChild(n);pc.appendChild(f)}
+pn.className=pc.children.length?"op":"";say(a&&(p.c>=0||p.d||p.x)?"Применится, когда откроется приложение":"")}
+function cal(a,p){var c=E("div","cl"),y=+cm.slice(0,4),m=+cm.slice(5,7),h=E("div","ch2"),pv=E("button",0,"‹"),nx=E("button",0,"›"),td=a.td,cur=p.d||a.d,lo=(+td.slice(0,4)-1)+td.slice(4,7);
+var sh=function(n){var t=new Date(Date.UTC(y,m-1+n,1)).toISOString().slice(0,7);if(t>td.slice(0,7)||t<lo)return;cm=t;hp();pc.replaceChild(cal(a,p),c)};
+pv.type=nx.type="button";pv.onclick=function(){sh(-1)};nx.onclick=function(){sh(1)};pv.disabled=cm<=lo;nx.disabled=cm>=td.slice(0,7);
+h.appendChild(pv);var mn=new Date(Date.UTC(y,m-1,9)).toLocaleString("ru",{month:"long",timeZone:"UTC"});h.appendChild(E("span",0,mn[0].toUpperCase()+mn.slice(1)+" "+y));h.appendChild(nx);c.appendChild(h);
+var g=E("div","cg");"Пн Вт Ср Чт Пт Сб Вс".split(" ").forEach(function(x){g.appendChild(E("b",0,x))});
+var f=(new Date(Date.UTC(y,m-1,1)).getUTCDay()+6)%7,n=new Date(Date.UTC(y,m,0)).getUTCDate();for(var i=0;i<f;i++)g.appendChild(E("span"));
+for(var d=1;d<=n;d++){(function(d){var ds=cm+"-"+(d<10?"0":"")+d,b=E("button",(ds===cur?"sel":"")+(ds===td?" td":""),d);b.type="button";b.disabled=ds>td;
+b.onclick=function(){hp();rq("d:"+ds,function(){P="";draw2()})};g.appendChild(b)})(d)}c.appendChild(g);return c}
+draw();if(T.onEvent)T.onEvent("chatDataChanged",draw);if(T.ready)T.ready();
 </script></body></html>`;
-async function rcEdit(env, r, s, text, note, card, kb, cap) {
-  const mk = kb ? { reply_markup: kb } : {};
+// v270: значки меню карточки (svg) — в public_data сообщения (своё место 1024 байта), чтобы HTML уложился в 4 КБ после zlib
+const RC_PUB = JSON.stringify({ i: {"K":["rotate(-20deg)","<path class=\"g\" d=\"M3.5 12.2V4.6c0-.6.5-1.1 1.1-1.1h7.6l8.3 8.3-8.7 8.7z\"/><circle cx=\"8\" cy=\"8\" r=\"1.4\"/>"],"D":["scaleY(.5)","<rect x=\"3.5\" y=\"5\" width=\"17\" height=\"15\" rx=\"2.5\"/><path d=\"M8 3v4M16 3v4\"/><path class=\"g\" d=\"M3.5 10h17M8 14h2M14 14h2M8 17h2\"/>"],"X":["translate(2px,-4px) rotate(-22deg)","<path d=\"M6 8.5l1 11h10l1-11M10 12v5M14 12v5\"/><path class=\"g\" d=\"M4 6.5h16M9.5 6.5V4h5v2.5\"/>"],"U":["rotate(-60deg)","<path class=\"g\" d=\"M8 7L4 11l4 4\"/><path d=\"M4 11h10a5 5 0 0 1 0 10h-3\"/>"],"O":["translate(4px,-4px)","<path d=\"M14 4h6v6M20 4l-9 9\"/><path class=\"g\" d=\"M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5\"/>"]} });
+async function rcEdit(env, r, s, text, note, card, kb, cap, act) {
+  const mk = kb ? { reply_markup: kb } : {}, wq = useWQ(env);
   if (useW(env)) {
-    const w = await (await tg(env, 'editMessageWidgetData', { chat_id: r.chat, message_id: r.mid, chat_data: rcData(s, card, note) })).json().catch(() => null);
-    if (w && w.ok) return tg(env, 'editMessageCaption', { chat_id: r.chat, message_id: r.mid, caption: cap || `${RC_CAP[s]}: «${r.text}»`, show_caption_above_media: true, ...mk }).catch(() => {});
+    const x = wq ? { u: await botUser(env), a: act ? waOf(act, await rcPend(r)) : null } : null;
+    const w = await (await tg(env, 'editMessageWidgetData', { chat_id: r.chat, message_id: r.mid, chat_data: rcData(s, card, note, x) })).json().catch(() => null);
+    if (w && w.ok) return tg(env, 'editMessageCaption', { chat_id: r.chat, message_id: r.mid, caption: cap || `${RC_CAP[s]}: «${r.text}»`, show_caption_above_media: true, ...(wq ? {} : mk) }).catch(() => {});
   }
   return tg(env, 'editMessageText', { chat_id: r.chat, message_id: r.mid, text, ...mk }).catch(() => {});   // квитанция-текст (не виджет)
 }
@@ -422,8 +501,8 @@ const dLbl = d => +d.slice(8) + ' ' + CAL_G[+d.slice(5, 7) - 1];
 const dAdd = (d, n) => new Date(Date.parse(d + 'T00:00:00Z') + n * 864e5).toISOString().slice(0, 10);
 const ymAdd = (ym, n) => { const [y, m] = ym.split('-').map(Number), t = new Date(Date.UTC(y, m - 1 + n, 1)); return t.toISOString().slice(0, 7); };
 const B = (text, d) => ({ text, callback_data: 'rc:' + d });
-const KB_MAIN = { inline_keyboard: [[B('🏷 Категория', 'K'), B('📅 Дата', 'D')], [B('↩ Отменить запись', 'X')]] };
-const KB_Q = { inline_keyboard: [[B('🏷 Категория', 'K'), B('📅 Дата', 'D')], [B('🗑 Не записывать', 'X')]] };   // v269: в очереди и на проверке
+const KB_MAIN = { inline_keyboard: [[B('🏷 Категория', 'K'), B('🗓 Дата', 'D')], [B('↩ Отменить запись', 'X')]] };
+const KB_Q = { inline_keyboard: [[B('🏷 Категория', 'K'), B('🗓 Дата', 'D')], [B('🗑 Не записывать', 'X')]] };   // v269: в очереди и на проверке
 const KB_DEL = { inline_keyboard: [[B('Да, отменить', 'Y'), B('Нет', 'B')]] };
 const KB_UNDEL = { inline_keyboard: [[B('↩ Не отменять', 'U')]] };
 const KB_QDEL = { inline_keyboard: [[B('Да, не записывать', 'Y'), B('Нет', 'B')]] };
@@ -431,7 +510,7 @@ const KB_QUNDEL = { inline_keyboard: [[B('↩ Всё-таки записать',
 const isQ = act => act.st === 'q' || act.st === 'h';   // запись ещё не в учёте
 // main — сетка категорий сразу (слово не узнано): внизу «Дата» и «Не записывать» вместо «Назад»
 const kbCat = (act, main) => { const rows = []; (act.k || []).forEach((c, i) => { if (i % 2 === 0) rows.push([]); rows[rows.length - 1].push(B(String(c[1]).slice(0, 30), 'c:' + i)); });
-  rows.push(main ? [B('📅 Дата', 'D'), B('🗑 Не записывать', 'X')] : [B('← Назад', 'B')]); return { inline_keyboard: rows }; };
+  rows.push(main ? [B('🗓 Дата', 'D'), B('🗑 Не записывать', 'X')] : [B('← Назад', 'B')]); return { inline_keyboard: rows }; };
 // кнопка «Открыть финансы» — пока запись не в учёте
 const kbFor = (env, act, kb) => { kb = kb || (isQ(act) ? KB_Q : KB_MAIN);
   return isQ(act) && env.APP_URL ? { inline_keyboard: [...kb.inline_keyboard, [{ text: 'Открыть финансы', web_app: { url: env.APP_URL } }]] } : kb; };
@@ -455,7 +534,7 @@ const actOf = card => { const a = card && card.a; if (!a || !Array.isArray(a.k) 
   const r = card.o && Array.isArray(card.o[0]) ? JSON.parse(rcData('ok', { o: [card.o[0]] })).o[0] : null;
   return { k, td: a.td, d: a.d, v: str(a.v, 20), ...(r ? { r } : {}), ...(Array.isArray(card.b) ? { b: JSON.parse(rcData('ok', { o: [], b: card.b })).b } : {}),
     n: str(a.n, 60), w: str(a.w, 30) }; };
-const dayLbl = (d, td) => '📅 ' + (d === td ? 'сегодня, ' : d === dAdd(td, -1) ? 'вчера, ' : '') + dLbl(d);
+const dayLbl = (d, td) => (d === td ? 'сегодня, ' : d === dAdd(td, -1) ? 'вчера, ' : '') + dLbl(d);
 // карточка с учётом нажатий: выбранная категория и дата видны сразу, до открытия приложения
 const cardOf = (act, pend) => { if (!act.r) return null; const r = act.r.slice(); let d = act.d;
   for (const p of pend) { if (p.op === 'cat') { const c = act.k.find(x => x[0] === p.val); if (c) { r[2] = c[2] || r[2]; r[3] = c[4] || ''; r[4] = c[3] || c[1]; } } if (p.op === 'date' && isD(p.val)) d = p.val; }
@@ -471,7 +550,7 @@ async function rcKeep(env, box, r, note, card) {   // «✅ Записано» +
   const act = actOf(card); if (!act) { await box.rc.drop(r.id); return rcEdit(env, r, 'ok', `✅ Записано: «${r.text}»` + (note ? `\n\n${note}` : ''), note, card); }
   act.st = 'ok'; await box.rc.setAct(r.id, JSON.stringify(act));
   if (!hookOk) { hookOk = true; await ensureCallbacks(env).catch(() => {}); }   // нажатия кнопок (callback_query) должны доходить до бота
-  return rcEdit(env, r, 'ok', `✅ Записано: «${r.text}»` + (note ? `\n\n${note}` : ''), note, card, KB_MAIN);
+  return rcEdit(env, r, 'ok', `✅ Записано: «${r.text}»` + (note ? `\n\n${note}` : ''), note, card, KB_MAIN, null, act);
 }
 async function cmdFinish(env, box, done, cres, cards) {
   if (!box.rc || !box.rc.cmdDone) return;
@@ -483,7 +562,7 @@ async function cmdFinish(env, box, done, cres, cards) {
     if (res === 'c') continue;   // v269: черновик записан или убран — квитанцию уже обновил ack «Записать» (bhFinish)
     if (res === 'h') { if ((await box.rc.cmdsOf(sid)).length) continue; const act = actOf(cards[sid]);   // черновик поправлен, но ещё не понятен — ждёт проверки
       if (act) { act.st = 'h'; await box.rc.setAct(sid, JSON.stringify(act)); }
-      await rcEdit(env, r, 'h', `📝 Получено: «${r.text}»`, '', cards[sid], act ? kbFor(env, act) : null); continue; }   // ещё есть новые нажатия — карточку обновим после них
+      await rcEdit(env, r, 'h', `📝 Получено: «${r.text}»`, '', cards[sid], act ? kbFor(env, act) : null, null, act); continue; }   // ещё есть новые нажатия — карточку обновим после них
     await box.rc.drop(sid);
     const t = res === 'del' ? `↩ Отменено: «${r.text}»\nЗапись удалена из учёта.` : `✅ Записано: «${r.text}»\nℹ️ Запись уже изменили в приложении — кнопки отключены.`;
     if (res === 'del') { await rcEdit(env, r, 'un', t, 'Запись удалена из учёта.', null, null, `↩ Отменено: «${r.text}»`); continue; }
@@ -541,6 +620,34 @@ function preview(P, text, ts) {
   return { act, card: cardOf(act, []), cw: !!cw, hit: !!hit };
 }
 const pvText = pv => { const r = pv.card.o[0]; return `${r[1]} · ${r[2]} ${r[4]}` + (r[5] ? ` · ${r[5]}` : ''); };
+// v270: перерисовать карточку после нажатия: выбранное видно сразу, меню знает, что уже нажато
+async function wPaint(env, id, act, pend) {
+  const del = pend.some(p => p.op === 'del'), q = isQ(act), c = cardOf(act, pend) || { o: [] };
+  const x = useWQ(env) ? { u: await botUser(env), a: waOf(act, pend) } : null;
+  return tg(env, 'editMessageWidgetData', { ...id, chat_data: rcData(del ? 'un' : act.st === 'ok' ? 'ok' : act.st, c, del ? (q ? 'Не будет записано.' : 'Отменится, когда откроется приложение.') : '', x) });
+}
+// одно действие из меню (кнопки Telegram или запрос виджета): c:<номер> — категория, d:<дата>, x — не записывать / отменить, u — вернуть
+async function rcDo(box, row, act, a, b) {
+  const q = isQ(act), later = q ? 'Запишется так, когда откроется приложение' : 'Изменится, когда откроется приложение';
+  if (a === 'c') { const c = act.k[Number(b)]; if (!c) return null; await box.rc.cmd(row.id, 'cat', c[0], act.v); return later; }
+  if (a === 'd' && isD(b) && b <= act.td) { if (b === act.d) await box.rc.unCmd(row.id, 'date'); else await box.rc.cmd(row.id, 'date', b, act.v); return b === act.d ? 'Дата остаётся прежней' : later; }
+  if (a === 'x' || a === 'Y') { await box.rc.cmd(row.id, 'del', '1', act.v); return q ? 'Не будет записано' : 'Запись отменится, когда откроется приложение'; }
+  if (a === 'u' || a === 'U') { await box.rc.unCmd(row.id, 'del'); return q ? 'Запишется' : 'Отмена снята'; }
+  return null;
+}
+async function onWidgetQuery(wq, env) {
+  const ans = o => tg(env, 'answerWidgetQuery', { widget_query_id: wq.id, data: JSON.stringify(o) }).catch(() => {});
+  if (!wq.chat || !wq.message_id || !env.DB || !wq.from) return ans({ e: 'old' });
+  const box = store(env, wq.from.id), row = await box.rc.byMsg(wq.chat.id, wq.message_id); let act = null;
+  try { act = row && JSON.parse(row.act || 'null'); } catch {}
+  if (!act) return ans({ e: 'old' });
+  const [a, b] = String(wq.data || '').split(':'), say = await rcDo(box, row, act, a, b);
+  if (say == null) return ans({ e: 'bad' });
+  await ans({ ok: 1, t: say });   // ответ — сразу (виджет ждёт до 15 с), карточку перерисовываем следом
+  const id = { chat_id: wq.chat.id, message_id: wq.message_id }, pend = await box.rc.cmdsOf(row.id), line = pendLine(act, pend);
+  await wPaint(env, id, act, pend);
+  await tg(env, 'editMessageCaption', { ...id, caption: `${RC_CAP[act.st || 'ok']}: «${row.text}»` + (line ? '\n' + line : ''), show_caption_above_media: true }).catch(() => {});
+}
 async function onRcCallback(cq, env) {
   const m = cq.message, ans = t => tg(env, 'answerCallbackQuery', { callback_query_id: cq.id, ...(t ? { text: t } : {}) });
   const [, a, b] = String(cq.data).split(':');
@@ -556,23 +663,17 @@ async function onRcCallback(cq, env) {
     const pend = await box.rc.cmdsOf(row.id), line = pendLine(act, pend);
     kb = kb ? kbFor(env, act, kb) : mainKb(pend);
     if (m.widget) {
-      const c = cardOf(act, pend); if (c) await tg(env, 'editMessageWidgetData', { ...id, chat_data: rcData(pend.some(p => p.op === 'del') ? 'un' : st === 'ok' ? 'ok' : st, c, pend.some(p => p.op === 'del') ? (q ? 'Не будет записано.' : 'Отменится, когда откроется приложение.') : '') });
+      await wPaint(env, id, act, pend);
       await tg(env, 'editMessageCaption', { ...id, caption: `${RC_CAP[st]}: «${row.text}»` + (line ? '\n' + line : ''), show_caption_above_media: true, reply_markup: kb });
     } else await tg(env, 'editMessageText', { ...id, text: String(m.text || '').split('\n\n⏳ ')[0].split('\n\n🗑 ')[0] + (line ? '\n\n' + line : ''), reply_markup: kb });
     return ans(say);
   };
-  const later = q ? 'Запишется так, когда откроется приложение' : 'Изменится, когда откроется приложение';
   if (a === 'K') { await kbSet(kbFor(env, act, kbCat(act))); return ans(); }
   if (a === 'D') { await kbSet(kbFor(env, act, kbCal(act.d.slice(0, 7), act))); return ans(); }
   if (a === 'M' && /^\d{4}-\d\d$/.test(b || '')) { await kbSet(kbFor(env, act, kbCal(b, act))); return ans(); }
   if (a === 'B') { await kbSet(mainKb(await box.rc.cmdsOf(row.id))); return ans(); }
   if (a === 'X') { await kbSet(kbFor(env, act, q ? KB_QDEL : KB_DEL)); return ans(); }
-  if (a === 'c') { const c = act.k[Number(b)]; if (!c) return ans();
-    await box.rc.cmd(row.id, 'cat', c[0], act.v); return refresh(null, later); }
-  if (a === 'd' && isD(b) && b <= act.td) { if (b === act.d) await box.rc.unCmd(row.id, 'date'); else await box.rc.cmd(row.id, 'date', b, act.v);
-    return refresh(null, b === act.d ? 'Дата остаётся прежней' : later); }
-  if (a === 'Y') { await box.rc.cmd(row.id, 'del', '1', act.v); return refresh(undel, q ? 'Не будет записано' : 'Запись отменится, когда откроется приложение'); }
-  if (a === 'U') { await box.rc.unCmd(row.id, 'del'); return refresh(null, q ? 'Запишется' : 'Отмена снята'); }
+  if (a === 'c' || a === 'd' || a === 'Y' || a === 'U') { const t = await rcDo(box, row, act, a, b); return t == null ? ans() : refresh(a === 'Y' ? undel : null, t); }
   return ans();
 }
 
@@ -741,7 +842,8 @@ let hookChecked = false;
 async function ensureCallbacks(env) {
   if (hookChecked) return; hookChecked = true;
   const info = await (await tg(env, 'getWebhookInfo', {})).json().catch(() => null), r = info && info.result;
-  if (!r || !r.url || !Array.isArray(r.allowed_updates) || !r.allowed_updates.length || r.allowed_updates.includes('callback_query')) return;
-  await tg(env, 'setWebhook', { url: r.url, secret_token: env.WEBHOOK_SECRET, allowed_updates: [...new Set([...r.allowed_updates, 'message', 'callback_query'])],
+  // пустой список — Telegram шлёт всё по умолчанию; иначе дописываем нужные типы (v270: и widget_query — нажатия в карточке)
+  if (!r || !r.url || !Array.isArray(r.allowed_updates) || !r.allowed_updates.length || ['callback_query', 'widget_query'].every(t => r.allowed_updates.includes(t))) return;
+  await tg(env, 'setWebhook', { url: r.url, secret_token: env.WEBHOOK_SECRET, allowed_updates: [...new Set([...r.allowed_updates, 'message', 'callback_query', 'widget_query'])],
     ...(r.max_connections ? { max_connections: r.max_connections } : {}) });
 }
