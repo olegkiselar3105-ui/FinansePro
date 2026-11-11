@@ -440,7 +440,7 @@ body{font:14px/1.3 -apple-system,system-ui,"Segoe UI",Roboto,sans-serif;color:va
 .s-q .r:after,.s-h .r:after{background:var(--H);box-shadow:0 0 0 3px transparent;animation:bl 1s ease-in-out infinite}
 @keyframes bl{50%{opacity:.12;box-shadow:0 0 0 6px #8a8a8e33}}
 .s-un .r:after,.s-gone .r:after,.s-drop .r:after{display:none}
-button{font:inherit;color:inherit;border:0;background:var(--S);border-radius:12px;transition:transform .15s,background .2s}
+button{-webkit-appearance:none;appearance:none;font:inherit;color:inherit;border:0;background:var(--S);border-radius:12px;transition:transform .15s,background .2s}
 #mb button{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 2px 6px;font-size:11px;color:var(--H)}
 button:active{transform:scale(.93)}
 #mb button.on{background:#3390ec26;color:#3390ec}
@@ -556,7 +556,7 @@ body{font:14px/1.3 system-ui,sans-serif;color:var(--T);padding:10px 12px 26px;-w
 .t{white-space:pre-wrap;font-size:13px}
 .sep{height:1px;background:rgba(128,128,128,.18);margin:12px 0}
 .bt{display:flex;gap:6px;margin-top:10px}
-.bt button{flex:1;font:inherit;font-size:13px;font-weight:600;border:0;border-radius:12px;padding:10px 6px;color:var(--T);background:#80808033;transition:transform .15s}
+.bt button{-webkit-appearance:none;appearance:none;flex:1;font:inherit;font-size:13px;font-weight:600;border:0;border-radius:12px;padding:10px 6px;color:var(--T);background:#80808033;transition:transform .15s}
 .bt button.m{color:#fff;background:var(--E)}
 .bt button:active{transform:scale(.94)}
 .bt.bz{opacity:.5;pointer-events:none}
