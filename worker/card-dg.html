@@ -39,6 +39,13 @@ body{font:14px/1.3 system-ui,sans-serif;color:var(--T);padding:10px 12px 12px;-w
 @keyframes fl{to{transform:translate(var(--x),240px) rotate(var(--r));opacity:0}}
 .t{white-space:pre-wrap;font-size:13px}
 .sep{height:1px;background:rgba(128,128,128,.18);margin:12px 0}
+.bt{display:flex;gap:6px;margin-top:10px}
+.bt button{flex:1;font:inherit;font-size:13px;font-weight:600;border:0;border-radius:12px;padding:10px 6px;color:var(--B);background:color-mix(in srgb,var(--B) 13%,transparent);transition:transform .15s}
+.bt button.m{color:#fff;background:var(--E)}
+.bt button:active{transform:scale(.94)}
+.bt.bz{opacity:.5;pointer-events:none}
+.dn{margin-top:10px;font-size:12.5px;color:var(--E);font-weight:600;animation:f .4s both}
+.er{margin-top:6px;font-size:12px;color:var(--H);text-align:center}
 </style></head><body><div id="w"></div><script>
 var T=window.TelegramWidget||{},w=document.getElementById("w"),j=0;
 function E(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
@@ -48,27 +55,34 @@ function pct(x){return Math.max(0,Math.min(1,+x||0))}
 function bar(p,o){var b=E("div","bar"+(o?" o":"")),i=E("i");b.appendChild(i);setTimeout(function(){i.style.width=Math.max(2,pct(p)*100)+"%"},80);return b}
 function boom(){hp();for(var k=0;k<26;k++){var s=E("i","cf");s.style.left=(Math.random()*100)+"%";s.style.background=["#2fa65a","#3390ec","#f08c2e","#e5484d","#f2c94c"][k%5];
 s.style.setProperty("--x",(Math.random()*80-40)+"px");s.style.setProperty("--r",(Math.random()*720-360)+"deg");s.style.animationDelay=(Math.random()*.4)+"s";document.body.appendChild(s);setTimeout(function(e){e.remove()},2300,s)}}
+// v273: кнопки — «Вернули всё» (сразу), «Другая сумма» / «Пополнить» (бот спросит сумму)
+function acts(x,i){var c=E("div");if(x.c||!x.n||!T.request)return c;if(x.x){c.appendChild(E("div","dn","✓ Отправлено — новая запись ниже"));return c}
+var b=E("div","bt"),er=E("div","er");function go(q,el,t){if(b.classList.contains("bz"))return;b.classList.add("bz");try{T.HapticFeedback.impactOccurred("light")}catch(e){}
+T.request(q).then(function(){b.classList.remove("bz");if(t){el.textContent=t}}).catch(function(e){b.classList.remove("bz");er.textContent=e&&e.code==="RATE_LIMITED"?"Подождите пару секунд":"Не получилось, попробуйте ещё раз"})}
+function B(t,q,m,done){var e=E("button",m?"m":"",t);e.type="button";e.onclick=function(){go(q,e,done)};b.appendChild(e)}
+if(x.k==="d"){if(x.ln)B((x.i?"Вернули всё":"Вернул всё")+" · "+x.l,"r:"+i+":a",1);B("Другая сумма","r:"+i+":o",0,"Напишите сумму ↓")}else B("＋ Пополнить","p:"+i+":o",1,"Напишите сумму ↓");
+c.appendChild(b);c.appendChild(er);return c}
 function okRow(t){var o=E("div","ok");o.innerHTML='<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';o.appendChild(E("span",0,t));return o}
-function debt(x){var c=E("div","c"),h=E("div","hd"),av=E("div","av"+(x.i?"":" o"),(x.w||"?").trim().charAt(0).toUpperCase()),m=E("div","m"),bg=E("div","bg");
+function debt(x,I){var c=E("div","c"),h=E("div","hd"),av=E("div","av"+(x.i?"":" o"),(x.w||"?").trim().charAt(0).toUpperCase()),m=E("div","m"),bg=E("div","bg");
 m.appendChild(E("div","nm",x.w));m.appendChild(E("div","sb",x.i?"Вам должны":"Вы должны"));
 bg.appendChild(E("b",0,x.c?x.t:x.l));bg.appendChild(E("span","sb",x.c?"закрыт":"осталось"));h.appendChild(av);h.appendChild(m);h.appendChild(bg);c.appendChild(h);
 var ev={new:x.i?"Дали в долг":"Взяли в долг",add:"Добавлено к долгу",pay:x.i?"Вам вернули":"Вы вернули"}[x.ev];
 if(ev&&x.e)c.appendChild(E("div","ev"+(x.ev==="pay"?" e":""),(x.ev==="pay"?"↩ ":"＋ ")+ev+" · "+x.e));
 if(x.c)c.appendChild(okRow("Долг закрыт полностью"));
 else{c.appendChild(bar(x.p,!x.i));var l=E("div","ln");l.appendChild(E("span",0,"Возвращено "+Math.round(pct(x.p)*100)+"%"));var t=E("span");t.appendChild(document.createTextNode("всего "));t.appendChild(E("b",0,x.t));l.appendChild(t);c.appendChild(l)}
-if(x.due&&!x.c)c.appendChild(E("div","du","⏰ "+x.due));return c}
-function goal(x){var c=E("div","c"),h=E("div","hd"),rg=E("div","rg"),m=E("div","m"),P=Math.round(pct(x.p)*100);
+if(x.due&&!x.c)c.appendChild(E("div","du","⏰ "+x.due));c.appendChild(acts(x,I));return c}
+function goal(x,I){var c=E("div","c"),h=E("div","hd"),rg=E("div","rg"),m=E("div","m"),P=Math.round(pct(x.p)*100);
 rg.innerHTML='<svg viewBox="0 0 74 74"><circle cx="37" cy="37" r="32"/><circle class="v" cx="37" cy="37" r="32"/></svg>';var n=E("b",0,"0%");rg.appendChild(n);
 setTimeout(function(){rg.querySelector(".v").style.strokeDashoffset=201*(1-pct(x.p));var t0=Date.now();(function st(){var k=Math.min(1,(Date.now()-t0)/1000);n.textContent=Math.round(P*(1-Math.pow(1-k,3)))+"%";if(k<1)requestAnimationFrame(st)})()},80);
 m.appendChild(E("div","nm","🎯 "+x.w));var s=E("div","sb");s.appendChild(document.createTextNode("Накоплено "));s.appendChild(E("b",0,x.s));s.appendChild(document.createTextNode(" из "+x.t));m.appendChild(s);
 if(!x.c&&x.l)m.appendChild(E("div","sb","Осталось "+x.l));h.appendChild(rg);h.appendChild(m);c.appendChild(h);
 var ev={new:"Новая цель",in:"В копилку",out:"Из цели"}[x.ev];if(ev)c.appendChild(E("div","ev"+(x.ev==="in"?" e":""),ev+(x.e?" · "+x.e:"")));
-if(x.c)c.appendChild(okRow("Цель достигнута"));if(x.by&&!x.c)c.appendChild(E("div","du","⏰ "+x.by));return c}
+if(x.c)c.appendChild(okRow("Цель достигнута"));if(x.by&&!x.c)c.appendChild(E("div","du","⏰ "+x.by));c.appendChild(acts(x,I));return c}
 var seen="";
 function draw(){var D={};try{D=JSON.parse(T.chatData||"{}")||{}}catch(e){}
 w.textContent="";j=0;
 if(D.s==="q"){var q=E("div","q");q.appendChild(E("i"));q.appendChild(E("span",0,D.ph?"«"+D.ph+"»":""));w.appendChild(q);w.appendChild(E("div","sk"));var k2=E("div","sk");k2.style.width="60%";w.appendChild(k2);return}
-var g=D.g||[],any=0;g.forEach(function(x,i){if(i)w.appendChild(E("div","sep"));A(w,x.k==="g"?goal(x):debt(x));if(x.c)any=1});
+var g=D.g||[],any=0;g.forEach(function(x,i){if(i)w.appendChild(E("div","sep"));A(w,x.k==="g"?goal(x,i):debt(x,i));if(x.c)any=1});
 (D.o||[]).forEach(function(p){A(w,E("div","t",p[1]+" · "+p[4]))});
 if(D.n&&!g.length)A(w,E("div","t",D.n));if(D.hn)A(w,E("div","t sb",D.hn));
 var key=JSON.stringify(g);if(any&&key!==seen)setTimeout(boom,700);seen=key}

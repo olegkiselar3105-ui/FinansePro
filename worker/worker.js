@@ -90,7 +90,9 @@ const d1Init = env => d1Ready || (d1Ready = env.DB.batch([
   // v267: команды из кнопок карточки («Категория», «Дата», «Отменить») — ждут, пока приложение их заберёт; op: cat/date/del, v — версия записи
   env.DB.prepare('CREATE TABLE IF NOT EXISTS cmds (uid TEXT, sid TEXT, op TEXT, val TEXT, v TEXT, at INTEGER, PRIMARY KEY (uid, sid, op))'),
   // v269: словарь для предпросмотра фразы: названия категорий, их другие названия, валюта (без сумм, записей и заметок); присылает приложение
-  env.DB.prepare('CREATE TABLE IF NOT EXISTS prof (uid TEXT PRIMARY KEY, data TEXT, at INTEGER)')
+  env.DB.prepare('CREATE TABLE IF NOT EXISTS prof (uid TEXT PRIMARY KEY, data TEXT, at INTEGER)'),
+  // v273: вопрос «Сколько?» от кнопки «Другая сумма» / «Пополнить»: по ответу на это сообщение бот собирает фразу (tpl с {n}); сутки
+  env.DB.prepare('CREATE TABLE IF NOT EXISTS asks (uid TEXT, mid INTEGER, tpl TEXT, at INTEGER, PRIMARY KEY (uid, mid))')
 ]).then(async () => {
   // v267: act — что можно сделать из чата с записью «сразу» (варианты категорий, сегодняшняя дата телефона, версия записи)
   try { await env.DB.prepare('ALTER TABLE rcpt ADD COLUMN act TEXT').run(); } catch {}
@@ -130,6 +132,9 @@ const d1Store = (env, uid) => {
         // отмена важнее правок: приложение смотрит её первой; правки не стираем — «Не отменять» вернёт их
         await env.DB.batch(l);
       },
+      async ask(mid, tpl) { await d1Init(env); await env.DB.batch([q('INSERT OR REPLACE INTO asks (uid, mid, tpl, at) VALUES (?, ?, ?, ?)', uid, mid, tpl, Date.now()), q('DELETE FROM asks WHERE uid = ? AND at < ?', uid, Date.now() - 864e5)]); },
+      async askGet(mid) { await d1Init(env); return q('SELECT tpl FROM asks WHERE uid = ? AND mid = ? AND at >= ?', uid, mid, Date.now() - 864e5).first(); },
+      async askDel(mid) { await d1Init(env); await q('DELETE FROM asks WHERE uid = ? AND mid = ?', uid, mid).run(); },
       async prof() { await d1Init(env); const r = await q('SELECT data FROM prof WHERE uid = ?', uid).first(); try { return r ? JSON.parse(r.data) : null; } catch { return null; } },
       async setProf(data) { await d1Init(env); if (data) await q('INSERT OR REPLACE INTO prof (uid, data, at) VALUES (?, ?, ?)', uid, data, Date.now()).run(); else await q('DELETE FROM prof WHERE uid = ?', uid).run(); },
       async unCmd(sid, op) { await d1Init(env); await q('DELETE FROM cmds WHERE uid = ? AND sid = ? AND op = ?', uid, sid, op).run(); },
@@ -279,6 +284,10 @@ async function handleUpdate(upd, env) {
     'Завтра бот снова будет принимать сообщения ✨', open);
 
   let text = t;
+  // v273: ответ на вопрос бота «Сколько вернули / отложить?» — сумма подставляется в готовую фразу
+  const rq = msg.reply_to_message && box.rc && box.rc.askGet ? await box.rc.askGet(msg.reply_to_message.message_id) : null;
+  if (rq) { const n = /(\d[\d\s]*(?:[.,]\d{1,2})?)/.exec(t || ''); if (!n) return reply('Нужна сумма цифрами, например: 200');
+    text = rq.tpl.replace('{n}', n[1].replace(/\s/g, '').replace(',', '.')); await box.rc.askDel(msg.reply_to_message.message_id); }
   if (!text && (msg.voice || msg.audio)) {
     const f = msg.voice || msg.audio;
     if ((f.duration || 0) > 120) return reply('Голосовое длиннее 2 минут — скажите короче.');
@@ -286,15 +295,20 @@ async function handleUpdate(upd, env) {
     if (!text) return reply('Не смог разобрать голос. Попробуйте ещё раз или напишите текстом.');
   }
   if (!text || text.startsWith('/')) return;
-  const id = `${Date.now()}-${msg.message_id}`;
-  await box.add(id, text.slice(0, 500), msg.date);              // сначала кладём в очередь (приложение получает мгновенно), потом отвечаем в чат
+  return queuePhrase(env, box, chat, text, msg.date, msg.message_id, open, reply);
+}
+
+// фраза → очередь приложения + карточка в чат (v273: и для кнопок «Вернули всё» / ответа на «Сколько?»)
+async function queuePhrase(env, box, chat, text, ts, mid0, open, reply) {
+  const id = `${Date.now()}-${mid0}`;
+  await box.add(id, text.slice(0, 500), ts);              // сначала кладём в очередь (приложение получает мгновенно), потом отвечаем в чат
   const shown = text.slice(0, 200);
   if (!box.rc) return reply(`📥 В очереди: «${shown}»\nПоявится в приложении, когда оно откроется.`, open);
   // Бот не может сам записать в облако Telegram — это делает только открытое приложение. Поэтому: сначала «в очереди», а когда приложение
   // заберёт запись (api/ack), это же сообщение сменится на «Записано».
   // v265: квитанция-карточка (виджет Bot API 10.4); не отправилась (старый API, ошибка, WIDGETS=0) — текст, как раньше
   // v269: предпросмотр — сумма и категория сразу, кнопки до открытия приложения (нужен словарь категорий от приложения)
-  let pv = null; try { const pf = box.rc.prof && await box.rc.prof(); pv = pf && preview(pf, text, msg.date); } catch (e) { console.error('preview', e && e.message); }
+  let pv = null; try { const pf = box.rc.prof && await box.rc.prof(); pv = pf && preview(pf, text, ts); } catch (e) { console.error('preview', e && e.message); }
   const kb = pv ? kbFor(env, pv.act, pv.cw ? kbCat(pv.act, true) : null) : open.reply_markup;
   let mid = useW(env) ? await sendRcWidget(env, chat, shown, kb ? { reply_markup: kb } : {}, pv && pv.card, pv && pv.act) : null;
   if (!mid) { const sent = await (await reply(`⏳ В очереди: «${shown}»\n` + (pv ? pvText(pv) + '\n' : '') + 'Появится в приложении, когда оно откроется.', kb ? { reply_markup: kb } : {})).json().catch(() => null);
@@ -319,7 +333,12 @@ async function finishReceipts(env, box, ids, bad, notes = {}, hold = [], drop = 
   const okA = i => !dropSet.has(i) && !badSet.has(i) && cards[i] && cards[i].a && box.rc.setAct;
   const kept = await box.rc.take(ids.map(String).filter(i => !holdSet.has(i) && okA(i)), true);
   await Promise.all(kept.map(r => rcKeep(env, box, r, notes[r.id], cards[r.id])));
-  const list = await box.rc.take(ids.map(String).filter(i => !holdSet.has(i) && !okA(i)));
+  // v273: долг/цель — квитанция остаётся (кнопки «Вернули всё», «Другая сумма», «Пополнить»)
+  const dgA = i => !okA(i) && !dropSet.has(i) && !badSet.has(i) && useWQ(env) && box.rc.setAct && cards[i] && Array.isArray(cards[i].g) && cards[i].g.some(x => x && !x.c && x.n);
+  const keptDg = await box.rc.take(ids.map(String).filter(i => !holdSet.has(i) && dgA(i)), true);
+  await Promise.all(keptDg.map(async r => { const g = JSON.parse(rcData('ok', { o: [], g: cards[r.id].g })).g || [];
+    await box.rc.setAct(r.id, JSON.stringify({ st: 'dg', g })); return rcEdit(env, r, 'ok', `✅ Записано: «${r.text}»` + (notes[r.id] ? `\n\n${notes[r.id]}` : ''), notes[r.id], cards[r.id]); }));
+  const list = await box.rc.take(ids.map(String).filter(i => !holdSet.has(i) && !okA(i) && !dgA(i)));
   await Promise.all(list.map(r => dropSet.has(r.id) ? rcEdit(env, r, 'drop', `🗑 Не записано: «${r.text}»\nВ учёт не попало.`)
     : badSet.has(r.id) ? rcEdit(env, r, 'bad', `⚠ Приложение не поняло: «${r.text}»\n\nНапишите, например:\n• «кофе 300 кафе» (заметка, сумма, категория)\n• «бюджет 20000»\n• «Иван должен 500»`)
     : rcEdit(env, r, 'ok', `✅ Записано: «${r.text}»` + (notes[r.id] ? `\n\n${notes[r.id]}` : ''), notes[r.id], cards[r.id])));   // v166: подробный ответ из приложения отдельным абзацем
@@ -345,7 +364,8 @@ const u8 = s => new TextEncoder().encode(s).length;
 // v272: долг {k:'d', w кто, i вам должны?, ev new/add/pay, e сумма события, l остаток, t всего, p доля возврата, due срок, c закрыт}; цель {k:'g', w, ev new/in/out, e, s накоплено, t цель, p, l осталось, by срок, c достигнута}
 const dgClean = x => { const o = { k: x.k === 'g' ? 'g' : 'd' };
   for (const f of ['w', 'e', 'l', 't', 's', 'due', 'by']) if (x[f] != null && x[f] !== '') o[f] = String(x[f]).slice(0, 40);
-  if (['new', 'add', 'pay', 'in', 'out'].includes(x.ev)) o.ev = x.ev; o.p = Math.max(0, Math.min(1, Number(x.p) || 0)); if (x.i) o.i = 1; if (x.c) o.c = 1; return o; };
+  if (['new', 'add', 'pay', 'in', 'out'].includes(x.ev)) o.ev = x.ev; o.p = Math.max(0, Math.min(1, Number(x.p) || 0)); if (x.i) o.i = 1; if (x.c) o.c = 1;
+  if (x.n) o.n = String(x.n).replace(/[\n\r]/g, ' ').slice(0, 40); if (Number(x.ln) > 0) o.ln = Math.round(Number(x.ln) * 100) / 100; if (x.x) o.x = 1; return o; };
 // фразы про долги и цели — своя карточка (решается при отправке: HTML сообщения потом не меняется)
 const PV_DG = /(^|\s)(долг|долж|одолж|занял|заняла|займ|верн|цел[ьиюя]|копи|накоп|отлож)/u;
 const str = (v, n) => String(v ?? '').slice(0, n);
@@ -377,7 +397,7 @@ async function sendRcWidget(env, chat, shown, open, card, act) {
   if (wq && !hookOk) { hookOk = true; await ensureCallbacks(env).catch(() => {}); }   // widget_query должен доходить до бота
   const r = await (await tg(env, 'sendWidget', { chat_id: chat, html: dg ? RC_DG : RC_HTML, ...(dg ? {} : { public_data: RC_PUB }), chat_data: rcData('q', card, '', x),
     ...(wq || (dg && useWQ(env)) ? {} : { caption: `${RC_CAP.q}: «${shown}»`, show_caption_above_media: true }),
-    ...(wq ? { allow_queries: true } : dg && useWQ(env) ? {} : open) })).json().catch(() => null);
+    ...(wq || (dg && useWQ(env)) ? { allow_queries: true } : open) })).json().catch(() => null);   // v273: и у карточки долгов/целей — кнопки «Вернули всё», «Пополнить»
   if (r && r.ok && r.result && r.result.message_id) return r.result.message_id;
   console.error('widget', r && r.description); return null;
 }
@@ -532,6 +552,13 @@ body{font:14px/1.3 system-ui,sans-serif;color:var(--T);padding:10px 12px 12px;-w
 @keyframes fl{to{transform:translate(var(--x),240px) rotate(var(--r));opacity:0}}
 .t{white-space:pre-wrap;font-size:13px}
 .sep{height:1px;background:rgba(128,128,128,.18);margin:12px 0}
+.bt{display:flex;gap:6px;margin-top:10px}
+.bt button{flex:1;font:inherit;font-size:13px;font-weight:600;border:0;border-radius:12px;padding:10px 6px;color:var(--B);background:color-mix(in srgb,var(--B) 13%,transparent);transition:transform .15s}
+.bt button.m{color:#fff;background:var(--E)}
+.bt button:active{transform:scale(.94)}
+.bt.bz{opacity:.5;pointer-events:none}
+.dn{margin-top:10px;font-size:12.5px;color:var(--E);font-weight:600;animation:f .4s both}
+.er{margin-top:6px;font-size:12px;color:var(--H);text-align:center}
 </style></head><body><div id="w"></div><script>
 var T=window.TelegramWidget||{},w=document.getElementById("w"),j=0;
 function E(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
@@ -541,27 +568,34 @@ function pct(x){return Math.max(0,Math.min(1,+x||0))}
 function bar(p,o){var b=E("div","bar"+(o?" o":"")),i=E("i");b.appendChild(i);setTimeout(function(){i.style.width=Math.max(2,pct(p)*100)+"%"},80);return b}
 function boom(){hp();for(var k=0;k<26;k++){var s=E("i","cf");s.style.left=(Math.random()*100)+"%";s.style.background=["#2fa65a","#3390ec","#f08c2e","#e5484d","#f2c94c"][k%5];
 s.style.setProperty("--x",(Math.random()*80-40)+"px");s.style.setProperty("--r",(Math.random()*720-360)+"deg");s.style.animationDelay=(Math.random()*.4)+"s";document.body.appendChild(s);setTimeout(function(e){e.remove()},2300,s)}}
+// v273: кнопки — «Вернули всё» (сразу), «Другая сумма» / «Пополнить» (бот спросит сумму)
+function acts(x,i){var c=E("div");if(x.c||!x.n||!T.request)return c;if(x.x){c.appendChild(E("div","dn","✓ Отправлено — новая запись ниже"));return c}
+var b=E("div","bt"),er=E("div","er");function go(q,el,t){if(b.classList.contains("bz"))return;b.classList.add("bz");try{T.HapticFeedback.impactOccurred("light")}catch(e){}
+T.request(q).then(function(){b.classList.remove("bz");if(t){el.textContent=t}}).catch(function(e){b.classList.remove("bz");er.textContent=e&&e.code==="RATE_LIMITED"?"Подождите пару секунд":"Не получилось, попробуйте ещё раз"})}
+function B(t,q,m,done){var e=E("button",m?"m":"",t);e.type="button";e.onclick=function(){go(q,e,done)};b.appendChild(e)}
+if(x.k==="d"){if(x.ln)B((x.i?"Вернули всё":"Вернул всё")+" · "+x.l,"r:"+i+":a",1);B("Другая сумма","r:"+i+":o",0,"Напишите сумму ↓")}else B("＋ Пополнить","p:"+i+":o",1,"Напишите сумму ↓");
+c.appendChild(b);c.appendChild(er);return c}
 function okRow(t){var o=E("div","ok");o.innerHTML='<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';o.appendChild(E("span",0,t));return o}
-function debt(x){var c=E("div","c"),h=E("div","hd"),av=E("div","av"+(x.i?"":" o"),(x.w||"?").trim().charAt(0).toUpperCase()),m=E("div","m"),bg=E("div","bg");
+function debt(x,I){var c=E("div","c"),h=E("div","hd"),av=E("div","av"+(x.i?"":" o"),(x.w||"?").trim().charAt(0).toUpperCase()),m=E("div","m"),bg=E("div","bg");
 m.appendChild(E("div","nm",x.w));m.appendChild(E("div","sb",x.i?"Вам должны":"Вы должны"));
 bg.appendChild(E("b",0,x.c?x.t:x.l));bg.appendChild(E("span","sb",x.c?"закрыт":"осталось"));h.appendChild(av);h.appendChild(m);h.appendChild(bg);c.appendChild(h);
 var ev={new:x.i?"Дали в долг":"Взяли в долг",add:"Добавлено к долгу",pay:x.i?"Вам вернули":"Вы вернули"}[x.ev];
 if(ev&&x.e)c.appendChild(E("div","ev"+(x.ev==="pay"?" e":""),(x.ev==="pay"?"↩ ":"＋ ")+ev+" · "+x.e));
 if(x.c)c.appendChild(okRow("Долг закрыт полностью"));
 else{c.appendChild(bar(x.p,!x.i));var l=E("div","ln");l.appendChild(E("span",0,"Возвращено "+Math.round(pct(x.p)*100)+"%"));var t=E("span");t.appendChild(document.createTextNode("всего "));t.appendChild(E("b",0,x.t));l.appendChild(t);c.appendChild(l)}
-if(x.due&&!x.c)c.appendChild(E("div","du","⏰ "+x.due));return c}
-function goal(x){var c=E("div","c"),h=E("div","hd"),rg=E("div","rg"),m=E("div","m"),P=Math.round(pct(x.p)*100);
+if(x.due&&!x.c)c.appendChild(E("div","du","⏰ "+x.due));c.appendChild(acts(x,I));return c}
+function goal(x,I){var c=E("div","c"),h=E("div","hd"),rg=E("div","rg"),m=E("div","m"),P=Math.round(pct(x.p)*100);
 rg.innerHTML='<svg viewBox="0 0 74 74"><circle cx="37" cy="37" r="32"/><circle class="v" cx="37" cy="37" r="32"/></svg>';var n=E("b",0,"0%");rg.appendChild(n);
 setTimeout(function(){rg.querySelector(".v").style.strokeDashoffset=201*(1-pct(x.p));var t0=Date.now();(function st(){var k=Math.min(1,(Date.now()-t0)/1000);n.textContent=Math.round(P*(1-Math.pow(1-k,3)))+"%";if(k<1)requestAnimationFrame(st)})()},80);
 m.appendChild(E("div","nm","🎯 "+x.w));var s=E("div","sb");s.appendChild(document.createTextNode("Накоплено "));s.appendChild(E("b",0,x.s));s.appendChild(document.createTextNode(" из "+x.t));m.appendChild(s);
 if(!x.c&&x.l)m.appendChild(E("div","sb","Осталось "+x.l));h.appendChild(rg);h.appendChild(m);c.appendChild(h);
 var ev={new:"Новая цель",in:"В копилку",out:"Из цели"}[x.ev];if(ev)c.appendChild(E("div","ev"+(x.ev==="in"?" e":""),ev+(x.e?" · "+x.e:"")));
-if(x.c)c.appendChild(okRow("Цель достигнута"));if(x.by&&!x.c)c.appendChild(E("div","du","⏰ "+x.by));return c}
+if(x.c)c.appendChild(okRow("Цель достигнута"));if(x.by&&!x.c)c.appendChild(E("div","du","⏰ "+x.by));c.appendChild(acts(x,I));return c}
 var seen="";
 function draw(){var D={};try{D=JSON.parse(T.chatData||"{}")||{}}catch(e){}
 w.textContent="";j=0;
 if(D.s==="q"){var q=E("div","q");q.appendChild(E("i"));q.appendChild(E("span",0,D.ph?"«"+D.ph+"»":""));w.appendChild(q);w.appendChild(E("div","sk"));var k2=E("div","sk");k2.style.width="60%";w.appendChild(k2);return}
-var g=D.g||[],any=0;g.forEach(function(x,i){if(i)w.appendChild(E("div","sep"));A(w,x.k==="g"?goal(x):debt(x));if(x.c)any=1});
+var g=D.g||[],any=0;g.forEach(function(x,i){if(i)w.appendChild(E("div","sep"));A(w,x.k==="g"?goal(x,i):debt(x,i));if(x.c)any=1});
 (D.o||[]).forEach(function(p){A(w,E("div","t",p[1]+" · "+p[4]))});
 if(D.n&&!g.length)A(w,E("div","t",D.n));if(D.hn)A(w,E("div","t sb",D.hn));
 var key=JSON.stringify(g);if(any&&key!==seen)setTimeout(boom,700);seen=key}
@@ -739,12 +773,32 @@ async function rcDo(box, row, act, a, b) {
   if (a === 'u' || a === 'U') { await box.rc.unCmd(row.id, 'del'); return q ? 'Запишется' : 'Отмена снята'; }
   return null;
 }
+// v273: «Вернули всё» — сразу фраза в очередь (как будто написали сами); «Другая сумма» / «Пополнить» — вопрос «Сколько?», ответом — сумма
+// фразы — те, что приложение понимает (проверено): «Иван вернул 300», «вернул Маша 300», «в цель Отпуск 5000»
+const dgTpl = x => x.k === 'g' ? `в цель ${x.n} {n}` : x.i ? `${x.n} вернул {n}` : `вернул ${x.n} {n}`;
+const dgAsk = x => x.k === 'g' ? `🎯 Цель «${x.n}»: сколько отложить? Напишите сумму ответом на это сообщение.` : x.i ? `💵 Сколько вернул(а) ${x.n}? Напишите сумму ответом на это сообщение.` : `💵 Долг «${x.n}»: сколько вы вернули? Напишите сумму ответом на это сообщение.`;
+async function dgDo(env, box, row, act, wq, ans) {
+  const [a, i, how] = String(wq.data || '').split(':'), x = (act.g || [])[Number(i)];
+  if (!x || x.c || !x.n || (a !== 'r' && a !== 'p') || (a === 'r') !== (x.k === 'd')) return ans({ e: 'bad' });
+  const chat = wq.chat.id, reply = (text, extra) => tg(env, 'sendMessage', { chat_id: chat, text, ...extra });
+  if (how === 'a' && x.k === 'd' && x.ln > 0) {
+    await ans({ ok: 1 });
+    x.x = 1; await box.rc.setAct(row.id, JSON.stringify(act));
+    await tg(env, 'editMessageWidgetData', { chat_id: chat, message_id: wq.message_id, chat_data: rcData('ok', { o: [], g: act.g }) }).catch(() => {});
+    return queuePhrase(env, box, chat, dgTpl(x).replace('{n}', String(x.ln)), Math.floor(Date.now() / 1000), 'w' + wq.message_id, {}, reply);
+  }
+  if (how !== 'o') return ans({ e: 'bad' });
+  await ans({ ok: 1 });
+  const m = await (await reply(dgAsk(x), { reply_markup: { force_reply: true, input_field_placeholder: 'Например, 500' } })).json().catch(() => null);
+  if (m && m.ok && m.result) await box.rc.ask(m.result.message_id, dgTpl(x));
+}
 async function onWidgetQuery(wq, env) {
   const ans = o => tg(env, 'answerWidgetQuery', { widget_query_id: wq.id, data: JSON.stringify(o) }).catch(() => {});
   if (!wq.chat || !wq.message_id || !env.DB || !wq.from) return ans({ e: 'old' });
   const box = store(env, wq.from.id), row = await box.rc.byMsg(wq.chat.id, wq.message_id); let act = null;
   try { act = row && JSON.parse(row.act || 'null'); } catch {}
   if (!act) return ans({ e: 'old' });
+  if (act.st === 'dg') return dgDo(env, box, row, act, wq, ans);   // v273: долг/цель
   const [a, b] = String(wq.data || '').split(':'), say = await rcDo(box, row, act, a, b);
   if (say == null) return ans({ e: 'bad' });
   await ans({ ok: 1, t: say });   // ответ — сразу (виджет ждёт до 15 с), карточку перерисовываем следом

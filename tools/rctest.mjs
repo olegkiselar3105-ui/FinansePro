@@ -194,9 +194,36 @@ assert(!W._t.RC_HTML.includes('openTelegramLink') && !JSON.parse(W._t.RC_PUB).i.
 const zdg = zlib.deflateSync(Buffer.from(W._t.RC_DG), { level: 9 }).length; assert(zdg <= 4096, `карточка долгов/целей: zlib ${zdg} B`);
 for (const t of ['одолжил Ивану 500', 'цель отпуск 50000', 'Маша вернула долг 300']) {
   sent = []; await msg(41, t); const s1 = sent.find(x => x.m === 'sendWidget'), d1 = JSON.parse(s1.chat_data);
-  assert(s1.html === W._t.RC_DG && !s1.allow_queries && !s1.caption && !s1.reply_markup && d1.s === 'q' && d1.ph === t, `«${t}» — карточка долгов/целей, в очереди`); }
+  assert(s1.html === W._t.RC_DG && s1.allow_queries && !s1.caption && !s1.reply_markup && d1.s === 'q' && d1.ph === t, `«${t}» — карточка долгов/целей, в очереди`); }
 sent = []; await msg(41, 'кофе 300 кафе'); assert(sent.find(x => x.m === 'sendWidget').html === W._t.RC_HTML, 'обычная фраза — обычная карточка');
 const r41 = db.prepare("SELECT id FROM rcpt WHERE CAST(uid AS REAL) = 41 ORDER BY at").get();
 sent = []; await W._t.finishReceipts(env, W._t.store(env, 41), [r41.id], [], { [r41.id]: '💸 Долг: Иван должен вам 500 MDL' }, [], [], { [r41.id]: { o: [], n: 'x', g: [{ k: 'd', w: 'Иван', i: 1, ev: 'new', e: '500 MDL', l: '500 MDL', t: '500 MDL', p: 0, due: '', c: 0, zz: 'лишнее' }] } });
 const g41 = JSON.parse(sent.find(x => x.m === 'editMessageWidgetData').chat_data);
 assert(g41.s === 'ok' && g41.g[0].w === 'Иван' && g41.g[0].i === 1 && g41.g[0].ev === 'new' && !g41.g[0].zz && !sent.some(x => x.m === 'editMessageCaption'), 'записано: данные долга, лишние поля отброшены, без подписи');
+// ---------- v273: «Вернули всё», «Другая сумма», «Пополнить» ----------
+const U3 = 51, b3 = W._t.store(env, U3);
+sent = []; await msg(U3, 'одолжил Ивану 500'); const r3 = db.prepare("SELECT id, mid FROM rcpt WHERE CAST(uid AS REAL) = 51").get();
+assert(sent.find(x => x.m === 'sendWidget').allow_queries, 'карточка долга — с запросами виджета');
+const gD = { k: 'd', w: 'Иван', n: 'Иван', ln: 300, i: 1, ev: 'pay', e: '200 MDL', l: '300 MDL', t: '500 MDL', p: 0.4 }, gG = { k: 'g', w: 'Отпуск', n: 'Отпуск', ln: 45000, ev: 'in', e: '5 000 MDL', s: '5 000', t: '50 000 MDL', p: 0.1 };
+sent = []; await W._t.finishReceipts(env, b3, [r3.id], [], {}, [], [], { [r3.id]: { o: [], g: [gD, gG] } });
+const act3 = JSON.parse(db.prepare("SELECT act FROM rcpt WHERE CAST(uid AS REAL) = 51").get().act);
+assert(act3.st === 'dg' && act3.g[0].ln === 300 && act3.g[1].n === 'Отпуск', 'квитанция долга/цели осталась для кнопок');
+const wq3 = async data => { sent = []; await W.default.fetch(new Request('https://w/webhook', { method: 'POST', headers: { 'X-Telegram-Bot-Api-Secret-Token': 's' },
+  body: JSON.stringify({ widget_query: { id: 'q3', from: { id: U3 }, chat: { id: U3, type: 'private' }, message_id: r3.mid, data } }) }), env, ctx).then(() => Promise.all(ctx.ps.splice(0))); };
+const queued = () => db.prepare("SELECT text FROM msgs WHERE CAST(uid AS REAL) = 51 ORDER BY at").all().map(r => r.text);
+await wq3('r:0:a');
+assert(JSON.parse(sent.find(x => x.m === 'answerWidgetQuery').data).ok && JSON.parse(sent.find(x => x.m === 'editMessageWidgetData').chat_data).g[0].x === 1, '«Вернули всё»: ответ, отметка «Отправлено»');
+assert(queued().includes('Иван вернул 300') && sent.find(x => x.m === 'sendWidget' && x.html === W._t.RC_DG), '«Вернули всё»: фраза «Иван вернул 300» в очереди, новая карточка');
+await wq3('r:0:o'); const ask = sent.find(x => x.m === 'sendMessage');
+assert(ask && ask.reply_markup.force_reply && /Сколько вернул/.test(ask.text), '«Другая сумма»: вопрос с ответом');
+const askMid = db.prepare("SELECT mid FROM asks WHERE CAST(uid AS REAL) = 51").get().mid;
+const reply3 = async (text, to) => { sent = []; await W.default.fetch(new Request('https://w/webhook', { method: 'POST', headers: { 'X-Telegram-Bot-Api-Secret-Token': 's' },
+  body: JSON.stringify({ message: { message_id: Math.random() * 1e6 | 0, date: Math.floor(Date.now() / 1000), from: { id: U3 }, chat: { id: U3, type: 'private' }, text, reply_to_message: { message_id: to } } }) }), env, ctx).then(() => Promise.all(ctx.ps.splice(0))); };
+await reply3('ну где-то', askMid); assert(sent.some(x => x.m === 'sendMessage' && /цифрами/.test(x.text)), 'ответ без суммы — просим цифрами');
+await reply3('1 500,5', askMid); assert(queued().includes('Иван вернул 1500.5'), 'ответ «1 500,5» → «Иван вернул 1500.5»');
+assert(!db.prepare("SELECT 1 FROM asks WHERE CAST(uid AS REAL) = 51").get(), 'вопрос закрыт');
+await wq3('p:1:o'); const ask2 = db.prepare("SELECT mid, tpl FROM asks WHERE CAST(uid AS REAL) = 51").get();
+assert(ask2 && ask2.tpl === 'в цель Отпуск {n}', '«Пополнить»: шаблон «в цель Отпуск {n}»');
+await reply3('5000', ask2.mid); assert(queued().includes('в цель Отпуск 5000'), 'пополнение цели — фраза в очереди');
+await wq3('p:0:o'); assert(JSON.parse(sent.find(x => x.m === 'answerWidgetQuery').data).e === 'bad', '«Пополнить» у долга — отказ');
+await reply3('кофе 300 кафе', 999999); assert(queued().includes('кофе 300 кафе'), 'обычный ответ на чужое сообщение — обычная фраза');
