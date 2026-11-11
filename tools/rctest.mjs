@@ -134,7 +134,7 @@ pv = await say('кофе 300'); assert(pv.d.o[0][4] === 'Категорию по
 pv = await say('зарплата 5000 зарплата'); assert(pv.d.o[0][1].replace(/\s/g, ' ') === '+5 000 MDL' && pv.d.o[0][0] === 1, 'доход по категории: +5 000');
 pv = await say('такси 100'); assert(pv.d.o[0][4] === 'Категорию подберёт приложение', '«такси 100»: слово до суммы — заметка');
 pv = await say('обед 1 200 кафе вчера'); assert(pv.d.o[0][1].replace(/\s/g, ' ') === '−1 200 MDL' && /вчера/.test(pv.d.o[0][5]), '«1 200» и «вчера»');
-for (const t of ['кофе 5 евро кафе', 'такси 100 и обед 200', 'одолжил Ивану 500', 'бюджет 20000', 'кофе 300 12.11', 'пятьсот на кафе']) {
+for (const t of ['кофе 5 евро кафе', 'одолжил Ивану 500', 'бюджет 20000', 'кофе 300 12.11', 'пятьсот на кафе']) {
   pv = await say(t); assert(pv && !pv.d.o && !pv.d.a && pv.kb.inline_keyboard.length === 1, `без предпросмотра: «${t}»`); }
 // приложение забрало фразу и применило правки (preDone) — команды удаляются, квитанция по обычному пути
 sent = []; await W._t.cmdFinish(env, bU, pq, {}, {}); assert(!(await bU.list(0)).cmds, 'preDone: команды удалены');
@@ -227,3 +227,14 @@ assert(ask2 && ask2.tpl === 'в цель Отпуск {n}', '«Пополнит�
 await reply3('5000', ask2.mid); assert(queued().includes('в цель Отпуск 5000'), 'пополнение цели — фраза в очереди');
 await wq3('p:0:o'); assert(JSON.parse(sent.find(x => x.m === 'answerWidgetQuery').data).e === 'bad', '«Пополнить» у долга — отказ');
 await reply3('кофе 300 кафе', 999999); assert(queued().includes('кофе 300 кафе'), 'обычный ответ на чужое сообщение — обычная фраза');
+// ---------- v274: несколько записей — несколько карточек; оформленный предпросмотр долга/цели ----------
+env.WQ = '1'; const U4 = 61, b4 = W._t.store(env, U4); await b4.rc.setProf(JSON.stringify(W._t.profClean(PROF)));
+sent = []; await msg(U4, 'кофе 300 кафе и такси 120 транспорт');
+const ws4 = sent.filter(x => x.m === 'sendWidget'), q4 = db.prepare("SELECT text FROM msgs WHERE CAST(uid AS REAL) = 61 ORDER BY at").all().map(r => r.text);
+assert(ws4.length === 2 && JSON.stringify(q4) === JSON.stringify(['кофе 300 кафе', 'такси 120 транспорт']), 'две записи — две карточки и две фразы в очереди');
+assert(JSON.parse(ws4[0].chat_data).o[0][4] === 'Кафе и рестораны' && JSON.parse(ws4[1].chat_data).o[0][4] === 'Транспорт', 'у каждой — своя категория');
+assert(db.prepare("SELECT COUNT(*) n FROM rcpt WHERE CAST(uid AS REAL) = 61").get().n === 2, 'две квитанции');
+sent = []; await msg(U4, 'взял в долг у Пети 2000 до 20 декабря'); const wd4 = sent.find(x => x.m === 'sendWidget'), dd4 = JSON.parse(wd4.chat_data);
+assert(wd4.html === W._t.RC_DG && JSON.parse(wd4.public_data).t.length > 10 && dd4.s === 'q' && dd4.g[0].w === 'Петя' && dd4.g[0].i !== 1 && dd4.g[0].e.replace(/\s/g, ' ') === '2 000 MDL' && dd4.g[0].pv === 1, 'долг: сразу оформленная карточка (Петя, 2 000 MDL, вы должны)');
+sent = []; await msg(U4, 'в цель отпуск 5000'); const dg4 = JSON.parse(sent.find(x => x.m === 'sendWidget').chat_data).g[0];
+assert(dg4.k === 'g' && dg4.w === 'Отпуск' && dg4.ev === 'in' && dg4.pv === 1, 'цель: «Отпуск», в копилку');

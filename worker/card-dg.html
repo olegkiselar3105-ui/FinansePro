@@ -46,8 +46,12 @@ body{font:14px/1.3 system-ui,sans-serif;color:var(--T);padding:10px 12px 12px;-w
 .bt.bz{opacity:.5;pointer-events:none}
 .dn{margin-top:10px;font-size:12.5px;color:var(--E);font-weight:600;animation:f .4s both}
 .er{margin-top:6px;font-size:12px;color:var(--H);text-align:center}
+.pd{display:inline-block;width:9px;height:9px;border-radius:50%;margin-left:8px;vertical-align:1px;background:var(--H);animation:bl 1s ease-in-out infinite}
+@keyframes bl{50%{opacity:.12}}
+.rg .sp{stroke:var(--H);stroke-dasharray:40 161;animation:rt 1.2s linear infinite;transform-origin:37px 37px}
+@keyframes rt{to{transform:rotate(360deg)}}
 </style></head><body><div id="w"></div><script>
-var T=window.TelegramWidget||{},w=document.getElementById("w"),j=0;
+var T=window.TelegramWidget||{},w=document.getElementById("w"),j=0,L=[];try{L=JSON.parse(T.publicData||"{}").t||[]}catch(e){}
 function E(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
 function A(p,e){e.style.setProperty("--j",j++);p.appendChild(e);return e}
 function hp(){try{T.HapticFeedback.notificationOccurred("success")}catch(e){}}
@@ -56,32 +60,34 @@ function bar(p,o){var b=E("div","bar"+(o?" o":"")),i=E("i");b.appendChild(i);set
 function boom(){hp();for(var k=0;k<26;k++){var s=E("i","cf");s.style.left=(Math.random()*100)+"%";s.style.background=["#2fa65a","#3390ec","#f08c2e","#e5484d","#f2c94c"][k%5];
 s.style.setProperty("--x",(Math.random()*80-40)+"px");s.style.setProperty("--r",(Math.random()*720-360)+"deg");s.style.animationDelay=(Math.random()*.4)+"s";document.body.appendChild(s);setTimeout(function(e){e.remove()},2300,s)}}
 // v273: кнопки — «Вернули всё» (сразу), «Другая сумма» / «Пополнить» (бот спросит сумму)
-function acts(x,i){var c=E("div");if(x.c||!x.n||!T.request)return c;if(x.x){c.appendChild(E("div","dn","✓ Отправлено — новая запись ниже"));return c}
+function acts(x,i){var c=E("div");if(x.c||!x.n||!T.request)return c;if(x.x){c.appendChild(E("div","dn",L[0]));return c}
 var b=E("div","bt"),er=E("div","er");function go(q,el,t){if(b.classList.contains("bz"))return;b.classList.add("bz");try{T.HapticFeedback.impactOccurred("light")}catch(e){}
-T.request(q).then(function(){b.classList.remove("bz");if(t){el.textContent=t}}).catch(function(e){b.classList.remove("bz");er.textContent=e&&e.code==="RATE_LIMITED"?"Подождите пару секунд":"Не получилось, попробуйте ещё раз"})}
+T.request(q).then(function(){b.classList.remove("bz");if(t){el.textContent=t}}).catch(function(e){b.classList.remove("bz");er.textContent=e&&e.code==="RATE_LIMITED"?L[1]:L[2]})}
 function B(t,q,m,done){var e=E("button",m?"m":"",t);e.type="button";e.onclick=function(){go(q,e,done)};b.appendChild(e)}
-if(x.k==="d"){if(x.ln)B(x.i?"Вернули всё":"Вернул всё","r:"+i+":a",1);B("Другая сумма","r:"+i+":o",0,"Напишите сумму ↓")}else B("＋ Пополнить","p:"+i+":o",1,"Напишите сумму ↓");
+if(x.k==="d"){if(x.ln)B(x.i?"Вернули всё":"Вернул всё","r:"+i+":a",1);B(L[3],"r:"+i+":o",0,L[4])}else B(L[5],"p:"+i+":o",1,L[4]);
 c.appendChild(b);c.appendChild(er);return c}
 function okRow(t){var o=E("div","ok");o.innerHTML='<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';o.appendChild(E("span",0,t));return o}
 function debt(x,I){var c=E("div","c"),h=E("div","hd"),av=E("div","av"+(x.i?"":" o"),(x.w||"?").trim().charAt(0).toUpperCase()),m=E("div","m"),bg=E("div","bg");
-m.appendChild(E("div","nm",x.w));m.appendChild(E("div","sb",x.i?"Вам должны":"Вы должны"));
-bg.appendChild(E("b",0,x.c?x.t:x.l));bg.appendChild(E("span","sb",x.c?"закрыт":"осталось"));h.appendChild(av);h.appendChild(m);h.appendChild(bg);c.appendChild(h);
+m.appendChild(E("div","nm",x.w));m.appendChild(E("div","sb",x.i?L[9]:L[10]));
+var bb=E("b",0,x.pv?x.e:x.c?x.t:x.l);if(x.pv)bb.appendChild(E("i","pd"));bg.appendChild(bb);bg.appendChild(E("span","sb",x.pv?L[8]:x.c?L[12]:L[11]));h.appendChild(av);h.appendChild(m);h.appendChild(bg);c.appendChild(h);
 var ev={new:x.i?"Дали в долг":"Взяли в долг",add:"Добавлено к долгу",pay:x.i?"Вам вернули":"Вы вернули"}[x.ev];
-if(ev&&x.e)c.appendChild(E("div","ev"+(x.ev==="pay"?" e":""),(x.ev==="pay"?"↩ ":"＋ ")+ev+" · "+x.e));
-if(x.c)c.appendChild(okRow("Долг закрыт полностью"));
-else{c.appendChild(bar(x.p,!x.i));var l=E("div","ln");l.appendChild(E("span",0,"Возвращено "+Math.round(pct(x.p)*100)+"%"));var t=E("span");t.appendChild(document.createTextNode("всего "));t.appendChild(E("b",0,x.t));l.appendChild(t);c.appendChild(l)}
+if(ev&&x.e)c.appendChild(E("div","ev"+(x.ev==="pay"?" e":""),(x.ev==="pay"?"↩ ":"＋ ")+ev+" · "+x.e));if(x.pv){c.appendChild(E("div","sk"));return c}
+if(x.c)c.appendChild(okRow(L[6]));
+else{c.appendChild(bar(x.p,!x.i));var l=E("div","ln");l.appendChild(E("span",0,L[13]+Math.round(pct(x.p)*100)+"%"));var t=E("span");t.appendChild(document.createTextNode(L[14]));t.appendChild(E("b",0,x.t));l.appendChild(t);c.appendChild(l)}
 if(x.due&&!x.c)c.appendChild(E("div","du","⏰ "+x.due));c.appendChild(acts(x,I));return c}
 function goal(x,I){var c=E("div","c"),h=E("div","hd"),rg=E("div","rg"),m=E("div","m"),P=Math.round(pct(x.p)*100);
-rg.innerHTML='<svg viewBox="0 0 74 74"><circle cx="37" cy="37" r="32"/><circle class="v" cx="37" cy="37" r="32"/></svg>';var n=E("b",0,"0%");rg.appendChild(n);
+rg.innerHTML='<svg viewBox="0 0 74 74"><circle cx="37" cy="37" r="32"/><circle class="'+(x.pv?"sp":"v")+'" cx="37" cy="37" r="32"/></svg>';var n=E("b",0,x.pv?"":"0%");rg.appendChild(n);
+if(x.pv){m.appendChild(E("div","nm","🎯 "+x.w));var q=E("div","sb",x.t?"Цель "+x.t:L[8]);q.appendChild(E("i","pd"));m.appendChild(q);h.appendChild(rg);h.appendChild(m);c.appendChild(h);
+var v0={new:"Новая цель",in:"В копилку",out:"Из цели"}[x.ev];if(v0)c.appendChild(E("div","ev"+(x.ev==="in"?" e":""),v0+(x.e?" · "+x.e:"")));c.appendChild(E("div","sk"));return c}
 setTimeout(function(){rg.querySelector(".v").style.strokeDashoffset=201*(1-pct(x.p));var t0=Date.now();(function st(){var k=Math.min(1,(Date.now()-t0)/1000);n.textContent=Math.round(P*(1-Math.pow(1-k,3)))+"%";if(k<1)requestAnimationFrame(st)})()},80);
-m.appendChild(E("div","nm","🎯 "+x.w));var s=E("div","sb");s.appendChild(document.createTextNode("Накоплено "));s.appendChild(E("b",0,x.s));s.appendChild(document.createTextNode(" из "+x.t));m.appendChild(s);
-if(!x.c&&x.l)m.appendChild(E("div","sb","Осталось "+x.l));h.appendChild(rg);h.appendChild(m);c.appendChild(h);
+m.appendChild(E("div","nm","🎯 "+x.w));var s=E("div","sb");s.appendChild(document.createTextNode(L[15]));s.appendChild(E("b",0,x.s));s.appendChild(document.createTextNode(" из "+x.t));m.appendChild(s);
+if(!x.c&&x.l)m.appendChild(E("div","sb",L[16]+x.l));h.appendChild(rg);h.appendChild(m);c.appendChild(h);
 var ev={new:"Новая цель",in:"В копилку",out:"Из цели"}[x.ev];if(ev)c.appendChild(E("div","ev"+(x.ev==="in"?" e":""),ev+(x.e?" · "+x.e:"")));
-if(x.c)c.appendChild(okRow("Цель достигнута"));if(x.by&&!x.c)c.appendChild(E("div","du","⏰ "+x.by));c.appendChild(acts(x,I));return c}
+if(x.c)c.appendChild(okRow(L[7]));if(x.by&&!x.c)c.appendChild(E("div","du","⏰ "+x.by));c.appendChild(acts(x,I));return c}
 var seen="";
 function draw(){var D={};try{D=JSON.parse(T.chatData||"{}")||{}}catch(e){}
 w.textContent="";j=0;
-if(D.s==="q"){var q=E("div","q");q.appendChild(E("i"));q.appendChild(E("span",0,D.ph?"«"+D.ph+"»":""));w.appendChild(q);w.appendChild(E("div","sk"));var k2=E("div","sk");k2.style.width="60%";w.appendChild(k2);return}
+if(D.s==="q"&&!(D.g&&D.g.length)){var q=E("div","q");q.appendChild(E("i"));q.appendChild(E("span",0,D.ph?"«"+D.ph+"»":""));w.appendChild(q);w.appendChild(E("div","sk"));var k2=E("div","sk");k2.style.width="60%";w.appendChild(k2);return}
 var g=D.g||[],any=0;g.forEach(function(x,i){if(i)w.appendChild(E("div","sep"));A(w,x.k==="g"?goal(x,i):debt(x,i));if(x.c)any=1});
 (D.o||[]).forEach(function(p){A(w,E("div","t",p[1]+" · "+p[4]))});
 if(D.n&&!g.length)A(w,E("div","t",D.n));if(D.hn)A(w,E("div","t sb",D.hn));
