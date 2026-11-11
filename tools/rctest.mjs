@@ -10,7 +10,7 @@ globalThis.fetch = async (u, o) => { const m = String(u).split('/').pop(), b = J
   if (failWidget && /Widget/.test(m)) return new Response(JSON.stringify({ ok: false, description: 'Bad Request: method not found' }));
   return new Response(JSON.stringify({ ok: true, result: { message_id: ++mid } })); };
 const src = new URL('../worker/worker.js', import.meta.url), tmp = path.join(os.tmpdir(), 'fp-rc-test-' + process.pid + '.mjs');
-fs.writeFileSync(tmp, fs.readFileSync(src, 'utf8') + '\nexport const _t = { finishReceipts, rcData, RC_HTML, RC_DG, RC_PUB, store, cmdFinish, profClean };\n');
+fs.writeFileSync(tmp, fs.readFileSync(src, 'utf8') + '\nexport const _t = { finishReceipts, rcData, RC_HTML, RC_DG, RC_PUB, store, cmdFinish, profClean, staleRemind };\n');
 const W = await import(tmp); fs.unlinkSync(tmp);
 const env = { DB, BOT_TOKEN: 'x', WEBHOOK_SECRET: 's', APP_URL: 'https://a.example/' };
 const ctx = { ps: [], waitUntil(p) { this.ps.push(p.catch(() => {})); } };
@@ -238,3 +238,15 @@ sent = []; await msg(U4, 'взял в долг у Пети 2000 до 20 дека
 assert(wd4.html === W._t.RC_DG && JSON.parse(wd4.public_data).t.length > 10 && dd4.s === 'q' && dd4.g[0].w === 'Петя' && dd4.g[0].i !== 1 && dd4.g[0].e.replace(/\s/g, ' ') === '2 000 MDL' && dd4.g[0].pv === 1, 'долг: сразу оформленная карточка (Петя, 2 000 MDL, вы должны)');
 sent = []; await msg(U4, 'в цель отпуск 5000'); const dg4 = JSON.parse(sent.find(x => x.m === 'sendWidget').chat_data).g[0];
 assert(dg4.k === 'g' && dg4.w === 'Отпуск' && dg4.ev === 'in' && dg4.pv === 1, 'цель: «Отпуск», в копилку');
+// ---------- v275: карточка долга, а записан обычный расход → обычная карточка; напоминание о зависшей записи ----------
+const U5 = 71, b5 = W._t.store(env, U5); await b5.rc.setProf(JSON.stringify(W._t.profClean(PROF)));
+sent = []; await msg(U5, 'Ксюша вернула 200'); const r5 = db.prepare("SELECT id, mid, act FROM rcpt WHERE CAST(uid AS REAL) = 71").get();
+assert(/"st":"dgq"/.test(r5.act), 'квитанция помнит: карточка долга');
+sent = []; await W._t.finishReceipts(env, b5, [r5.id], [], { [r5.id]: 'x' }, [], [], { [r5.id]: { o: [[0, '−200 MDL', '🍽️', '#e0703c', 'Кафе и рестораны', 'Ксюша вернула', 0, '']], a: { k: [['food', '🛒 Продукты', '🛒', 'Продукты', '', 0]], td: '2026-11-11', d: '2026-11-11', v: '5', n: '' } } });
+const nw5 = sent.find(x => x.m === 'sendWidget'), r5b = db.prepare("SELECT mid, act FROM rcpt WHERE CAST(uid AS REAL) = 71").get();
+assert(nw5 && nw5.html === W._t.RC_HTML && sent.some(x => x.m === 'deleteMessage' && x.message_id === r5.mid) && r5b.mid !== r5.mid && /"st":"ok"/.test(r5b.act), 'обычный расход — обычная карточка с меню, старая удалена');
+sent = []; await msg(U5, 'кофе 300 кафе'); const r6 = db.prepare("SELECT id FROM rcpt WHERE CAST(uid AS REAL) = 71 AND text = 'кофе 300 кафе'").get();
+db.prepare("UPDATE rcpt SET at = at - 3 * 864e5 WHERE CAST(uid AS REAL) = 71 AND id = ?").run(r6.id);
+sent = []; await W._t.staleRemind(env); const st6 = sent.filter(x => x.m === 'editMessageWidgetData').map(x => JSON.parse(x.chat_data));
+assert(st6.length === 1 && /Ждёт 3 дня/.test(st6[0].hn) && st6[0].o[0][4] === 'Кафе и рестораны' && st6[0].a, 'зависшая запись: «Ждёт 3 дня», карточка и меню на месте');
+await b5.ack([r6.id]); sent = []; await W._t.staleRemind(env); assert(!sent.some(x => x.m === 'editMessageWidgetData'), 'приложение забрало — не напоминаем');

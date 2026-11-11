@@ -74,7 +74,8 @@ export default {
   },
   async scheduled(ev, env, ctx) {
     if (ev.cron === WEEKLY) ctx.waitUntil(sendWeekly(env).catch(e => console.error('weekly', e && e.stack || e)));
-    else ctx.waitUntil(rollup(env).catch(e => console.error('rollup', e && e.stack || e)));
+    else { ctx.waitUntil(rollup(env).catch(e => console.error('rollup', e && e.stack || e)));
+      ctx.waitUntil(staleRemind(env).catch(e => console.error('stale', e && e.stack || e))); }
   }
 };
 
@@ -124,6 +125,9 @@ const d1Store = (env, uid) => {
       // v267: кнопки в карточке
       async get(id) { await d1Init(env); const r = await q('SELECT id, chat, mid, text, act FROM rcpt WHERE uid = ? AND id = ?', uid, String(id)).first(); return r ? { ...r, id: String(r.id) } : null; },
       async byMsg(chat, mid) { await d1Init(env); const r = await q('SELECT id, chat, mid, text, act FROM rcpt WHERE uid = ? AND chat = ? AND mid = ?', uid, chat, mid).first(); return r ? { ...r, id: String(r.id) } : null; },
+      async dgq(ids) { await d1Init(env); const out = new Set();   // v275: какие квитанции ушли карточкой долга/цели
+        for (const id of ids.slice(0, 20)) { const r = await q('SELECT act FROM rcpt WHERE uid = ? AND id = ?', uid, String(id)).first(); if (r && /"st":"dgq"/.test(r.act || '')) out.add(String(id)); } return out; },
+      async setMid(id, mid) { await d1Init(env); await q('UPDATE rcpt SET mid = ?, act = NULL WHERE uid = ? AND id = ?', mid, uid, String(id)).run(); },
       async setAct(id, act) { await d1Init(env); await q('UPDATE rcpt SET act = ? WHERE uid = ? AND id = ?', act, uid, String(id)).run(); },
       async drop(id) { await d1Init(env); await env.DB.batch([q('DELETE FROM rcpt WHERE uid = ? AND id = ?', uid, String(id)), q('DELETE FROM cmds WHERE uid = ? AND sid = ?', uid, String(id))]); },
       async cmd(sid, op, val, v) {
@@ -321,12 +325,21 @@ async function queuePhrase(env, box, chat, text, ts, mid0, open, reply) {
   if (mid) {
     await box.rc.add(id, chat, mid, shown);
     if (pv) await box.rc.setAct(id, JSON.stringify(pv.act));
+    else if (dgp || (useW(env) && PV_DG.test(' ' + shown.toLowerCase().replace(/ё/g, 'е')))) await box.rc.setAct(id, JSON.stringify({ st: 'dgq', ...(dgp ? { g: [dgp] } : {}) }));   // v275: отправлена карточкой долга/цели
     if (!(await box.has(id))) await finishReceipts(env, box, [id], []);   // приложение успело забрать запись, пока мы отвечали
   }
 }
 
 async function finishReceipts(env, box, ids, bad, notes = {}, hold = [], drop = [], cards = {}) {
   if (!box.rc || !ids.length) return;
+  // v275: ушла карточкой долга/цели, а приложение записало обычную операцию — та карточка покажет лишь строку текста.
+  // Шлём обычную карточку (с меню), старую удаляем; дальше всё — как обычно, по новому сообщению
+  if (box.rc.dgq && useW(env)) { const dq = await box.rc.dgq(ids.map(String).filter(i => cards[i] && !(cards[i].g && cards[i].g.length) && cards[i].o && cards[i].o.length));
+    for (const r of await box.rc.take([...dq], true)) {
+      const act = actOf(cards[r.id]), mid = await sendRcWidget(env, r.chat, r.text, {}, cards[r.id], act, true);
+      if (!mid) continue;
+      await box.rc.setMid(r.id, mid); await tg(env, 'deleteMessage', { chat_id: r.chat, message_id: r.mid }).catch(() => {});
+    } }
   const badSet = new Set(bad.map(String)), holdSet = new Set(hold.map(String)), dropSet = new Set(drop.map(String));
   // v167: «на проверке» — сообщение меняется, квитанция остаётся (после подтверждения в приложении придёт второй ack → «✅ Записано»)
   const held = await box.rc.take(ids.map(String).filter(i => holdSet.has(i)), true);
@@ -380,6 +393,7 @@ function rcData(s, card, note, x) {
   if (c && Array.isArray(c.o) && c.o.length) d.o = c.o.slice(0, 4).filter(Array.isArray).map(p => [p[0] ? 1 : 0, str(p[1], 40), str(p[2], 16), /^#[0-9a-f]{6}$/i.test(p[3]) ? p[3] : '', str(p[4], 40), str(p[5], 80), Math.max(0, Math.min(9, Number(p[6]) || 0)), str(p[7], 80)]);
   if (c && Array.isArray(c.g)) d.g = c.g.slice(0, 2).filter(x => x && typeof x === 'object').map(dgClean);   // v272: долг/цель
   if (x && x.ph) d.ph = str(x.ph, 120);
+  if (x && x.hn) d.hn = str(x.hn, 120);
   if (c && Array.isArray(c.b)) d.b = [Math.max(0, Math.min(9, Number(c.b[0]) || 0)), str(c.b[1], 40), str(c.b[2], 60), str(c.b[3], 60)];
   const n = c && c.n ? c.n : !d.o ? note : '';   // старое приложение: только текст notes
   if (n) d.n = str(n, 600);
@@ -396,8 +410,8 @@ function rcData(s, card, note, x) {
   }
   return j;
 }
-async function sendRcWidget(env, chat, shown, open, card, act) {
-  const dg = !act && PV_DG.test(' ' + String(shown).toLowerCase().replace(/ё/g, 'е')), wq = useWQ(env) && !dg, x = dg ? { ph: shown } : wq ? { a: waOf(act, []) } : null;
+async function sendRcWidget(env, chat, shown, open, card, act, plain) {
+  const dg = !plain && !act && PV_DG.test(' ' + String(shown).toLowerCase().replace(/ё/g, 'е')), wq = useWQ(env) && !dg, x = dg ? { ph: shown } : wq ? { a: waOf(act, []) } : null;
   if (wq && !hookOk) { hookOk = true; await ensureCallbacks(env).catch(() => {}); }   // widget_query должен доходить до бота
   const r = await (await tg(env, 'sendWidget', { chat_id: chat, html: dg ? RC_DG : RC_HTML, public_data: dg ? RC_DGPUB : RC_PUB, chat_data: rcData('q', card, '', x),
     ...(wq || (dg && useWQ(env)) ? {} : { caption: `${RC_CAP.q}: «${shown}»`, show_caption_above_media: true }),
@@ -840,6 +854,21 @@ async function dgDo(env, box, row, act, wq, ans) {
   await ans({ ok: 1 });
   const m = await (await reply(dgAsk(x), { reply_markup: { force_reply: true, input_field_placeholder: 'Например, 500' } })).json().catch(() => null);
   if (m && m.ok && m.result) await box.rc.ask(m.result.message_id, dgTpl(x));
+}
+// v275: раз в сутки (cron итогов) — карточки, чья запись так и ждёт приложения дольше суток: «Ждёт N дн. — откройте приложение».
+// Меняются только данные карточки (тихо, без уведомления); сам бот по-прежнему ничего не записывает
+async function staleRemind(env, now = Date.now()) {
+  if (!env.DB || !useW(env)) return;
+  await d1Init(env);
+  const rows = (await env.DB.prepare('SELECT r.uid, r.id, r.chat, r.mid, r.text, r.act, r.at FROM rcpt r WHERE r.at < ? AND EXISTS (SELECT 1 FROM msgs m WHERE m.uid = r.uid AND m.id = r.id) ORDER BY r.at LIMIT 200').bind(now - 864e5).all()).results || [];
+  for (const r of rows) {
+    const days = Math.max(1, Math.floor((now - r.at) / 864e5)), hn = `⏳ Ждёт ${days} ${days === 1 ? 'день' : days < 5 ? 'дня' : 'дней'} — откройте приложение, чтобы записать`;
+    let act = null; try { act = JSON.parse(r.act || 'null'); } catch {}
+    const box = store(env, r.uid), pend = act && act.r ? await box.rc.cmdsOf(String(r.id)) : [];
+    const card = act && act.st === 'dgq' ? (act.g ? { o: [], g: act.g } : null) : act && act.r ? cardOf(act, pend) : null;
+    const x = { hn, ...(act && act.r && useWQ(env) ? { a: waOf(act, pend) } : act && act.st === 'dgq' ? { ph: r.text } : {}) };
+    await tg(env, 'editMessageWidgetData', { chat_id: r.chat, message_id: r.mid, chat_data: rcData('q', card, '', x) }).catch(() => {});
+  }
 }
 async function onWidgetQuery(wq, env) {
   const ans = o => tg(env, 'answerWidgetQuery', { widget_query_id: wq.id, data: JSON.stringify(o) }).catch(() => {});
