@@ -333,8 +333,6 @@ const useW = env => String(env.WIDGETS ?? '1').trim() !== '0';
 // v270: кнопки — внутри карточки (запросы виджета, widget_query); WQ=0 — как в v269, кнопками Telegram под сообщением
 const rcPend = async r => r.pend || [];
 const useWQ = env => useW(env) && String(env.WQ ?? '1').trim() !== '0';
-let BOTU = null;   // имя бота — для «Открыть» в карточке (t.me/<бот>?startapp)
-async function botUser(env) { if (BOTU !== null) return BOTU; const r = await (await tg(env, 'getMe', {})).json().catch(() => null); BOTU = (r && r.ok && r.result && r.result.username) || ''; return BOTU; }
 // тексты статусов — в данных, не в HTML (экономия места в HTML)
 const RC_TX = { drop: { hn: 'В учёт не попало.' },
   bad: { hn: 'Напишите, например:\n• «кофе 300 кафе»\n• «Иван должен 500»' } };
@@ -344,19 +342,27 @@ const waOf = (act, pend) => { if (!act) return null; const p = { c: -1, d: '', x
   return { k: act.k.map(c => [c[2] || '', c[3] || c[1], c[5] ? 1 : 0]), i: incOf(act, pend) ? 1 : 0, td: act.td, d: act.d, st: act.st || 'ok', p }; };
 const RC_CAP = { q: '⏳ В очереди', h: '📝 Получено', ok: '✅ Записано', drop: '🗑 Не записано', bad: '⚠ Приложение не поняло' };
 const u8 = s => new TextEncoder().encode(s).length;
+// v272: долг {k:'d', w кто, i вам должны?, ev new/add/pay, e сумма события, l остаток, t всего, p доля возврата, due срок, c закрыт}; цель {k:'g', w, ev new/in/out, e, s накоплено, t цель, p, l осталось, by срок, c достигнута}
+const dgClean = x => { const o = { k: x.k === 'g' ? 'g' : 'd' };
+  for (const f of ['w', 'e', 'l', 't', 's', 'due', 'by']) if (x[f] != null && x[f] !== '') o[f] = String(x[f]).slice(0, 40);
+  if (['new', 'add', 'pay', 'in', 'out'].includes(x.ev)) o.ev = x.ev; o.p = Math.max(0, Math.min(1, Number(x.p) || 0)); if (x.i) o.i = 1; if (x.c) o.c = 1; return o; };
+// фразы про долги и цели — своя карточка (решается при отправке: HTML сообщения потом не меняется)
+const PV_DG = /(^|\s)(долг|долж|одолж|занял|заняла|займ|верн|цел[ьиюя]|копи|накоп|отлож)/u;
 const str = (v, n) => String(v ?? '').slice(0, n);
 // данные карточки: s — статус; o — операции [доход?, сумма, эмодзи, цвет, категория, подпись, доля лимита, текст лимита]; b — бюджет [доля, заголовок, значение, остаток]; n — текст
 function rcData(s, card, note, x) {
   const d = { s, ...(RC_TX[s] || {}) }, c = card && typeof card === 'object' ? card : null;
-  if (x && x.u) d.u = str(x.u, 40);
   if (x && x.a) d.a = x.a;
   if (c && Array.isArray(c.o) && c.o.length) d.o = c.o.slice(0, 4).filter(Array.isArray).map(p => [p[0] ? 1 : 0, str(p[1], 40), str(p[2], 16), /^#[0-9a-f]{6}$/i.test(p[3]) ? p[3] : '', str(p[4], 40), str(p[5], 80), Math.max(0, Math.min(9, Number(p[6]) || 0)), str(p[7], 80)]);
+  if (c && Array.isArray(c.g)) d.g = c.g.slice(0, 2).filter(x => x && typeof x === 'object').map(dgClean);   // v272: долг/цель
+  if (x && x.ph) d.ph = str(x.ph, 120);
   if (c && Array.isArray(c.b)) d.b = [Math.max(0, Math.min(9, Number(c.b[0]) || 0)), str(c.b[1], 40), str(c.b[2], 60), str(c.b[3], 60)];
   const n = c && c.n ? c.n : !d.o ? note : '';   // старое приложение: только текст notes
   if (n) d.n = str(n, 600);
   let j = JSON.stringify(d);
   while (u8(j) > 1024) {                         // не влезло — сначала меньше вариантов меню, короче текст, меньше операций, без бюджета
     if (d.a && d.a.k.length > 4) d.a.k.pop();
+    else if (d.g && d.g.length > 1) d.g.pop();
     else if (d.n && d.n.length > 60) d.n = d.n.slice(0, Math.floor(d.n.length * 0.75)) + '…';
     else if (d.n) delete d.n;
     else if (d.o && d.o.length > 1) d.o.pop();
@@ -367,10 +373,11 @@ function rcData(s, card, note, x) {
   return j;
 }
 async function sendRcWidget(env, chat, shown, open, card, act) {
-  const wq = useWQ(env), x = wq ? { u: await botUser(env), a: waOf(act, []) } : null;
+  const dg = !act && PV_DG.test(' ' + String(shown).toLowerCase().replace(/ё/g, 'е')), wq = useWQ(env) && !dg, x = dg ? { ph: shown } : wq ? { a: waOf(act, []) } : null;
   if (wq && !hookOk) { hookOk = true; await ensureCallbacks(env).catch(() => {}); }   // widget_query должен доходить до бота
-  const r = await (await tg(env, 'sendWidget', { chat_id: chat, html: RC_HTML, public_data: RC_PUB, chat_data: rcData('q', card, '', x), ...(wq ? {} : { caption: `${RC_CAP.q}: «${shown}»`, show_caption_above_media: true }),
-    ...(wq ? { allow_queries: true } : open) })).json().catch(() => null);
+  const r = await (await tg(env, 'sendWidget', { chat_id: chat, html: dg ? RC_DG : RC_HTML, ...(dg ? {} : { public_data: RC_PUB }), chat_data: rcData('q', card, '', x),
+    ...(wq || (dg && useWQ(env)) ? {} : { caption: `${RC_CAP.q}: «${shown}»`, show_caption_above_media: true }),
+    ...(wq ? { allow_queries: true } : dg && useWQ(env) ? {} : open) })).json().catch(() => null);
   if (r && r.ok && r.result && r.result.message_id) return r.result.message_id;
   console.error('widget', r && r.description); return null;
 }
@@ -466,7 +473,6 @@ function draw2(){var a=D.a,p=a&&a.p||{},q=a&&a.st!=="ok";mb.textContent="";pc.te
 if(a){if(p.x)mb.appendChild(btn("U",q?"Записать":"Не отменять",function(){rq("u")}));
 else{mb.appendChild(btn("K","Категория",function(){open("K")},P==="K"?"on":""));mb.appendChild(btn("D","Дата",function(){cm=(p.d||a.d).slice(0,7);open("D")},P==="D"?"on":""));
 mb.appendChild(btn("X",q?"Убрать":"Отменить",function(){open("X")},"rd"+(P==="X"?" on":"")))}}
-if(D.u&&(!a||q))mb.appendChild(btn("O","Открыть",function(){try{T.openTelegramLink("https://t.me/"+D.u+"?startapp=1")}catch(e){}}));
 mb.style.display=mb.children.length?"":"none";
 if(a&&!p.x&&P==="K"){var g=E("div","gr");(a.k||[]).forEach(function(c,i){if((c[2]?1:0)!==(a.i?1:0))return;var b=E("button","ch"+(p.c===i?" sel":""));b.type="button";b.style.setProperty("--j",i);
 b.appendChild(E("span",0,c[0]||"•"));b.appendChild(E("span",0,c[1]));b.onclick=function(){hp();rq("c:"+i,function(){P="";draw2()})};g.appendChild(b)});pc.appendChild(g)}
@@ -484,13 +490,90 @@ for(var d=1;d<=n;d++){(function(d){var ds=cm+"-"+(d<10?"0":"")+d,b=E("button",ds
 b.onclick=function(){hp();rq("d:"+ds,function(){P="";draw2()})};g.appendChild(b)})(d)}c.appendChild(g);return c}
 draw();if(T.onEvent)T.onEvent("chatDataChanged",draw);if(T.ready)T.ready();
 </script></body></html>`;
+// v272: отдельная карточка для долгов и целей (исходник worker/card-dg.html): человек и остаток / кольцо цели, событие, срок, конфетти при закрытии
+const RC_DG = String.raw`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
+:root{--B:var(--tg-theme-button-color,#3390ec);--S:var(--tg-theme-secondary-bg-color,#f0f0f2);--H:var(--tg-theme-hint-color,#8a8a8e);--G:var(--tg-theme-bg-color,#fff);--T:var(--tg-theme-text-color,#000);--E:#2fa65a;--O:#f08c2e}
+*{box-sizing:border-box;margin:0}
+html,body{background:var(--G)}
+body{font:14px/1.3 system-ui,sans-serif;color:var(--T);padding:10px 12px 12px;-webkit-user-select:none;user-select:none;overflow:hidden}
+.q{display:flex;gap:8px;align-items:center;color:var(--H);font-size:13px}
+.q i{flex:0 0 8px;height:8px;border-radius:50%;background:var(--B);animation:p 1.2s infinite}
+@keyframes p{50%{opacity:.25;transform:scale(.6)}}
+.sk{height:12px;border-radius:6px;margin-top:10px;background:linear-gradient(90deg,var(--S) 0,color-mix(in srgb,var(--S) 40%,var(--G)) 50%,var(--S) 100%);background-size:200% 100%;animation:sh 1.3s linear infinite}
+@keyframes sh{to{background-position:-200% 0}}
+.c{animation:f .45s both;animation-delay:calc(var(--j)*90ms)}
+@keyframes f{from{opacity:0;transform:translateY(6px)}}
+.hd{display:flex;align-items:center;gap:10px}
+.av{flex:0 0 42px;height:42px;border-radius:50%;display:grid;place-items:center;font-size:19px;font-weight:700;color:#fff;background:var(--E)}
+.av.o{background:var(--O)}
+.m{flex:1;min-width:0}
+.nm{font-weight:650;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb{font-size:12px;color:var(--H)}
+.bg{text-align:right;white-space:nowrap}
+.bg b{display:block;font-size:17px;font-variant-numeric:tabular-nums}
+.ev{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:5px 10px;border-radius:999px;font-size:12.5px;font-weight:600;background:color-mix(in srgb,var(--B) 14%,transparent);color:var(--B)}
+.ev.e{background:color-mix(in srgb,var(--E) 15%,transparent);color:var(--E)}
+.bar{height:8px;border-radius:4px;background:var(--S);overflow:hidden;margin:10px 0 4px}
+.bar i{display:block;height:100%;width:0;border-radius:4px;background:var(--E);transition:width .9s cubic-bezier(.2,.8,.2,1)}
+.bar.o i{background:var(--O)}
+.ln{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--H)}
+.ln b{color:var(--T);font-weight:600}
+.du{display:inline-block;margin-top:8px;font-size:12px;color:var(--H);padding:3px 8px;border-radius:8px;background:var(--S)}
+.rg{flex:0 0 74px;height:74px;position:relative}
+.rg svg{width:74px;height:74px;transform:rotate(-90deg)}
+.rg circle{fill:none;stroke-width:8;stroke:var(--S)}
+.rg .v{stroke:var(--E);stroke-linecap:round;stroke-dasharray:201;stroke-dashoffset:201;transition:stroke-dashoffset 1.1s cubic-bezier(.2,.8,.2,1)}
+.rg b{position:absolute;inset:0;display:grid;place-items:center;font-size:17px;font-variant-numeric:tabular-nums}
+.ok{display:flex;align-items:center;gap:8px;margin-top:10px;font-weight:650;color:var(--E)}
+.ok svg{width:22px;height:22px;stroke:var(--E);fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.ok path{stroke-dasharray:24;stroke-dashoffset:24;animation:ck .6s .5s forwards}
+@keyframes ck{to{stroke-dashoffset:0}}
+.cf{position:fixed;top:-10px;width:7px;height:11px;border-radius:2px;animation:fl 1.6s ease-in forwards;pointer-events:none}
+@keyframes fl{to{transform:translate(var(--x),240px) rotate(var(--r));opacity:0}}
+.t{white-space:pre-wrap;font-size:13px}
+.sep{height:1px;background:rgba(128,128,128,.18);margin:12px 0}
+</style></head><body><div id="w"></div><script>
+var T=window.TelegramWidget||{},w=document.getElementById("w"),j=0;
+function E(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+function A(p,e){e.style.setProperty("--j",j++);p.appendChild(e);return e}
+function hp(){try{T.HapticFeedback.notificationOccurred("success")}catch(e){}}
+function pct(x){return Math.max(0,Math.min(1,+x||0))}
+function bar(p,o){var b=E("div","bar"+(o?" o":"")),i=E("i");b.appendChild(i);setTimeout(function(){i.style.width=Math.max(2,pct(p)*100)+"%"},80);return b}
+function boom(){hp();for(var k=0;k<26;k++){var s=E("i","cf");s.style.left=(Math.random()*100)+"%";s.style.background=["#2fa65a","#3390ec","#f08c2e","#e5484d","#f2c94c"][k%5];
+s.style.setProperty("--x",(Math.random()*80-40)+"px");s.style.setProperty("--r",(Math.random()*720-360)+"deg");s.style.animationDelay=(Math.random()*.4)+"s";document.body.appendChild(s);setTimeout(function(e){e.remove()},2300,s)}}
+function okRow(t){var o=E("div","ok");o.innerHTML='<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';o.appendChild(E("span",0,t));return o}
+function debt(x){var c=E("div","c"),h=E("div","hd"),av=E("div","av"+(x.i?"":" o"),(x.w||"?").trim().charAt(0).toUpperCase()),m=E("div","m"),bg=E("div","bg");
+m.appendChild(E("div","nm",x.w));m.appendChild(E("div","sb",x.i?"Вам должны":"Вы должны"));
+bg.appendChild(E("b",0,x.c?x.t:x.l));bg.appendChild(E("span","sb",x.c?"закрыт":"осталось"));h.appendChild(av);h.appendChild(m);h.appendChild(bg);c.appendChild(h);
+var ev={new:x.i?"Дали в долг":"Взяли в долг",add:"Добавлено к долгу",pay:x.i?"Вам вернули":"Вы вернули"}[x.ev];
+if(ev&&x.e)c.appendChild(E("div","ev"+(x.ev==="pay"?" e":""),(x.ev==="pay"?"↩ ":"＋ ")+ev+" · "+x.e));
+if(x.c)c.appendChild(okRow("Долг закрыт полностью"));
+else{c.appendChild(bar(x.p,!x.i));var l=E("div","ln");l.appendChild(E("span",0,"Возвращено "+Math.round(pct(x.p)*100)+"%"));var t=E("span");t.appendChild(document.createTextNode("всего "));t.appendChild(E("b",0,x.t));l.appendChild(t);c.appendChild(l)}
+if(x.due&&!x.c)c.appendChild(E("div","du","⏰ "+x.due));return c}
+function goal(x){var c=E("div","c"),h=E("div","hd"),rg=E("div","rg"),m=E("div","m"),P=Math.round(pct(x.p)*100);
+rg.innerHTML='<svg viewBox="0 0 74 74"><circle cx="37" cy="37" r="32"/><circle class="v" cx="37" cy="37" r="32"/></svg>';var n=E("b",0,"0%");rg.appendChild(n);
+setTimeout(function(){rg.querySelector(".v").style.strokeDashoffset=201*(1-pct(x.p));var t0=Date.now();(function st(){var k=Math.min(1,(Date.now()-t0)/1000);n.textContent=Math.round(P*(1-Math.pow(1-k,3)))+"%";if(k<1)requestAnimationFrame(st)})()},80);
+m.appendChild(E("div","nm","🎯 "+x.w));var s=E("div","sb");s.appendChild(document.createTextNode("Накоплено "));s.appendChild(E("b",0,x.s));s.appendChild(document.createTextNode(" из "+x.t));m.appendChild(s);
+if(!x.c&&x.l)m.appendChild(E("div","sb","Осталось "+x.l));h.appendChild(rg);h.appendChild(m);c.appendChild(h);
+var ev={new:"Новая цель",in:"В копилку",out:"Из цели"}[x.ev];if(ev)c.appendChild(E("div","ev"+(x.ev==="in"?" e":""),ev+(x.e?" · "+x.e:"")));
+if(x.c)c.appendChild(okRow("Цель достигнута"));if(x.by&&!x.c)c.appendChild(E("div","du","⏰ "+x.by));return c}
+var seen="";
+function draw(){var D={};try{D=JSON.parse(T.chatData||"{}")||{}}catch(e){}
+w.textContent="";j=0;
+if(D.s==="q"){var q=E("div","q");q.appendChild(E("i"));q.appendChild(E("span",0,D.ph?"«"+D.ph+"»":""));w.appendChild(q);w.appendChild(E("div","sk"));var k2=E("div","sk");k2.style.width="60%";w.appendChild(k2);return}
+var g=D.g||[],any=0;g.forEach(function(x,i){if(i)w.appendChild(E("div","sep"));A(w,x.k==="g"?goal(x):debt(x));if(x.c)any=1});
+(D.o||[]).forEach(function(p){A(w,E("div","t",p[1]+" · "+p[4]))});
+if(D.n&&!g.length)A(w,E("div","t",D.n));if(D.hn)A(w,E("div","t sb",D.hn));
+var key=JSON.stringify(g);if(any&&key!==seen)setTimeout(boom,700);seen=key}
+draw();if(T.onEvent)T.onEvent("chatDataChanged",draw);if(T.ready)T.ready();
+</script></body></html>`;
 // v270: значки меню карточки (svg) — в public_data сообщения (своё место 1024 байта), чтобы HTML уложился в 4 КБ после zlib
-const RC_PUB = JSON.stringify({ i: {"K":["rotate(-20deg)","<path class=g d='M3.5 12.2V4.6c0-.6.5-1.1 1.1-1.1h7.6l8.3 8.3-8.7 8.7z'/><circle cx='8' cy='8' r='1.4'/>"],"D":["scaleY(.5)","<rect x='3.5' y='5' width='17' height='15' rx='2.5'/><path d='M8 3v4M16 3v4'/><path class=g d='M3.5 10h17M8 14h2M14 14h2M8 17h2'/>"],"X":["translate(2px,-4px) rotate(-22deg)","<path d='M6 8.5l1 11h10l1-11M10 12v5M14 12v5'/><path class=g d='M4 6.5h16M9.5 6.5V4h5v2.5'/>"],"U":["rotate(-60deg)","<path class=g d='M8 7L4 11l4 4'/><path d='M4 11h10a5 5 0 0 1 0 10h-3'/>"],"O":["translate(4px,-4px)","<path d='M14 4h6v6M20 4l-9 9'/><path class=g d='M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5'/>"]}, t: ["Подождите пару секунд", "Не получилось, попробуйте ещё раз", "Применится, когда откроется приложение", "Обновите Telegram"] });
+const RC_PUB = JSON.stringify({ i: {"K":["rotate(-20deg)","<path class=g d='M3.5 12.2V4.6c0-.6.5-1.1 1.1-1.1h7.6l8.3 8.3-8.7 8.7z'/><circle cx='8' cy='8' r='1.4'/>"],"D":["scaleY(.5)","<rect x='3.5' y='5' width='17' height='15' rx='2.5'/><path d='M8 3v4M16 3v4'/><path class=g d='M3.5 10h17M8 14h2M14 14h2M8 17h2'/>"],"X":["translate(2px,-4px) rotate(-22deg)","<path d='M6 8.5l1 11h10l1-11M10 12v5M14 12v5'/><path class=g d='M4 6.5h16M9.5 6.5V4h5v2.5'/>"],"U":["rotate(-60deg)","<path class=g d='M8 7L4 11l4 4'/><path d='M4 11h10a5 5 0 0 1 0 10h-3'/>"]}, t: ["Подождите пару секунд", "Не получилось, попробуйте ещё раз", "Применится, когда откроется приложение", "Обновите Telegram"] });
 
 async function rcEdit(env, r, s, text, note, card, kb, cap, act) {
   const mk = kb ? { reply_markup: kb } : {}, wq = useWQ(env);
   if (useW(env)) {
-    const x = wq ? { u: await botUser(env), a: act ? waOf(act, await rcPend(r)) : null } : null;
+    const x = wq ? { a: act ? waOf(act, await rcPend(r)) : null } : null;
     const w = await (await tg(env, 'editMessageWidgetData', { chat_id: r.chat, message_id: r.mid, chat_data: rcData(s, card, note, x) })).json().catch(() => null);
     if (w && w.ok) return wq ? w : tg(env, 'editMessageCaption', { chat_id: r.chat, message_id: r.mid, caption: cap || `${RC_CAP[s]}: «${r.text}»`, show_caption_above_media: true, ...mk }).catch(() => {});   // v271: в режиме меню подписи нет — только карточка
   }
@@ -637,7 +720,7 @@ const pvText = pv => { const r = pv.card.o[0]; return `${r[1]} · ${r[2]} ${r[4]
 // v270: перерисовать карточку после нажатия: выбранное видно сразу, меню знает, что уже нажато
 async function wPaint(env, id, act, pend) {
   const del = pend.some(p => p.op === 'del'), q = isQ(act), c = cardOf(act, pend) || { o: [] };
-  const x = useWQ(env) ? { u: await botUser(env), a: waOf(act, pend) } : null;
+  const x = useWQ(env) ? { a: waOf(act, pend) } : null;
   return tg(env, 'editMessageWidgetData', { ...id, chat_data: rcData(del ? 'un' : act.st === 'ok' ? 'ok' : act.st, c, del ? (q ? 'Не будет записано.' : 'Отменится, когда откроется приложение.') : '', x) });
 }
 // одно действие из меню (кнопки Telegram или запрос виджета): c:<номер> — категория, d:<дата>, x — не записывать / отменить, u — вернуть

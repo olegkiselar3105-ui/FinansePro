@@ -10,7 +10,7 @@ globalThis.fetch = async (u, o) => { const m = String(u).split('/').pop(), b = J
   if (failWidget && /Widget/.test(m)) return new Response(JSON.stringify({ ok: false, description: 'Bad Request: method not found' }));
   return new Response(JSON.stringify({ ok: true, result: { message_id: ++mid } })); };
 const src = new URL('../worker/worker.js', import.meta.url), tmp = path.join(os.tmpdir(), 'fp-rc-test-' + process.pid + '.mjs');
-fs.writeFileSync(tmp, fs.readFileSync(src, 'utf8') + '\nexport const _t = { finishReceipts, rcData, RC_HTML, RC_PUB, store, cmdFinish, profClean };\n');
+fs.writeFileSync(tmp, fs.readFileSync(src, 'utf8') + '\nexport const _t = { finishReceipts, rcData, RC_HTML, RC_DG, RC_PUB, store, cmdFinish, profClean };\n');
 const W = await import(tmp); fs.unlinkSync(tmp);
 const env = { DB, BOT_TOKEN: 'x', WEBHOOK_SECRET: 's', APP_URL: 'https://a.example/' };
 const ctx = { ps: [], waitUntil(p) { this.ps.push(p.catch(() => {})); } };
@@ -189,3 +189,14 @@ assert(pT.some(c => c.op === 'type' && c.val === 'i') && pT.some(c => c.op === '
 tdd = await wq2('t:e'); const pT2 = ((await W._t.store(env, V).list(0)).cmds || []).filter(c => c.sid === rt.id);
 assert(tdd.a.i === 0 && tdd.o[0][1].startsWith('−') && tdd.o[0][4] === 'Кафе и рестораны' && !pT2.some(c => c.op === 'cat') && !pT2.some(c => c.op === 'type'), '«−» обратно: как было, лишние команды убраны');
 tdd = await wq2('c:' + tdd.a.k.findIndex(c => c[2] === 1)); assert(tdd.a.i === 1 && tdd.o[0][1].startsWith('+'), 'категория дохода сама переключает на «+»');
+// ---------- v272: без «Открыть»; отдельная карточка долгов и целей ----------
+assert(!W._t.RC_HTML.includes('openTelegramLink') && !JSON.parse(W._t.RC_PUB).i.O, '«Открыть» убрана из карточки');
+const zdg = zlib.deflateSync(Buffer.from(W._t.RC_DG), { level: 9 }).length; assert(zdg <= 4096, `карточка долгов/целей: zlib ${zdg} B`);
+for (const t of ['одолжил Ивану 500', 'цель отпуск 50000', 'Маша вернула долг 300']) {
+  sent = []; await msg(41, t); const s1 = sent.find(x => x.m === 'sendWidget'), d1 = JSON.parse(s1.chat_data);
+  assert(s1.html === W._t.RC_DG && !s1.allow_queries && !s1.caption && !s1.reply_markup && d1.s === 'q' && d1.ph === t, `«${t}» — карточка долгов/целей, в очереди`); }
+sent = []; await msg(41, 'кофе 300 кафе'); assert(sent.find(x => x.m === 'sendWidget').html === W._t.RC_HTML, 'обычная фраза — обычная карточка');
+const r41 = db.prepare("SELECT id FROM rcpt WHERE CAST(uid AS REAL) = 41 ORDER BY at").get();
+sent = []; await W._t.finishReceipts(env, W._t.store(env, 41), [r41.id], [], { [r41.id]: '💸 Долг: Иван должен вам 500 MDL' }, [], [], { [r41.id]: { o: [], n: 'x', g: [{ k: 'd', w: 'Иван', i: 1, ev: 'new', e: '500 MDL', l: '500 MDL', t: '500 MDL', p: 0, due: '', c: 0, zz: 'лишнее' }] } });
+const g41 = JSON.parse(sent.find(x => x.m === 'editMessageWidgetData').chat_data);
+assert(g41.s === 'ok' && g41.g[0].w === 'Иван' && g41.g[0].i === 1 && g41.g[0].ev === 'new' && !g41.g[0].zz && !sent.some(x => x.m === 'editMessageCaption'), 'записано: данные долга, лишние поля отброшены, без подписи');

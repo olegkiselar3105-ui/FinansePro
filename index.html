@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v271';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v272';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -2636,6 +2636,21 @@ function botCmds(list){const by={},done=[],res={},ch=[],mem=BCD.get(),hc={};let 
   Object.entries(hc).forEach(([sid,ds])=>{try{cards[sid]=botCard(ds,false,true)}catch(e){}});
   if(dsDrop)setTimeout(()=>{try{bhFinish([])}catch(e){}},0);   // «Не записывать» для черновика — бот получит «🗑 Не записано»
   return {done,res,cards,n:ch.length+Object.keys(hc).length,del}}
+// v272: отдельная карточка в боте для долгов и целей — что изменила команда (снимок до и после voiceCmds); суммы — BM_/fmt
+function dgSnap(){const m=new Map();(cfg.debts||[]).forEach(d=>m.set('d'+d.id,{a:+d.amount||0,p:+d.paid||0}));(cfg.goals||[]).forEach(g=>m.set('g'+g.id,{s:+g.saved||0}));return m}
+function dgDiff(m0){const out=[];
+  (cfg.debts||[]).forEach(d=>{const p=m0.get('d'+d.id),a=+d.amount||0,pd=+d.paid||0;let ev=null,e=0;
+    if(!p){ev='new';e=a}else if(pd>p.p){ev='pay';e=pd-p.p}else if(a>p.a){ev='add';e=a-p.a}
+    if(ev)out.push({k:'d',id:d.id,ev,e})});
+  (cfg.goals||[]).forEach(g=>{const p=m0.get('g'+g.id),sv=+g.saved||0;let ev=null,e=0;
+    if(!p){ev='new';e=sv}else if(sv!==p.s){ev=sv>p.s?'in':'out';e=Math.abs(sv-p.s)}
+    if(ev)out.push({k:'g',id:g.id,ev,e})});
+  return out.slice(0,2)}
+function dgCard(ch){return (ch||[]).map(c=>{
+  if(c.k==='d'){const d=(cfg.debts||[]).find(x=>x.id===c.id);if(!d)return null;const L=dRem(d);
+    return {k:'d',w:String(d.who||'').slice(0,40),i:d.dir==='in'?1:0,ev:c.ev,e:c.e>0?BM_(c.e):'',l:BM_(L),t:BM_(d.amount||0),p:d.amount>0?Math.min(1,(d.paid||0)/d.amount):0,due:d.due?'до '+dueShort(d.due):'',c:L<=0?1:0}}
+  const g=(cfg.goals||[]).find(x=>x.id===c.id);if(!g)return null;const tg=+g.target||0,sv=+g.saved||0;
+  return {k:'g',w:String(g.name||'').slice(0,40),ev:c.ev,e:c.e>0?BM_(c.e):'',s:fmt(sv),t:BM_(tg),p:tg>0?Math.min(1,sv/tg):0,l:tg>sv?BM_(tg-sv):'',by:g.by?'к '+dueShort(g.by):'',c:tg>0&&sv>=tg?1:0}}).filter(Boolean)}
 function voiceCmds(raw){
   let t=' '+String(raw||'').toLowerCase().replace(/ё/g,'е')+' ';const msgs=[],rich=[];const say=(a,b)=>{msgs.push(a);rich.push(b||a)};   // v166: msgs — коротко (уведомления в приложении), rich — подробно (ответ бота)
   // голосом числа часто приходят словами: «одолжил Ивану пятьсот» → 500 (только в командах про долги/цели/лимиты/бюджет)
@@ -6359,8 +6374,8 @@ async function inboxPull(fast,wait){
       if(seen.has(sid)){okIds.push(sid);continue}                       // уже записано раньше — просто подтверждаем
       const text=String(it.text||'').trim().slice(0,500);okIds.push(sid);fresh.push(sid);if(!text)continue;
       try{
-        let cm={rest:text,msgs:[]},r=[];needRate.clear();
-        ibAt(it.ts,()=>{cm=voiceCmds(text);r=parse(cm.rest)});
+        let cm={rest:text,msgs:[]},r=[];needRate.clear();const dg0=dgSnap();
+        ibAt(it.ts,()=>{cm=voiceCmds(text);r=parse(cm.rest)});const dgc=dgDiff(dg0);   // v272: долги/цели, которые изменила фраза
         if(needRate.size){try{await ratesRefresh(true)}catch{}needRate.clear();ibAt(it.ts,()=>{r=parse(cm.rest)})}
         if(cm.msgs.length)cmd=true;
         if(!r.length&&!cm.msgs.length){bad.push(text);badIds.push(sid);continue}
@@ -6369,7 +6384,7 @@ async function inboxPull(fast,wait){
           if(r.length===1&&!cm.msgs.length)botFix(r[0],pc)}
         const au=bAutoOk(cm,r);   // v266: понятная запись — сразу в учёт
         r.forEach(d=>{delete d.addCat;d.bs=sid;if(au){autoL.push(d);return}d.bsid=sid;if(d.amount>0)added.push(d);else left.push(d)});   // v167: операции из бота — на проверку (черновики)
-        nbuild[sid]={rich:cm.rich||cm.msgs,ops:r.filter(d=>d.amount>0),au};   // v166: ответ бота собирается после записи — с итогами бюджета и лимитов
+        nbuild[sid]={rich:cm.rich||cm.msgs,ops:r.filter(d=>d.amount>0),au,dg:dgc};   // v166: ответ бота собирается после записи — с итогами бюджета и лимитов
       }catch(e){bad.push(text);badIds.push(sid)}}                           // одна «битая» запись не должна блокировать остальные
     for(let w=0;w<30&&typeof CL==='object'&&CL.busy;w++)await new Promise(r=>setTimeout(r,200));
     let saved=true;
@@ -6381,7 +6396,8 @@ async function inboxPull(fast,wait){
     if(!saved)return;                       // не сохранилось — в очереди запись остаётся, следующий опрос повторит (ничего не теряется)
     const hold=[],bh=BH.get();
     Object.entries(nbuild).forEach(([sid,o])=>{try{if(o.au){notes[sid]=[...o.ops.map(botOpLine),botBudLine(o.ops)].filter(Boolean).join('\n\n').slice(0,1200);cards[sid]=botCard(o.ops,true,true);return}const ops=drafts.filter(d=>d.bsid===sid);if(ops.length){hold.push(sid);bh[sid]=1}
-      const nt=[...o.rich,...(ops.length?['📝 На проверке в приложении:\n'+ops.map(botDraftLine).join('\n')+'\n\nПроверьте и нажмите «Записать».']:[])].filter(Boolean);if(nt.length)notes[sid]=nt.join('\n\n').slice(0,1200);if(ops.length||o.rich.length)cards[sid]={...botCard(ops,false,true),...(o.rich.length?{n:o.rich.join('\n\n').slice(0,600)}:{})}}catch(e){}});
+      const nt=[...o.rich,...(ops.length?['📝 На проверке в приложении:\n'+ops.map(botDraftLine).join('\n')+'\n\nПроверьте и нажмите «Записать».']:[])].filter(Boolean);if(nt.length)notes[sid]=nt.join('\n\n').slice(0,1200);if(ops.length||o.rich.length)cards[sid]={...botCard(ops,false,true),...(o.rich.length?{n:o.rich.join('\n\n').slice(0,600)}:{})};
+      const g=dgCard(o.dg);if(g.length)cards[sid]={...(cards[sid]||{o:[]}),g}}catch(e){}});   // v272: карточка долга/цели
     BH.set(bh);
     fresh.forEach(i=>seen.add(i));ibSeenSave([...seen]);
     if(autoL.length&&!bad.length)toast(autoL.length===1?'Из бота записано: '+botDraftLine(autoL[0]).replace(/^\S+ /,''):'Из бота записано: '+autoL.length);

@@ -89,7 +89,6 @@ function draw2(){var a=D.a,p=a&&a.p||{},q=a&&a.st!=="ok";mb.textContent="";pc.te
 if(a){if(p.x)mb.appendChild(btn("U",q?"Записать":"Не отменять",function(){rq("u")}));
 else{mb.appendChild(btn("K","Категория",function(){open("K")},P==="K"?"on":""));mb.appendChild(btn("D","Дата",function(){cm=(p.d||a.d).slice(0,7);open("D")},P==="D"?"on":""));
 mb.appendChild(btn("X",q?"Убрать":"Отменить",function(){open("X")},"rd"+(P==="X"?" on":"")))}}
-if(D.u&&(!a||q))mb.appendChild(btn("O","Открыть",function(){try{T.openTelegramLink("https://t.me/"+D.u+"?startapp=1")}catch(e){}}));
 mb.style.display=mb.children.length?"":"none";
 if(a&&!p.x&&P==="K"){var g=E("div","gr");(a.k||[]).forEach(function(c,i){if((c[2]?1:0)!==(a.i?1:0))return;var b=E("button","ch"+(p.c===i?" sel":""));b.type="button";b.style.setProperty("--j",i);
 b.appendChild(E("span",0,c[0]||"•"));b.appendChild(E("span",0,c[1]));b.onclick=function(){hp();rq("c:"+i,function(){P="";draw2()})};g.appendChild(b)});pc.appendChild(g)}
