@@ -1,0 +1,70 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
+:root{--S:var(--tg-theme-secondary-bg-color,#f0f0f2);--H:var(--tg-theme-hint-color,#8a8a8e);--G:var(--tg-theme-bg-color,#fff);--T:var(--tg-theme-text-color,#000);--E:#2fa65a;--B:#3390ec;--V:#8a5cf0;--R:#e5484d}
+*{box-sizing:border-box;margin:0}
+html,body{background:var(--G)}
+body{font:14px/1.3 system-ui,sans-serif;color:var(--T);padding:10px 12px 26px;-webkit-user-select:none;user-select:none}
+.hd{display:flex;justify-content:space-between;align-items:baseline;font-weight:650;font-size:15px}
+.hd small{font-weight:400;font-size:11px;color:var(--H)}
+.tb{position:relative;display:flex;margin:10px 0 12px;padding:3px;border-radius:12px;background:var(--S)}
+.tb i{position:absolute;top:3px;bottom:3px;left:3px;width:calc((100% - 6px)/3);border-radius:9px;background:var(--G);box-shadow:0 1px 3px rgba(0,0,0,.18);transition:transform .35s cubic-bezier(.3,1.3,.5,1)}
+.tb button{-webkit-appearance:none;appearance:none;position:relative;flex:1;border:0;background:0;font:inherit;font-size:13px;font-weight:600;color:var(--H);padding:6px 0}
+.tb button.on{color:var(--T)}
+.hr .l,.ti .l{font-size:12px;color:var(--H)}
+.hr .v{font-size:34px;font-weight:750;font-variant-numeric:tabular-nums;line-height:1.1}
+.hr .n{display:inline-block;margin-left:8px;font-size:13px;font-weight:600;color:var(--E);vertical-align:6px}
+.sp{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--S);margin:10px 0 5px}
+.sp i{display:block;height:100%;width:0;transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.lg{display:flex;gap:14px;font-size:12px;color:var(--H)}
+.lg span:before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;background:var(--c)}
+.gr{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.ti{padding:10px 12px;border-radius:12px;background:var(--S);animation:f .4s both;animation-delay:calc(var(--j)*70ms)}
+@keyframes f{from{opacity:0;transform:translateY(5px)}}
+.ti b{display:block;font-size:20px;font-variant-numeric:tabular-nums;margin-top:2px}
+.ti em{font-style:normal;font-size:12px;font-weight:600}
+.up{color:var(--E)}.dw{color:var(--R)}
+.st{font-size:12px;font-weight:650;color:var(--H);text-transform:uppercase;letter-spacing:.04em;margin:16px 0 8px}
+.ch{display:flex;align-items:flex-end;gap:6px;height:86px}
+.ch div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px;height:100%}
+.ch b{font-size:11px;font-variant-numeric:tabular-nums}
+.ch i{display:block;width:100%;max-width:28px;height:0;border-radius:5px 5px 2px 2px;background:var(--B);transition:height .7s cubic-bezier(.2,.8,.2,1)}
+.ch .mx i{background:var(--E)}
+.ch span{font-size:10px;color:var(--H)}
+.rt{display:flex;gap:10px}
+.rt>div{flex:1;display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;background:var(--S)}
+.rg{flex:0 0 54px;height:54px;position:relative}
+.rg svg{width:54px;height:54px;transform:rotate(-90deg)}
+.rg circle{fill:none;stroke-width:7;stroke:rgba(128,128,128,.22)}
+.rg .v{stroke:var(--V);stroke-linecap:round;stroke-dasharray:138;stroke-dashoffset:138;transition:stroke-dashoffset 1s cubic-bezier(.2,.8,.2,1)}
+.rg b{position:absolute;inset:0;display:grid;place-items:center;font-size:13px}
+.rt small{display:block;font-size:12px;color:var(--H)}
+.rf{-webkit-appearance:none;appearance:none;display:block;width:100%;margin-top:12px;border:0;border-radius:12px;padding:10px;font:inherit;font-size:13px;font-weight:600;color:var(--T);background:var(--S)}
+.rf.bz{opacity:.5}
+.nt{font-size:11.5px;color:var(--H);margin-top:8px}
+</style></head><body><div id="w"></div><script>
+var T=window.TelegramWidget||{},w=document.getElementById("w"),D={},tab=1,j=0;
+function E(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+function F(n){return String(Math.round(+n||0)).replace(/\B(?=(\d{3})+(?!\d))/g," ")}
+function cnt(el,v){var t0=Date.now();(function s(){var k=Math.min(1,(Date.now()-t0)/700);el.textContent=F(v*(1-Math.pow(1-k,3)));if(k<1)requestAnimationFrame(s)})()}
+function hp(){try{T.HapticFeedback.selectionChanged()}catch(e){}}
+function ti(l,v,em,cl){var t=E("div","ti");t.style.setProperty("--j",j++);t.appendChild(E("div","l",l));var b=E("b");cnt(b,v);t.appendChild(b);if(em)t.appendChild(E("em",cl,em));return t}
+function dl(a,b){if(!b)return"";var p=Math.round(Math.abs(a-b)*100/b);return a===b?"= как неделей раньше":(a>b?"▲ ":"▼ ")+p+"% к прошлой"}
+function draw(){try{D=JSON.parse(T.chatData||"{}")||{}}catch(e){D={}}if(D.t!=null&&!draw.k){tab=D.t;draw.k=1}paint()}
+function paint(){w.textContent="";j=0;var h=E("div","hd");h.appendChild(E("span",0,D.wk?"🗓 "+D.wk:"📈 Бот FinansePro"));h.appendChild(E("small",0,D.up||""));w.appendChild(h);
+var P=[D.d1,D.d7,D.d30][tab];if(!P){w.appendChild(E("div","nt",D.err||"Данных пока нет"));return}
+if(!D.wk){var tb=E("div","tb"),ind=E("i");tb.appendChild(ind);["Сегодня","7 дней","30 дней"].forEach(function(l,i){var b=E("button",i===tab?"on":"",l);b.type="button";b.onclick=function(){if(tab!==i){tab=i;hp();paint()}};tb.appendChild(b)});
+ind.style.transform="translateX("+(tab*100)+"%)";w.appendChild(tb)}else w.appendChild(E("div","st"," "));
+var hr=E("div","hr");hr.appendChild(E("div","l","Людей"));var v=E("span","v");cnt(v,P.u);hr.appendChild(v);if(P.n)hr.appendChild(E("span","n","+"+P.n+" новых"));w.appendChild(hr);
+var sp=E("div","sp"),a=E("i"),b=E("i"),sm=P.b+P.p||1;a.style.background="var(--B)";b.style.background="var(--V)";sp.appendChild(a);sp.appendChild(b);w.appendChild(sp);
+setTimeout(function(){a.style.width=P.b/sm*100+"%";b.style.width=P.p/sm*100+"%"},60);
+var lg=E("div","lg"),l1=E("span",0,"писали боту "+P.b),l2=E("span",0,"открывали приложение "+P.p);l1.style.setProperty("--c","var(--B)");l2.style.setProperty("--c","var(--V)");lg.appendChild(l1);lg.appendChild(l2);w.appendChild(lg);
+var gr=E("div","gr"),c7=tab===1&&D.w0;gr.appendChild(ti("Сообщений боту",P.m,c7?dl(P.m,D.w0.m):"",c7&&P.m>=D.w0.m?"up":"dw"));gr.appendChild(ti("Из них голосом",P.v,P.m?Math.round(P.v/P.m*100)+"%":"",""));
+if(c7)gr.appendChild(ti("Людей к прошлой",P.u,dl(P.u,D.w0.u),P.u>=D.w0.u?"up":"dw"));if(c7||tab===2)gr.appendChild(ti("Новых",P.n,"",""));w.appendChild(gr);
+if(D.days&&D.days.length){w.appendChild(E("div","st","Заходили по дням"));var ch=E("div","ch"),mx=Math.max.apply(0,D.days.map(function(x){return x[1]}))||1;
+D.days.forEach(function(x,i){var d=E("div",x[1]===mx&&mx>0?"mx":""),bi=E("i");d.appendChild(E("b",0,x[1]||""));d.appendChild(bi);d.appendChild(E("span",0,x[0]));ch.appendChild(d);setTimeout(function(){bi.style.height=Math.max(3,x[1]/mx*58)+"px"},80+i*40)});w.appendChild(ch)}
+if(D.r){w.appendChild(E("div","st","Возвращаются"));var rt=E("div","rt");D.r.forEach(function(r,i){var c=E("div"),g=E("div","rg"),p=r[1]?r[0]/r[1]:0;g.innerHTML='<svg viewBox="0 0 54 54"><circle cx="27" cy="27" r="22"/><circle class="v" cx="27" cy="27" r="22"/></svg>';
+g.appendChild(E("b",0,r[1]?Math.round(p*100)+"%":"—"));c.appendChild(g);var t=E("div");t.appendChild(E("b",0,i?"Через месяц":"Через неделю"));t.appendChild(E("small",0,r[1]?r[0]+" из "+r[1]+(r[1]<10?" · мало людей":""):"пока рано"));c.appendChild(t);rt.appendChild(c);
+setTimeout(function(){g.querySelector(".v").style.strokeDashoffset=138*(1-p)},120)});w.appendChild(rt)}
+if(D.nt)w.appendChild(E("div","nt",D.nt));
+if(T.request){var rf=E("button","rf","🔄 Обновить");rf.type="button";rf.onclick=function(){if(rf.classList.contains("bz"))return;rf.classList.add("bz");hp();T.request(D.wk?"ad:wk":"ad:up").then(function(){rf.classList.remove("bz")}).catch(function(){rf.classList.remove("bz");rf.textContent="Не получилось — ещё раз"})};w.appendChild(rf)}}
+draw();if(T.onEvent)T.onEvent("chatDataChanged",draw);if(T.ready)T.ready();
+</script></body></html>

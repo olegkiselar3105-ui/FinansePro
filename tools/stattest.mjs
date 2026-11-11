@@ -40,7 +40,7 @@ await day(1); await day(30); await botMsg(2, 'ещё 1');
 
 // владелец/чужой
 sent = []; await botMsg(5, '/stats'); assert(sent.filter(x => x.m === 'sendMessage').length === 0, 'non-owner silent');
-await botMsg(42, '/stats'); assert(sent.some(m => /Статистика/.test(m.text)), 'owner gets stats');
+await botMsg(42, '/stats'); assert(sent.some(m => m.m === 'sendWidget' && JSON.parse(m.chat_data).d7), 'owner gets stats (карточка, v276)');
 // уборка 90 дней
 await day(95); assert(db.prepare("SELECT COUNT(*) c FROM act WHERE day < '2026-10-05'").get().c === 0, 'act >90 deleted');
 assert(db.prepare('SELECT COUNT(*) c FROM agg').get().c > 3, 'agg kept');
@@ -62,18 +62,22 @@ assert(/7 дн +▓{7}░{3} +67% +2 из 3/.test(s), 'ret7 = 2 of 3'); assert(s
 const cb = async (uid, data) => { sent = []; await W.default.fetch(new Request('https://w/webhook', { method: 'POST', headers: { 'X-Telegram-Bot-Api-Secret-Token': 's' },
   body: JSON.stringify({ callback_query: { id: 'q1', from: { id: uid }, data, message: { message_id: 7, chat: { id: uid } } } }) }), env, ctx); await flush(); };
 sent = []; await botMsg(42, '/stats');
-const sw = hooks[0], sm = sent.find(x => x.m === 'sendMessage');
+const sw = hooks[0], sm = sent.find(x => x.m === 'sendWidget');
 assert(hooks.length === 1 && sw && sw.allowed_updates.includes('callback_query') && sw.secret_token === 's' && sw.url === hook.url, 'webhook gets callback_query once');
-assert(sm && sm.reply_markup.inline_keyboard[0][0].callback_data === 'st:upd' && sm.parse_mode === 'HTML', 'stats has refresh button');
+assert(sm && sm.allow_queries && /ad:up/.test(sm.html), 'stats card has refresh (ad:up)');
+const sd = JSON.parse(sm.chat_data); assert(sd.d1 && sd.d30 && sd.days.length === 7 && sd.r.length === 2 && !sd.wk, 'stats card: сегодня/7/30, дни, возврат');
+const wq = async (uid, data) => { sent = []; await W.default.fetch(new Request('https://w/webhook', { method: 'POST', headers: { 'X-Telegram-Bot-Api-Secret-Token': 's' },
+  body: JSON.stringify({ widget_query: { id: 'w1', from: { id: uid }, chat: { id: uid, type: 'private' }, message_id: 9, data } }) }), env, ctx); await flush(); };
+await wq(42, 'ad:up'); assert(sent.some(x => x.m === 'editMessageWidgetData' && x.message_id === 9), 'owner: «Обновить» в карточке');
+await wq(5, 'ad:up'); assert(!sent.some(x => x.m === 'editMessageWidgetData'), 'non-owner: «Обновить» игнор');
 await cb(42, 'st:upd'); assert(sent.some(x => x.m === 'editMessageText' && x.message_id === 7 && /Статистика/.test(x.text)) && sent.some(x => x.m === 'answerCallbackQuery'), 'owner refresh edits message');
 await cb(5, 'st:upd'); assert(!sent.some(x => x.m === 'editMessageText') && sent.some(x => x.m === 'answerCallbackQuery'), 'non-owner refresh ignored');
 await cb(42, 'st:new'); assert(sent.some(x => x.m === 'sendMessage' && /Статистика/.test(x.text)), 'details sends full stats');
-const keepNow = NOW, wsend = async iso => { NOW = Date.parse(iso); sent = []; await W.default.scheduled({ cron: '0 5,6 * * 6' }, env, ctx); await flush(); return sent.some(x => x.m === 'sendMessage'); };
+const keepNow = NOW, wsend = async iso => { NOW = Date.parse(iso); sent = []; await W.default.scheduled({ cron: '0 5,6 * * 6' }, env, ctx); await flush(); return sent.some(x => x.m === 'sendWidget' || x.m === 'sendMessage'); };
 assert(await wsend('2026-11-14T06:00:00Z') && !(await wsend('2026-11-14T05:00:00Z')), 'weekly: winter — 06:00 UTC sends, 05:00 skips');
 assert(await wsend('2026-04-11T05:00:00Z') && !(await wsend('2026-04-11T06:00:00Z')), 'weekly: summer — 05:00 UTC sends, 06:00 skips');
 await wsend('2026-10-10T05:00:00Z'); NOW = keepNow;   // сб 10.10, летнее время → 08:00 по Кишинёву
-const wk = sent.find(x => x.m === 'sendMessage');
-assert(wk && wk.chat_id === 42 && /Неделя/.test(wk.text) && /Неделя 3 октября — 9 октября/.test(wk.text) && /Людей: <b>1<\/b>/.test(wk.text) && wk.reply_markup.inline_keyboard[0][0].callback_data === 'st:new', 'weekly summary to owner');
-if (process.env.SHOW) console.log(wk.text);
+const wk = sent.find(x => x.m === 'sendWidget'), wkd = wk && JSON.parse(wk.chat_data);
+assert(wk && wk.chat_id === 42 && wkd.wk === 'Неделя 3 октября — 9 октября' && wkd.d7.u === 1 && !wkd.d1, 'weekly summary to owner (карточка)');
 const aggN = db.prepare('SELECT COUNT(*) c FROM agg').get().c; await W.default.scheduled({ cron: '10 0 * * *' }, env, ctx); await flush();
 assert(db.prepare('SELECT COUNT(*) c FROM agg').get().c >= aggN, 'daily cron still rolls up');
