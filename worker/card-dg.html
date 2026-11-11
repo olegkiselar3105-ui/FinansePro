@@ -6,8 +6,6 @@ body{font:14px/1.3 system-ui,sans-serif;color:var(--T);padding:10px 12px 26px;-w
 .q{display:flex;gap:8px;align-items:center;color:var(--H);font-size:13px}
 .q i{flex:0 0 8px;height:8px;border-radius:50%;background:var(--B);animation:p 1.2s infinite}
 @keyframes p{50%{opacity:.25;transform:scale(.6)}}
-.sk{height:12px;border-radius:6px;margin-top:10px;background:linear-gradient(90deg,var(--S),#8080802e,var(--S));background-size:200% 100%;animation:sh 1.3s linear infinite}
-@keyframes sh{to{background-position:-200% 0}}
 .c{animation:f .45s both;animation-delay:calc(var(--j)*90ms)}
 @keyframes f{from{opacity:0;transform:translateY(6px)}}
 .hd{display:flex;align-items:center;gap:10px}
@@ -45,6 +43,7 @@ body{font:14px/1.3 system-ui,sans-serif;color:var(--T);padding:10px 12px 26px;-w
 .bt button:active{transform:scale(.94)}
 .bt.bz{opacity:.5;pointer-events:none}
 .dn{margin-top:10px;font-size:12.5px;color:var(--E);font-weight:600;animation:f .4s both}
+.pv{padding-bottom:12px}
 .er{margin-top:6px;font-size:12px;color:var(--H);text-align:center}
 .pd{display:inline-block;width:9px;height:9px;border-radius:50%;margin-left:8px;vertical-align:1px;background:var(--H);animation:bl 1s ease-in-out infinite}
 @keyframes bl{50%{opacity:.12}}
@@ -71,14 +70,14 @@ function debt(x,I){var c=E("div","c"),h=E("div","hd"),av=E("div","av"+(x.i?"":" 
 m.appendChild(E("div","nm",x.w));m.appendChild(E("div","sb",x.i?L[9]:L[10]));
 var bb=E("b",0,x.pv?x.e:x.c?x.t:x.l);if(x.pv)bb.appendChild(E("i","pd"));bg.appendChild(bb);bg.appendChild(E("span","sb",x.pv?L[8]:x.c?L[12]:L[11]));h.appendChild(av);h.appendChild(m);h.appendChild(bg);c.appendChild(h);
 var ev={new:x.i?"Дали в долг":"Взяли в долг",add:"Добавлено к долгу",pay:x.i?"Вам вернули":"Вы вернули"}[x.ev];
-if(ev&&x.e)c.appendChild(E("div","ev"+(x.ev==="pay"?" e":""),(x.ev==="pay"?"↩ ":"＋ ")+ev+" · "+x.e));if(x.pv){c.appendChild(E("div","sk"));return c}
+if(ev&&x.e)c.appendChild(E("div","ev"+(x.ev==="pay"?" e":""),(x.ev==="pay"?"↩ ":"＋ ")+ev+" · "+x.e));if(x.pv)return c
 if(x.c)c.appendChild(okRow(L[6]));
 else{c.appendChild(bar(x.p,!x.i));var l=E("div","ln");l.appendChild(E("span",0,L[13]+Math.round(pct(x.p)*100)+"%"));var t=E("span");t.appendChild(document.createTextNode(L[14]));t.appendChild(E("b",0,x.t));l.appendChild(t);c.appendChild(l)}
 if(x.due&&!x.c)c.appendChild(E("div","du","⏰ "+x.due));c.appendChild(acts(x,I));return c}
 function goal(x,I){var c=E("div","c"),h=E("div","hd"),rg=E("div","rg"),m=E("div","m"),P=Math.round(pct(x.p)*100);
 rg.innerHTML='<svg viewBox="0 0 74 74"><circle cx="37" cy="37" r="32"/><circle class="'+(x.pv?"sp":"v")+'" cx="37" cy="37" r="32"/></svg>';var n=E("b",0,x.pv?"":"0%");rg.appendChild(n);
 if(x.pv){m.appendChild(E("div","nm","🎯 "+x.w));var q=E("div","sb",x.t?"Цель "+x.t:L[8]);q.appendChild(E("i","pd"));m.appendChild(q);h.appendChild(rg);h.appendChild(m);c.appendChild(h);
-var v0={new:"Новая цель",in:"В копилку",out:"Из цели"}[x.ev];if(v0)c.appendChild(E("div","ev"+(x.ev==="in"?" e":""),v0+(x.e?" · "+x.e:"")));c.appendChild(E("div","sk"));return c}
+var v0={new:"Новая цель",in:"В копилку",out:"Из цели"}[x.ev];if(v0)c.appendChild(E("div","ev"+(x.ev==="in"?" e":""),v0+(x.e?" · "+x.e:"")));return c}
 setTimeout(function(){rg.querySelector(".v").style.strokeDashoffset=201*(1-pct(x.p));var t0=Date.now();(function st(){var k=Math.min(1,(Date.now()-t0)/1000);n.textContent=Math.round(P*(1-Math.pow(1-k,3)))+"%";if(k<1)requestAnimationFrame(st)})()},80);
 m.appendChild(E("div","nm","🎯 "+x.w));var s=E("div","sb");s.appendChild(document.createTextNode(L[15]));s.appendChild(E("b",0,x.s));s.appendChild(document.createTextNode(" из "+x.t));m.appendChild(s);
 if(!x.c&&x.l)m.appendChild(E("div","sb",L[16]+x.l));h.appendChild(rg);h.appendChild(m);c.appendChild(h);
@@ -87,10 +86,10 @@ if(x.c)c.appendChild(okRow(L[7]));if(x.by&&!x.c)c.appendChild(E("div","du","⏰ 
 var seen="";
 function draw(){var D={};try{D=JSON.parse(T.chatData||"{}")||{}}catch(e){}
 w.textContent="";j=0;
-if(D.s==="q"&&!(D.g&&D.g.length)){var q=E("div","q");q.appendChild(E("i"));q.appendChild(E("span",0,D.ph?"«"+D.ph+"»":""));w.appendChild(q);w.appendChild(E("div","sk"));var k2=E("div","sk");k2.style.width="60%";w.appendChild(k2);return}
+if(D.s==="q"&&!(D.g&&D.g.length)){var q=E("div","q");q.appendChild(E("i"));q.appendChild(E("span",0,D.ph?"«"+D.ph+"»":""));w.appendChild(q);document.body.className="pv";return}
 var g=D.g||[],any=0;g.forEach(function(x,i){if(i)w.appendChild(E("div","sep"));A(w,x.k==="g"?goal(x,i):debt(x,i));if(x.c)any=1});
 (D.o||[]).forEach(function(p){A(w,E("div","t",p[1]+" · "+p[4]))});
 if(D.n&&!g.length)A(w,E("div","t",D.n));if(D.hn)A(w,E("div","t sb",D.hn));
-var key=JSON.stringify(g);if(any&&key!==seen)setTimeout(boom,700);seen=key}
+document.body.className=g.length&&g.every(function(x){return x.pv})?"pv":"";var key=JSON.stringify(g);if(any&&key!==seen)setTimeout(boom,700);seen=key}
 draw();if(T.onEvent)T.onEvent("chatDataChanged",draw);if(T.ready)T.ready();
 </script></body></html>
