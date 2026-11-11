@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v264';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v265';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -2567,6 +2567,15 @@ function botOpLine(d){const c=cd(d.category),inc=d.type==='income';let s=(inc?'�
   return s}
 function botBudLine(ds){const k=curM();if(!ds.some(d=>d.type==='expense'&&perKey(d.date)===k))return '';let b=0;try{b=budgetOf(k)}catch(e){}if(!(b>0))return '';const sp=spentIn(k);
   return '📊 Бюджет на '+MN[+k.slice(5,7)-1].toLowerCase()+': потрачено '+fmt(sp)+' из '+BM_(b)+(sp>b?' — перерасход '+BM_(sp-b):' · осталось '+BM_(b-sp))}
+// v265: данные карточки-квитанции в боте (виджет Bot API 10.4) — те же факты, что botOpLine/botBudLine, коротко; суммы — BM_/fmt.
+// full=false — черновики «на проверке»: ещё не в учёте, поэтому без лимитов и бюджета. Старый бот поле cards не читает — совместимо
+function botCard(ops,full){const o=ops.slice(0,4).map(d=>{const c=cd(d.category),inc=d.type==='income',k=perKey(d.date);
+    const sub=[d.note&&d.note!==c.n?d.note:'',dChip(d.date).toLowerCase(),d.oc?fmt(d.oa)+' '+d.oc:''].filter(Boolean).join(' · ').slice(0,80);
+    let lr=0,lt='';if(full&&!inc){const lim=+(limOf(k)[d.category])||0;if(lim>0){const sp=spentIn(k,d.category);lr=Math.round(sp/lim*100)/100;lt='Лимит: '+fmt(sp)+' из '+BM_(lim)}}
+    return [inc?1:0,(inc?'+':'−')+BM_(d.amount||0),c.e||'',c.c||'',String(c.n).slice(0,40),sub,lr,lt]});
+  const r={o};if(full){const k=curM();let b=0;try{b=budgetOf(k)}catch(e){}
+    if(b>0&&ops.some(d=>d.type==='expense'&&perKey(d.date)===k)){const sp=spentIn(k);r.b=[Math.round(sp/b*100)/100,'Бюджет на '+MN[+k.slice(5,7)-1].toLowerCase(),fmt(sp)+' из '+BM_(b),sp>b?'перерасход '+BM_(sp-b):'осталось '+BM_(b-sp)]}}
+  return r}
 function voiceCmds(raw){
   let t=' '+String(raw||'').toLowerCase().replace(/ё/g,'е')+' ';const msgs=[],rich=[];const say=(a,b)=>{msgs.push(a);rich.push(b||a)};   // v166: msgs — коротко (уведомления в приложении), rich — подробно (ответ бота)
   // голосом числа часто приходят словами: «одолжил Ивану пятьсот» → 500 (только в командах про долги/цели/лимиты/бюджет)
@@ -4695,12 +4704,12 @@ topEl.addEventListener('click',e=>{if(msBlock){e.stopPropagation();e.preventDefa
 const BH={get(){try{const o=JSON.parse(localStorage.getItem('finapp.bhold')||'{}');return _obj(o)?o:{}}catch(e){return {}}},set(o){try{localStorage.setItem('finapp.bhold',JSON.stringify(o))}catch(e){}}};
 function botDraftLine(d){const c=cd(d.category);return (d.type==='income'?'💰 +':'💸 −')+BM_(d.amount||0)+' · '+c.l+(d.note&&d.note!==c.n?' · '+d.note:'')+' · '+dChip(d.date).toLowerCase()}
 function bhFinish(committed){const h=BH.get(),ids=Object.keys(h);if(!ids.length){(committed||[]).forEach(d=>{delete d.bsid});return}
-  const done={},notes={},fin=[],drop=[];(committed||[]).forEach(d=>{if(d.bsid)(done[d.bsid]=done[d.bsid]||[]).push(d)});
+  const done={},notes={},cards={},fin=[],drop=[];(committed||[]).forEach(d=>{if(d.bsid)(done[d.bsid]=done[d.bsid]||[]).push(d)});
   ids.forEach(sid=>{if(drafts.some(d=>d.bsid===sid))return;   // часть ещё на проверке — ждём
     const ops=(done[sid]||[]).filter(d=>d.amount>0);fin.push(sid);delete h[sid];
-    if(ops.length){try{notes[sid]=[...ops.map(botOpLine),botBudLine(ops)].filter(Boolean).join('\n\n').slice(0,1200)}catch(e){}}else drop.push(sid)});
+    if(ops.length){try{notes[sid]=[...ops.map(botOpLine),botBudLine(ops)].filter(Boolean).join('\n\n').slice(0,1200)}catch(e){}try{cards[sid]=botCard(ops,true)}catch(e){}}else drop.push(sid)});
   (committed||[]).forEach(d=>{delete d.bsid});BH.set(h);
-  if(fin.length)ibCall('/api/ack',{ids:fin,notes,drop}).catch(()=>{const b=BH.get();fin.forEach(i=>{b[i]=1});BH.set(b)})}   // нет связи — повторим при следующей записи
+  if(fin.length)ibCall('/api/ack',{ids:fin,notes,cards,drop}).catch(()=>{const b=BH.get();fin.forEach(i=>{b[i]=1});BH.set(b)})}   // нет связи — повторим при следующей записи
 // окно «+» с проверкой открывается само, когда приложение на экране и ничего не открыто
 let revT=0;function revOpen(){clearTimeout(revT);if(!drafts.length)return;
   const busy=document.hidden||isModalOpen()||document.getElementById('spl')||(LKE&&LKE.classList.contains('on'))||(typeof tourOn==='function'&&tourOn())||window.__onbOn||window.__onbWait;
@@ -6271,7 +6280,7 @@ async function inboxPull(fast,wait){
     if(IB.proc)return;IB.proc=true;     // записи разбирает кто-то один; остальное подберёт следующий опрос
     try{
     IB.procAt=Date.now();
-    const seen=new Set(ibSeen()),added=[],left=[],bad=[],badIds=[],okIds=[],fresh=[],notes={},nbuild={};let cmd=false;
+    const seen=new Set(ibSeen()),added=[],left=[],bad=[],badIds=[],okIds=[],fresh=[],notes={},cards={},nbuild={};let cmd=false;
     for(const it of items){
       if(!it||!it.id)continue;const sid=String(it.id);
       if(seen.has(sid)){okIds.push(sid);continue}                       // уже записано раньше — просто подтверждаем
@@ -6294,11 +6303,11 @@ async function inboxPull(fast,wait){
     if(!saved)return;                       // не сохранилось — в очереди запись остаётся, следующий опрос повторит (ничего не теряется)
     const hold=[],bh=BH.get();
     Object.entries(nbuild).forEach(([sid,o])=>{try{const ops=drafts.filter(d=>d.bsid===sid);if(ops.length){hold.push(sid);bh[sid]=1}
-      const nt=[...o.rich,...(ops.length?['📝 На проверке в приложении:\n'+ops.map(botDraftLine).join('\n')+'\n\nПроверьте и нажмите «Записать».']:[])].filter(Boolean);if(nt.length)notes[sid]=nt.join('\n\n').slice(0,1200)}catch(e){}});
+      const nt=[...o.rich,...(ops.length?['📝 На проверке в приложении:\n'+ops.map(botDraftLine).join('\n')+'\n\nПроверьте и нажмите «Записать».']:[])].filter(Boolean);if(nt.length)notes[sid]=nt.join('\n\n').slice(0,1200);if(ops.length||o.rich.length)cards[sid]={...botCard(ops,false),...(o.rich.length?{n:o.rich.join('\n\n').slice(0,600)}:{})}}catch(e){}});
     BH.set(bh);
     fresh.forEach(i=>seen.add(i));ibSeenSave([...seen]);
     if(bad.length)toast('Бот: не понял — «'+bad.slice(0,2).join('», «').slice(0,120)+'»');
-    await ibCall('/api/ack',{ids:okIds,bad:badIds,notes,hold})}finally{IB.proc=false}}
+    await ibCall('/api/ack',{ids:okIds,bad:badIds,notes,cards,hold})}finally{IB.proc=false}}
   catch(e){if(IB.wakeAbort){IB.wakeAbort=false}else if(wait)IB.fail=(IB.fail||0)+1;IB.dbg={t:Date.now(),n:0,lp:IB.lp,err:String(e&&e.message||e).slice(0,60)};/* нет связи — тихо, повторим; а вот просроченную подпись Telegram показываем один раз */
 }
   finally{if(wait){IB.lpBusy=false;IB.ctl=null}else IB.busy=false;window.__ibBusy=false}}

@@ -8,6 +8,7 @@
 //   Secret        WEBHOOK_SECRET   — любая длинная строка (латиница/цифры), та же, что в setWebhook
 //   Variable      ALLOWED_IDS      — ПУСТО = бот открыт для всех (у каждого свои данные). Или список id через запятую, чтобы закрыть
 //   Variable      DAILY_LIMIT      — сообщений в сутки на человека (по умолчанию 30)
+//   Variable      WIDGETS          — 0 = квитанции текстом, без карточки-виджета (v265; по умолчанию карточка)
 //   Variable      APP_URL          — адрес Mini App (https://…pages.dev): кнопка «Открыть финансы» и ссылка на политику (APP_URL + privacy.html)
 
 //   Secret        STATS_SALT       — соль для обезличенной статистики (длинная случайная строка; НЕ менять — иначе все посчитаются новыми). Нет соли — статистика не собирается
@@ -49,8 +50,10 @@ export default {
         if (body.notes && typeof body.notes === 'object') for (const k of Object.keys(body.notes).slice(0, 200)) notes[String(k)] = String(body.notes[k]).slice(0, 1200);   // v166: подробный ответ (старое приложение шлёт ≤300 — совместимо)
         const hold = Array.isArray(body.hold) ? body.hold.map(String).slice(0, 200) : [];
         const drop = Array.isArray(body.drop) ? body.drop.map(String).slice(0, 200) : [];   // v167: удалены в приложении, не записаны   // v167: записи на проверке в приложении — квитанцию не удаляем, «✅ Записано» придёт вторым ack
+        const cards = {};                                                                  // v265: данные карточки-квитанции {id: {o, b, n}}; старое приложение не шлёт — карточка покажет notes
+        if (body.cards && typeof body.cards === 'object') for (const k of Object.keys(body.cards).slice(0, 200)) cards[String(k)] = body.cards[k];
         const box = store(env, uid), out = await box.ack(ids);
-        ctx.waitUntil(finishReceipts(env, box, ids, bad, notes, hold, drop).catch(e => console.error('receipts', e && e.stack || e)));
+        ctx.waitUntil(finishReceipts(env, box, ids, bad, notes, hold, drop, cards).catch(e => console.error('receipts', e && e.stack || e)));
         return cors(json(out));
       }
       return new Response('finance bot', { status: 200 });
@@ -249,24 +252,113 @@ async function handleUpdate(upd, env) {
   if (!box.rc) return reply(`📥 В очереди: «${shown}»\nПоявится в приложении, когда оно откроется.`, open);
   // Бот не может сам записать в облако Telegram — это делает только открытое приложение. Поэтому: сначала «в очереди», а когда приложение
   // заберёт запись (api/ack), это же сообщение сменится на «Записано».
-  const sent = await (await reply(`⏳ В очереди: «${shown}»\nПоявится в приложении, когда оно откроется.`, open)).json().catch(() => null);
-  const mid = sent && sent.result && sent.result.message_id;
+  // v265: квитанция-карточка (виджет Bot API 10.4); не отправилась (старый API, ошибка, WIDGETS=0) — текст, как раньше
+  let mid = useW(env) ? await sendRcWidget(env, chat, shown, open) : null;
+  if (!mid) { const sent = await (await reply(`⏳ В очереди: «${shown}»\nПоявится в приложении, когда оно откроется.`, open)).json().catch(() => null);
+    mid = sent && sent.result && sent.result.message_id; }
   if (mid) {
     await box.rc.add(id, chat, mid, shown);
     if (!(await box.has(id))) await finishReceipts(env, box, [id], []);   // приложение успело забрать запись, пока мы отвечали
   }
 }
 
-async function finishReceipts(env, box, ids, bad, notes = {}, hold = [], drop = []) {
+async function finishReceipts(env, box, ids, bad, notes = {}, hold = [], drop = [], cards = {}) {
   if (!box.rc || !ids.length) return;
   const badSet = new Set(bad.map(String)), holdSet = new Set(hold.map(String)), dropSet = new Set(drop.map(String));
   // v167: «на проверке» — сообщение меняется, квитанция остаётся (после подтверждения в приложении придёт второй ack → «✅ Записано»)
   const held = await box.rc.take(ids.map(String).filter(i => holdSet.has(i)), true);
-  await Promise.all(held.map(r => tg(env, 'editMessageText', { chat_id: r.chat, message_id: r.mid,
-    text: `📝 Получено: «${r.text}»` + (notes[r.id] ? `\n\n${notes[r.id]}` : '') }).catch(() => {})));
+  await Promise.all(held.map(r => rcEdit(env, r, 'h', `📝 Получено: «${r.text}»` + (notes[r.id] ? `\n\n${notes[r.id]}` : ''), notes[r.id], cards[r.id])));
   const list = await box.rc.take(ids.map(String).filter(i => !holdSet.has(i)));
-  await Promise.all(list.map(r => tg(env, 'editMessageText', { chat_id: r.chat, message_id: r.mid,
-    text: dropSet.has(r.id) ? `🗑 Не записано: «${r.text}»\nЗапись удалена в приложении.` : badSet.has(r.id) ? `⚠ Приложение не поняло: «${r.text}»\n\nНапишите, например:\n• «кофе 300 кафе» (заметка, сумма, категория)\n• «бюджет 20000»\n• «Иван должен 500»` : `✅ Записано: «${r.text}»` + (notes[r.id] ? `\n\n${notes[r.id]}` : '') }).catch(() => {})));   // v166: подробный ответ из приложения отдельным абзацем
+  await Promise.all(list.map(r => dropSet.has(r.id) ? rcEdit(env, r, 'drop', `🗑 Не записано: «${r.text}»\nЗапись удалена в приложении.`)
+    : badSet.has(r.id) ? rcEdit(env, r, 'bad', `⚠ Приложение не поняло: «${r.text}»\n\nНапишите, например:\n• «кофе 300 кафе» (заметка, сумма, категория)\n• «бюджет 20000»\n• «Иван должен 500»`)
+    : rcEdit(env, r, 'ok', `✅ Записано: «${r.text}»` + (notes[r.id] ? `\n\n${notes[r.id]}` : ''), notes[r.id], cards[r.id])));   // v166: подробный ответ из приложения отдельным абзацем
+}
+
+// ---------- v265: квитанция-карточка (виджет, Bot API 10.4) ----------
+// HTML один на все квитанции и не меняется; меняются только данные сообщения (chat_data ≤1024 байт) — editMessageWidgetData.
+// Подпись над карточкой — статус и фраза (её же видят клиенты без виджетов). Сеть виджету недоступна: всё — из chat_data.
+// Квитанции-тексты (старые, или виджет не отправился) правятся по-старому, editMessageText. WIDGETS=0 в переменных — выключить.
+const useW = env => String(env.WIDGETS ?? '1').trim() !== '0';
+const RC_CAP = { q: '⏳ В очереди', h: '📝 Получено', ok: '✅ Записано', drop: '🗑 Не записано', bad: '⚠ Приложение не поняло' };
+const u8 = s => new TextEncoder().encode(s).length;
+const str = (v, n) => String(v ?? '').slice(0, n);
+// данные карточки: s — статус; o — операции [доход?, сумма, эмодзи, цвет, категория, подпись, доля лимита, текст лимита]; b — бюджет [доля, заголовок, значение, остаток]; n — текст
+function rcData(s, card, note) {
+  const d = { s }, c = card && typeof card === 'object' ? card : null;
+  if (c && Array.isArray(c.o) && c.o.length) d.o = c.o.slice(0, 4).filter(Array.isArray).map(p => [p[0] ? 1 : 0, str(p[1], 40), str(p[2], 16), /^#[0-9a-f]{6}$/i.test(p[3]) ? p[3] : '', str(p[4], 40), str(p[5], 80), Math.max(0, Math.min(9, Number(p[6]) || 0)), str(p[7], 80)]);
+  if (c && Array.isArray(c.b)) d.b = [Math.max(0, Math.min(9, Number(c.b[0]) || 0)), str(c.b[1], 40), str(c.b[2], 60), str(c.b[3], 60)];
+  const n = c && c.n ? c.n : !d.o ? note : '';   // старое приложение: только текст notes
+  if (n) d.n = str(n, 600);
+  let j = JSON.stringify(d);
+  while (u8(j) > 1024) {                         // не влезло — сначала короче текст, потом меньше операций, потом без бюджета
+    if (d.n && d.n.length > 60) d.n = d.n.slice(0, Math.floor(d.n.length * 0.75)) + '…';
+    else if (d.n) delete d.n;
+    else if (d.o && d.o.length > 1) d.o.pop();
+    else if (d.b) delete d.b;
+    else { delete d.o; }
+    j = JSON.stringify(d);
+  }
+  return j;
+}
+async function sendRcWidget(env, chat, shown, open) {
+  const r = await (await tg(env, 'sendWidget', { chat_id: chat, html: RC_HTML, chat_data: rcData('q'), caption: `${RC_CAP.q}: «${shown}»`, show_caption_above_media: true, ...open })).json().catch(() => null);
+  if (r && r.ok && r.result && r.result.message_id) return r.result.message_id;
+  console.error('widget', r && r.description); return null;
+}
+// HTML карточки (≤32 КБ, ≤4 КБ после zlib — сейчас ~2 КБ); цвета — из темы Telegram (--tg-theme-*), есть светлая/тёмная
+const RC_HTML = String.raw`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
+*{box-sizing:border-box;margin:0}
+html,body{background:var(--tg-theme-bg-color,#fff)}
+body{font:14px/1.3 -apple-system,system-ui,"Segoe UI",Roboto,sans-serif;color:var(--tg-theme-text-color,#000);padding:8px 12px 10px;-webkit-user-select:none;user-select:none}
+.r{display:flex;align-items:center;gap:10px;padding:5px 0}
+.i{flex:0 0 36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:19px;background:var(--tg-theme-secondary-bg-color,#f0f0f2)}
+.m{flex:1;min-width:0}
+.c,.s{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c{font-weight:600}
+.s,.h{font-size:12px;color:var(--tg-theme-hint-color,#8a8a8e)}
+.a{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.a.in{color:#2fa65a}
+.l{padding:0 0 4px 46px}
+.bd{margin-top:8px;padding-top:8px;border-top:1px solid var(--tg-theme-section-separator-color,rgba(128,128,128,.2))}
+.k{display:flex;justify-content:space-between;gap:8px;font-size:13px}
+.k b{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bar{height:6px;border-radius:3px;background:var(--tg-theme-secondary-bg-color,#ececef);overflow:hidden;margin:5px 0 3px}
+.bar i{display:block;height:100%;width:0;border-radius:3px;background:var(--tg-theme-button-color,#3390ec);transition:width .7s cubic-bezier(.2,.8,.2,1)}
+.bar.w i{background:#f2a516}.bar.x i{background:#e5484d}
+.x2{color:#e5484d}
+.t{white-space:pre-wrap;font-size:13px;margin-top:4px}
+.q{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--tg-theme-hint-color,#8a8a8e);padding:4px 0}
+.d{flex:0 0 8px;height:8px;border-radius:50%;background:var(--tg-theme-button-color,#3390ec);animation:p 1.2s ease-in-out infinite}
+@keyframes p{50%{opacity:.25;transform:scale(.6)}}
+.n>*{animation:f .4s both;animation-delay:calc(var(--j)*60ms)}
+@keyframes f{from{opacity:0;transform:translateY(5px)}}
+@media (prefers-reduced-motion:reduce){.n>*,.d{animation:none}.bar i{transition:none}}
+</style></head><body><div id="w"></div><script>
+var T=window.TelegramWidget||{},w=document.getElementById("w"),j=0;
+function E(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+function A(e){e.style.setProperty("--j",j++);w.appendChild(e);return e}
+function bar(r){var b=E("div","bar"+(r>1?" x":r>=.85?" w":"")),i=E("i");b.appendChild(i);setTimeout(function(){i.style.width=Math.max(3,Math.min(100,r*100))+"%"},60);return b}
+function draw(){var d={};try{d=JSON.parse(T.chatData||"{}")||{}}catch(e){}
+w.className="";w.textContent="";j=0;var s=d.s||"q";
+if(s==="q"){var q=A(E("div","q"));q.appendChild(E("span","d"));q.appendChild(E("span",0,"Появится в приложении, когда оно откроется"))}
+(d.o||[]).forEach(function(p){var r=A(E("div","r")),i=E("div","i",p[2]||"•"),m=E("div","m");
+if(/^#[0-9a-f]{6}$/i.test(p[3]||""))i.style.background=p[3]+"2e";
+m.appendChild(E("div","c",p[4]));if(p[5])m.appendChild(E("div","s",p[5]));
+r.appendChild(i);r.appendChild(m);r.appendChild(E("div","a"+(p[0]?" in":""),p[1]));
+if(p[7]){var l=A(E("div","l"));l.appendChild(bar(+p[6]||0));l.appendChild(E("div","h"+(p[6]>1?" x2":""),p[7]))}});
+if(d.b){var b=A(E("div","bd")),k=E("div","k");k.appendChild(E("span",0,d.b[1]));k.appendChild(E("b",0,d.b[2]));b.appendChild(k);b.appendChild(bar(+d.b[0]||0));if(d.b[3])b.appendChild(E("div","h"+(d.b[0]>1?" x2":""),d.b[3]))}
+if(d.n)A(E("div","t",d.n));
+var H={h:"Проверьте и нажмите «Записать» в приложении.",drop:"Запись удалена в приложении.",bad:"Напишите, например:\n• «кофе 300 кафе» — заметка, сумма, категория\n• «бюджет 20000»\n• «Иван должен 500»"}[s];
+if(H)A(E("div","t h",H));
+void w.offsetWidth;w.className="n"}
+draw();if(T.onEvent)T.onEvent("chatDataChanged",draw);
+</script></body></html>`;
+async function rcEdit(env, r, s, text, note, card) {
+  if (useW(env)) {
+    const w = await (await tg(env, 'editMessageWidgetData', { chat_id: r.chat, message_id: r.mid, chat_data: rcData(s, card, note) })).json().catch(() => null);
+    if (w && w.ok) return tg(env, 'editMessageCaption', { chat_id: r.chat, message_id: r.mid, caption: `${RC_CAP[s]}: «${r.text}»`, show_caption_above_media: true }).catch(() => {});
+  }
+  return tg(env, 'editMessageText', { chat_id: r.chat, message_id: r.mid, text }).catch(() => {});   // квитанция-текст (не виджет)
 }
 
 async function transcribe(fileId, env) {
