@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v266';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v267';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -2569,13 +2569,41 @@ function botBudLine(ds){const k=curM();if(!ds.some(d=>d.type==='expense'&&perKey
   return '📊 Бюджет на '+MN[+k.slice(5,7)-1].toLowerCase()+': потрачено '+fmt(sp)+' из '+BM_(b)+(sp>b?' — перерасход '+BM_(sp-b):' · осталось '+BM_(b-sp))}
 // v265: данные карточки-квитанции в боте (виджет Bot API 10.4) — те же факты, что botOpLine/botBudLine, коротко; суммы — BM_/fmt.
 // full=false — черновики «на проверке»: ещё не в учёте, поэтому без лимитов и бюджета. Старый бот поле cards не читает — совместимо
-function botCard(ops,full){const o=ops.slice(0,4).map(d=>{const c=cd(d.category),inc=d.type==='income',k=perKey(d.date);
-    const sub=[d.note&&d.note!==c.n?d.note:'',dChip(d.date).toLowerCase(),d.oc?fmt(d.oa)+' '+d.oc:''].filter(Boolean).join(' · ').slice(0,80);
+function botCard(ops,full,act){const o=ops.slice(0,4).map(d=>{const c=cd(d.category),inc=d.type==='income',k=perKey(d.date);
+    const sub=[d.note&&d.note!==c.n?d.note:'',bDay(d.date),d.oc?fmt(d.oa)+' '+d.oc:''].filter(Boolean).join(' · ').slice(0,80);
     let lr=0,lt='';if(full&&!inc){const lim=+(limOf(k)[d.category])||0;if(lim>0){const sp=spentIn(k,d.category);lr=Math.round(sp/lim*100)/100;lt='Лимит: '+fmt(sp)+' из '+BM_(lim)}}
     return [inc?1:0,(inc?'+':'−')+BM_(d.amount||0),c.e||'',c.c||'',String(c.n).slice(0,40),sub,lr,lt]});
   const r={o};if(full){const k=curM();let b=0;try{b=budgetOf(k)}catch(e){}
     if(b>0&&ops.some(d=>d.type==='expense'&&perKey(d.date)===k)){const sp=spentIn(k);r.b=[Math.round(sp/b*100)/100,'Бюджет на '+MN[+k.slice(5,7)-1].toLowerCase(),fmt(sp)+' из '+BM_(b),sp>b?'перерасход '+BM_(sp-b):'осталось '+BM_(b-sp)]}}
+  if(act&&ops.length===1&&ops[0].bs)r.a=botAct(ops[0]);   // v267: кнопки «Категория/Дата/Отменить» в боте
   return r}
+// v267: дата в карточке бота — «📅 сегодня, 11 ноя» (для сегодня/вчера число тоже), иначе «📅 9 ноя»
+function bDay(d){const c=dChip(d),[,M,D]=d.split('-').map(Number);return '📅 '+c.toLowerCase()+(/^(Сегодня|Вчера)$/.test(c)?', '+D+' '+MGN[M-1].slice(0,3):'')}
+// v267: что можно сделать с записью «сразу» из чата: до 6 частых категорий того же типа (без долгов/накоплений), «сегодня» по телефону, версия записи u
+const BC_NO=new Set(['debt','save','debtin']);
+function botAct(t){const inc=t.type==='income',n={},old=ymd(new Date(Date.now()-90*864e5));
+  tx.forEach(x=>{if(x.date>=old&&(x.type==='income')===inc)n[x.category]=(n[x.category]||0)+1});
+  const k=ALL.map((c,i)=>[c,i]).filter(([c])=>!!c.inc===inc&&c.id!==t.category&&!BC_NO.has(c.id)).sort((a,b)=>(n[b[0].id]||0)-(n[a[0].id]||0)||a[1]-b[1]).slice(0,6).map(([c])=>[c.id,String(c.l).slice(0,30)]);
+  return {k,td:ymd(new Date()),d:t.date,v:String(t.u||0)}}
+// v267: команды из кнопок карточки бота. Только записи «сразу» (t.bs = id сообщения бота). Запись меняли в приложении после карточки (t.u ≠ v)
+// или её нет — не применяем (gone). Отмена — как «Отмена» в уведомлении: удаление + tomb (не вернётся из облака). Повтор той же команды — прежний итог (BCD)
+const BCD={get(){try{const o=JSON.parse(localStorage.getItem('finapp.bcd')||'{}');return _obj(o)?o:{}}catch(e){return {}}},set(o){try{const k=Object.keys(o);if(k.length>200)k.slice(0,k.length-200).forEach(x=>delete o[x]);localStorage.setItem('finapp.bcd',JSON.stringify(o))}catch(e){}}};
+function botCmds(list){const by={},done=[],res={},ch=[],mem=BCD.get();let del=0;
+  list.forEach(c=>{if(_obj(c)&&c.sid&&c.op)(by[c.sid]=by[c.sid]||[]).push(c)});
+  Object.entries(by).forEach(([sid,cs])=>{cs.forEach(c=>done.push({sid,op:c.op,at:c.at}));
+    const key=cs.map(c=>c.op+'|'+c.at).sort().join(',');if(mem[sid+'#'+key]){res[sid]=mem[sid+'#'+key];return}   // уже применяли — связь пропала при ответе
+    const t=tx.find(x=>x.bs===sid);
+    if(!t||t.lk||t.rid||!cs.every(c=>String(c.v)===String(t.u||0)))res[sid]='gone';
+    else if(cs.some(c=>c.op==='del')){tx=tx.filter(x=>x!==t);tomb([t.id]);res[sid]='del';del++}
+    else{const inc=t.type==='income',td=ymd(new Date());
+      cs.forEach(c=>{if(c.op==='cat'){const k=ALL.find(x=>x.id===c.val);if(k&&!!k.inc===inc&&!BC_NO.has(k.id))t.category=c.val}
+        else if(c.op==='date'&&/^\d{4}-\d\d-\d\d$/.test(String(c.val))&&c.val<=td)t.date=c.val});
+      res[sid]='ok';ch.push([sid,t])}
+    mem[sid+'#'+key]=res[sid]});
+  BCD.set(mem);
+  if(ch.length||del){save();render()}
+  const cards={};ch.forEach(([sid,t])=>{try{cards[sid]=botCard([t],true,true)}catch(e){}});   // после save: новая версия u, итоги бюджета
+  return {done,res,cards,n:ch.length,del}}
 function voiceCmds(raw){
   let t=' '+String(raw||'').toLowerCase().replace(/ё/g,'е')+' ';const msgs=[],rich=[];const say=(a,b)=>{msgs.push(a);rich.push(b||a)};   // v166: msgs — коротко (уведомления в приложении), rich — подробно (ответ бота)
   // голосом числа часто приходят словами: «одолжил Ивану пятьсот» → 500 (только в командах про долги/цели/лимиты/бюджет)
@@ -5330,7 +5358,7 @@ function cbHint(){const m=cbM,mn=MN[+m.slice(5,7)-1].toLowerCase(),own=bmOwn(m),
 function saveCb(){const inp=$('#cbam'),v=pn(inp&&inp.value);if(!(v>0)){toast('Укажите сумму бюджета');return}
   if(!_obj(cfg.bm))cfg.bm={};cfg.bm[cbM]=v;save();closeBq();toast('Бюджет · '+MN[+cbM.slice(5,7)-1]+': '+fmt(v)+' '+cfg.cur)}
 function bqHtml(kind){
-  if(kind==='bauto')return `<div class="bqt">Записи из бота</div>${bqTg('tgbau','Записывать сразу, если всё понятно','Без окна проверки',cfg.bAuto)}<div class="bqs" style="font-size:11px;line-height:1.45;margin-top:12px;opacity:.8">Сразу записывается фраза с одной операцией, где понятны сумма и категория — например, «кофе 300 кафе». На проверку по-прежнему уходят: незнакомое слово, запись без категории, другая валюта, несколько записей в одной фразе. Долги, цели, бюджет и лимиты работают как раньше. Записи появляются, когда приложение открыто.</div>`;
+  if(kind==='bauto')return `<div class="bqt">Записи из бота</div>${bqTg('tgbau','Записывать сразу, если всё понятно','Без окна проверки',cfg.bAuto)}<div class="bqs" style="font-size:11px;line-height:1.45;margin-top:12px;opacity:.8">Сразу записывается фраза с одной операцией, где понятны сумма и категория — например, «кофе 300 кафе». На проверку по-прежнему уходят: незнакомое слово, запись без категории, другая валюта, несколько записей в одной фразе. Долги, цели, бюджет и лимиты работают как раньше. Записи появляются, когда приложение открыто.<br><br>Под ответом бота «✅ Записано» будут кнопки: 🏷 категория, 📅 дата и ↩ отмена. Изменение применится, когда вы откроете приложение.</div>`;
   if(kind==='prv')return `<div class="bqt">Скрытие сумм</div>${bqTg('tgprv','Скрывать суммы','Вместо цифр показывается •••',PRV)}${bqTg('tgprf','Включать поворотом экрана','Переворот телефона экраном вниз',FLP.want)}<div class="bqs" style="font-size:11px;line-height:1.45;margin-top:12px;opacity:.8">Положите телефон экраном вниз примерно на секунду — суммы скроются, и вы почувствуете короткую вибрацию. Переверните экраном вниз ещё раз — суммы снова появятся. Телефон должен лежать почти горизонтально: наклон или положение в руке не считаются. Работает, пока приложение открыто.</div><div class="bqb"><button class="sm pr auto" data-bq="cancel">Готово</button></div>`;
   if(kind==='mstart')return `<div class="bqt">Начало месяца</div><div class="bqs">С какого числа начинается ваш месяц — например, день зарплаты.</div><div class="bqm"><button type="button" class="sm" data-bq="msm" aria-label="Раньше">−</button><span class="mn" id="msn">${msV} число</span><button type="button" class="sm" data-bq="msp" aria-label="Позже">+</button></div><div class="bqs" id="msh">${E(msHint())}</div><div class="bqb"><button class="sm" data-bq="cancel">Отмена</button><button class="sm pr" data-bq="mssave">Сохранить</button></div>`;
   if(kind==='pin'){   // v160
@@ -6281,6 +6309,10 @@ async function inboxPull(fast,wait){
     // wait=true — «долгий опрос»: сервер держит запрос до ~12 с и отвечает сразу, как только бот получил сообщение
     const res=await ibCall(wait?'/api/pending?wait=12':fast?'/api/pending?fast=1':'/api/pending',null,wait?22000:0,c=>{if(wait)IB.ctl=c}),items=Array.isArray(res&&res.items)?res.items:[];
     IB.lp=!!(res&&res.lp);if(wait){IB.fail=0;IB.lpOk=Date.now()}IB.dbg={t:Date.now(),n:items.length,lp:IB.lp,err:'',uid:res&&res.uid||''};
+    const bcm=Array.isArray(res&&res.cmds)?res.cmds:[];   // v267: команды из кнопок карточки бота
+    if(bcm.length&&!IB.proc){IB.proc=true;try{for(let w=0;w<30&&typeof CL==='object'&&CL.busy;w++)await new Promise(r=>setTimeout(r,200));
+      const o=botCmds(bcm);if(o.n||o.del)toast(o.del&&!o.n?'Из бота: запись отменена':o.n===1&&!o.del?'Из бота: запись изменена':'Из бота: изменено '+(o.n+o.del));
+      await ibCall('/api/ack',{ids:[],cmds:o.done,cres:o.res,cards:o.cards})}catch(e){}finally{IB.proc=false}}
     if(!items.length)return;
     if(IB.proc)return;IB.proc=true;     // записи разбирает кто-то один; остальное подберёт следующий опрос
     try{
@@ -6297,7 +6329,7 @@ async function inboxPull(fast,wait){
         if(cm.msgs.length)cmd=true;
         if(!r.length&&!cm.msgs.length){bad.push(text);badIds.push(sid);continue}
         const au=bAutoOk(cm,r);   // v266: понятная запись — сразу в учёт
-        r.forEach(d=>{delete d.addCat;if(au){autoL.push(d);return}d.bsid=sid;if(d.amount>0)added.push(d);else left.push(d)});   // v167: операции из бота — на проверку (черновики)
+        r.forEach(d=>{delete d.addCat;if(au){d.bs=sid;autoL.push(d);return}d.bsid=sid;if(d.amount>0)added.push(d);else left.push(d)});   // v167: операции из бота — на проверку (черновики)
         nbuild[sid]={rich:cm.rich||cm.msgs,ops:r.filter(d=>d.amount>0),au};   // v166: ответ бота собирается после записи — с итогами бюджета и лимитов
       }catch(e){bad.push(text);badIds.push(sid)}}                           // одна «битая» запись не должна блокировать остальные
     for(let w=0;w<30&&typeof CL==='object'&&CL.busy;w++)await new Promise(r=>setTimeout(r,200));
@@ -6309,7 +6341,7 @@ async function inboxPull(fast,wait){
     }catch(e){saved=false;IB.dbg={t:Date.now(),n:0,lp:IB.lp,err:'запись: '+String(e&&e.message||e).slice(0,50)}}
     if(!saved)return;                       // не сохранилось — в очереди запись остаётся, следующий опрос повторит (ничего не теряется)
     const hold=[],bh=BH.get();
-    Object.entries(nbuild).forEach(([sid,o])=>{try{if(o.au){notes[sid]=[...o.ops.map(botOpLine),botBudLine(o.ops)].filter(Boolean).join('\n\n').slice(0,1200);cards[sid]=botCard(o.ops,true);return}const ops=drafts.filter(d=>d.bsid===sid);if(ops.length){hold.push(sid);bh[sid]=1}
+    Object.entries(nbuild).forEach(([sid,o])=>{try{if(o.au){notes[sid]=[...o.ops.map(botOpLine),botBudLine(o.ops)].filter(Boolean).join('\n\n').slice(0,1200);cards[sid]=botCard(o.ops,true,true);return}const ops=drafts.filter(d=>d.bsid===sid);if(ops.length){hold.push(sid);bh[sid]=1}
       const nt=[...o.rich,...(ops.length?['📝 На проверке в приложении:\n'+ops.map(botDraftLine).join('\n')+'\n\nПроверьте и нажмите «Записать».']:[])].filter(Boolean);if(nt.length)notes[sid]=nt.join('\n\n').slice(0,1200);if(ops.length||o.rich.length)cards[sid]={...botCard(ops,false),...(o.rich.length?{n:o.rich.join('\n\n').slice(0,600)}:{})}}catch(e){}});
     BH.set(bh);
     fresh.forEach(i=>seen.add(i));ibSeenSave([...seen]);

@@ -53,6 +53,10 @@ export default {
         const cards = {};                                                                  // v265: данные карточки-квитанции {id: {o, b, n}}; старое приложение не шлёт — карточка покажет notes
         if (body.cards && typeof body.cards === 'object') for (const k of Object.keys(body.cards).slice(0, 200)) cards[String(k)] = body.cards[k];
         const box = store(env, uid), out = await box.ack(ids);
+        // v267: приложение применило команды из кнопок: cmds — какие именно (sid, op, at), cres — итог по записи: ok / del / gone
+        const cmdsDone = Array.isArray(body.cmds) ? body.cmds.filter(c => c && c.sid).slice(0, 100) : [];
+        const cres = body.cres && typeof body.cres === 'object' ? body.cres : {};
+        if (cmdsDone.length || Object.keys(cres).length) ctx.waitUntil(cmdFinish(env, box, cmdsDone, cres, cards).catch(e => console.error('cmds', e && e.stack || e)));
         ctx.waitUntil(finishReceipts(env, box, ids, bad, notes, hold, drop, cards).catch(e => console.error('receipts', e && e.stack || e)));
         return cors(json(out));
       }
@@ -73,8 +77,12 @@ const d1Init = env => d1Ready || (d1Ready = env.DB.batch([
   env.DB.prepare('CREATE TABLE IF NOT EXISTS msgs (uid TEXT, id TEXT, text TEXT, ts INTEGER, at INTEGER, PRIMARY KEY (uid, id))'),
   env.DB.prepare('CREATE TABLE IF NOT EXISTS cnt (uid TEXT, day TEXT, n INTEGER, PRIMARY KEY (uid, day))'),
   // «квитанции»: какое сообщение бота нужно переписать на «Записано», когда приложение заберёт запись
-  env.DB.prepare('CREATE TABLE IF NOT EXISTS rcpt (uid TEXT, id TEXT, chat INTEGER, mid INTEGER, text TEXT, at INTEGER, PRIMARY KEY (uid, id))')
+  env.DB.prepare('CREATE TABLE IF NOT EXISTS rcpt (uid TEXT, id TEXT, chat INTEGER, mid INTEGER, text TEXT, at INTEGER, PRIMARY KEY (uid, id))'),
+  // v267: команды из кнопок карточки («Категория», «Дата», «Отменить») — ждут, пока приложение их заберёт; op: cat/date/del, v — версия записи
+  env.DB.prepare('CREATE TABLE IF NOT EXISTS cmds (uid TEXT, sid TEXT, op TEXT, val TEXT, v TEXT, at INTEGER, PRIMARY KEY (uid, sid, op))')
 ]).then(async () => {
+  // v267: act — что можно сделать из чата с записью «сразу» (варианты категорий, сегодняшняя дата телефона, версия записи)
+  try { await env.DB.prepare('ALTER TABLE rcpt ADD COLUMN act TEXT').run(); } catch {}
   // v-колонка: голосовые за день (для статистики) — той же записью, что и счётчик лимита; на старой таблице добавляется один раз
   try { await env.DB.prepare('ALTER TABLE cnt ADD COLUMN v INTEGER DEFAULT 0').run(); } catch {}
 }).catch(e => { d1Ready = null; throw e; }));
@@ -88,7 +96,7 @@ const d1Store = (env, uid) => {
       await d1Init(env);
       await q('INSERT OR REPLACE INTO msgs (uid, id, text, ts, at) VALUES (?, ?, ?, ?, ?)', uid, id, text, ts, Date.now()).run();
       // уборка старого — раз при добавлении, а не на каждом опросе
-      await env.DB.batch([q('DELETE FROM msgs WHERE uid = ? AND at < ?', uid, Date.now() - TTL * 1000), q('DELETE FROM rcpt WHERE uid = ? AND at < ?', uid, Date.now() - TTL * 1000)]);
+      await env.DB.batch([q('DELETE FROM msgs WHERE uid = ? AND at < ?', uid, Date.now() - TTL * 1000), q('DELETE FROM rcpt WHERE uid = ? AND at < ?', uid, Date.now() - TTL * 1000), q('DELETE FROM cmds WHERE uid = ? AND at < ?', uid, Date.now() - TTL * 1000)]);
     },
     async count() { await d1Init(env); const r = await q('SELECT COUNT(*) AS n FROM msgs WHERE uid = ?', uid).first(); return Number(r && r.n) || 0; },
     async has(id) { await d1Init(env); return !!(await q('SELECT 1 AS x FROM msgs WHERE uid = ? AND id = ?', uid, String(id)).first()); },
@@ -99,14 +107,32 @@ const d1Store = (env, uid) => {
         for (const id of ids.slice(0, 20)) { const r = await q('SELECT chat, mid, text FROM rcpt WHERE uid = ? AND id = ?', uid, String(id)).first(); if (r) out.push({ id: String(id), ...r }); }
         if (out.length && !keep) await env.DB.batch(out.map(o => q('DELETE FROM rcpt WHERE uid = ? AND id = ?', uid, o.id)));
         return out;
+      },
+      // v267: кнопки в карточке
+      async get(id) { await d1Init(env); const r = await q('SELECT id, chat, mid, text, act FROM rcpt WHERE uid = ? AND id = ?', uid, String(id)).first(); return r ? { ...r, id: String(r.id) } : null; },
+      async byMsg(chat, mid) { await d1Init(env); const r = await q('SELECT id, chat, mid, text, act FROM rcpt WHERE uid = ? AND chat = ? AND mid = ?', uid, chat, mid).first(); return r ? { ...r, id: String(r.id) } : null; },
+      async setAct(id, act) { await d1Init(env); await q('UPDATE rcpt SET act = ? WHERE uid = ? AND id = ?', act, uid, String(id)).run(); },
+      async drop(id) { await d1Init(env); await env.DB.batch([q('DELETE FROM rcpt WHERE uid = ? AND id = ?', uid, String(id)), q('DELETE FROM cmds WHERE uid = ? AND sid = ?', uid, String(id))]); },
+      async cmd(sid, op, val, v) {
+        await d1Init(env);
+        const l = [q('INSERT OR REPLACE INTO cmds (uid, sid, op, val, v, at) VALUES (?, ?, ?, ?, ?, ?)', uid, sid, op, String(val), String(v), Date.now())];
+        if (op === 'del') l.push(q("DELETE FROM cmds WHERE uid = ? AND sid = ? AND op <> 'del'", uid, sid));   // отмена важнее правок
+        await env.DB.batch(l);
+      },
+      async unCmd(sid, op) { await d1Init(env); await q('DELETE FROM cmds WHERE uid = ? AND sid = ? AND op = ?', uid, sid, op).run(); },
+      async cmdsOf(sid) { await d1Init(env); return (await q('SELECT op, val FROM cmds WHERE uid = ? AND sid = ?', uid, sid).all()).results || []; },
+      async cmds() { await d1Init(env); return (await q('SELECT sid, op, val, v, at FROM cmds WHERE uid = ? ORDER BY at LIMIT 50', uid).all()).results || []; },
+      async cmdDone(list) {   // удаляем только те команды, что приложение применило (новое нажатие после опроса — останется)
+        await d1Init(env); if (!list.length) return;
+        await env.DB.batch(list.map(c => q('DELETE FROM cmds WHERE uid = ? AND sid = ? AND op = ? AND at = ?', uid, String(c.sid), String(c.op), Number(c.at) || 0)));
       }
     },
     // «долгий опрос»: ждём до ~12 с (параметр wait), проверяя базу раз в 2 с; как только запись появилась — отвечаем сразу
     async list(wait, signal) {
       await d1Init(env);
-      let items = await read();
-      for (let i = 0, n = Math.min(10, Math.ceil(wait / 2)); i < n && !items.length && !(signal && signal.aborted); i++) { await sleep(2000); items = await read(); }
-      return { items, lp: true };
+      let items = await read(), cmds = await this.rc.cmds();
+      for (let i = 0, n = Math.min(10, Math.ceil(wait / 2)); i < n && !items.length && !cmds.length && !(signal && signal.aborted); i++) { await sleep(2000); items = await read(); cmds = await this.rc.cmds(); }
+      return cmds.length ? { items, lp: true, cmds } : { items, lp: true };   // v267: cmds — отдельным полем, старое приложение его не читает
     },
     async ack(ids) {
       await d1Init(env);
@@ -268,7 +294,11 @@ async function finishReceipts(env, box, ids, bad, notes = {}, hold = [], drop = 
   // v167: «на проверке» — сообщение меняется, квитанция остаётся (после подтверждения в приложении придёт второй ack → «✅ Записано»)
   const held = await box.rc.take(ids.map(String).filter(i => holdSet.has(i)), true);
   await Promise.all(held.map(r => rcEdit(env, r, 'h', `📝 Получено: «${r.text}»` + (notes[r.id] ? `\n\n${notes[r.id]}` : ''), notes[r.id], cards[r.id])));
-  const list = await box.rc.take(ids.map(String).filter(i => !holdSet.has(i)));
+  // v267: «✅ Записано» у записи «сразу» (card.a) — квитанция остаётся с кнопками; остальные — удаляются, как раньше
+  const okA = i => !dropSet.has(i) && !badSet.has(i) && cards[i] && cards[i].a && box.rc.setAct;
+  const kept = await box.rc.take(ids.map(String).filter(i => !holdSet.has(i) && okA(i)), true);
+  await Promise.all(kept.map(r => rcKeep(env, box, r, notes[r.id], cards[r.id])));
+  const list = await box.rc.take(ids.map(String).filter(i => !holdSet.has(i) && !okA(i)));
   await Promise.all(list.map(r => dropSet.has(r.id) ? rcEdit(env, r, 'drop', `🗑 Не записано: «${r.text}»\nЗапись удалена в приложении.`)
     : badSet.has(r.id) ? rcEdit(env, r, 'bad', `⚠ Приложение не поняло: «${r.text}»\n\nНапишите, например:\n• «кофе 300 кафе» (заметка, сумма, категория)\n• «бюджет 20000»\n• «Иван должен 500»`)
     : rcEdit(env, r, 'ok', `✅ Записано: «${r.text}»` + (notes[r.id] ? `\n\n${notes[r.id]}` : ''), notes[r.id], cards[r.id])));   // v166: подробный ответ из приложения отдельным абзацем
@@ -353,12 +383,99 @@ if(H)A(E("div","t h",H));
 void w.offsetWidth;w.className="n"}
 draw();if(T.onEvent)T.onEvent("chatDataChanged",draw);
 </script></body></html>`;
-async function rcEdit(env, r, s, text, note, card) {
+async function rcEdit(env, r, s, text, note, card, kb, cap) {
+  const mk = kb ? { reply_markup: kb } : {};
   if (useW(env)) {
     const w = await (await tg(env, 'editMessageWidgetData', { chat_id: r.chat, message_id: r.mid, chat_data: rcData(s, card, note) })).json().catch(() => null);
-    if (w && w.ok) return tg(env, 'editMessageCaption', { chat_id: r.chat, message_id: r.mid, caption: `${RC_CAP[s]}: «${r.text}»`, show_caption_above_media: true }).catch(() => {});
+    if (w && w.ok) return tg(env, 'editMessageCaption', { chat_id: r.chat, message_id: r.mid, caption: cap || `${RC_CAP[s]}: «${r.text}»`, show_caption_above_media: true, ...mk }).catch(() => {});
   }
-  return tg(env, 'editMessageText', { chat_id: r.chat, message_id: r.mid, text }).catch(() => {});   // квитанция-текст (не виджет)
+  return tg(env, 'editMessageText', { chat_id: r.chat, message_id: r.mid, text, ...mk }).catch(() => {});   // квитанция-текст (не виджет)
+}
+
+// ---------- v267: кнопки карточки «✅ Записано» — категория, дата, отмена (только записи «сразу», cfg.bAuto в приложении) ----------
+// Бот записей не меняет: нажатие кладёт команду в cmds, приложение применяет её при открытии и присылает новую карточку (cmdFinish).
+// act (в rcpt, до 30 дней): k — до 6 вариантов категорий [id, «🍽️ Кафе»], td — «сегодня» по телефону, d — дата записи, v — версия записи
+const CAL_M = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+const CAL_G = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+const isD = d => /^\d{4}-\d\d-\d\d$/.test(String(d || ''));
+const dLbl = d => +d.slice(8) + ' ' + CAL_G[+d.slice(5, 7) - 1];
+const dAdd = (d, n) => new Date(Date.parse(d + 'T00:00:00Z') + n * 864e5).toISOString().slice(0, 10);
+const ymAdd = (ym, n) => { const [y, m] = ym.split('-').map(Number), t = new Date(Date.UTC(y, m - 1 + n, 1)); return t.toISOString().slice(0, 7); };
+const B = (text, d) => ({ text, callback_data: 'rc:' + d });
+const KB_MAIN = { inline_keyboard: [[B('🏷 Категория', 'K'), B('📅 Дата', 'D')], [B('↩ Отменить запись', 'X')]] };
+const KB_DEL = { inline_keyboard: [[B('Да, отменить', 'Y'), B('Нет', 'B')]] };
+const KB_UNDEL = { inline_keyboard: [[B('↩ Не отменять', 'U')]] };
+const kbCat = act => { const rows = []; (act.k || []).forEach((c, i) => { if (i % 2 === 0) rows.push([]); rows[rows.length - 1].push(B(String(c[1]).slice(0, 30), 'c:' + i)); }); rows.push([B('← Назад', 'B')]); return { inline_keyboard: rows }; };
+function kbCal(ym, act) {
+  const [y, m] = ym.split('-').map(Number), days = new Date(Date.UTC(y, m, 0)).getUTCDate(), sh = (new Date(Date.UTC(y, m - 1, 1)).getUTCDay() + 6) % 7;
+  const N = B('\u2800', 'n'), tdm = act.td.slice(0, 7), nx = ymAdd(ym, 1), pv = ymAdd(ym, -1), lo = ymAdd(tdm, -12);
+  const rows = [[pv >= lo ? B('‹', 'M:' + pv) : N, B(CAL_M[m - 1] + ' ' + y, 'n'), nx <= tdm ? B('›', 'M:' + nx) : N], ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map(x => B(x, 'n'))];
+  let row = Array(sh).fill(N);
+  for (let d = 1; d <= days; d++) {
+    const ds = `${ym}-${String(d).padStart(2, '0')}`;
+    row.push(ds > act.td ? B('·', 'n') : B(ds === act.d ? `•${d}•` : String(d), 'd:' + ds));
+    if (row.length === 7) { rows.push(row); row = []; }
+  }
+  if (row.length) { while (row.length < 7) row.push(N); rows.push(row); }
+  rows.push([B('Сегодня', 'd:' + act.td), B('Вчера', 'd:' + dAdd(act.td, -1)), B('← Назад', 'B')]);
+  return { inline_keyboard: rows };
+}
+const actOf = card => { const a = card && card.a; if (!a || !Array.isArray(a.k) || !isD(a.td) || !isD(a.d)) return null;
+  return { k: a.k.slice(0, 6).filter(c => Array.isArray(c) && c[0]).map(c => [str(c[0], 40), str(c[1], 30)]), td: a.td, d: a.d, v: str(a.v, 20) }; };
+const pendLine = (act, pend) => { const l = [];
+  for (const p of pend) { if (p.op === 'del') return '⏳ Запись отменится, когда откроется приложение';
+    if (p.op === 'cat') { const c = (act.k || []).find(x => x[0] === p.val); l.push('категория — ' + (c ? c[1] : p.val)); }
+    if (p.op === 'date' && isD(p.val)) l.push('дата — ' + dLbl(p.val)); }
+  return l.length ? '⏳ Когда откроется приложение: ' + l.join(', ') : ''; };
+let hookOk = false;
+async function rcKeep(env, box, r, note, card) {   // «✅ Записано» + кнопки; act — в квитанцию
+  const act = actOf(card); if (!act) { await box.rc.drop(r.id); return rcEdit(env, r, 'ok', `✅ Записано: «${r.text}»` + (note ? `\n\n${note}` : ''), note, card); }
+  await box.rc.setAct(r.id, JSON.stringify(act));
+  if (!hookOk) { hookOk = true; await ensureCallbacks(env).catch(() => {}); }   // нажатия кнопок (callback_query) должны доходить до бота
+  return rcEdit(env, r, 'ok', `✅ Записано: «${r.text}»` + (note ? `\n\n${note}` : ''), note, card, KB_MAIN);
+}
+async function cmdFinish(env, box, done, cres, cards) {
+  if (!box.rc || !box.rc.cmdDone) return;
+  await box.rc.cmdDone(done);
+  for (const sid of Object.keys(cres).slice(0, 50)) {
+    const r = await box.rc.get(sid); if (!r) continue;
+    const res = cres[sid], cap = s => ({ chat_id: r.chat, message_id: r.mid, caption: s, show_caption_above_media: true });
+    if (res === 'ok') { if ((await box.rc.cmdsOf(sid)).length) continue; await rcKeep(env, box, r, '', cards[sid]); continue; }   // ещё есть новые нажатия — карточку обновим после них
+    await box.rc.drop(sid);
+    const t = res === 'del' ? `↩ Отменено: «${r.text}»\nЗапись удалена из учёта.` : `✅ Записано: «${r.text}»\nℹ️ Запись уже изменили в приложении — кнопки отключены.`;
+    if (res === 'del') { await rcEdit(env, r, 'un', t, 'Запись удалена из учёта.', null, null, `↩ Отменено: «${r.text}»`); continue; }
+    const c = await (await tg(env, 'editMessageCaption', cap(t))).json().catch(() => null);   // карточка остаётся как есть, меняется подпись, кнопки убираются
+    if (!(c && c.ok)) await tg(env, 'editMessageText', { chat_id: r.chat, message_id: r.mid, text: t }).catch(() => {});
+  }
+}
+async function onRcCallback(cq, env) {
+  const m = cq.message, ans = t => tg(env, 'answerCallbackQuery', { callback_query_id: cq.id, ...(t ? { text: t } : {}) });
+  const [, a, b] = String(cq.data).split(':');
+  if (a === 'n' || !m || !env.DB || !cq.from) return ans();
+  const box = store(env, cq.from.id), row = await box.rc.byMsg(m.chat.id, m.message_id); let act = null;
+  try { act = row && JSON.parse(row.act || 'null'); } catch {}
+  const id = { chat_id: m.chat.id, message_id: m.message_id };
+  const kbSet = kb => tg(env, 'editMessageReplyMarkup', { ...id, reply_markup: kb });
+  if (!act) { await kbSet({ inline_keyboard: [] }); return ans('Эту запись из чата уже не изменить'); }
+  const refresh = async (kb, say) => {   // подпись со строкой «⏳ Когда откроется приложение…» + кнопки
+    const pend = await box.rc.cmdsOf(row.id), line = pendLine(act, pend);
+    kb = kb || (pend.some(p => p.op === 'del') ? KB_UNDEL : KB_MAIN);
+    if (m.widget) await tg(env, 'editMessageCaption', { ...id, caption: `${RC_CAP.ok}: «${row.text}»` + (line ? '\n' + line : ''), show_caption_above_media: true, reply_markup: kb });
+    else await tg(env, 'editMessageText', { ...id, text: String(m.text || '').split('\n\n⏳ ')[0] + (line ? '\n\n' + line : ''), reply_markup: kb });
+    return ans(say);
+  };
+  if (a === 'K') { await kbSet(kbCat(act)); return ans(); }
+  if (a === 'D') { await kbSet(kbCal(act.d.slice(0, 7), act)); return ans(); }
+  if (a === 'M' && /^\d{4}-\d\d$/.test(b || '')) { await kbSet(kbCal(b, act)); return ans(); }
+  if (a === 'B') { await kbSet((await box.rc.cmdsOf(row.id)).some(p => p.op === 'del') ? KB_UNDEL : KB_MAIN); return ans(); }
+  if (a === 'X') { await kbSet(KB_DEL); return ans(); }
+  if (a === 'c') { const c = act.k[Number(b)]; if (!c) return ans();
+    await box.rc.cmd(row.id, 'cat', c[0], act.v); return refresh(null, 'Категория сменится, когда откроется приложение'); }
+  if (a === 'd' && isD(b) && b <= act.td) { if (b === act.d) await box.rc.unCmd(row.id, 'date'); else await box.rc.cmd(row.id, 'date', b, act.v);
+    return refresh(null, b === act.d ? 'Дата остаётся прежней' : 'Дата сменится, когда откроется приложение'); }
+  if (a === 'Y') { await box.rc.cmd(row.id, 'del', '1', act.v); return refresh(KB_UNDEL, 'Запись отменится, когда откроется приложение'); }
+  if (a === 'U') { await box.rc.unCmd(row.id, 'del'); return refresh(KB_MAIN, 'Отмена снята'); }
+  return ans();
 }
 
 async function transcribe(fileId, env) {
@@ -510,6 +627,7 @@ async function sendWeekly(env, now = Date.now()) {
 }
 // нажатия кнопок статистики (только владельцу): «Обновить» — переписать это же сообщение, «Подробно» — новое сообщение с полным /stats
 async function onCallback(cq, env) {
+  if (/^rc:/.test(cq.data || '')) return onRcCallback(cq, env);   // v267: кнопки карточки-квитанции
   const ok = isOwner(env, cq.from && cq.from.id) && /^st:/.test(cq.data || ''), m = cq.message;
   if (ok && m && cq.data === 'st:upd') {
     const r = await (await tg(env, 'editMessageText', { chat_id: m.chat.id, message_id: m.message_id, text: await statsText(env), parse_mode: 'HTML', reply_markup: STATS_KB })).json().catch(() => ({}));
