@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v263';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v264';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -6857,7 +6857,13 @@ if('serviceWorker' in navigator&&location.protocol!=='file:'){
     try{
       window.__introIdx();
     }catch(e){}
-    window.__introT=performance.now();de.classList.add('intro');de.classList.remove('splh');const fl=flyOut();if(!fl)s.classList.add('out');
+    window.__introT=performance.now();de.classList.add('intro');de.classList.remove('splh');
+    // v264: стоит PIN-код — под заставкой уже экран блокировки: без полёта в лампочку, заставка плавно растворяется, экран кода мягко проявляется
+    const lkE=document.getElementById('lk'),locked=!!(lkE&&lkE.classList.contains('on'));
+    const fl=locked?false:flyOut();
+    if(!fl){if(locked&&!rm&&s.animate){s.animate([{opacity:1,transform:'none'},{opacity:0,transform:'scale(1.03)'}],{duration:560,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'});
+        try{lkE.animate([{opacity:0,transform:'scale(.97)'},{opacity:1,transform:'none'}],{duration:700,delay:60,easing:'cubic-bezier(.22,1,.36,1)',fill:'backwards'})}catch(e){}}
+      else s.classList.add('out')}
     // цифры остатка заново «набегают» уже на глазах, а не за заставкой
     setTimeout(()=>{try{_animN.delete(month);_nP=null;runNums()}catch(e){}},rm?0:260);
     setTimeout(()=>{de.classList.remove('intro')},rm?400:2800);
