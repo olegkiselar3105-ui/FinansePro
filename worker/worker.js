@@ -50,6 +50,17 @@ export default {
         await box.rc.setProf(b.off ? null : JSON.stringify(profClean(b)));
         return cors(json({ ok: true }));
       }
+      if (url.pathname === '/api/sum' && req.method === 'POST') {   // v275: итоги для карточки статистики; {off:1} — удалить
+        const uid = await authUser(req, env); if (!uid) return cors(json({ error: 'auth' }, 401));
+        const raw = await req.text(), box = store(env, uid);
+        if (!box.rc || !box.rc.sumSet) return cors(json({ ok: false }));
+        let b = null; try { b = JSON.parse(raw); } catch {}
+        if (!b || typeof b !== 'object' || raw.length > 8000) return cors(json({ error: 'bad' }, 400));
+        if (b.off) { await box.rc.sumSet(null); return cors(json({ ok: true })); }
+        const data = sumClean(b); await box.rc.sumSet(JSON.stringify(data));
+        ctx.waitUntil(stLive(env, box, uid).catch(e => console.error('stlive', e && e.message)));   // последняя карточка статистики — живая
+        return cors(json({ ok: true }));
+      }
       if (url.pathname === '/api/ack' && req.method === 'POST') {
         const uid = await authUser(req, env); if (!uid) return cors(json({ error: 'auth' }, 401));
         const body = await req.json();
@@ -73,6 +84,7 @@ export default {
     } catch (e) { console.error('fetch', e && e.stack || e); return cors(json({ error: 'server' }, 500)); }
   },
   async scheduled(ev, env, ctx) {
+    if (ev.cron === HOURLY) { ctx.waitUntil(evening(env).catch(e => console.error('evening', e && e.stack || e))); return; }   // v275
     if (ev.cron === WEEKLY) ctx.waitUntil(sendWeekly(env).catch(e => console.error('weekly', e && e.stack || e)));
     else { ctx.waitUntil(rollup(env).catch(e => console.error('rollup', e && e.stack || e)));
       ctx.waitUntil(staleRemind(env).catch(e => console.error('stale', e && e.stack || e))); }
@@ -93,7 +105,9 @@ const d1Init = env => d1Ready || (d1Ready = env.DB.batch([
   // v269: словарь для предпросмотра фразы: названия категорий, их другие названия, валюта (без сумм, записей и заметок); присылает приложение
   env.DB.prepare('CREATE TABLE IF NOT EXISTS prof (uid TEXT PRIMARY KEY, data TEXT, at INTEGER)'),
   // v273: вопрос «Сколько?» от кнопки «Другая сумма» / «Пополнить»: по ответу на это сообщение бот собирает фразу (tpl с {n}); сутки
-  env.DB.prepare('CREATE TABLE IF NOT EXISTS asks (uid TEXT, mid INTEGER, tpl TEXT, at INTEGER, PRIMARY KEY (uid, mid))')
+  env.DB.prepare('CREATE TABLE IF NOT EXISTS asks (uid TEXT, mid INTEGER, tpl TEXT, at INTEGER, PRIMARY KEY (uid, mid))'),
+  // v275: итоги для карточки статистики — только суммы (день/неделя/месяц, топ категорий, бюджет), последняя версия; ev — вечерняя сводка, mid — последняя карточка, sent — день сводки
+  env.DB.prepare("CREATE TABLE IF NOT EXISTS sums (uid TEXT PRIMARY KEY, data TEXT, at INTEGER, ev TEXT DEFAULT '1', mid INTEGER, sent TEXT)")
 ]).then(async () => {
   // v267: act — что можно сделать из чата с записью «сразу» (варианты категорий, сегодняшняя дата телефона, версия записи)
   try { await env.DB.prepare('ALTER TABLE rcpt ADD COLUMN act TEXT').run(); } catch {}
@@ -139,6 +153,9 @@ const d1Store = (env, uid) => {
       async ask(mid, tpl) { await d1Init(env); await env.DB.batch([q('INSERT OR REPLACE INTO asks (uid, mid, tpl, at) VALUES (?, ?, ?, ?)', uid, mid, tpl, Date.now()), q('DELETE FROM asks WHERE uid = ? AND at < ?', uid, Date.now() - 864e5)]); },
       async askGet(mid) { await d1Init(env); return q('SELECT tpl FROM asks WHERE uid = ? AND mid = ? AND at >= ?', uid, mid, Date.now() - 864e5).first(); },
       async askDel(mid) { await d1Init(env); await q('DELETE FROM asks WHERE uid = ? AND mid = ?', uid, mid).run(); },
+      async sumGet() { await d1Init(env); const r = await q('SELECT data, at, ev, mid, sent FROM sums WHERE uid = ?', uid).first(); if (!r) return null; try { return { ...r, data: JSON.parse(r.data) }; } catch { return null; } },
+      async sumSet(data) { await d1Init(env); if (data) await q("INSERT INTO sums (uid, data, at) VALUES (?, ?, ?) ON CONFLICT(uid) DO UPDATE SET data = excluded.data, at = excluded.at", uid, data, Date.now()).run(); else await q('DELETE FROM sums WHERE uid = ?', uid).run(); },
+      async sumUp(f, v) { await d1Init(env); if (['ev', 'mid', 'sent'].includes(f)) await q(`UPDATE sums SET ${f} = ? WHERE uid = ?`, v, uid).run(); },
       async prof() { await d1Init(env); const r = await q('SELECT data FROM prof WHERE uid = ?', uid).first(); try { return r ? JSON.parse(r.data) : null; } catch { return null; } },
       async setProf(data) { await d1Init(env); if (data) await q('INSERT OR REPLACE INTO prof (uid, data, at) VALUES (?, ?, ?)', uid, data, Date.now()).run(); else await q('DELETE FROM prof WHERE uid = ?', uid).run(); },
       async unCmd(sid, op) { await d1Init(env); await q('DELETE FROM cmds WHERE uid = ? AND sid = ? AND op = ?', uid, sid, op).run(); },
@@ -257,6 +274,8 @@ const HELP = `Что можно написать или сказать боту:
 
 💱 Курс: «курс евро 19.5»
 
+📊 Статистика: /report (месяц), /today (сегодня), /week (неделя) — или «статистика». Каждый вечер в 21:00 — сводка за день (отключается в самой карточке)
+
 Суммы можно словами: «пятьсот», «две тысячи». Записи появляются в приложении, когда оно открыто. /queue — сколько ждёт в очереди.`;
 
 async function handleUpdate(upd, env) {
@@ -272,6 +291,14 @@ async function handleUpdate(upd, env) {
   const priv = env.APP_URL ? new URL('privacy.html', env.APP_URL).href : '';
   if (t === '/privacy') return reply(priv ? `🔒 Политика конфиденциальности: ${priv}` : 'Политика конфиденциальности пока не опубликована.');
   if (t === '/help' || t === '/помощь') return reply(HELP + (priv ? `\n\n🔒 Политика конфиденциальности: /privacy` : ''));
+  // v275: карточка статистики (из итогов, что прислало приложение)
+  if (/^\/(report|today|month|week)(@\w+)?$/i.test(t) || /^(статистика|отч[её]т|итоги|сводка)$/i.test(t)) {
+    const box0 = store(env, uid), tab = /today/i.test(t) ? 0 : /week/i.test(t) ? 1 : 2;
+    if (!box0.rc || !box0.rc.sumGet) return reply('Статистика недоступна.');
+    const sm = await box0.rc.sumGet();
+    if (!sm) return reply('📊 Откройте приложение один раз — после этого здесь можно будет смотреть статистику.', open);
+    return sendSt(env, box0, chat, sm, tab);
+  }
   if (t === '/stats') { if (!isOwner(env, uid)) return; await ensureCallbacks(env).catch(e => console.error('hook', e && e.message)); return reply(await statsText(env), { parse_mode: 'HTML', reply_markup: STATS_KB }); }   // только владельцу (OWNER_ID); остальным — молчание
   if (t === '/queue') return reply(`В очереди на запись в приложение: ${await store(env, uid).count()}`);   // 0 = всё забрано приложением
   if (t === '/start') return reply('Привет! Я записываю ваши доходы и расходы.\n\n' +
@@ -870,9 +897,115 @@ async function staleRemind(env, now = Date.now()) {
     await tg(env, 'editMessageWidgetData', { chat_id: r.chat, message_id: r.mid, chat_data: rcData('q', card, '', x) }).catch(() => {});
   }
 }
+// ---------- v275: карточка статистики (worker/card-st.html) ----------
+const RC_ST = String.raw`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
+:root{--S:var(--tg-theme-secondary-bg-color,#f0f0f2);--H:var(--tg-theme-hint-color,#8a8a8e);--G:var(--tg-theme-bg-color,#fff);--T:var(--tg-theme-text-color,#000);--E:#2fa65a;--B:#3390ec}
+*{box-sizing:border-box;margin:0}
+html,body{background:var(--G)}
+body{font:14px/1.3 system-ui,sans-serif;color:var(--T);padding:10px 12px 26px;-webkit-user-select:none;user-select:none}
+.hd{display:flex;justify-content:space-between;align-items:baseline;font-weight:650;font-size:15px}
+.hd small{font-weight:400;font-size:11px;color:var(--H)}
+.tb{position:relative;display:flex;margin:10px 0 12px;padding:3px;border-radius:12px;background:var(--S)}
+.tb i{position:absolute;top:3px;bottom:3px;left:3px;width:calc((100% - 6px)/3);border-radius:9px;background:var(--G);box-shadow:0 1px 3px rgba(0,0,0,.18);transition:transform .35s cubic-bezier(.3,1.3,.5,1)}
+.tb button{-webkit-appearance:none;appearance:none;position:relative;flex:1;border:0;background:0;font:inherit;font-size:13px;font-weight:600;color:var(--H);padding:6px 0;transition:color .25s}
+.tb button.on{color:var(--T)}
+.hr{display:flex;align-items:center;gap:14px}
+.dn{flex:0 0 108px;height:108px;position:relative}
+.dn svg{width:108px;height:108px;transform:rotate(-90deg)}
+.dn circle{fill:none;stroke-width:13;transition:stroke-dasharray .9s cubic-bezier(.2,.8,.2,1),stroke-dashoffset .9s cubic-bezier(.2,.8,.2,1)}
+.dn b{position:absolute;inset:0;display:grid;place-items:center;font-size:26px}
+.tt{flex:1;min-width:0}
+.tt .l{font-size:12px;color:var(--H)}
+.tt .v{font-size:25px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;margin:1px 0 4px}
+.tt .in{font-size:13px;color:var(--E);font-weight:600}
+.tt .n{font-size:12px;color:var(--H);margin-top:2px}
+.lg{margin-top:12px}
+.rw{display:flex;align-items:center;gap:8px;padding:5px 0;animation:f .4s both;animation-delay:calc(var(--j)*60ms)}
+@keyframes f{from{opacity:0;transform:translateY(5px)}}
+.dt{flex:0 0 10px;height:10px;border-radius:50%}
+.rw .m{flex:1;min-width:0}
+.rw .k{display:flex;justify-content:space-between;gap:8px;font-size:13px}
+.rw .k span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rw .k b{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.br{height:4px;border-radius:2px;background:var(--S);margin-top:4px;overflow:hidden}
+.br i{display:block;height:100%;width:0;border-radius:2px;transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.ch{display:flex;align-items:flex-end;gap:4px;height:74px;margin-top:14px}
+.ch div{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}
+.ch i{display:block;width:100%;max-width:26px;height:0;border-radius:5px 5px 2px 2px;background:var(--B);opacity:.85;transition:height .7s cubic-bezier(.2,.8,.2,1)}
+.ch .td i{background:var(--E);opacity:1}
+.ch span{font-size:10px;color:var(--H)}
+.bu{margin-top:14px;padding:10px 12px;border-radius:12px;background:var(--S)}
+.bu .k{display:flex;justify-content:space-between;font-size:13px}
+.bu .br{height:8px;border-radius:4px;background:rgba(128,128,128,.22);margin:7px 0 4px}
+.bu .br i{background:var(--E)}
+.bu.x .br i{background:#e5484d}
+.bu small{font-size:12px;color:var(--H)}
+.em{padding:18px 0;text-align:center;color:var(--H);font-size:13px}
+.ev{-webkit-appearance:none;appearance:none;display:block;width:100%;margin-top:12px;border:0;border-radius:12px;padding:9px;font:inherit;font-size:12.5px;color:var(--H);background:var(--S)}
+.ev b{color:var(--T)}
+</style></head><body><div id="w"></div><script>
+var T=window.TelegramWidget||{},w=document.getElementById("w"),D={},tab=0,j=0;
+function E(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+function F(n){return String(Math.round(+n||0)).replace(/\B(?=(\d{3})+(?!\d))/g," ")+" "+(D.cur||"")}
+function hp(){try{T.HapticFeedback.selectionChanged()}catch(e){}}
+function cnt(el,v){var t0=Date.now();(function s(){var k=Math.min(1,(Date.now()-t0)/700);el.textContent=F(v*(1-Math.pow(1-k,3)));if(k<1)requestAnimationFrame(s)})()}
+function draw(){try{D=JSON.parse(T.chatData||"{}")||{}}catch(e){D={}}if(D.t!=null&&!draw.k){tab=D.t;draw.k=1}paint()}
+function paint(){w.textContent="";j=0;var P=[D.d,D.w,D.m][tab]||null,h=E("div","hd");h.appendChild(E("span",0,"📊 Статистика"));if(D.up)h.appendChild(E("small",0,"обновлено "+D.up));w.appendChild(h);
+var tb=E("div","tb"),ind=E("i");tb.appendChild(ind);["Сегодня","Неделя",D.m&&D.m.l||"Месяц"].forEach(function(l,i){var b=E("button",i===tab?"on":"",l);b.type="button";b.onclick=function(){if(tab===i)return;tab=i;hp();paint()};tb.appendChild(b)});
+ind.style.transform="translateX("+(tab*100)+"%)";w.appendChild(tb);
+if(!P){w.appendChild(E("div","em","Откройте приложение — здесь появятся цифры"));return}
+var hr=E("div","hr"),dn=E("div","dn"),tt=E("div","tt"),c=P.c||[],tot=c.reduce(function(s,x){return s+x[2]},0),r=48,L=2*Math.PI*r;
+var sv='<svg viewBox="0 0 108 108"><circle cx="54" cy="54" r="'+r+'" stroke="rgba(128,128,128,.18)"/>';
+c.forEach(function(x){sv+='<circle cx="54" cy="54" r="'+r+'" stroke="'+(/^#[0-9a-f]{6}$/i.test(x[3])?x[3]:"#3390ec")+'" stroke-dasharray="0 '+L+'"/>'});dn.innerHTML=sv+"</svg>";dn.appendChild(E("b",0,c[0]?c[0][0]:"🌿"));
+tt.appendChild(E("div","l","Расходы"));var v=E("div","v");tt.appendChild(v);cnt(v,P.e);if(P.i)tt.appendChild(E("div","in","+ "+F(P.i)+" доход"));tt.appendChild(E("div","n",P.n?P.n+" "+(P.n%10===1&&P.n%100!==11?"запись":P.n%10>=2&&P.n%10<=4&&(P.n%100<10||P.n%100>=20)?"записи":"записей"):"Записей нет"));
+hr.appendChild(dn);hr.appendChild(tt);w.appendChild(hr);
+setTimeout(function(){var o=0,k=dn.querySelectorAll("circle");c.forEach(function(x,i){var a=tot?x[2]/tot*L:0,g=c.length>1?2:0;k[i+1].style.strokeDasharray=Math.max(0,a-g)+" "+L;k[i+1].style.strokeDashoffset=-o;o+=a})},60);
+if(c.length){var lg=E("div","lg");c.forEach(function(x){var rw=E("div","rw"),d=E("i","dt"),m=E("div","m"),k=E("div","k"),b=E("div","br"),bi=E("i");rw.style.setProperty("--j",j++);var col=/^#[0-9a-f]{6}$/i.test(x[3])?x[3]:"#3390ec";d.style.background=col;bi.style.background=col;
+k.appendChild(E("span",0,x[0]+" "+x[1]));k.appendChild(E("b",0,F(x[2])));b.appendChild(bi);m.appendChild(k);m.appendChild(b);rw.appendChild(d);rw.appendChild(m);lg.appendChild(rw);setTimeout(function(){bi.style.width=(tot?x[2]/tot*100:0)+"%"},80)});w.appendChild(lg)}
+if(P.x&&P.x.length>1){var ch=E("div","ch"),mx=Math.max.apply(0,P.x)||1,W="Вс Пн Вт Ср Чт Пт Сб".split(" "),s0=P.s?new Date(P.s+"T00:00:00Z").getUTCDay():0;
+P.x.forEach(function(x,i){var d=E("div",i===P.x.length-1?"td":""),bi=E("i");d.appendChild(bi);if(tab===1)d.appendChild(E("span",0,W[(s0+i)%7]));ch.appendChild(d);setTimeout(function(){bi.style.height=Math.max(3,x/mx*(tab===1?58:70))+"px"},80+i*25)});w.appendChild(ch)}
+if(tab===2&&P.b){var bu=E("div","bu"+(P.b[0]>P.b[1]?" x":"")),k=E("div","k"),br=E("div","br"),bi=E("i");k.appendChild(E("span",0,"Бюджет"));k.appendChild(E("b",0,F(P.b[0])+" из "+F(P.b[1])));br.appendChild(bi);bu.appendChild(k);bu.appendChild(br);
+bu.appendChild(E("small",0,P.b[0]>P.b[1]?"перерасход "+F(P.b[0]-P.b[1]):"осталось "+F(P.b[1]-P.b[0])));w.appendChild(bu);setTimeout(function(){bi.style.width=Math.min(100,P.b[0]/P.b[1]*100)+"%"},80)}
+if(D.ev!=null&&T.request){var ev=E("button","ev");ev.type="button";ev.innerHTML="🌙 Вечерняя сводка в 21:00 · <b>"+(D.ev?"вкл":"выкл")+"</b>";ev.onclick=function(){hp();T.request("ev:"+(D.ev?0:1)).catch(function(){})};w.appendChild(ev)}}
+draw();if(T.onEvent)T.onEvent("chatDataChanged",draw);if(T.ready)T.ready();
+</script></body></html>`;
+const num = v => Math.round(Number(v) || 0);
+function perClean(p) { if (!p || typeof p !== 'object') return null;
+  const o = { e: num(p.e), i: num(p.i), n: num(p.n), c: (Array.isArray(p.c) ? p.c : []).slice(0, 5).filter(Array.isArray).map(x => [str(x[0], 8), str(x[1], 16), num(x[2]), /^#[0-9a-f]{6}$/i.test(x[3]) ? x[3] : '']) };
+  if (Array.isArray(p.x)) o.x = p.x.slice(0, 31).map(num); if (isD(p.s)) o.s = p.s; if (p.l) o.l = str(p.l, 12); if (Array.isArray(p.b)) o.b = [num(p.b[0]), num(p.b[1])]; return o; }
+const sumClean = b => ({ cur: str(b.cur, 8), tz: Math.max(-900, Math.min(900, Number(b.tz) || 0)), ds: isD(b.ds) ? b.ds : '', d: perClean(b.d), w: perClean(b.w), m: perClean(b.m) });
+const locNow = (tz, now = Date.now()) => new Date(now - (Number(tz) || 0) * 60000);   // «местное» время в UTC-полях
+function stData(sm, tab) {
+  const s = sm.data, up = locNow(s.tz, sm.at), today = locNow(s.tz).toISOString().slice(0, 10);
+  const d = { cur: s.cur, up: (s.ds === today ? '' : String(+s.ds.slice(8)) + '.' + s.ds.slice(5, 7) + ' ') + up.toISOString().slice(11, 16), t: tab, ev: sm.ev === '0' ? 0 : 1,
+    d: s.ds === today ? s.d : { e: 0, i: 0, n: 0, c: [] }, w: s.w, m: s.m };
+  let j = JSON.stringify(d);
+  for (const cut of [() => delete d.m.x, () => d.w && d.w.c.splice(3), () => d.m && d.m.c.splice(3), () => d.d && d.d.c.splice(3)]) { if (u8(j) <= 1024) break; try { cut(); } catch {} j = JSON.stringify(d); }
+  return j;
+}
+async function sendSt(env, box, chat, sm, tab) {
+  const r = await (await tg(env, 'sendWidget', { chat_id: chat, html: RC_ST, chat_data: stData(sm, tab), allow_queries: true })).json().catch(() => null);
+  if (r && r.ok && r.result) { await box.rc.sumUp('mid', r.result.message_id); if (!hookOk) { hookOk = true; await ensureCallbacks(env).catch(() => {}); } return r.result.message_id; }
+  console.error('st widget', r && r.description);
+  const s = sm.data, P = s.ds === locNow(s.tz).toISOString().slice(0, 10) ? s.d : null;   // запасной путь — текстом
+  return tg(env, 'sendMessage', { chat_id: chat, text: `📊 Сегодня: ${P ? num(P.e) : 0} ${s.cur}\n${s.m ? s.m.l : 'Месяц'}: ${s.m ? num(s.m.e) : 0} ${s.cur}` });
+}
+async function stLive(env, box, uid) { const sm = await box.rc.sumGet(); if (sm && sm.mid) await tg(env, 'editMessageWidgetData', { chat_id: Number(uid), message_id: sm.mid, chat_data: stData(sm, null) }).catch(() => {}); }
+// вечерняя сводка: ежечасный cron, в 21 час по поясу человека; только если сегодня что-то записано и сводка не отключена
+const HOURLY = '0 * * * *';
+async function evening(env, now = Date.now()) {
+  if (!env.DB || !useW(env)) return; await d1Init(env);
+  const rows = (await env.DB.prepare("SELECT uid, data, at, ev, mid, sent FROM sums WHERE COALESCE(ev, '1') <> '0' LIMIT 500").all()).results || [];
+  for (const r of rows) { let data = null; try { data = JSON.parse(r.data); } catch {} if (!data) continue;
+    const loc = locNow(data.tz, now), day = loc.toISOString().slice(0, 10);
+    if (loc.getUTCHours() !== 21 || r.sent === day || data.ds !== day || !(data.d && data.d.n > 0)) continue;
+    const box = store(env, r.uid); await box.rc.sumUp('sent', day); await sendSt(env, box, Number(r.uid), { ...r, data }, 0); }
+}
 async function onWidgetQuery(wq, env) {
   const ans = o => tg(env, 'answerWidgetQuery', { widget_query_id: wq.id, data: JSON.stringify(o) }).catch(() => {});
   if (!wq.chat || !wq.message_id || !env.DB || !wq.from) return ans({ e: 'old' });
+  if (/^ev:[01]$/.test(String(wq.data))) { const b = store(env, wq.from.id); await b.rc.sumUp('ev', String(wq.data).slice(3)); await ans({ ok: 1 });   // v275: вечерняя сводка вкл/выкл
+    const sm = await b.rc.sumGet(); if (sm) await tg(env, 'editMessageWidgetData', { chat_id: wq.chat.id, message_id: wq.message_id, chat_data: stData(sm, null) }).catch(() => {}); return; }
   const box = store(env, wq.from.id), row = await box.rc.byMsg(wq.chat.id, wq.message_id); let act = null;
   try { act = row && JSON.parse(row.act || 'null'); } catch {}
   if (!act) return ans({ e: 'old' });
@@ -979,6 +1112,7 @@ async function rollup(env, now = Date.now()) {
   ]);
   // v269: словарь категорий тех, кто 30 дней не открывал приложение
   try { await env.DB.prepare('DELETE FROM prof WHERE at < ?').bind(now - TTL * 1000).run(); } catch {}
+  try { await env.DB.prepare('DELETE FROM sums WHERE at < ?').bind(now - TTL * 1000).run(); } catch {}   // v275: итоги тех, кто 30 дней не открывал приложение
 }
 const N = x => Number(x) || 0;
 // период [from, to] (YYYY-MM-DD): люди, новые, сообщения. Сообщения: старые дни — из agg, последние 3 дня (по настоящей дате) — из cnt

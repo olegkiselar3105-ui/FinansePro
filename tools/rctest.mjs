@@ -10,7 +10,7 @@ globalThis.fetch = async (u, o) => { const m = String(u).split('/').pop(), b = J
   if (failWidget && /Widget/.test(m)) return new Response(JSON.stringify({ ok: false, description: 'Bad Request: method not found' }));
   return new Response(JSON.stringify({ ok: true, result: { message_id: ++mid } })); };
 const src = new URL('../worker/worker.js', import.meta.url), tmp = path.join(os.tmpdir(), 'fp-rc-test-' + process.pid + '.mjs');
-fs.writeFileSync(tmp, fs.readFileSync(src, 'utf8') + '\nexport const _t = { finishReceipts, rcData, RC_HTML, RC_DG, RC_PUB, store, cmdFinish, profClean, staleRemind };\n');
+fs.writeFileSync(tmp, fs.readFileSync(src, 'utf8') + '\nexport const _t = { finishReceipts, rcData, RC_HTML, RC_DG, RC_PUB, RC_ST, store, cmdFinish, profClean, staleRemind, sumClean, evening };\n');
 const W = await import(tmp); fs.unlinkSync(tmp);
 const env = { DB, BOT_TOKEN: 'x', WEBHOOK_SECRET: 's', APP_URL: 'https://a.example/' };
 const ctx = { ps: [], waitUntil(p) { this.ps.push(p.catch(() => {})); } };
@@ -250,3 +250,23 @@ db.prepare("UPDATE rcpt SET at = at - 3 * 864e5 WHERE CAST(uid AS REAL) = 71 AND
 sent = []; await W._t.staleRemind(env); const st6 = sent.filter(x => x.m === 'editMessageWidgetData').map(x => JSON.parse(x.chat_data));
 assert(st6.length === 1 && /Ждёт 3 дня/.test(st6[0].hn) && st6[0].o[0][4] === 'Кафе и рестораны' && st6[0].a, 'зависшая запись: «Ждёт 3 дня», карточка и меню на месте');
 await b5.ack([r6.id]); sent = []; await W._t.staleRemind(env); assert(!sent.some(x => x.m === 'editMessageWidgetData'), 'приложение забрало — не напоминаем');
+// ---------- v275: карточка статистики, вечерняя сводка ----------
+const U7 = 81, b7 = W._t.store(env, U7), td7 = new Date(Date.now() + 7200e3).toISOString().slice(0, 10);
+const SUM = { cur: 'MDL', tz: -120, ds: td7, d: { e: 420, i: 5000, n: 3, c: [['🛒', 'Продукты', 300, '#98ebeb'], ['🚌', 'Транспорт', 120, '#eb98e0']] },
+  w: { e: 1220, i: 5000, n: 4, c: [['🍽️', 'Кафе и рестораны', 800, '#dede7c']], s: '2026-11-05', x: [0, 0, 0, 0, 800, 0, 420] }, m: { e: 1220, i: 5000, n: 4, c: [['🍽️', 'Кафе', 800, '']], l: 'Ноябрь', x: Array(31).fill(1234567), b: [1220, 10000] } };
+sent = []; await msg(U7, '/report'); assert(sent.some(x => x.m === 'sendMessage' && /Откройте приложение один раз/.test(x.text)), '/report без итогов — подсказка');
+await b7.rc.sumSet(JSON.stringify(W._t.sumClean({ ...SUM, d: { ...SUM.d, c: [...SUM.d.c, ['x', '<b>', 'zz', 'red']] } })));
+sent = []; await msg(U7, 'статистика'); let st7 = sent.find(x => x.m === 'sendWidget'), sd7 = JSON.parse(st7.chat_data);
+assert(st7.html === W._t.RC_ST && st7.allow_queries && sd7.t === 2 && sd7.m.b[1] === 10000 && sd7.d.e === 420 && sd7.d.c[2][2] === 0 && sd7.ev === 1, '«статистика» — карточка, вкладка «месяц», данные очищены');
+assert(Buffer.byteLength(st7.chat_data) <= 1024, `данные карточки ${Buffer.byteLength(st7.chat_data)} байт`);
+assert(zlib.deflateSync(Buffer.from(W._t.RC_ST), { level: 9 }).length <= 4096, 'HTML статистики ≤ 4 КБ');
+sent = []; await msg(U7, '/today'); assert(JSON.parse(sent.find(x => x.m === 'sendWidget').chat_data).t === 0, '/today — вкладка «сегодня»');
+const mid7 = (await b7.rc.sumGet()).mid;
+sent = []; await W.default.fetch(new Request('https://w/webhook', { method: 'POST', headers: { 'X-Telegram-Bot-Api-Secret-Token': 's' },
+  body: JSON.stringify({ widget_query: { id: 'e1', from: { id: U7 }, chat: { id: U7, type: 'private' }, message_id: mid7, data: 'ev:0' } }) }), env, ctx).then(() => Promise.all(ctx.ps.splice(0)));
+assert((await b7.rc.sumGet()).ev === '0' && JSON.parse(sent.find(x => x.m === 'editMessageWidgetData').chat_data).ev === 0, 'вечерняя сводка — выключается в карточке');
+const at21 = Date.parse(td7 + 'T19:00:00Z');   // 21:00 по Кишинёву (tz -120)
+sent = []; await W._t.evening(env, at21); assert(!sent.some(x => x.m === 'sendWidget'), 'выключена — сводки нет');
+await b7.rc.sumUp('ev', '1'); sent = []; await W._t.evening(env, at21 - 3600e3); assert(!sent.some(x => x.m === 'sendWidget'), 'в 20:00 — ещё нет');
+sent = []; await W._t.evening(env, at21); assert(sent.filter(x => x.m === 'sendWidget' && x.html === W._t.RC_ST).length === 1, 'в 21:00 — сводка');
+sent = []; await W._t.evening(env, at21 + 60e3); assert(!sent.some(x => x.m === 'sendWidget'), 'второй раз за день — нет');

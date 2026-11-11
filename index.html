@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v273';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v275';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -2607,6 +2607,21 @@ function botProf(){const n={},old=ymd(new Date(Date.now()-90*864e5));tx.forEach(
   CAT_AL.forEach(([ids,w])=>{const id=ids.find(i=>cs.some(c=>c.id===i));if(id)w.split(' ').forEach(a=>d.push([a,id,0]))});
   return {c:cs.map(c=>[c.id,c.e||'',String(c.n).slice(0,30),c.inc?1:0,c.c||'']),d,cur:cfg.cur,tz:new Date().getTimezoneOffset(),cx:codes().filter(c=>c!==cfg.cur).map(curSrc).join('|'),sk:CW_SKIP.source,ir:[INCRE.source,INCW.source]}}
 let bpAt=0;
+// v275: итоги для карточки статистики в боте (/report, «Сегодня» в 21:00): только суммы за день/неделю/месяц, топ категорий, бюджет — без отдельных записей и заметок.
+// Шлются, когда изменились (и раз в сутки); запись из бота «сразу» выключена — итоги на сервере удаляются ({off:1}). Суммы — числами, формат — в карточке
+function botSum(){const now=new Date(),td=ymd(now),k=perKey(td),R=v=>Math.round(v);
+  const per=(a,b)=>{let e=0,i=0,n=0;const by={};tx.forEach(t=>{if(t.date<a||t.date>b)return;n++;if(t.type==='income')i+=t.amount;else if(t.type==='expense'){e+=t.amount;by[t.category]=(by[t.category]||0)+t.amount}});
+    const c=Object.entries(by).sort((x,y)=>y[1]-x[1]).slice(0,5).map(([id,v])=>{const q=cd(id);return [q.e||'•',String(q.n).slice(0,16),R(v),q.c||'']});return {e:R(e),i:R(i),n,c}};
+  const days=(a,b)=>{const o=[];for(let x=a;x<=b&&o.length<31;x=dAdd(x,1))o.push(R(tx.reduce((s,t)=>s+(t.date===x&&t.type==='expense'?t.amount:0),0)));return o};
+  const w0=dAdd(td,-6),m0=pFrom(k),d=per(td,td),w={...per(w0,td),s:w0,x:days(w0,td)},m={...per(m0,td),l:MN[+k.slice(5,7)-1],x:days(m0,td)};
+  let b=0;try{b=budgetOf(k)}catch(e){}if(b>0)m.b=[R(spentIn(k)),R(b)];
+  return {cur:cfg.cur,tz:now.getTimezoneOffset(),ds:td,d,w,m}}
+let bsAt=0;
+function botSumSync(){if(Date.now()-bsAt<30000)return;bsAt=Date.now();
+  try{const p=bAuto()?botSum():{off:1},j=JSON.stringify(p);let h=0;for(let i=0;i<j.length;i++)h=(h*31+j.charCodeAt(i))|0;
+    const key=j.length+':'+h,o=(()=>{try{return JSON.parse(localStorage.getItem('finapp.bsum')||'{}')}catch(e){return {}}})();
+    if(o.h===key&&Date.now()-(+o.at||0)<864e5)return;
+    ibCall('/api/sum',p).then(()=>{try{localStorage.setItem('finapp.bsum',JSON.stringify({h:key,at:Date.now()}))}catch(e){}}).catch(()=>{})}catch(e){}}
 function botProfSync(){if(Date.now()-bpAt<60000)return;bpAt=Date.now();
   try{const p=bAuto()?botProf():{off:1},j=JSON.stringify(p);let h=0;for(let i=0;i<j.length;i++)h=(h*31+j.charCodeAt(i))|0;
     const key=j.length+':'+h,o=(()=>{try{return JSON.parse(localStorage.getItem('finapp.bprof')||'{}')}catch(e){return {}}})();
@@ -6357,7 +6372,7 @@ async function inboxPull(fast,wait){
     // wait=true — «долгий опрос»: сервер держит запрос до ~12 с и отвечает сразу, как только бот получил сообщение
     const res=await ibCall(wait?'/api/pending?wait=12':fast?'/api/pending?fast=1':'/api/pending',null,wait?22000:0,c=>{if(wait)IB.ctl=c}),items=Array.isArray(res&&res.items)?res.items:[];
     IB.lp=!!(res&&res.lp);if(wait){IB.fail=0;IB.lpOk=Date.now()}IB.dbg={t:Date.now(),n:items.length,lp:IB.lp,err:'',uid:res&&res.uid||''};
-    try{if(!IB.dead)botProfSync()}catch(e){}   // v269: словарь для предпросмотра в боте
+    try{if(!IB.dead){botProfSync();botSumSync()}}catch(e){}   // v269: словарь для предпросмотра в боте
     const allc=Array.isArray(res&&res.cmds)?res.cmds:[],qids=new Set(items.map(it=>it&&String(it.id)).filter(Boolean)),seen0=new Set(ibSeen());
     const bcm=allc.filter(c=>!(qids.has(String(c&&c.sid))&&!seen0.has(String(c.sid)))),preBy={};   // v267: команды из кнопок карточки бота
     allc.forEach(c=>{if(_obj(c)&&qids.has(String(c.sid))&&!seen0.has(String(c.sid)))(preBy[c.sid]=preBy[c.sid]||[]).push(c)});
