@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v277';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v278';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -906,8 +906,8 @@ html.intro #tabs,html.intro #fab{animation:inUp .9s cubic-bezier(.22,1,.36,1) .4
 .bw .ch i{flex:1;border-radius:3px 3px 1px 1px;background:var(--bwB);height:0}
 .bw .ch i:last-child{background:var(--bwe)}
 .bw .cap{margin-top:6px;font-size:10.5px;opacity:.6;text-align:center}
-/* время — общий цикл 8 с */
-:is(#tour .tr-sl.on,#onb) .bw *{animation-duration:8s;animation-iteration-count:infinite;animation-timing-function:cubic-bezier(.22,1,.36,1);animation-fill-mode:both}
+/* время — общий цикл 5,33 с (v278: в 1,5 раза быстрее, было 8 с) */
+:is(#tour .tr-sl.on,#onb) .bw *{animation-duration:5.333s;animation-iteration-count:infinite;animation-timing-function:cubic-bezier(.22,1,.36,1);animation-fill-mode:both}
 :is(#tour .tr-sl.on,#onb) .bwA .bu{animation-name:bwIn0}
 :is(#tour .tr-sl.on,#onb) .bwA .bc{animation-name:bwIn1}
 :is(#tour .tr-sl.on,#onb) .bwA .bd{animation-name:bwDot;animation-timing-function:linear}
@@ -959,7 +959,23 @@ html.intro #tabs,html.intro #fab{animation:inUp .9s cubic-bezier(.22,1,.36,1) .4
 @keyframes bwV1{0%,4%{opacity:0;transform:translateY(6px)}8%,28%{opacity:1;transform:none}32%,100%{opacity:0}}
 @keyframes bwV2{0%,32%{opacity:0;transform:translateY(6px)}36%,61%{opacity:1;transform:none}65%,100%{opacity:0}}
 @keyframes bwV3{0%,65%{opacity:0;transform:translateY(6px)}69%,94%{opacity:1;transform:none}98%,100%{opacity:0}}
-@media (prefers-reduced-motion:reduce){.bw *{animation:none!important}.bw .bp{max-height:none;opacity:1;margin-top:6px}.bw .bok{opacity:1;height:16px}.bw .bd{background:#2fa65a}.bw .bf{display:none}.bw .m2{opacity:0}}
+/* v278: знакомство — сцены по очереди в одном окне: кофе → долг → цель → взнос. Цикл 4 × 5,33 с; внутренние анимации сцены
+   идут с задержкой её места в очереди — к началу показа каждая сцена в нулевой точке */
+.bwq{display:grid}
+.bwq>div{grid-area:1/1;opacity:0}
+#onb .bwq>div{animation:bwSeq 21.333s infinite both}
+#onb .bwq>div:nth-child(2),#onb .bwq>div:nth-child(2) .bw *{animation-delay:5.333s}
+#onb .bwq>div:nth-child(3),#onb .bwq>div:nth-child(3) .bw *{animation-delay:10.667s}
+#onb .bwq>div:nth-child(4),#onb .bwq>div:nth-child(4) .bw *{animation-delay:16s}
+@keyframes bwSeq{0%{opacity:0;transform:translateX(26px)}3%,22%{opacity:1;transform:none}25%,100%{opacity:0;transform:translateX(-26px)}}
+.bw .bch{font-style:normal;display:inline-block;margin-top:7px;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:600;color:#3390ec;background:rgba(51,144,236,.15)}
+.bw .bch.e{color:#2fa65a;background:rgba(47,166,90,.15)}
+.bw .rgm{flex:none;width:30px;height:30px;transform:rotate(-90deg)}
+.bw .rgm circle{fill:none;stroke-width:5}
+.bw .rgm .f{stroke:#2fa65a;stroke-linecap:round;stroke-dasharray:var(--a0) 151}
+:is(#tour .tr-sl.on,#onb) .bwA .rgm .f.go{animation-name:bwRgF}
+@keyframes bwRgF{0%,52%{stroke-dasharray:var(--a0) 151}64%,100%{stroke-dasharray:var(--a1) 151}}
+@media (prefers-reduced-motion:reduce){.bwq>div:not(:first-child){display:none}.bwq>div{opacity:1}.bw *{animation:none!important}.bw .bp{max-height:none;opacity:1;margin-top:6px}.bw .bok{opacity:1;height:16px}.bw .bd{background:#2fa65a}.bw .bf{display:none}.bw .m2{opacity:0}}
 #tour .v1g{position:absolute;width:150px;height:150px;border-radius:50%;background:radial-gradient(closest-side,rgba(143,201,160,.30),rgba(143,201,160,0));opacity:.9}
 :root[data-theme=light] #tour .v1g{background:radial-gradient(closest-side,rgba(46,139,87,.22),rgba(46,139,87,0))}
 #tour .v1{position:relative;color:var(--t);overflow:visible}
@@ -4913,7 +4929,7 @@ setTimeout(()=>{try{if(Object.keys(BH.get()).length)bhFinish([])}catch(e){}},400
 // с новым id (лучше дата). Показывается один раз каждому: отметка cfg.wnSeen уходит в облако Telegram, на других устройствах окно не повторяется.
 // Новым пользователям — после обучения
 const WN=[
- {id:'2026-11-12-v277',items:[
+ {id:'2026-11-12-v278',items:[
   ['💬','Карточки в боте','Запись — сразу карточкой: сумма, категория, бюджет. Точка горит зелёным, когда записано. Несколько трат — несколько карточек.'],
   ['✏️','Правка прямо в чате','«−/+», категория, дата и «Убрать» — в самой карточке. Незнакомое слово бот запомнит.'],
   ['🤝','Долги и цели','Остаток, прогресс и срок. «Вернули всё» и «Пополнить» — в одно касание.'],
@@ -7367,6 +7383,15 @@ window.AppSel={exit,enter};
 /* ================= Знакомство с приложением: до 10 окон ================= */
 /* v276: сцены «бот в Telegram» (стили .bw) — общие для обучения (AppTour) и знакомства (AppOnb) */
 window.BWS={
+ // v278: «сообщение → карточка» с любым содержимым (анимации — как у A: всплывает, точка мигает → зелёная, «✓ …»)
+ M:(msg,body,ok)=>`<div class="bw bwA"><div class="bu">${msg}</div><div class="bc">${body}<div class="bok">✓ ${ok}</div></div></div>`,
+ ring:(a0,a1,go)=>`<svg class="rgm" viewBox="0 0 30 30"><circle cx="15" cy="15" r="12" stroke="rgba(128,128,128,.22)"/><circle class="f${go?' go':''}" cx="15" cy="15" r="12" style="--a0:${a0};--a1:${a1}"/></svg>`,
+ Q:()=>`<div class="bwq">${[
+   BWS.M('кофе 30 кафе','<div class="br"><i class="bs">−</i><i class="bi">🍽️</i><div class="bm"><div><b>Кафе и рестораны</b><small>Кофе · сегодня</small></div></div><span class="ba">−30</span><u class="bd"></u></div>','Записано'),
+   BWS.M('одолжил Ивану 500','<div class="br"><i class="av">И</i><div class="bm"><div><b>Иван</b><small>Вам должны</small></div></div><span class="ba">500</span><u class="bd"></u></div><i class="bch">＋ Дали в долг · 500</i>','Долг записан'),
+   BWS.M('цель отпуск 50000','<div class="br">'+BWS.ring(0,0)+'<div class="bm"><div><b>🎯 Отпуск</b><small>Цель 50 000</small></div></div><span class="ba">0%</span><u class="bd"></u></div><i class="bch">Новая цель</i>','Цель создана'),
+   BWS.M('в цель отпуск 5000','<div class="br">'+BWS.ring(15,30,1)+'<div class="bm"><div><b>🎯 Отпуск</b><small>Накоплено 10 000 из 50 000</small></div></div><span class="ba">20%</span><u class="bd"></u></div><i class="bch e">В копилку · 5 000</i>','В копилке')
+ ].map(x=>`<div>${x}</div>`).join('')}</div>`,
  A:()=>`<div class="bw bwA"><div class="bu">кофе 300 кафе</div><div class="bc"><div class="br"><i class="bs">−</i><i class="bi">🍽️</i><div class="bm"><div><b>Кафе и рестораны</b><small>Кофе · сегодня</small></div></div><span class="ba">−300</span><u class="bd"></u></div><div class="bok">✓ Записано в приложение</div></div></div>`,
  B:()=>`<div class="bw bwB"><div class="bc"><div class="br"><i class="bs">−</i><i class="bi"><span class="m1" style="position:absolute">❓</span><span class="m2">🛒</span></i><div class="bm"><div class="m1"><b>Категория?</b><small>Хлеб · сегодня</small></div><div class="m2"><b>Продукты</b><small>Хлеб · сегодня</small></div></div><span class="ba">−45</span><u class="bd"></u></div>
   <div class="bk"><i>Категория</i><i>Дата</i><i>Убрать</i></div><div class="bp"><i>🛒 Продукты</i><i>🍽️ Кафе</i><i>🚌 Транспорт</i><i>🏠 Жильё</i></div></div><i class="bf"></i></div>`,
@@ -7579,7 +7604,7 @@ const SH=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-widt
 const STEPS=[
  {w:1,go:'Далее',b:()=>`<div class="ob-v" style="position:relative"><div class="ob-glow"></div>${WAL}</div><h2>Деньги под&nbsp;контролем</h2><p class="ob-p">Записывайте доходы и расходы за секунду, видьте, куда уходят деньги, и копите на важное.</p>`},
  {w:1,go:'Далее',b:()=>`<div class="ob-v"><div class="ob-demo"><div class="ob-say ob-g"><span>кофе 300 кафе</span><s></s></div><div class="ob-rec ob-g"><i>☕</i><span><b>Кофе</b><small>Кафе и рестораны · сегодня</small></span><em>−300</em></div></div></div><h2>Пишите или говорите — как&nbsp;другу</h2><p class="ob-p">Заметка, сумма, категория — и запись готова. Так же можно писать боту в Telegram, текстом или голосом.</p>`},
- {w:1,go:'Настроить под себя',b:()=>`<div class="ob-v">${window.BWS?BWS.A():''}</div><h2>Бот в&nbsp;Telegram</h2><p class="ob-p">Напишите боту — карточка в чате сразу покажет запись. Поправить категорию, дату или убрать можно прямо там, а «статистика» покажет траты за день, неделю и месяц.</p>`},   // v276
+ {w:1,go:'Настроить под себя',b:()=>`<div class="ob-v">${window.BWS?BWS.Q():''}</div><h2>Бот в&nbsp;Telegram</h2><p class="ob-p">Напишите боту — карточка в чате сразу покажет запись. Поправить категорию, дату или убрать можно прямо там, а «статистика» покажет траты за день, неделю и месяц.</p>`},   // v276
  {k:'cur',go:'Далее',b:()=>{const lock=hasData(),cur=st.cur,other=!TOP.includes(cur);
    return `<h2>Ваша валюта</h2><p class="ob-p">В ней будут суммы, бюджет и итоги. Другие валюты тоже можно писать — «кофе 5 евро», курс подтянется сам.</p>
    <div class="ob-grid">${TOP.map(c=>`<button type="button" class="ob-o ob-g${c===cur?' on':''}" data-cur="${c}"${lock&&c!==cur?' disabled':''}><b>${esc(SY[c]||c)}</b><small>${c} · ${esc((CURS[c]||{}).n||'')}</small></button>`).join('')}</div>
