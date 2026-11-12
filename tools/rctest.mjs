@@ -10,7 +10,7 @@ globalThis.fetch = async (u, o) => { const m = String(u).split('/').pop(), b = J
   if (failWidget && /Widget/.test(m)) return new Response(JSON.stringify({ ok: false, description: 'Bad Request: method not found' }));
   return new Response(JSON.stringify({ ok: true, result: { message_id: ++mid } })); };
 const src = new URL('../worker/worker.js', import.meta.url), tmp = path.join(os.tmpdir(), 'fp-rc-test-' + process.pid + '.mjs');
-fs.writeFileSync(tmp, fs.readFileSync(src, 'utf8') + '\nexport const _t = { finishReceipts, rcData, RC_HTML, RC_DG, RC_PUB, RC_ST, store, cmdFinish, profClean, staleRemind, sumClean, evening };\n');
+fs.writeFileSync(tmp, fs.readFileSync(src, 'utf8') + '\nexport const _t = { finishReceipts, rcData, RC_HTML, RC_DG, RC_PUB, RC_ST, store, cmdFinish, profClean, staleRemind, sumClean, evening, lkH };\n');
 const W = await import(tmp); fs.unlinkSync(tmp);
 const env = { DB, BOT_TOKEN: 'x', WEBHOOK_SECRET: 's', APP_URL: 'https://a.example/' };
 const ctx = { ps: [], waitUntil(p) { this.ps.push(p.catch(() => {})); } };
@@ -130,7 +130,8 @@ await cbU('rc:X', rz.mid); assert(sent.find(x => x.m === 'editMessageReplyMarkup
 await cbU('rc:Y', rz.mid); assert(JSON.parse(sent.find(x => x.m === 'editMessageWidgetData').chat_data).s === 'un' && sent.find(x => x.m === 'editMessageCaption').reply_markup.inline_keyboard[0][0].callback_data === 'rc:U', 'не записывать: карточка и «Всё-таки записать»');
 await cbU('rc:U', rz.mid); assert(/категория — 🛒 Продукты/.test(sent.find(x => x.m === 'editMessageCaption').caption), '«Всё-таки записать» — правки вернулись'); const pq = (await bU.list(0)).cmds;
 assert(pq.length === 2 && pq.every(c => c.v === 'q') && pq.some(c => c.op === 'cat' && c.val === 'food'), 'в /api/pending — правки с v:q');
-pv = await say('кофе 300'); assert(pv.d.o[0][4] === 'Категорию подберёт приложение' && pv.d.o[0][1] === '300 MDL', 'без слова после суммы — категория за приложением');
+pv = await say('кофе 300'); assert(pv.d.o[0][4] === 'Продукты' && pv.d.o[0][1].replace(/\s/g, ' ') === '−300 MDL', 'v281: «кофе» уже выбирали в боте (Продукты) — бот помнит');
+pv = await say('чай 300'); assert(pv.d.o[0][4] === 'Категорию подберёт приложение' && pv.d.o[0][1] === '300 MDL', 'без слова после суммы и без памяти — категория за приложением');
 pv = await say('зарплата 5000 зарплата'); assert(pv.d.o[0][1].replace(/\s/g, ' ') === '+5 000 MDL' && pv.d.o[0][0] === 1, 'доход по категории: +5 000');
 pv = await say('такси 100'); assert(pv.d.o[0][4] === 'Категорию подберёт приложение', '«такси 100»: слово до суммы — заметка');
 pv = await say('обед 1 200 кафе вчера'); assert(pv.d.o[0][1].replace(/\s/g, ' ') === '−1 200 MDL' && /вчера/.test(pv.d.o[0][5]), '«1 200» и «вчера»');
@@ -270,3 +271,14 @@ sent = []; await W._t.evening(env, at21); assert(!sent.some(x => x.m === 'sendWi
 await b7.rc.sumUp('ev', '1'); sent = []; await W._t.evening(env, at21 - 3600e3); assert(!sent.some(x => x.m === 'sendWidget'), 'в 20:00 — ещё нет');
 sent = []; await W._t.evening(env, at21); assert(sent.filter(x => x.m === 'sendWidget' && x.html === W._t.RC_ST).length === 1, 'в 21:00 — сводка');
 sent = []; await W._t.evening(env, at21 + 60e3); assert(!sent.some(x => x.m === 'sendWidget'), 'второй раз за день — нет');
+// ---------- v281: память «заметка → категория» в боте ----------
+const U8 = 91, b8 = W._t.store(env, U8); await b8.rc.setProf(JSON.stringify(W._t.profClean({ ...PROF, l: [[W._t.lkH('такси'), 'transport']] })));
+const pv8 = async t => { sent = []; await msg(U8, t); return JSON.parse(sent.find(x => x.m === 'sendWidget').chat_data); };
+let m8 = await pv8('такси 120'); assert(m8.o[0][4] === 'Транспорт', 'память: «такси 120» → Транспорт сразу');
+m8 = await pv8('кофе 25'); assert(m8.o[0][4] === 'Категорию подберёт приложение', 'без памяти — категория за приложением');
+const r8 = db.prepare("SELECT id, mid FROM rcpt WHERE CAST(uid AS REAL) = 91 ORDER BY at DESC").get();
+sent = []; await W.default.fetch(new Request('https://w/webhook', { method: 'POST', headers: { 'X-Telegram-Bot-Api-Secret-Token': 's' },
+  body: JSON.stringify({ widget_query: { id: 'm1', from: { id: U8 }, chat: { id: U8, type: 'private' }, message_id: r8.mid, data: 'c:0' } }) }), env, ctx).then(() => Promise.all(ctx.ps.splice(0)));
+m8 = await pv8('кофе 30'); assert(m8.o[0][4] === 'Кафе и рестораны', 'выбрал категорию в боте → «кофе 30» сразу «Кафе и рестораны»');
+m8 = await pv8('Кофе 40'); assert(m8.o[0][4] === 'Кафе и рестораны', 'регистр не важен');
+assert(W._t.lkH('кофе') === W._t.lkH('Кофе ') && W._t.lkH('ёлка') === W._t.lkH('елка'), 'отпечаток: регистр, пробелы, ё');

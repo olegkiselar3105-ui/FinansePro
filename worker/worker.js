@@ -768,8 +768,15 @@ const safeRx = (src, fl) => { try { return src ? new RegExp(src, fl) : null; } c
 function profClean(b) {
   const c = (Array.isArray(b.c) ? b.c : []).slice(0, 80).filter(x => Array.isArray(x) && x[0]).map(x => [str(x[0], 40), str(x[1], 16), str(x[2], 30), x[3] ? 1 : 0, /^#[0-9a-f]{6}$/i.test(x[4]) ? x[4] : '']);
   const d = (Array.isArray(b.d) ? b.d : []).slice(0, 600).filter(x => Array.isArray(x) && x[0] && x[1]).map(x => [str(x[0], 40), str(x[1], 40), Math.max(0, Math.min(3, Number(x[2]) || 0))]);
-  return { c, d, cur: str(b.cur, 8), tz: Math.max(-900, Math.min(900, Number(b.tz) || 0)), cx: str(b.cx, 3000), sk: str(b.sk, 3000), ir: (Array.isArray(b.ir) ? b.ir : []).slice(0, 2).map(x => str(x, 3000)) };
+  // v281: память «заметка → категория» — хеш заметки (lkH) и id категории
+  const l = (Array.isArray(b.l) ? b.l : []).slice(-400).filter(x => Array.isArray(x) && /^[0-9a-f]{8}$/.test(x[0]) && x[1]).map(x => [x[0], str(x[1], 40)]);
+  return { c, d, l, cur: str(b.cur, 8), tz: Math.max(-900, Math.min(900, Number(b.tz) || 0)), cx: str(b.cx, 3000), sk: str(b.sk, 3000), ir: (Array.isArray(b.ir) ? b.ir : []).slice(0, 2).map(x => str(x, 3000)) };
 }
+// v281: отпечаток заметки — тот же, что lkH в приложении (FNV-1a 32 бит, 'fp:' + нижний регистр, ё → е, одиночные пробелы)
+const lkH = s => { s = 'fp:' + String(s || '').toLowerCase().replace(/ё/g, 'е').replace(/\s+/g, ' ').trim(); let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h.toString(16).padStart(8, '0'); };
+// бот запоминает выбор сразу (не дожидаясь приложения): новая пара — в конец, старая для этой заметки — убирается
+async function profLearn(box, note, id) { if (!note || !id || !box.rc || !box.rc.prof) return; const P = await box.rc.prof(); if (!P) return;
+  const h = lkH(note); P.l = [...(P.l || []).filter(x => x[0] !== h), [h, id]].slice(-400); await box.rc.setProf(JSON.stringify(P)); }
 function pvHit(P, ws) {   // как catByWords: полные названия → первое слово (короткое — только точно) → свои другие названия → встроенные
   for (const pri of [3, 2, 1, 0]) { let best = null;
     if (pri === 2 && !(ws[0] && ws[0].length >= 3)) continue;
@@ -793,8 +800,11 @@ function preview(P, text, ts) {
   const td = new Date((Number(ts) || Date.now() / 1000) * 1000 - (Number(P.tz) || 0) * 60000).toISOString().slice(0, 10);
   const d = /позавчера/.test(t) ? dAdd(td, -2) : /вчера/.test(t) ? dAdd(td, -1) : td;
   const DW = /^(вчера|позавчера|сегодня)$/, tk = cwords(after).filter(w => !DW.test(w)).slice(0, 4), sk = safeRx(P.sk, 'u');
-  const hit = tk.length ? pvHit(P, tk) : null;
+  let hit = tk.length ? pvHit(P, tk) : null;
   const cw = !hit && tk[0] && tk[0].length >= 4 && /^\p{L}+$/u.test(tk[0]) && !(sk && sk.test(tk[0])) ? tk[0] : '';
+  if (!hit && !cw && Array.isArray(P.l) && P.l.length) {   // v281: слова после суммы нет — категория из памяти по заметке («кофе 25» → Кафе)
+    const nk = lkH([...cwords(before), ...tk].filter(w => !DW.test(w)).join(' ')), lm = P.l.find(x => x[0] === nk), c = lm && P.c.find(x => x[0] === lm[1]);
+    if (c) hit = { c, n: 0, mem: 1 }; }
   const irx = (P.ir || []).map(x => safeRx(x, 'u')).filter(Boolean), iw = irx.some(r => r.test(' ' + t + ' '));
   const inc = sign ? sign > 0 : hit ? !!hit.c[3] : iw;
   const rest = [...cwords(before).filter(w => !DW.test(w)), ...cwords(after).filter(w => !DW.test(w)).slice(hit ? hit.n : cw ? 1 : 0)];
@@ -860,6 +870,7 @@ async function rcDo(box, row, act, a, b) {
     if (c && !!c[5] !== (b === 'i')) await box.rc.unCmd(row.id, 'cat');
     return b === 'i' ? 'Доход' : 'Расход'; }
   if (a === 'c') { const c = act.k[Number(b)]; if (!c) return null; await box.rc.cmd(row.id, 'cat', c[0], act.v);
+    if (act.n && !/^(in_)?other$/.test(c[0])) await profLearn(box, act.n, c[0]).catch(() => {});   // v281: запомнить для заметки сразу
     if (!!c[5] === inc0) await box.rc.unCmd(row.id, 'type'); else await box.rc.cmd(row.id, 'type', c[5] ? 'i' : 'e', act.v); return later; }
   if (a === 'd' && isD(b) && b <= act.td) { if (b === act.d) await box.rc.unCmd(row.id, 'date'); else await box.rc.cmd(row.id, 'date', b, act.v); return b === act.d ? 'Дата остаётся прежней' : later; }
   if (a === 'x' || a === 'Y') { await box.rc.cmd(row.id, 'del', '1', act.v); return q ? 'Не будет записано' : 'Запись отменится, когда откроется приложение'; }
