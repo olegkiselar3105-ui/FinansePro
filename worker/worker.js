@@ -477,10 +477,11 @@ body{font:14px/1.3 -apple-system,system-ui,"Segoe UI",Roboto,sans-serif;color:va
 .sg.in{color:var(--E);background:#2fa65a29}
 .sg.go{animation:sp .45s cubic-bezier(.3,1.6,.5,1)}
 @keyframes sp{40%{transform:rotate(180deg) scale(1.15)}}
-.r:after{content:"";flex:0 0 9px;height:9px;border-radius:50%;background:var(--E);box-shadow:0 0 0 3px #2fa65a33}
-.s-q .r:after,.s-h .r:after{background:var(--H);box-shadow:0 0 0 3px transparent;animation:bl 1s ease-in-out infinite}
-@keyframes bl{50%{opacity:.12;box-shadow:0 0 0 6px #8a8a8e33}}
-.s-un .r:after,.s-gone .r:after,.s-drop .r:after{display:none}
+.dt{flex:0 0 9px;height:9px;border-radius:50%;background:var(--E);animation:bg 1.8s ease-in-out infinite}
+.s-q .dt,.s-h .dt{background:var(--H);animation:bl 1s ease-in-out infinite}
+@keyframes bl{50%{opacity:.12;transform:scale(.6)}}
+@keyframes bg{50%{opacity:.35;transform:scale(.8)}}
+.s-un .dt,.s-gone .dt,.s-drop .dt{display:none}
 button{-webkit-appearance:none;appearance:none;font:inherit;color:inherit;border:0;background:var(--S);border-radius:12px;transition:transform .15s,background .2s}
 #mb button{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 2px 6px;font-size:11px;color:var(--H)}
 button:active{transform:scale(.93)}
@@ -529,7 +530,7 @@ w.className="";w.textContent="";j=0;
 (D.o||[]).forEach(function(p){var r=A(E("div","r")),i=E("div","i",p[2]||"•"),m=E("div","m");
 if(/^#[0-9a-f]{6}$/i.test(p[3]||""))i.style.background=p[3]+"2e";
 m.appendChild(E("div","c",p[4]));if(p[5])m.appendChild(E("div","s",p[5]));
-if(!r.previousSibling&&D.a&&!D.a.p.x){var g=E("button","sg"+(D.a.i?" in":""),D.a.i?"+":"−");g.type="button";g.onclick=function(){var n=D.a.i?0:1;g.classList.remove("go");void g.offsetWidth;g.classList.add("go");hp();D.a.i=n;g.textContent=n?"+":"−";g.className="sg go"+(n?" in":"");rq("t:"+(n?"i":"e"),function(){P="K";draw2()})};r.appendChild(g)}r.appendChild(i);r.appendChild(m);r.appendChild(E("div","a"+(p[0]?" in":""),p[1]));
+if(!r.previousSibling&&D.a&&!D.a.p.x){var g=E("button","sg"+(D.a.i?" in":""),D.a.i?"+":"−");g.type="button";g.onclick=function(){var n=D.a.i?0:1;g.classList.remove("go");void g.offsetWidth;g.classList.add("go");hp();D.a.i=n;g.textContent=n?"+":"−";g.className="sg go"+(n?" in":"");rq("t:"+(n?"i":"e"),function(){P="K";draw2()})};r.appendChild(g)}r.appendChild(i);r.appendChild(m);r.appendChild(E("div","a"+(p[0]?" in":""),p[1]));r.appendChild(E("i","dt"));
 if(p[7]){var l=A(E("div","l"));l.appendChild(bar(+p[6]||0));l.appendChild(E("div","h",p[7]))}});
 if(D.b){var b=A(E("div","bd")),k=E("div","k");k.appendChild(E("span",0,D.b[1]));k.appendChild(E("b",0,D.b[2]));b.appendChild(k);b.appendChild(bar(+D.b[0]||0));if(D.b[3])b.appendChild(E("div","h",D.b[3]))}
 if(D.n)A(E("div","t",D.n));if(D.ph&&!(D.o&&D.o.length))A(E("div","t h","⏳ «"+D.ph+"»"));
@@ -605,7 +606,9 @@ body{font:14px/1.3 system-ui,sans-serif;color:var(--T);padding:10px 12px 26px;-w
 .pv{padding-bottom:12px}
 .er{margin-top:6px;font-size:12px;color:var(--H);text-align:center}
 .pd{display:inline-block;width:9px;height:9px;border-radius:50%;margin-left:8px;vertical-align:1px;background:var(--H);animation:bl 1s ease-in-out infinite}
-@keyframes bl{50%{opacity:.12}}
+@keyframes bl{50%{opacity:.12;transform:scale(.6)}}
+.pd.g{background:var(--E);animation:bg 1.8s ease-in-out infinite}
+@keyframes bg{50%{opacity:.35;transform:scale(.8)}}
 .rg .sp{stroke:var(--H);stroke-dasharray:40 161;animation:rt 1.2s linear infinite;transform-origin:37px 37px}
 @keyframes rt{to{transform:rotate(360deg)}}
 </style></head><body><div id="w"></div><script>
@@ -627,7 +630,7 @@ c.appendChild(b);c.appendChild(er);return c}
 function okRow(t){var o=E("div","ok");o.innerHTML='<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';o.appendChild(E("span",0,t));return o}
 function debt(x,I){var c=E("div","c"),h=E("div","hd"),av=E("div","av"+(x.i?"":" o"),(x.w||"?").trim().charAt(0).toUpperCase()),m=E("div","m"),bg=E("div","bg");
 m.appendChild(E("div","nm",x.w));m.appendChild(E("div","sb",x.i?L[9]:L[10]));
-var bb=E("b",0,x.pv?x.e:x.c?x.t:x.l);if(x.pv)bb.appendChild(E("i","pd"));bg.appendChild(bb);bg.appendChild(E("span","sb",x.pv?L[8]:x.c?L[12]:L[11]));h.appendChild(av);h.appendChild(m);h.appendChild(bg);c.appendChild(h);
+var bb=E("b",0,x.pv?x.e:x.c?x.t:x.l);bb.appendChild(E("i",x.pv?"pd":"pd g"));bg.appendChild(bb);bg.appendChild(E("span","sb",x.pv?L[8]:x.c?L[12]:L[11]));h.appendChild(av);h.appendChild(m);h.appendChild(bg);c.appendChild(h);
 var ev={new:x.i?"Дали в долг":"Взяли в долг",add:"Добавлено к долгу",pay:x.i?"Вам вернули":"Вы вернули"}[x.ev];
 if(ev&&x.e)c.appendChild(E("div","ev"+(x.ev==="pay"?" e":""),(x.ev==="pay"?"↩ ":"＋ ")+ev+" · "+x.e));if(x.pv)return c
 if(x.c)c.appendChild(okRow(L[6]));
@@ -638,7 +641,7 @@ rg.innerHTML='<svg viewBox="0 0 74 74"><circle cx="37" cy="37" r="32"/><circle c
 if(x.pv){m.appendChild(E("div","nm","🎯 "+x.w));var q=E("div","sb",x.t?"Цель "+x.t:L[8]);q.appendChild(E("i","pd"));m.appendChild(q);h.appendChild(rg);h.appendChild(m);c.appendChild(h);
 var v0={new:"Новая цель",in:"В копилку",out:"Из цели"}[x.ev];if(v0)c.appendChild(E("div","ev"+(x.ev==="in"?" e":""),v0+(x.e?" · "+x.e:"")));return c}
 setTimeout(function(){rg.querySelector(".v").style.strokeDashoffset=201*(1-pct(x.p));var t0=Date.now();(function st(){var k=Math.min(1,(Date.now()-t0)/1000);n.textContent=Math.round(P*(1-Math.pow(1-k,3)))+"%";if(k<1)requestAnimationFrame(st)})()},80);
-m.appendChild(E("div","nm","🎯 "+x.w));var s=E("div","sb");s.appendChild(document.createTextNode(L[15]));s.appendChild(E("b",0,x.s));s.appendChild(document.createTextNode(" из "+x.t));m.appendChild(s);
+var nm=E("div","nm","🎯 "+x.w);nm.appendChild(E("i","pd g"));m.appendChild(nm);var s=E("div","sb");s.appendChild(document.createTextNode(L[15]));s.appendChild(E("b",0,x.s));s.appendChild(document.createTextNode(" из "+x.t));m.appendChild(s);
 if(!x.c&&x.l)m.appendChild(E("div","sb",L[16]+x.l));h.appendChild(rg);h.appendChild(m);c.appendChild(h);
 var ev={new:"Новая цель",in:"В копилку",out:"Из цели"}[x.ev];if(ev)c.appendChild(E("div","ev"+(x.ev==="in"?" e":""),ev+(x.e?" · "+x.e:"")));
 if(x.c)c.appendChild(okRow(L[7]));if(x.by&&!x.c)c.appendChild(E("div","du","⏰ "+x.by));c.appendChild(acts(x,I));return c}
