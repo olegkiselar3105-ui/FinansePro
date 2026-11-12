@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v282';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v283';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -1775,7 +1775,7 @@ html:root.selm body #selbar>*{opacity:1;transform:none}
 html:root.selm body #selbar>:nth-child(1){transition-delay:.07s}html:root.selm body #selbar>:nth-child(2){transition-delay:.13s}html:root.selm body #selbar>:nth-child(3){transition-delay:.19s}
 html:root body #selbar #selx{height:56px;padding:0 18px;border-radius:999px;font-size:15px;font-weight:600;color:var(--t);background:rgba(var(--wr),.12);border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
 html:root body #selbar #selc{flex:1;min-width:0;height:auto;display:block;padding:0 4px;text-align:center;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:none;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;border-radius:0}
-html:root body #selbar #selmore{position:static;flex:none;width:56px;height:56px;border-radius:50%;border:0;box-shadow:none;background:rgba(var(--wr),.12);-webkit-backdrop-filter:none;backdrop-filter:none;pointer-events:auto}
+html:root body #selbar #selmore{touch-action:none;position:static;flex:none;width:56px;height:56px;border-radius:50%;border:0;box-shadow:none;background:rgba(var(--wr),.12);-webkit-backdrop-filter:none;backdrop-filter:none;pointer-events:auto}
 html:root body #selbar #selmore svg{transition:transform .6s cubic-bezier(.34,1.56,.64,1) .19s;transform:rotate(-90deg)}html:root.selm body #selbar #selmore svg{transform:none}
 html:root.selm body #selbar :is(#selx,#selmore):active{transform:scale(.92);transition-delay:0s;transition-duration:.12s}
 /* v255: контекстное меню — то же стекло, что у нижней панели (фон за ним уже затемнён и размыт подложкой .cmb); пункты появляются по очереди сверху вниз */
@@ -4107,13 +4107,17 @@ function fxNeighbors(el,dir,d,delay){const out=[];
     if(nx&&nx.classList.contains('dg')){const m=getComputedStyle(nx).marginTop;
       out.push(nx.animate(dir<0?[{marginTop:m},{marginTop:'4px'}]:[{marginTop:'4px'},{marginTop:m}],{duration:d,delay:delay||0,easing:dir<0?FX_C:FX_I,fill:dir<0?'forwards':'backwards'}))}}
   return out}
-function fxCollapse(el,dur){
+// v283: o.ios — как в iOS: строка не уменьшается, только «закрывается» по высоте (низ списка подтягивается той же кривой), подложка гаснет к концу
+const FX_IOS=SPRING;   // критически затухающая пружина (как UIView spring без отскока): старт с нулевой скоростью, мягкий конец
+function fxCollapse(el,dur,o){
   if(!el)return Promise.resolve();
   if(RM||!el.animate){el.style.display='none';return Promise.resolve()}
-  const cs=getComputedStyle(el),h=fxH(el),d=dur||460;el.style.overflow='hidden';
+  const cs=getComputedStyle(el),h=fxH(el),d=dur||460,ios=!!(o&&o.ios),ez=ios?FX_IOS:FX_C;el.style.overflow='hidden';
   const nb=fxNeighbors(el,-1,d);
-  const g=el.animate([fxGeo(el,cs,h),ZG],{duration:d,easing:FX_C,fill:'forwards'});
-  const v=el.animate([{opacity:1,transform:'scale(1)'},{opacity:0,transform:'scale(.94)'}],{duration:Math.round(d*.65),easing:'cubic-bezier(.4,0,.6,1)',fill:'forwards'});
+  if(ios)nb.forEach(a=>{try{a.effect.updateTiming({easing:ez})}catch(e){}});
+  const g=el.animate([fxGeo(el,cs,h),ZG],{duration:d,easing:ez,fill:'forwards'});
+  const v=ios?el.animate([{opacity:1},{opacity:1,offset:.25},{opacity:0}],{duration:Math.round(d*.8),easing:'linear',fill:'forwards'})
+    :el.animate([{opacity:1,transform:'scale(1)'},{opacity:0,transform:'scale(.94)'}],{duration:Math.round(d*.65),easing:'cubic-bezier(.4,0,.6,1)',fill:'forwards'});
   return Promise.all([g.finished,v.finished,...nb.map(a=>a.finished)]).then(()=>{},()=>{})}
 // красивое появление (отмена удаления): из «ничего» — высота растёт, элемент приближается и из мутного становится чётким
 function fxExpand(el,dur,delay){
@@ -4154,15 +4158,16 @@ function shMorph(change){const el=document.getElementById('sh');
   show.forEach((x,i)=>x.animate([{opacity:0,transform:'translate3d(0,12px,0)'},{opacity:1,transform:'none'}],{duration:480,delay:90+i*45,easing:'cubic-bezier(.22,1,.36,1)',fill:'backwards'}))}
 window._fxLock=0;
 function fxLk(d){window._fxLock=Math.max(0,(window._fxLock||0)+d);const s=document.getElementById('sh');if(s)s.classList.toggle('fxl',window._fxLock>0);if(!window._fxLock)try{window.dispatchEvent(new Event('resize'))}catch{}}
-function commitSw(w){
+function commitSw(w,vel){
   const isDraft=!!w.closest('#rev');
   if(openSw===w)openSw=null;
-  const W=w.offsetWidth+24,c=w.lastElementChild;
-  // 1) строка доезжает за экран плавной iOS-кривой, красная кнопка заполняет ширину
+  const W=w.offsetWidth+24,c=w.lastElementChild,rv0=Math.max(0,+w.dataset.rv||0);
+  // 1) строка доезжает за экран с той скоростью, с какой её бросил палец (v283), красная подложка растягивается на всю строку той же кривой
+  const left=Math.max(0,W-rv0),sp=Math.max(1.6,Math.min(4.5,(vel||0)*1.15)),SD=RM?0:Math.round(Math.max(200,Math.min(340,left/sp+120)));
   w.classList.add('armed');setRv(w,W,true);
-  if(!RM){c.style.transition='transform .36s cubic-bezier(.32,.72,0,1)'}
+  if(!RM){const tr=SD+'ms cubic-bezier(.2,.75,.25,1)';c.style.transition='transform '+tr;const b=w.firstElementChild;if(b)b.style.transition='width '+tr+',opacity .2s'}
   try{hap.sw('medium')}catch{}
-  const GAP=RM?0:70;
+  const GAP=isDraft?(RM?0:70):Math.round(SD*.55);
   if(isDraft){
     const dl=document.querySelector(`#rev .dl[data-id="${w.dataset.id}"]`),rh=drafts.length===1?document.querySelector('#rev .rh'):null;
     fxLk(1);const st=draftToast(w.dataset.id);
@@ -4178,7 +4183,7 @@ function commitSw(w){
   const isDay=w.classList.contains('sd'),dg=w.closest('.dg'),rows=[...dg.querySelectorAll('.sw:not(.sd)')];
   const ids=isDay?rows.map(x=>x.dataset.id):[w.dataset.id],tg=(isDay||rows.length===1)?dg:w;
   const st={undone:false};fxCV();if(!delTx(ids,true,st))return;
-  setTimeout(()=>{if(st.undone)return;fxCollapse(tg).then(()=>{if(!st.undone)render()})},GAP)}
+  setTimeout(()=>{if(st.undone)return;fxCollapse(tg,tg===w?420:480,{ios:1}).then(()=>{if(!st.undone)render()})},GAP)}
 function onSwDown(e){if(window.__selOn)return;if(e.pointerType==='mouse'&&e.button!==0)return;
   // allow swipe only inside #rev when sheet is open; block main list when any modal is open
   const inRev=!!e.target.closest('#rev');
@@ -4198,7 +4203,7 @@ function onSwMove(e){if(!sd||e.pointerId!==sd.id)return;const dx=e.clientX-sd.x,
   setRv(sd.w,rv,false)}
 function endSw(e,cancel){if(!sd||e.pointerId!==sd.id)return;const d=sd;sd=null;if(!d.on)return;
   swBlock=true;setTimeout(()=>swBlock=false,60);const rv=+d.w.dataset.rv||0;
-  if(!cancel&&(rv>d.W*.5||(d.v>.8&&rv>SWO*.7))){commitSw(d.w);return}
+  if(!cancel&&(rv>d.W*.5||(d.v>.8&&rv>SWO*.7))){commitSw(d.w,d.v);return}
   if(rv>SWO*.35||(d.v>.3&&rv>10)){d.w.classList.remove('armed');setRv(d.w,SWO,true);openSw=d.w}else closeSw(d.w)}
 $('#body').addEventListener('pointerdown',onSwDown);
 $('#body').addEventListener('pointermove',onSwMove);
@@ -7183,11 +7188,18 @@ window.addEventListener('pointerup',trailEnd,true);window.addEventListener('poin
 function release(e,cancel){
   if(pend&&e.pointerId===pend.id)cancelPend();
   if(!(open&&pressing&&e.pointerId===pid))return;
+  if(cancel&&e.isTrusted&&e.pointerType==='touch'){pid=null;return}   // v283: iOS может оборвать поток pointer-событий (кнопка «⋯» в панели) — дальше ведём палец по touch-событиям
   pressing=false;hold(260);
   if(!cancel&&hi>=0)pick(hi);else setHi(-1)}
 D.addEventListener('pointerup',e=>release(e,false),true);
 D.addEventListener('pointercancel',e=>release(e,true),true);
-const shTM=e=>{if(!shield()){shOff();return}if(e.cancelable)e.preventDefault();e.stopImmediatePropagation()};let shOn=false;
+const shTM=e=>{if(!shield()){shOff();return}if(e.cancelable)e.preventDefault();
+  if(open&&pressing){const t=e.touches&&e.touches[0];if(t)setHi(hit(t.clientX,t.clientY))}
+  e.stopImmediatePropagation()};let shOn=false;
+// v283: отпускание пальца, если pointerup не пришёл (поток pointer-событий оборван) — выбор пункта, как при нажатии на строку
+const tEnd=e=>{if(!(open&&pressing&&pid==null))return;pressing=false;hold(260);
+  const t=e.changedTouches&&e.changedTouches[0];const i=e.type==='touchend'&&t?hit(t.clientX,t.clientY):-1;if(i>=0)pick(i);else setHi(-1)};
+window.addEventListener('touchend',tEnd,true);window.addEventListener('touchcancel',e=>{if(e.isTrusted)tEnd(e)},true);
 const shArm=()=>{if(!shOn){shOn=true;window.addEventListener('touchmove',shTM,{passive:false,capture:true})}},shOff=()=>{if(shOn){shOn=false;window.removeEventListener('touchmove',shTM,true)}};
 window.addEventListener('wheel',e=>{if(shield()){e.preventDefault();e.stopImmediatePropagation()}},{passive:false,capture:true});
 // в момент открытия меню все начатые фоном жесты (карусель страниц, свайп строки, тянуть-поиск, пружина) отменяются — как будто палец ушёл с экрана
