@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v279';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v280';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -4074,6 +4074,8 @@ function navStats(d){const now=new Date();
 function openTag(g,r,bk){flk=null;ftag=g;ftagR=r||null;ftagBk=bk||'goals';fcat=null;tab='list';render();pgTo(0)}
 // ---------- свайп справа налево: удалить строку или целый день ----------
 const SWO=84;let sd=null,openSw=null,swBlock=false;
+// v280: в списке операций свайп, начатый в правой четверти строки (или заголовка дня), — удаление; левее — листание месяца
+const swZone=(t,x)=>{const c=t&&t.closest&&t.closest('#body .sw>.r2,#body .sw>.dh,#body .sw>.r');if(!c)return false;const r=c.getBoundingClientRect();return x>=r.right-r.width*.25};
 function setRv(w,rv,anim){const c=w.lastElementChild,b=w.firstElementChild;w.classList.toggle('anim',!!anim);w.classList.add('swg');clearTimeout(w._sg);if(!(rv>0))w._sg=setTimeout(()=>{if(!(+w.dataset.rv>0))w.classList.remove('swg')},700);
   c.style.transition=anim?'transform .55s cubic-bezier(.16,1,.3,1)':'none';c.style.transform=`translateX(${-rv}px)`;
   w.style.setProperty('--rv',Math.max(0,rv)+'px');b.style.opacity=Math.min(1,Math.max(0,rv)/44);w.dataset.rv=rv}
@@ -4176,7 +4178,7 @@ function commitSw(w){
 function onSwDown(e){if(window.__selOn)return;if(e.pointerType==='mouse'&&e.button!==0)return;
   // allow swipe only inside #rev when sheet is open; block main list when any modal is open
   const inRev=!!e.target.closest('#rev');
-  if(!inRev)return;   // v155: в списке операций горизонтальный свайп листает месяц; удалить — зажатие → «Удалить»
+  if(!inRev&&!(tab==='list'&&!searchOn()&&swZone(e.target,e.clientX)))return;   // v155: в списке горизонтальный свайп листает месяц; v280: из правой четверти строки — удаление
   if(isModalOpen()&&!inRev)return;
   if(!isModalOpen()&&e.target.closest('#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc,#ov'))return;
   const c=e.target.closest('.sw>.r2,.sw>.dh,.sw>.r');if(!c||e.target.closest('.swb'))return;if(e.pointerType==='mouse'&&e.target.closest('input,select'))return;const w=c.parentElement;
@@ -4184,7 +4186,7 @@ function onSwDown(e){if(window.__selOn)return;if(e.pointerType==='mouse'&&e.butt
   sd={w,c,x:e.clientX,y:e.clientY,base:+w.dataset.rv||0,on:false,id:e.pointerId,lx:e.clientX,lt:performance.now(),v:0,W:w.offsetWidth,armed:false}}
 function onSwMove(e){if(!sd||e.pointerId!==sd.id)return;const dx=e.clientX-sd.x,dy=e.clientY-sd.y;
   if(!sd.on){const ax=Math.abs(dx),ay=Math.abs(dy);
-    if(ax>=6&&ax>=ay){sd.on=true;try{sd.c.setPointerCapture(e.pointerId)}catch{}if(sd.w.closest('#rev'))cancelAuto();if(document.activeElement&&document.activeElement.blur&&sd.w.contains(document.activeElement))document.activeElement.blur()}
+    if(ax>=6&&ax>=ay){sd.on=true;try{window.__cmCancel&&window.__cmCancel()}catch(e){}try{sd.c.setPointerCapture(e.pointerId)}catch{}if(sd.w.closest('#rev'))cancelAuto();if(document.activeElement&&document.activeElement.blur&&sd.w.contains(document.activeElement))document.activeElement.blur()}
     else if(ay>=10){sd=null;return}else return}
   let rv=sd.base-dx;if(rv<0)rv*=.25;if(rv>sd.W)rv=sd.W;
   const n=performance.now(),dt=n-sd.lt;if(dt>0){sd.v=lpf(sd.v,(sd.lx-e.clientX)/dt,dt,33)}sd.lx=e.clientX;sd.lt=n;
@@ -4745,12 +4747,12 @@ topEl.addEventListener('click',e=>{if(msBlock){e.stopPropagation();e.preventDefa
     if(go){try{hap.sw('select')}catch(err){}const s=m.dx<0?1:-1;swapAnim(s,()=>shift(s),[bodyEl,topEl],x,op,false);return}
     if(!RM&&bodyEl.animate)bodyEl.animate([{transform:`translate3d(${x}px,0,0)`,opacity:op},{transform:'none',opacity:1}],{duration:280,easing:'cubic-bezier(.22,1,.36,1)'})}
   // палец (телефон)
-  bodyEl.addEventListener('touchstart',e=>{if(e.touches.length!==1||!ok()||(e.target.closest&&e.target.closest('input,select,textarea'))){g=null;return}const t=e.touches[0];begin(t.clientX,t.clientY)},{passive:true});
+  bodyEl.addEventListener('touchstart',e=>{const t=e.touches[0];if(e.touches.length!==1||!ok()||(e.target.closest&&e.target.closest('input,select,textarea'))||swZone(e.target,t.clientX)){g=null;return}begin(t.clientX,t.clientY)},{passive:true});   // v280: правая четверть строки — свайп удаления
   bodyEl.addEventListener('touchmove',e=>{if(!g)return;if(e.touches.length!==1){end(true);return}const t=e.touches[0];move(t.clientX,t.clientY,e)},{passive:false});
   bodyEl.addEventListener('touchend',()=>end(false),{passive:true});bodyEl.addEventListener('touchcancel',()=>end(true),{passive:true});
   // мышь (компьютер)
   let mid=null;
-  bodyEl.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse'||e.button!==0||!ok())return;mid=e.pointerId;begin(e.clientX,e.clientY)});
+  bodyEl.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse'||e.button!==0||!ok()||swZone(e.target,e.clientX))return;mid=e.pointerId;begin(e.clientX,e.clientY)});
   bodyEl.addEventListener('pointermove',e=>{if(e.pointerId!==mid||!g)return;const was=g.on;move(e.clientX,e.clientY,null);if(!was&&g&&g.on){try{bodyEl.setPointerCapture(e.pointerId)}catch{}}});
   bodyEl.addEventListener('pointerup',e=>{if(e.pointerId===mid){mid=null;end(false)}});bodyEl.addEventListener('pointercancel',e=>{if(e.pointerId===mid){mid=null;end(true)}});
   // пока идёт свайп и сразу после — нажатия (строка, день) не срабатывают
