@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v284';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v285';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -2174,7 +2174,8 @@ function pgY(){const b=document.body;return b&&document.documentElement.classLis
 function pgTo(y){const b=document.body;if(b&&document.documentElement.classList.contains('wlk'))b.scrollTop=y;else window.scrollTo(0,y)}
 const $=s=>document.querySelector(s),E=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 let _sfT=0;
-const S={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch{const n=Date.now();if(n-_sfT>8000){_sfT=n;try{toast('⚠ Не удалось сохранить данные. Сделайте копию: Экспорт JSON')}catch{}}return false}}};
+const _sz={};   // v285: сколько символов занимает каждый записанный ключ — для предупреждения о заполнении (capCheck), без повторного чтения хранилища
+const S={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},set(k,v){try{const j=JSON.stringify(v);localStorage.setItem(k,j);_sz[k]=j.length;return true}catch{const n=Date.now();if(n-_sfT>8000){_sfT=n;try{toast('⚠ Не удалось сохранить данные. Сделайте копию: Экспорт JSON')}catch{}}return false}}};
 
 // ================= Telegram Mini App: окружение и состояние облака =================
 const TGW=window.__TG||null,IN_TG=!!TGW;
@@ -2322,7 +2323,20 @@ function jEdit(e,a,d){const x=jFind(e);if(!x)return false;a=r2(a);
 // дата начала долга: своя (created), у старых без неё — дата первой записи журнала
 function dStart(d){if(!d)return'';if(/^\d{4}-\d{2}-\d{2}$/.test(String(d.created||'')))return d.created;
   const ds=[...(d.ol||[]),...(d.log||[])].map(e=>e&&e.d).filter(v=>/^\d{4}-\d{2}-\d{2}$/.test(String(v))).sort();return ds[0]||''}
-const save=()=>{try{jIds();lkSync()}catch(e){console.error(e)}snapTx(true);snapDG(true);S.set('finapp.tx',tx);S.set('finapp.settings',cfg);S.set('finapp.learn',learn);cloudTouch()};
+const save=()=>{try{jIds();lkSync()}catch(e){console.error(e)}snapTx(true);snapDG(true);S.set('finapp.tx',tx);S.set('finapp.settings',cfg);S.set('finapp.learn',learn);cloudTouch();capCheck()};
+// v285: предупреждение о заполнении памяти — на устройстве (localStorage, без сжатия) и в облаке Telegram (куски по 3800 из 1000).
+// Пороги 70/85/95%: каждый показывается один раз на устройстве (finapp.capw), ниже 60% — сброс. Предел WebKit (iPhone) взят с запасом — 2,5 млн символов
+const CAP_LS=/AppleWebKit/.test(navigator.userAgent)&&!/Chrome|CriOS|Android/.test(navigator.userAgent)?2.5e6:5e6;
+let _capT=0,_capC=0;
+function capCheck(){clearTimeout(_capT);_capT=setTimeout(()=>{try{
+  const loc=((_sz['finapp.tx']||0)+(_sz['finapp.settings']||0)+(_sz['finapp.learn']||0))/CAP_LS,p=Math.max(loc,_capC);
+  let w=+(localStorage.getItem('finapp.capw')||0)||0;if(p<.6){if(w)localStorage.removeItem('finapp.capw');return}
+  const lv=p>=.95?95:p>=.85?85:p>=.7?70:0;if(!lv||lv<=w)return;
+  if(isModalOpen()||window.__onbOn||window.__onbWait){_capT=setTimeout(capCheck,5000);return}
+  localStorage.setItem('finapp.capw',String(lv));
+  const where=_capC>=loc?'в облаке Telegram':'на устройстве';
+  toast('⚠ Память '+where+' заполнена на '+Math.min(99,Math.round(p*100))+'%. Сохраните копию (Экспорт) и удалите старые записи','Экспорт',()=>{try{openBq('export')}catch(e){}})}catch(e){}},2000)}
+window.capCheck=capCheck;
 // бюджет по месяцам: cfg.bm = {'2026-10': 20000}; месяц без своего бюджета берёт общий (cfg.budget)
 const bmOwn=m=>!!(cfg.bm&&Number(cfg.bm[m])>0);
 // перенос бюджета: включён (по умолчанию) — общий бюджет действует и в следующих месяцах; выключен — с месяца budOffFrom его нужно задавать вручную (прошлые месяцы не меняются)
@@ -6232,6 +6246,7 @@ async function cloudRead(m){const keys=[];for(let i=0;i<m.n;i++)keys.push('d'+i)
 async function cloudPush(){const t=Date.now(),hNow=cloudHash(),json=JSON.stringify(collectData());
   const {z,body}=await cloudPack(json);
   const chunks=[];for(let i=0;i<body.length;i+=CLK.chunk)chunks.push(body.slice(i,i+CLK.chunk));
+  _capC=chunks.length/CLK.maxKeys;capCheck();
   if(chunks.length>CLK.maxKeys)throw Object.assign(new Error('STORAGE_KEYS_TOO_MUCH'),{limit:1});
   let idx=0;const worker=async()=>{while(idx<chunks.length){const i=idx++;try{await csCall('setItem','d'+i,chunks[i])}catch(e){idx=1e9;throw e}}};
   await Promise.all([worker(),worker(),worker()]);
