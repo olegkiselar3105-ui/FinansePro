@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v275';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v276';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -868,6 +868,98 @@ html.intro #tabs,html.intro #fab{animation:inUp .9s cubic-bezier(.22,1,.36,1) .4
 #tour .tr-w .tr-f{margin-top:18px}
 
 /* 1. логотип */
+/* v276: сцены «бот в Telegram» для обучения и знакомства — зацикленные мини-карточки (как в чате): сообщение → карточка, точка мигает → зелёная,
+   «палец» нажимает меню, долг закрывается с конфетти, статистика переключает вкладки. Анимации идут только на видимом слайде */
+.bw{position:relative;width:272px;max-width:100%;margin:0 auto;font-size:12.5px;text-align:left;--bwc:rgba(128,128,128,.15);--bwb:rgba(128,128,128,.28);--bwe:#2fa65a;--bwB:#3390ec}
+.bw .bu{margin-left:auto;width:max-content;max-width:78%;padding:8px 12px;border-radius:16px 16px 4px 16px;background:#3390ec;color:#fff;font-weight:600}
+.bw .bc{margin-top:8px;padding:10px;border-radius:16px 16px 16px 4px;background:var(--bwc);border:.5px solid var(--bwb)}
+.bw .br{display:flex;align-items:center;gap:8px}
+.bw .bs{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-weight:700;color:#e5484d;background:rgba(229,72,77,.15)}
+.bw .bi{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:15px;background:rgba(128,128,128,.18);position:relative}
+.bw .bm{flex:1;min-width:0;position:relative;height:30px}
+.bw .bm>div{position:absolute;inset:0}
+.bw .bm b{display:block;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bw .bm small{display:block;font-size:11px;opacity:.6;white-space:nowrap}
+.bw .ba{font-weight:700;white-space:nowrap}
+.bw .bd{flex:none;width:8px;height:8px;border-radius:50%;background:#8a8a8e}
+.bw .bk{display:flex;gap:5px;margin-top:8px}
+.bw .bk i{flex:1;font-style:normal;text-align:center;padding:6px 0;border-radius:10px;background:rgba(128,128,128,.16);font-size:11px;position:relative;overflow:hidden}
+.bw .bk i:first-child{color:var(--bwB)}
+.bw .bp{display:grid;grid-template-columns:1fr 1fr;gap:5px;max-height:0;overflow:hidden;opacity:0}
+.bw .bp i{font-style:normal;padding:5px 7px;border-radius:9px;background:rgba(128,128,128,.16);font-size:11px;white-space:nowrap}
+.bw .bf{position:absolute;width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.55);box-shadow:0 2px 10px rgba(0,0,0,.35),inset 0 0 0 2px rgba(255,255,255,.8);left:0;top:0;opacity:0;pointer-events:none;z-index:3}
+.bw .bok{display:flex;align-items:center;gap:6px;margin-top:7px;font-weight:600;color:var(--bwe);opacity:0;height:0}
+.bw .av{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;background:var(--bwe)}
+.bw .bb{height:6px;border-radius:3px;background:rgba(128,128,128,.2);margin:8px 0 4px;overflow:hidden}
+.bw .bb i{display:block;height:100%;width:56%;border-radius:3px;background:var(--bwe)}
+.bw .bg{display:block;overflow:hidden;font-style:normal;text-align:center;margin-top:7px;padding:7px;border-radius:10px;background:var(--bwe);color:#fff;font-weight:600;position:relative}
+.bw .cf{position:absolute;top:0;width:6px;height:9px;border-radius:2px;opacity:0}
+.bw .tb{position:relative;display:flex;padding:2px;border-radius:9px;background:rgba(128,128,128,.16);font-size:10.5px;margin-bottom:8px}
+.bw .tb u{position:absolute;top:2px;bottom:2px;left:2px;width:calc((100% - 4px)/3);border-radius:7px;background:rgba(128,128,128,.3)}
+.bw .tb span{flex:1;text-align:center;padding:3px 0;position:relative}
+.bw .sh{display:flex;align-items:center;gap:10px}
+.bw .dn{flex:none;width:58px;height:58px;transform:rotate(-90deg)}
+.bw .dn circle{fill:none;stroke-width:9}
+.bw .sv{position:relative;height:22px;flex:1}
+.bw .sv b{position:absolute;left:0;top:0;font-size:17px;opacity:0}
+.bw .ch{display:flex;align-items:flex-end;gap:4px;height:34px;margin-top:8px}
+.bw .ch i{flex:1;border-radius:3px 3px 1px 1px;background:var(--bwB);height:0}
+.bw .ch i:last-child{background:var(--bwe)}
+.bw .cap{margin-top:6px;font-size:10.5px;opacity:.6;text-align:center}
+/* время — общий цикл 8 с */
+:is(#tour .tr-sl.on,#onb) .bw *{animation-duration:8s;animation-iteration-count:infinite;animation-timing-function:cubic-bezier(.22,1,.36,1);animation-fill-mode:both}
+:is(#tour .tr-sl.on,#onb) .bwA .bu{animation-name:bwIn0}
+:is(#tour .tr-sl.on,#onb) .bwA .bc{animation-name:bwIn1}
+:is(#tour .tr-sl.on,#onb) .bwA .bd{animation-name:bwDot;animation-timing-function:linear}
+:is(#tour .tr-sl.on,#onb) .bwA .bok{animation-name:bwOk}
+@keyframes bwIn0{0%{opacity:0;transform:translateY(10px) scale(.9)}6%,90%{opacity:1;transform:none}97%,100%{opacity:0}}
+@keyframes bwIn1{0%,12%{opacity:0;transform:translateY(14px)}20%,90%{opacity:1;transform:none}97%,100%{opacity:0}}
+@keyframes bwDot{0%,24%{opacity:1}28%{opacity:.15}32%{opacity:1}36%{opacity:.15}40%{opacity:1}44%{opacity:.15}48%{opacity:1}52%{opacity:.15;background:#8a8a8e;transform:none}56%{opacity:1;background:#2fa65a;transform:scale(1.7);box-shadow:0 0 0 4px rgba(47,166,90,.3)}62%,100%{opacity:1;background:#2fa65a;transform:none;box-shadow:0 0 0 3px rgba(47,166,90,.2)}}
+@keyframes bwOk{0%,56%{opacity:0;height:0;margin-top:0}62%,90%{opacity:1;height:16px;margin-top:7px}97%,100%{opacity:0}}
+/* меню: палец → «Категория» → «Продукты» → «Дата» → «вчера» */
+:is(#tour .tr-sl.on,#onb) .bwB .bf{animation-name:bwF}
+:is(#tour .tr-sl.on,#onb) .bwB .bp{animation-name:bwP}
+:is(#tour .tr-sl.on,#onb) .bwB .m1{animation-name:bwX1}
+:is(#tour .tr-sl.on,#onb) .bwB .m2{animation-name:bwX2}
+:is(#tour .tr-sl.on,#onb) .bwB .bk i:first-child{animation-name:bwHl}
+:is(#tour .tr-sl.on,#onb) .bwB .bi{animation-name:bwPop}
+@keyframes bwF{0%,8%{opacity:0;transform:translate(150px,150px)}14%{opacity:1;transform:translate(20px,60px) scale(1)}17%{transform:translate(20px,60px) scale(.8)}20%{transform:translate(20px,60px) scale(1)}
+  32%{transform:translate(16px,94px) scale(1)}35%{transform:translate(16px,94px) scale(.8)}38%{transform:translate(16px,94px) scale(1)}
+  52%{opacity:1;transform:translate(110px,60px) scale(1)}55%{transform:translate(110px,60px) scale(.8)}58%,66%{opacity:1;transform:translate(110px,60px) scale(1)}74%,100%{opacity:0;transform:translate(170px,140px)}}
+@keyframes bwP{0%,18%{max-height:0;opacity:0;margin-top:0}24%,38%{max-height:60px;opacity:1;margin-top:6px}44%,100%{max-height:0;opacity:0;margin-top:0}}
+@keyframes bwX1{0%,38%{opacity:1}41%,92%{opacity:0}97%,100%{opacity:1}}
+@keyframes bwX2{0%,38%{opacity:0}41%,92%{opacity:1}97%,100%{opacity:0}}
+@keyframes bwHl{0%,16%{background:rgba(128,128,128,.16)}18%,40%{background:rgba(51,144,236,.22)}44%,100%{background:rgba(128,128,128,.16)}}
+@keyframes bwPop{0%,38%{transform:none}42%{transform:scale(1.25)}46%,100%{transform:none}}
+/* долг: «Вернули всё» → полоса до конца, «закрыт», конфетти */
+:is(#tour .tr-sl.on,#onb) .bwC .bf{animation-name:bwF2}
+:is(#tour .tr-sl.on,#onb) .bwC .bb i{animation-name:bwBar}
+:is(#tour .tr-sl.on,#onb) .bwC .m1{animation-name:bwX3}
+:is(#tour .tr-sl.on,#onb) .bwC .m2{animation-name:bwX4}
+:is(#tour .tr-sl.on,#onb) .bwC .bg{animation-name:bwBtn}
+:is(#tour .tr-sl.on,#onb) .bwC .bok{animation-name:bwOk2}
+:is(#tour .tr-sl.on,#onb) .bwC .cf{animation-name:bwCf;animation-timing-function:ease-in}
+@keyframes bwF2{0%,10%{opacity:0;transform:translate(170px,150px)}22%{opacity:1;transform:translate(122px,92px) scale(1)}26%{transform:translate(122px,92px) scale(.8)}30%,36%{opacity:1;transform:translate(122px,92px) scale(1)}44%,100%{opacity:0;transform:translate(190px,150px)}}
+@keyframes bwBar{0%,26%{width:56%}40%,92%{width:100%}97%,100%{width:56%}}
+@keyframes bwX3{0%,30%{opacity:1}34%,92%{opacity:0}97%,100%{opacity:1}}
+@keyframes bwX4{0%,30%{opacity:0}34%,92%{opacity:1}97%,100%{opacity:0}}
+@keyframes bwBtn{0%,24%{opacity:1;max-height:40px;padding:7px;margin-top:7px;transform:none}27%{opacity:1;max-height:40px;padding:7px;margin-top:7px;transform:scale(.94)}31%{opacity:1;max-height:40px;padding:7px;margin-top:7px;transform:none}36%,92%{opacity:0;max-height:0;padding:0 7px;margin-top:0;transform:none}97%,100%{opacity:1;max-height:40px;padding:7px;margin-top:7px;transform:none}}
+@keyframes bwOk2{0%,38%{opacity:0;height:0;margin-top:0}44%,90%{opacity:1;height:16px;margin-top:7px}97%,100%{opacity:0}}
+@keyframes bwCf{0%,40%{opacity:0;transform:translate(0,0) rotate(0)}44%{opacity:1}78%,100%{opacity:0;transform:translate(var(--x),120px) rotate(var(--r))}}
+/* статистика: вкладки, кольцо, столбики, сумма */
+:is(#tour .tr-sl.on,#onb) .bwD .tb u{animation-name:bwTab}
+:is(#tour .tr-sl.on,#onb) .bwD .dn .s{animation-name:bwRing}
+:is(#tour .tr-sl.on,#onb) .bwD .ch i{animation-name:bwCh}
+:is(#tour .tr-sl.on,#onb) .bwD .sv b:nth-child(1){animation-name:bwV1}
+:is(#tour .tr-sl.on,#onb) .bwD .sv b:nth-child(2){animation-name:bwV2}
+:is(#tour .tr-sl.on,#onb) .bwD .sv b:nth-child(3){animation-name:bwV3}
+@keyframes bwTab{0%,28%{transform:none}34%,61%{transform:translateX(100%)}67%,94%{transform:translateX(200%)}100%{transform:none}}
+@keyframes bwRing{0%{stroke-dasharray:0 160}20%,90%{stroke-dasharray:var(--a) 160}100%{stroke-dasharray:0 160}}
+@keyframes bwCh{0%{height:0}25%,30%{height:var(--h)}38%,62%{height:var(--h2)}70%,92%{height:var(--h3)}100%{height:0}}
+@keyframes bwV1{0%,4%{opacity:0;transform:translateY(6px)}8%,28%{opacity:1;transform:none}32%,100%{opacity:0}}
+@keyframes bwV2{0%,32%{opacity:0;transform:translateY(6px)}36%,61%{opacity:1;transform:none}65%,100%{opacity:0}}
+@keyframes bwV3{0%,65%{opacity:0;transform:translateY(6px)}69%,94%{opacity:1;transform:none}98%,100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.bw *{animation:none!important}.bw .bp{max-height:none;opacity:1;margin-top:6px}.bw .bok{opacity:1;height:16px}.bw .bd{background:#2fa65a}.bw .bf{display:none}.bw .m2{opacity:0}}
 #tour .v1g{position:absolute;width:150px;height:150px;border-radius:50%;background:radial-gradient(closest-side,rgba(143,201,160,.30),rgba(143,201,160,0));opacity:.9}
 :root[data-theme=light] #tour .v1g{background:radial-gradient(closest-side,rgba(46,139,87,.22),rgba(46,139,87,0))}
 #tour .v1{position:relative;color:var(--t);overflow:visible}
@@ -7272,6 +7364,16 @@ window.AppSel={exit,enter};
 </script>
 <script>
 /* ================= Знакомство с приложением: до 10 окон ================= */
+/* v276: сцены «бот в Telegram» (стили .bw) — общие для обучения (AppTour) и знакомства (AppOnb) */
+window.BWS={
+ A:()=>`<div class="bw bwA"><div class="bu">кофе 300 кафе</div><div class="bc"><div class="br"><i class="bs">−</i><i class="bi">🍽️</i><div class="bm"><div><b>Кафе и рестораны</b><small>Кофе · сегодня</small></div></div><span class="ba">−300</span><u class="bd"></u></div><div class="bok">✓ Записано в приложение</div></div></div>`,
+ B:()=>`<div class="bw bwB"><div class="bc"><div class="br"><i class="bs">−</i><i class="bi"><span class="m1" style="position:absolute">❓</span><span class="m2">🛒</span></i><div class="bm"><div class="m1"><b>Категория?</b><small>Хлеб · сегодня</small></div><div class="m2"><b>Продукты</b><small>Хлеб · сегодня</small></div></div><span class="ba">−45</span><u class="bd"></u></div>
+  <div class="bk"><i>Категория</i><i>Дата</i><i>Убрать</i></div><div class="bp"><i>🛒 Продукты</i><i>🍽️ Кафе</i><i>🚌 Транспорт</i><i>🏠 Жильё</i></div></div><i class="bf"></i></div>`,
+ C:()=>`<div class="bw bwC"><div class="bc"><div class="br"><i class="av">К</i><div class="bm"><div><b>Ксюша</b><small>Вам должны</small></div></div><div class="bm" style="flex:none;width:74px;text-align:right"><div class="m1"><b>2 950</b><small>осталось</small></div><div class="m2"><b>6 750</b><small>закрыт</small></div></div></div>
+  <div class="bb"><i></i></div><i class="bg">Вернули всё</i><div class="bok">✓ Долг закрыт полностью</div>${[...Array(12)].map((_,k)=>`<i class="cf" style="left:${8+k*7.5}%;background:${['#2fa65a','#3390ec','#f08c2e','#e5484d','#f2c94c'][k%5]};--x:${(k%2?1:-1)*(10+k*3)}px;--r:${(k%3-1)*300}deg;animation-delay:${(k%4)*.06}s"></i>`).join('')}</div><i class="bf"></i></div>`,
+ D:()=>`<div class="bw bwD"><div class="bc"><div class="tb"><u></u><span>Сегодня</span><span>Неделя</span><span>Месяц</span></div><div class="sh"><svg class="dn" viewBox="0 0 58 58"><circle cx="29" cy="29" r="24" stroke="rgba(128,128,128,.2)"/><circle class="s" cx="29" cy="29" r="24" stroke="#5fb0e8" style="--a:68"/><circle class="s" cx="29" cy="29" r="24" stroke="#e0703c" style="--a:42;stroke-dashoffset:-68"/><circle class="s" cx="29" cy="29" r="24" stroke="#8a5cf0" style="--a:26;stroke-dashoffset:-110"/></svg>
+  <div style="flex:1"><small style="opacity:.6;font-size:10.5px">Расходы</small><div class="sv"><b>1 420</b><b>8 640</b><b>14 860</b></div></div></div><div class="ch">${[[40,60,30],[25,35,70],[60,90,45],[30,50,80],[50,70,55],[20,40,95],[70,85,60]].map(h=>`<i style="--h:${h[0]}%;--h2:${h[1]}%;--h3:${h[2]}%"></i>`).join('')}</div><div class="cap">«статистика» или /report · сводка в 21:00</div></div></div>`
+};
 (function(){
 'use strict';
 if(window.AppTour)return;
@@ -7304,7 +7406,10 @@ const SL=[
 {h:'Знайте, куда уходят деньги',p:'Записывайте траты за секунду — просто фразой. Остальное приложение сделает само, а данные останутся только у вас.',v:
    `<div class="v1g"></div><svg class="v1" viewBox="96 96 320 320" width="116" height="116" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><linearGradient id="trg" x1="0" x2="1"><stop offset="0" style="stop-color:var(--g);stop-opacity:.3"/><stop offset=".5" style="stop-color:var(--g)"/><stop offset="1" style="stop-color:var(--g);stop-opacity:.3"/></linearGradient><clipPath id="trc"><rect x="96" y="96" width="320" height="104"/></clipPath></defs><g clip-path="url(#trc)"><rect class="bill" x="172" y="180" width="164" height="40" rx="10" fill="url(#trg)" stroke="none"/></g><path class="d" pathLength="1" d="M146 214 L150 178 C151 160 160 152 175 148 L316 126 C329 124 338 133 338 147 L338 196"/><rect class="d" pathLength="1" x="139" y="196" width="244" height="168" rx="40"/><circle class="dot" cx="335" cy="277" r="15" fill="currentColor" stroke="none"/></svg>`},
   {h:'Пишите — приложение разберётся',p:'Порядок простой: сначала заметка, потом сумма, после суммы — категория: «кофе 300 кафе», «такси 120 транспорт». Несколько трат — через запятую. Категорию для этой заметки приложение запомнит.',v:v2('pen',[['☕','Кофе','−5','exp'],['🚕','Такси','−12','exp'],['💼','Зарплата','+1 500','inc']])},
-  {h:'Записывайте через бота',p:'Напишите боту «такси 120 транспорт» или скажите голосом — в том же порядке: заметка, сумма, категория. В приложении запись откроется на проверку — сохраните её, и бот ответит «Записано».',v:v2('send',[['🚕','Такси','−200','exp'],['☕','Кофе','−50','exp'],['💼','Зарплата','+500','inc']])},
+  {h:'Бот записывает сам',p:'Напишите или скажите боту «кофе 300 кафе» — карточка в чате сразу покажет сумму и категорию. Точка мигает, пока запись ждёт приложения, и загорается зелёным, когда записано. Несколько трат в одном сообщении — несколько карточек.',v:BWS.A()},
+  {h:'Поправьте прямо в чате',p:'В карточке — меню: «−/+» (расход или доход), «Категория», «Дата», «Убрать». Не узнал слово — сам предложит категории и запомнит выбор. Изменения применятся, когда откроете приложение.',v:BWS.B()},
+  {h:'Долги и цели — своей карточкой',p:'«Ксюша вернула 200», «в цель отпуск 5000» — карточка покажет остаток и прогресс. «Вернули всё», «Другая сумма», «Пополнить» — прямо в ней; если нужно, бот спросит сумму.',v:BWS.C()},
+  {h:'Статистика в чате',p:'Напишите боту «статистика» или /report — траты за день, неделю и месяц, категории и бюджет. Каждый вечер в 21:00 — сводка за день; отключается в самой карточке.',v:BWS.D()},
   {h:'Повторы и шаблоны',p:'Аренда, подписки, зарплата — настройте один раз, и записи будут появляться сами. Частые траты — в одно касание.',v:v2('repeat',[['🏠','Аренда','−500','exp'],['📺','Подписка','−9','exp'],['💼','Зарплата','+1 500','inc']])},
 {h:'Вся картина за секунды',p:'Остаток, динамика, календарь трат и теги. Месяцы листаются свайпом по списку операций — сравнивайте с прошлым.',v:
    `<div class="v3p"><b class="inc">−12%</b> к прошлому месяцу</div><div class="v3" style="display:flex">${[[46,62],[58,50],[40,70],[66,54],[52,44],[72,38]].map((p,i)=>`<div><i class="a" style="--h:${p[0]}%;--i:${i}"></i><i class="b" style="--h:${p[1]}%;--i:${i}"></i></div>`).join('')}</div>`},
@@ -7472,7 +7577,8 @@ const SH=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-widt
 // шаги: h — заголовок, b() — содержимое, go — подпись кнопки, alt — вторая кнопка, w — приветствие (кнопка «Пропустить» — всё приветствие)
 const STEPS=[
  {w:1,go:'Далее',b:()=>`<div class="ob-v" style="position:relative"><div class="ob-glow"></div>${WAL}</div><h2>Деньги под&nbsp;контролем</h2><p class="ob-p">Записывайте доходы и расходы за секунду, видьте, куда уходят деньги, и копите на важное.</p>`},
- {w:1,go:'Настроить под себя',b:()=>`<div class="ob-v"><div class="ob-demo"><div class="ob-say ob-g"><span>кофе 300 кафе</span><s></s></div><div class="ob-rec ob-g"><i>☕</i><span><b>Кофе</b><small>Кафе и рестораны · сегодня</small></span><em>−300</em></div></div></div><h2>Пишите или говорите — как&nbsp;другу</h2><p class="ob-p">Заметка, сумма, категория — и запись готова. Так же можно писать боту в Telegram, текстом или голосом.</p>`},
+ {w:1,go:'Далее',b:()=>`<div class="ob-v"><div class="ob-demo"><div class="ob-say ob-g"><span>кофе 300 кафе</span><s></s></div><div class="ob-rec ob-g"><i>☕</i><span><b>Кофе</b><small>Кафе и рестораны · сегодня</small></span><em>−300</em></div></div></div><h2>Пишите или говорите — как&nbsp;другу</h2><p class="ob-p">Заметка, сумма, категория — и запись готова. Так же можно писать боту в Telegram, текстом или голосом.</p>`},
+ {w:1,go:'Настроить под себя',b:()=>`<div class="ob-v">${window.BWS?BWS.A():''}</div><h2>Бот в&nbsp;Telegram</h2><p class="ob-p">Напишите боту — карточка в чате сразу покажет запись. Поправить категорию, дату или убрать можно прямо там, а «статистика» покажет траты за день, неделю и месяц.</p>`},   // v276
  {k:'cur',go:'Далее',b:()=>{const lock=hasData(),cur=st.cur,other=!TOP.includes(cur);
    return `<h2>Ваша валюта</h2><p class="ob-p">В ней будут суммы, бюджет и итоги. Другие валюты тоже можно писать — «кофе 5 евро», курс подтянется сам.</p>
    <div class="ob-grid">${TOP.map(c=>`<button type="button" class="ob-o ob-g${c===cur?' on':''}" data-cur="${c}"${lock&&c!==cur?' disabled':''}><b>${esc(SY[c]||c)}</b><small>${c} · ${esc((CURS[c]||{}).n||'')}</small></button>`).join('')}</div>
