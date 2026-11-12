@@ -84,7 +84,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')set(false)})}</scrip
 <ul>
 <li><b>В облаке Telegram</b> (CloudStorage) — привязано к вашему аккаунту Telegram и этому боту. Так записи одинаковы на всех ваших устройствах.</li>
 <li><b>На вашем устройстве</b> — в памяти приложения внутри Telegram, чтобы работать без интернета.</li>
-<li>На наших серверах записи, суммы и настройки <b>не хранятся</b>.</li>
+<li>Постоянной копии ваших записей и настроек на наших серверах <b>нет</b>. Что бот хранит временно, чтобы отвечать вам, — перечислено ниже.</li>
 </ul>
 
 <h2>Что хранит бот</h2>
@@ -92,6 +92,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')set(false)})}</scrip
 <ul>
 <li>ваш <b>Telegram id</b>, <b>текст сообщения</b> (до 500 символов) и время отправки — удаляются, как только приложение забрало запись, и в любом случае не позже чем через <b>30 дней</b>;</li>
 <li>служебная отметка для ответа «✅ Записано» (номер чата и сообщения, начало текста) — тоже не дольше <b>30 дней</b>;</li>
+<li>чтобы карточка в чате показывала запись и её можно было поправить, вместе с этой отметкой хранятся данные карточки: у записи, сохранённой сразу, — сумма, категория, заметка и дата; у долга или цели — имя или название, остаток или накопленная сумма, срок. Тоже не дольше <b>30 дней</b>;</li>
 <li>для записей из бота, сохранённых сразу (так по умолчанию; отключается в настройках приложения), к этой отметке добавляются варианты для кнопок под ответом (до 6 названий ваших категорий, дата записи), а ваши нажатия («Категория», «Дата», «Отменить») хранятся, пока приложение их не применит; всё это — тоже не дольше <b>30 дней</b>;</li>
 <li>чтобы бот сразу показывал сумму и категорию и давал их поправить, приложение передаёт ему <b>список ваших категорий</b> (названия, значки, другие названия категорий, валюта, часовой пояс) и <b>память категорий</b> — какую категорию вы выбирали для заметки; сами заметки туда не попадают, только их отпечатки (хеши), по которым бот узнаёт заметку снова; сумм и записей там нет; список обновляется при открытии приложения и удаляется, если приложение не открывали <b>30 дней</b> или запись «сразу» выключена;</li>
 <li>для карточки статистики (/report, /today) и вечерней сводки в 21:00 приложение передаёт боту <b>итоги</b>: суммы расходов и доходов за сегодня, неделю и месяц, до 5 крупнейших категорий, расходы по дням, бюджет месяца — без отдельных записей и заметок; хранится только последняя версия, она удаляется, если приложение не открывали <b>30 дней</b> или запись «сразу» выключена; вечернюю сводку можно отключить в самой карточке;</li>
@@ -131,13 +132,14 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')set(false)})}</scrip
 <ul>
 <li><b>În cloud-ul Telegram</b> (CloudStorage) — legat de contul dumneavoastră Telegram și de acest bot, astfel încât înregistrările sunt aceleași pe toate dispozitivele.</li>
 <li><b>Pe dispozitivul dumneavoastră</b> — în memoria aplicației din Telegram, ca să funcționeze și fără internet.</li>
-<li>Înregistrările, sumele și setările <b>nu sunt păstrate</b> pe serverele noastre.</li>
+<li>Pe serverele noastre <b>nu există</b> o copie permanentă a înregistrărilor și setărilor dvs. Ce păstrează botul temporar, ca să vă răspundă, este enumerat mai jos.</li>
 </ul>
 <h2>Ce păstrează botul</h2>
 <p>Mesajul trimis botului așteaptă într-o coadă pe server (Cloudflare D1) până când aplicația îl preia:</p>
 <ul>
 <li><b>ID-ul Telegram</b>, <b>textul mesajului</b> (până la 500 de caractere) și ora trimiterii — se șterg imediat ce aplicația preia înregistrarea și, în orice caz, în cel mult <b>30 de zile</b>;</li>
 <li>o notă de serviciu pentru răspunsul „✅ Înregistrat” (numărul chatului și al mesajului, începutul textului) — tot cel mult <b>30 de zile</b>;</li>
+<li>pentru ca fișa din chat să arate înregistrarea și să o puteți corecta, împreună cu această notă se păstrează datele fișei: pentru o înregistrare salvată imediat — suma, categoria, nota și data; pentru o datorie sau un obiectiv — numele sau denumirea, restul sau suma acumulată, termenul. Tot cel mult <b>30 de zile</b>;</li>
 <li>pentru înregistrările din bot salvate imediat (implicit; se poate dezactiva în setările aplicației), la această notă se adaugă variantele pentru butoanele de sub răspuns (până la 6 denumiri ale categoriilor dvs., data înregistrării), iar apăsările dvs. („Categorie”, „Dată”, „Anulează”) se păstrează până când aplicația le aplică; toate — tot cel mult <b>30 de zile</b>;</li>
 <li>pentru ca botul să arate imediat suma și categoria și să le puteți corecta, aplicația îi transmite <b>lista categoriilor dvs.</b> (denumiri, pictograme, denumiri alternative, moneda, fusul orar) și <b>memoria categoriilor</b> — ce categorie ați ales pentru o notă; notele propriu-zise nu ajung acolo, doar amprentele lor (hash), după care botul recunoaște nota; fără sume sau înregistrări; lista se actualizează la deschiderea aplicației și se șterge dacă aplicația nu a fost deschisă <b>30 de zile</b> sau dacă înregistrarea „imediat” este dezactivată;</li>
 <li>pentru cardul de statistici (/report, /today) și rezumatul de seară de la 21:00, aplicația transmite botului <b>totaluri</b>: sumele cheltuielilor și veniturilor pentru azi, săptămână și lună, cel mult 5 categorii principale, cheltuielile pe zile, bugetul lunii — fără înregistrări separate sau note; se păstrează doar ultima versiune, ștearsă dacă aplicația nu a fost deschisă <b>30 de zile</b> sau dacă înregistrarea „imediat” este dezactivată; rezumatul de seară se poate opri din card;</li>
@@ -174,7 +176,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')set(false)})}</scrip
 <ul>
 <li><b>Telegram cloud</b> (CloudStorage), tied to your Telegram account and this bot, so records match on all your devices.</li>
 <li><b>Your device</b> — the app's storage inside Telegram, so it works offline.</li>
-<li>Your records, amounts and settings are <b>not stored</b> on our servers.</li>
+<li>There is <b>no</b> permanent copy of your records and settings on our servers. What the bot keeps temporarily in order to reply to you is listed below.</li>
 </ul>
 
 <h2>What the bot stores</h2>
@@ -182,6 +184,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')set(false)})}</scrip
 <ul>
 <li>your <b>Telegram id</b>, the <b>message text</b> (up to 500 characters) and its time — deleted as soon as the app picks it up, and in any case within <b>30 days</b>;</li>
 <li>a service record used to show “✅ Recorded” (chat and message number, start of the text) — also <b>30 days</b> at most;</li>
+<li>so that the card in the chat can show the record and let you correct it, the card's data is kept together with this record: for a record saved instantly — amount, category, note and date; for a debt or a goal — the name, the remaining or saved amount, the due date. Also <b>30 days</b> at most;</li>
 <li>for bot entries saved right away (the default; can be turned off in the app settings), this record also keeps the options for the buttons under the reply (up to 6 of your category names, the entry date), and your taps (“Category”, “Date”, “Cancel”) are kept until the app applies them; all of this — also <b>30 days</b> at most;</li>
 <li>so that the bot can show the amount and category right away and let you correct them, the app sends it <b>your category list</b> (names, icons, alternative names, currency, time zone) and the <b>category memory</b> — which category you chose for a note; the notes themselves are not sent, only their fingerprints (hashes), by which the bot recognises the note again; no amounts or entries; the list is updated whenever the app is opened and deleted if the app has not been opened for <b>30 days</b> or “record right away” is turned off;</li>
 <li>for the statistics card (/report, /today) and the 21:00 evening summary, the app sends the bot <b>totals</b>: expense and income sums for today, the week and the month, up to 5 top categories, spending by day, the monthly budget — no individual entries or notes; only the latest version is kept and it is deleted if the app has not been opened for <b>30 days</b> or “record right away” is turned off; the evening summary can be turned off in the card itself;</li>
@@ -221,13 +224,14 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')set(false)})}</scrip
 <ul>
 <li><b>In der Telegram-Cloud</b> (CloudStorage) — verknüpft mit Ihrem Telegram-Konto und diesem Bot, damit die Einträge auf allen Ihren Geräten gleich sind.</li>
 <li><b>Auf Ihrem Gerät</b> — im Speicher der App in Telegram, damit sie auch offline funktioniert.</li>
-<li>Ihre Einträge, Beträge und Einstellungen werden <b>nicht</b> auf unseren Servern gespeichert.</li>
+<li>Auf unseren Servern gibt es <b>keine</b> dauerhafte Kopie Ihrer Einträge und Einstellungen. Was der Bot vorübergehend speichert, um Ihnen zu antworten, ist unten aufgeführt.</li>
 </ul>
 <h2>Was der Bot speichert</h2>
 <p>Eine Nachricht an den Bot wartet in einer Warteschlange auf unserem Server (Cloudflare D1), bis die App sie abholt:</p>
 <ul>
 <li>Ihre <b>Telegram-ID</b>, der <b>Nachrichtentext</b> (bis zu 500 Zeichen) und der Zeitpunkt — werden gelöscht, sobald die App den Eintrag abgeholt hat, spätestens nach <b>30 Tagen</b>;</li>
 <li>ein interner Vermerk für die Antwort „✅ Erfasst“ (Chat- und Nachrichtennummer, Anfang des Textes) — ebenfalls höchstens <b>30 Tage</b>;</li>
+<li>damit die Karte im Chat den Eintrag zeigt und Sie ihn korrigieren können, werden zusammen mit diesem Vermerk die Daten der Karte gespeichert: bei einem sofort erfassten Eintrag — Betrag, Kategorie, Notiz und Datum; bei einer Schuld oder einem Ziel — Name bzw. Bezeichnung, Restbetrag oder angesparter Betrag, Frist. Ebenfalls höchstens <b>30 Tage</b>;</li>
 <li>bei Bot-Einträgen, die sofort erfasst werden (Standard; in den App-Einstellungen abschaltbar), enthält dieser Vermerk zusätzlich die Auswahl für die Schaltflächen unter der Antwort (bis zu 6 Ihrer Kategorienamen, das Datum des Eintrags), und Ihre Tipps („Kategorie“, „Datum“, „Stornieren“) werden gespeichert, bis die App sie anwendet; alles — ebenfalls höchstens <b>30 Tage</b>;</li>
 <li>damit der Bot Betrag und Kategorie sofort anzeigen und korrigieren lassen kann, übermittelt ihm die App <b>Ihre Kategorienliste</b> (Namen, Symbole, alternative Namen, Währung, Zeitzone) und das <b>Kategorien-Gedächtnis</b> — welche Kategorie Sie für eine Notiz gewählt haben; die Notizen selbst werden nicht übertragen, nur ihre Fingerabdrücke (Hashes), an denen der Bot die Notiz wiedererkennt; ohne Beträge oder Einträge; die Liste wird beim Öffnen der App aktualisiert und gelöscht, wenn die App <b>30 Tage</b> nicht geöffnet wurde oder „sofort erfassen“ ausgeschaltet ist;</li>
 <li>für die Statistikkarte (/report, /today) und die Abendübersicht um 21:00 übermittelt die App dem Bot <b>Summen</b>: Ausgaben und Einnahmen für heute, die Woche und den Monat, bis zu 5 größte Kategorien, Ausgaben nach Tagen, das Monatsbudget — ohne einzelne Einträge oder Notizen; gespeichert wird nur die letzte Version, sie wird gelöscht, wenn die App <b>30 Tage</b> nicht geöffnet wurde oder „sofort erfassen“ ausgeschaltet ist; die Abendübersicht lässt sich in der Karte abschalten;</li>
@@ -264,13 +268,14 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')set(false)})}</scrip
 <ul>
 <li><b>En la nube de Telegram</b> (CloudStorage), vinculada a su cuenta de Telegram y a este bot, para que los registros coincidan en todos sus dispositivos.</li>
 <li><b>En su dispositivo</b>, en la memoria de la aplicación dentro de Telegram, para que funcione sin conexión.</li>
-<li>Sus registros, importes y ajustes <b>no se guardan</b> en nuestros servidores.</li>
+<li>En nuestros servidores <b>no hay</b> una copia permanente de sus registros y ajustes. Lo que el bot guarda temporalmente para responderle se indica abajo.</li>
 </ul>
 <h2>Qué guarda el bot</h2>
 <p>Un mensaje enviado al bot espera en una cola en nuestro servidor (Cloudflare D1) hasta que la aplicación lo recoge:</p>
 <ul>
 <li>su <b>ID de Telegram</b>, el <b>texto del mensaje</b> (hasta 500 caracteres) y la hora de envío: se borran en cuanto la aplicación recoge el registro y, en cualquier caso, en un máximo de <b>30 días</b>;</li>
 <li>una nota de servicio para mostrar «✅ Registrado» (número de chat y de mensaje, inicio del texto): también <b>30 días</b> como máximo;</li>
+<li>para que la tarjeta del chat muestre el registro y pueda corregirlo, junto con esta nota se guardan los datos de la tarjeta: en un registro guardado al instante — importe, categoría, nota y fecha; en una deuda o un objetivo — nombre, saldo pendiente o importe ahorrado, plazo. También <b>30 días</b> como máximo;</li>
 <li>para los registros del bot guardados de inmediato (por defecto; se puede desactivar en los ajustes de la aplicación), esta nota guarda además las opciones de los botones bajo la respuesta (hasta 6 nombres de sus categorías, la fecha del registro), y sus pulsaciones («Categoría», «Fecha», «Cancelar») se guardan hasta que la aplicación las aplica; todo ello, también <b>30 días</b> como máximo;</li>
 <li>para que el bot muestre de inmediato el importe y la categoría y le permita corregirlos, la aplicación le envía <b>su lista de categorías</b> (nombres, iconos, nombres alternativos, moneda, zona horaria) y la <b>memoria de categorías</b>, es decir, qué categoría eligió para una nota; las notas en sí no se envían, solo sus huellas (hashes), con las que el bot reconoce la nota; sin importes ni registros; la lista se actualiza al abrir la aplicación y se borra si la aplicación no se abre durante <b>30 días</b> o si el registro «inmediato» está desactivado;</li>
 <li>para la tarjeta de estadísticas (/report, /today) y el resumen de las 21:00, la aplicación envía al bot <b>totales</b>: gastos e ingresos de hoy, la semana y el mes, hasta 5 categorías principales, gastos por día y el presupuesto del mes, sin registros individuales ni notas; solo se guarda la última versión, que se borra si la aplicación no se abre durante <b>30 días</b> o si el registro «inmediato» está desactivado; el resumen de la noche se puede desactivar en la propia tarjeta;</li>

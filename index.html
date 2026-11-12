@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="ru"><head><meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://finansepro.olegkiselar3105.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v285';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v286';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -2179,6 +2179,23 @@ const S={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{return
 
 // ================= Telegram Mini App: окружение и состояние облака =================
 const TGW=window.__TG||null,IN_TG=!!TGW;
+// v286: память устройства (localStorage) у разных аккаунтов Telegram может быть общей. Данные принадлежат тому аккаунту, чей id записан в finapp.own:
+// открыл другой аккаунт — данные прежнего убираются в finapp.acc.<id> (вернутся, когда он откроет приложение снова), этот начинает со своих (или с облака).
+// Без этого второй аккаунт видел бы чужие записи, а сверка отправила бы их в его облако
+(function(){if(!IN_TG)return;let id='';try{const u=TGW.initDataUnsafe&&TGW.initDataUnsafe.user;id=u&&u.id?String(u.id):''}catch(e){}
+  if(!/^\d+$/.test(id))return;
+  try{const own=localStorage.getItem('finapp.own');
+    if(!own){localStorage.setItem('finapp.own',id);return}
+    if(own===id)return;
+    const keep=k=>k==='finapp.own'||k==='finapp.kbh3'||k.startsWith('finapp.acc.'),ks=[];
+    for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('finapp.')&&!keep(k))ks.push(k)}
+    const pack={};ks.forEach(k=>{pack[k]=localStorage.getItem(k)});
+    const mine=localStorage.getItem('finapp.acc.'+id);
+    ks.forEach(k=>localStorage.removeItem(k));localStorage.removeItem('finapp.acc.'+id);
+    if(ks.length){try{localStorage.setItem('finapp.acc.'+own,JSON.stringify(pack))}
+      catch(e){delete pack['finapp.bak'];delete pack['finapp.cbk'];try{localStorage.setItem('finapp.acc.'+own,JSON.stringify(pack))}catch(e2){}}}   // не поместилось — без страховочных копий; основное есть и в облаке того аккаунта
+    if(mine){try{const o=JSON.parse(mine);Object.keys(o).forEach(k=>{if(typeof o[k]==='string')try{localStorage.setItem(k,o[k])}catch(e){}})}catch(e){}}
+    localStorage.setItem('finapp.own',id);try{sessionStorage.removeItem('finapp.pgy')}catch(e){}}catch(e){}})();
 const CL={on:false,mute:false,ready:false,pre:false,busy:false,again:false,pending:false,timer:0,retryT:0,fails:0,st:'ok',lastErr:null,lh:'',lastSync:0,manual:false,
   lt:(()=>{try{return Number(localStorage.getItem('finapp.mtime'))||0}catch{return 0}})(),
   sb:(()=>{try{return localStorage.getItem('finapp.synch')||''}catch{return ''}})()};   // sb — хэш данных на момент последней удачной сверки (основа для слияния)
@@ -2296,7 +2313,7 @@ const jNid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 function jIds(){[...(cfg.debts||[]),...(cfg.goals||[])].forEach(o=>{if(!o)return;['log','ol'].forEach(k=>{if(Array.isArray(o[k]))o[k].forEach(e=>{if(e&&typeof e==='object'&&!e.id)e.id=jNid()})})})}
 var _dgs=_dgs||new Map();   // var: snapDG вызывается при загрузке раньше этой строки
 function snapDG(stamp){const now=Date.now(),keep=new Map();
-  ['debts','goals'].forEach(k=>(cfg[k]||[]).forEach(o=>{if(!o||o.id==null)return;const{u,...r}=o,j=JSON.stringify(r),key=k+'|'+o.id;if(stamp&&_dgs.get(key)!==j)o.u=now;keep.set(key,j)}));_dgs=keep}
+  ['debts','goals','rec','custom'].forEach(k=>(cfg[k]||[]).forEach(o=>{if(!o||o.id==null)return;const{u,...r}=o,j=JSON.stringify(r),key=k+'|'+o.id;if(stamp&&_dgs.get(key)!==j)o.u=now;keep.set(key,j)}));_dgs=keep}
 function dgMerge(L,C,k,dead){const kk=k==='debts'?'d':'g',cm=new Map(),out=[],seen=new Set();
   (Array.isArray(C)?C:[]).forEach(x=>{if(x&&x.id!=null)cm.set(String(x.id),x)});
   const one=(a,b)=>{const base=JSON.parse(JSON.stringify(!b?a:!a?b:((+b.u||0)>(+a.u||0)?b:a))),oth=!a||!b?null:(base.id===a.id&&(+b.u||0)>(+a.u||0)?a:b);
@@ -2323,7 +2340,44 @@ function jEdit(e,a,d){const x=jFind(e);if(!x)return false;a=r2(a);
 // дата начала долга: своя (created), у старых без неё — дата первой записи журнала
 function dStart(d){if(!d)return'';if(/^\d{4}-\d{2}-\d{2}$/.test(String(d.created||'')))return d.created;
   const ds=[...(d.ol||[]),...(d.log||[])].map(e=>e&&e.d).filter(v=>/^\d{4}-\d{2}-\d{2}$/.test(String(v))).sort();return ds[0]||''}
-const save=()=>{try{jIds();lkSync()}catch(e){console.error(e)}snapTx(true);snapDG(true);S.set('finapp.tx',tx);S.set('finapp.settings',cfg);S.set('finapp.learn',learn);cloudTouch();capCheck()};
+// ===== v286: метки правки настроек (cfg.ku = {ключ: время}) — при слиянии с облаком берётся правка посвежее, а не «всегда локальная» =====
+// Одиночная настройка — ключ «budget»; запись словаря — «limits/food», «bm/2026-11», «rates/EUR»; элемент списка — «cc/EUR», «hide/other», «tpls/<id>».
+// Удаление — тоже правка: метка есть, значения нет. Списки со своими метками (цели, долги, повторы, свои категории — поле u) и служебное сюда не входят
+const KU_SKIP=new Set(['goals','debts','rec','custom','del','rh','ku','backupSnooze','lastBackup','notified','ratesAt','ratesErr']),KU_MAP=['rates','limits','catOv','bm','rman','lm'],KU_SET=['cc','curList','hide'];
+var _ks=_ks||new Map();
+function kuFlat(c){const m=new Map();
+  for(const k of Object.keys(c)){if(KU_SKIP.has(k))continue;const v=c[k];if(v===undefined)continue;
+    if(KU_MAP.includes(k)){if(_obj(v))for(const s of Object.keys(v))m.set(k+'/'+s,JSON.stringify(v[s]))}
+    else if(KU_SET.includes(k)){if(Array.isArray(v))v.forEach(x=>{if(typeof x==='string')m.set(k+'/'+x,'1')})}
+    else if(k==='tpls'){if(Array.isArray(v))v.forEach(x=>{if(x&&x.id!=null)m.set('tpls/'+x.id,JSON.stringify(x))})}
+    else m.set(k,JSON.stringify(v))}
+  return m}
+function snapCfg(stamp){const f=kuFlat(cfg);
+  if(stamp){const now=Date.now(),mark=k=>{if(!_obj(cfg.ku))cfg.ku={};cfg.ku[k]=now};
+    f.forEach((j,k)=>{if(_ks.get(k)!==j)mark(k)});_ks.forEach((j,k)=>{if(!f.has(k))mark(k)})}
+  _ks=f}
+// слияние настроек: L — локальные, C — облачные; cw — при равных (или отсутствующих) метках выигрывает облако (иначе — устройство, как было до v286)
+function cfgMerge(L,C,cw){const kl=_obj(L.ku)?L.ku:{},kc=_obj(C.ku)?C.ku:{},ku={},old=Date.now()-400*864e5;
+  Object.keys(kl).concat(Object.keys(kc)).forEach(k=>{const v=Math.max(+kl[k]||0,+kc[k]||0);if(v>0)ku[k]=v});
+  const W=k=>{const a=+kl[k]||0,b=+kc[k]||0;return b>a?1:a>b?-1:0};   // 1 — облачная правка свежее, -1 — локальная, 0 — меток нет или равны
+  const mg=cw?{...L,...C}:{...C,...L};
+  new Set(Object.keys(L).concat(Object.keys(C))).forEach(k=>{if(KU_SKIP.has(k)||KU_MAP.includes(k)||KU_SET.includes(k)||k==='tpls')return;
+    const w=W(k);if(!w)return;const src=w>0?C:L;if(src[k]!==undefined)mg[k]=src[k];else delete mg[k]});
+  KU_MAP.forEach(k=>{const a=_obj(L[k])?L[k]:{},b=_obj(C[k])?C[k]:{},o={...b,...a};
+    new Set(Object.keys(a).concat(Object.keys(b))).forEach(s=>{const w=W(k+'/'+s);if(!w)return;const src=w>0?b:a;if(s in src)o[s]=src[s];else delete o[s]});
+    mg[k]=o});
+  KU_SET.forEach(k=>{const a=(Array.isArray(L[k])?L[k]:[]).filter(x=>typeof x==='string'),b=(Array.isArray(C[k])?C[k]:[]).filter(x=>typeof x==='string');
+    mg[k]=[...new Set(a.concat(b))].filter(x=>{const w=W(k+'/'+x);
+      if(!w)return k==='hide'?(cw?b:a).includes(x):true;   // без меток: скрытые категории — как на устройстве, валюты — объединение (как было)
+      return (w>0?b:a).includes(x)})});
+  {const a=_okArr(L.tpls),b=_okArr(C.tpls),am=new Map(a.map(x=>[String(x.id),x])),bm=new Map(b.map(x=>[String(x.id),x])),o=[];
+    [...am.keys(),...[...bm.keys()].filter(i=>!am.has(i))].forEach(i=>{const w=W('tpls/'+i),x=(w>0||(!w&&cw)?bm:am).get(i);if(x)o.push(x)});
+    mg.tpls=o}
+  const live=kuFlat(mg);Object.keys(ku).forEach(k=>{if(ku[k]<old&&!live.has(k))delete ku[k]});   // метки давно удалённого не копим
+  if(Object.keys(ku).length)mg.ku=ku;else delete mg.ku;
+  return mg}
+snapCfg(false);
+const save=()=>{try{jIds();lkSync()}catch(e){console.error(e)}snapTx(true);snapDG(true);snapCfg(true);S.set('finapp.tx',tx);S.set('finapp.settings',cfg);S.set('finapp.learn',learn);cloudTouch();capCheck()};
 // v285: предупреждение о заполнении памяти — на устройстве (localStorage, без сжатия) и в облаке Telegram (куски по 3800 из 1000).
 // Пороги 70/85/95%: каждый показывается один раз на устройстве (finapp.capw), ниже 60% — сброс. Предел WebKit (iPhone) взят с запасом — 2,5 млн символов
 const CAP_LS=/AppleWebKit/.test(navigator.userAgent)&&!/Chrome|CriOS|Android/.test(navigator.userAgent)?2.5e6:5e6;
@@ -3001,6 +3055,7 @@ function run(){
   drafts.push(...r);renderRev();if(cfg.auto&&!needRate.size){if(!sh.classList.contains('on')){if(isModalOpen())return;openSheet()}startAuto();syncBtn()}}
 function commit(list,withUndo){
   list.forEach(x=>{delete x.cw;if(x.lrn){if(x.note)learn[norm(x.note)]=x.category;delete x.lrn}});   // v235: категория названа словами — запоминаем для этой заметки
+  {const have=new Set(tx.map(t=>t.id));list=list.filter(x=>!have.has(x.id));if(!list.length){render();return}}   // v286: запись из бота уже пришла с другого устройства (тот же id)
   tx=[...list,...tx];save();
   const f=mOf(list[list.length-1].date);if(!list.some(x=>mOf(x.date)===month))month=f;
   render();const ln=limitNote(list);if(withUndo){const ids=new Set(list.map(x=>x.id));toast('Добавлено: '+list.length+(ln?' · '+ln:''),'Отмена',()=>{tx=tx.filter(x=>!ids.has(x.id));tomb([...ids]);save();render()},'add')}
@@ -5359,7 +5414,7 @@ function applyReplace(d){
     tx=_okArr(d.tx,t=>_obj(t));
     cfg={cur:'MDL',budget:0,auto:false,rates:{},custom:[],catOv:{},...(_obj(d.cfg)?d.cfg:{})};
     learn=_obj(d.learn)?d.learn:{};
-    normState();buildAll();snapTx(false);snapDG(false);save()}
+    normState();buildAll();snapTx(false);snapDG(false);snapCfg(false);save()}
   finally{CL.mute=false}
   applyTheme(false);render();renderSt()}
 
@@ -5981,10 +6036,13 @@ function recNext(r){if(r.paused)return'';const td=ymd(new Date()),from=td>(r.sta
 const recLeft=r=>r.end?recGen(r,r.start,r.end).filter(d=>d>(r.done||'')).length:null;
 const recDate=d=>d?(+d.slice(8))+' '+MSH[+d.slice(5,7)-1]+(d.slice(0,4)!==String(new Date().getFullYear())?' '+d.slice(0,4):''):'';
 // создаёт все записи, которые уже должны были появиться (в том числе пропущенные, если приложение долго не открывали); на паузе и после даты окончания — не создаёт
-function applyRec(){const td=ymd(new Date()),add=[];
+function applyRec(){const td=ymd(new Date()),add=[],have=new Set(tx.map(t=>t.id));
   cfg.rec.forEach(r=>{if(!(r.amount>0)||r.paused)return;
     const to=r.end&&r.end<td?r.end:td;
-    recGen(r,r.start||td,to).forEach(d=>{if(d>(r.done||'')){add.push({id:uid(),type:r.type,amount:r.amount,category:r.category,note:r.note||cd(r.category).n,date:d,rid:r.id});r.done=d}})});
+    recGen(r,r.start||td,to).forEach(d=>{if(d>(r.done||'')){r.done=d;
+      // v286: id записи — из правила и даты: на двух устройствах получается одна и та же запись (а не две с разными id), удалённая на одном не возвращается с другого
+      const id='r'+r.id+'_'+d;if(have.has(id)||(_obj(cfg.del)&&cfg.del[id]!=null))return;have.add(id);
+      add.push({id,type:r.type,amount:r.amount,category:r.category,note:r.note||cd(r.category).n,date:d,rid:r.id})}})});
   if(add.length){tx=[...add,...tx];save()}
   return add.length}
 const rcDef=type=>type==='income'?'in_other':'other';
@@ -6262,9 +6320,12 @@ async function cloudPull(m,force){const hb=cloudHash();let d;
   catch(e){if(!(e&&e.corrupt))throw e;
     await new Promise(r=>setTimeout(r,1500));      // возможно, другое устройство как раз дописывает куски
     try{const m2=await cloudMeta();if(m2&&!m2.bad)m=m2;d=await cloudRead(m)}
-    catch(e2){if(e2&&e2.corrupt&&cloudHas()){await cloudPush();return}throw e2}}
-  if(cloudHash()!==hb&&!force){await cloudPush();return}   // пока читали, пользователь внёс правки — они важнее (на пустом устройстве — нет: облако не затираем, v206)
+    catch(e2){throw e2}}                           // v286: нечитаемое облако сразу не затираем — см. CL.cor в cloudSync
   if(isModalOpen()){CL.retryT=setTimeout(()=>cloudSync('modal'),2500);return 'defer'}   // не меняем данные под открытым окном
+  // v286: пока читали, на устройстве появились правки (запись из бота, курсы, повтор, ввод) — объединяем с прочитанным. Раньше устройство отправляло
+  // свою копию поверх облака — правки другого устройства пропадали. На пустом устройстве (force) при равных метках выигрывает облако
+  if(cloudHash()!==hb){try{if(tx.length){const b=JSON.stringify(collectData());if(b.length<9e5)localStorage.setItem('finapp.bak',b)}}catch{}
+    mergeCloudData(d,!!force);CL.pulled=true;CL.lt=Date.now();cloudPersist();await cloudPush();try{if(applyRec())render()}catch{}return}
   try{if(tx.length){const b=JSON.stringify(collectData());if(b.length<9e5)localStorage.setItem('finapp.bak',b)}}catch{}   // страховка: прежние локальные данные
   applyData(d,{replace:true});CL.pulled=true;
   CL.lt=m.t;cloudPersist();CL.lh=cloudHash();
@@ -6288,17 +6349,16 @@ function mergeCloudData(d,cw){
     tx.forEach(t=>{const id=String(t.id);seen.add(id);const c=cl.get(id);put(c&&(+c.u||0)>(+t.u||0)?c:t)});
     cl.forEach((c,id)=>{if(!seen.has(id))put(c)});
     // списки с id (цели, долги, повторы, свои категории): объединение, при совпадении — локальная версия
-    const un=(a,b)=>{const o=[],sn=new Set();_okArr(a).concat(_okArr(b)).forEach(x=>{const id=x&&x.id!=null?String(x.id):'';if(!id||sn.has(id)||dead(id))return;sn.add(id);o.push(x)});return o};
-    const arr=(a,b)=>[...new Set([...(Array.isArray(a)?a:[]),...(Array.isArray(b)?b:[])])];
-    const mg=cw?{...cfg,...dc}:{...dc,...cfg};                // одиночные настройки: выигрывают локальные (при спасении v206 — облачные: прежние настройки человека)
+    // v286: при совпадении id — версия посвежее (u), при равенстве — локальная
+    const un=(a,b)=>{const o=[],ix=new Map();_okArr(a).concat(_okArr(b)).forEach(x=>{const id=x&&x.id!=null?String(x.id):'';if(!id||dead(id))return;
+      if(ix.has(id)){const i=ix.get(id);if((+x.u||0)>(+o[i].u||0))o[i]=x;return}ix.set(id,o.length);o.push(x)});return o};
+    const mg=cfgMerge(cfg,dc,cw);                             // v286: настройки — по меткам правки (cfg.ku); без меток — локальные (при спасении v206 — облачные)
     ['rec','custom'].forEach(k=>{mg[k]=un(cfg[k],dc[k])});
     ['goals','debts'].forEach(k=>{mg[k]=dgMerge(cfg[k],dc[k],k,dead)});   // v198: версия посвежее + записи журнала по id
-    ['rates','limits','catOv','bm','rman','lm'].forEach(k=>{mg[k]={...(_obj(dc[k])?dc[k]:{}),...(_obj(cfg[k])?cfg[k]:{})}});
-    ['cc','curList'].forEach(k=>{mg[k]=arr(cfg[k],dc[k])});
     mg.rh=rhMerge(cfg.rh,dc.rh);if(!Object.keys(mg.rh).length)delete mg.rh;
     mg.del=del;
     cfg=mg;tx=out;learn={...(_obj(d.learn)?d.learn:{}),...learn};
-    normState();buildAll();snapTx(false);snapDG(false);save()}
+    normState();buildAll();snapTx(false);snapDG(false);snapCfg(false);save()}
   finally{CL.mute=false}
   applyTheme(false);render();renderSt()}
 async function cloudMerge(m,cw){
@@ -6352,7 +6412,9 @@ async function cloudSync(why){
     // v206: спасение записей после переезда на новый адрес (до RSQ_END). Ошибка v198–v205: первый запуск на новом адресе мог записать
     // пустые данные поверх облака — записи остались только в памяти старого адреса. Если и тут, и в облаке пусто — ставим метку:
     // старая версия (открытая по старому адресу) примет её за пустое облако и выгрузит свои записи; пока метка стоит — облако не трогаем
-    if(m&&m.rescue){if(rsqOn()){rq=true;try{localStorage.setItem('finapp.rsq',String(m.t||1))}catch{}}else m=null}
+    // v286: метка ждёт записей из прежней версии, но не бесконечно: если на устройстве уже есть свои данные, а метке больше 2 суток — отправляем их.
+    // Раньше новый человек (пусто и тут, и в облаке) получал метку, и его записи не уходили в облако до RSQ_END, хотя индикатор показывал «сохранено»
+    if(m&&m.rescue){if(rsqOn()&&!(cloudHas()&&Date.now()-(m.t||0)>48*3600e3)){rq=true;try{localStorage.setItem('finapp.rsq',String(m.t||1))}catch{}}else m=null}
     else if(rsqOn()&&!cloudHas()&&!localStorage.getItem('finapp.rsqd')){let empty=!m;
       if(m&&!(m.h===hNow)){try{empty=dataEmpty(await cloudRead(m))}catch{empty=false}}
       else if(m)empty=true;
@@ -6370,9 +6432,14 @@ async function cloudSync(why){
     else r=await cloudMerge(m);                                            // v206: без общей основы облако не затираем — объединяем
     if(r==='defer')defer=true;
     else if(rq){ok=true;CL.lastSync=Date.now();CL.fails=0;csSet('ok','')}
-    else{ok=true;cloudBase(CL.lh);CL.lastSync=Date.now();setTimeout(lkMigrateSoon,0);CL.fails=0;CL.lastErr=null;CL.errShown='';csSet('ok','');if(CL.manual)toast('Облако Telegram: всё сохранено');
+    else{ok=true;CL.cor=0;cloudBase(CL.lh);CL.lastSync=Date.now();setTimeout(lkMigrateSoon,0);CL.fails=0;CL.lastErr=null;CL.errShown='';csSet('ok','');if(CL.manual)toast('Облако Telegram: всё сохранено');
       try{if(localStorage.getItem('finapp.rst')){localStorage.removeItem('finapp.rst');if(CL.pulled)toast('Данные восстановлены из облака Telegram')}}catch{}}
-  }catch(e){cloudFail(e)}
+  }catch(e){
+    // v286: облако не читается (куски не сходятся с meta). Обычно другое устройство как раз дописывает — ждём и повторяем; три неудачи подряд
+    // (≈15 с и больше) — запись оборвалась насовсем: отправляем свою копию, иначе сверка не заработала бы никогда
+    if(e&&e.corrupt&&(CL.cor=(CL.cor||0)+1)>=3&&cloudHas()){
+      try{await cloudPush();CL.cor=0;ok=true;cloudBase(CL.lh);CL.lastSync=Date.now();CL.fails=0;CL.lastErr=null;CL.errShown='';csSet('ok','')}catch(e2){cloudFail(e2)}}
+    else cloudFail(e)}
   finally{
     CL.busy=false;CL.manual=false;
     if(!CL.ready){CL.ready=true;                    // первая сверка закончилась: правки, сделанные за это время, не теряем
@@ -6558,7 +6625,8 @@ async function inboxPull(fast,wait){
         if(pc&&pc.length){pc.forEach(c=>preDone.push({sid,op:c.op,at:c.at}));if(pc.some(c=>c.op==='del')){drop.push(sid);continue}
           if(r.length===1&&!cm.msgs.length)botFix(r[0],pc)}
         const au=bAutoOk(cm,r);   // v266: понятная запись — сразу в учёт
-        r.forEach(d=>{delete d.addCat;d.bs=sid;if(au){autoL.push(d);return}d.bsid=sid;if(d.amount>0)added.push(d);else left.push(d)});   // v167: операции из бота — на проверку (черновики)
+        r.forEach((d,di)=>{delete d.addCat;d.bs=sid;d.id='b'+sid.replace(/[^\w-]/g,'').slice(0,30)+'_'+di;   // v286: id из id фразы — два открытых устройства запишут одну и ту же операцию, а не две
+          if(au){autoL.push(d);return}d.bsid=sid;if(d.amount>0)added.push(d);else left.push(d)});   // v167: операции из бота — на проверку (черновики)
         nbuild[sid]={rich:cm.rich||cm.msgs,ops:r.filter(d=>d.amount>0),au,dg:dgc};   // v166: ответ бота собирается после записи — с итогами бюджета и лимитов
       }catch(e){bad.push(text);badIds.push(sid)}}                           // одна «битая» запись не должна блокировать остальные
     for(let w=0;w<30&&typeof CL==='object'&&CL.busy;w++)await new Promise(r=>setTimeout(r,200));
@@ -6858,8 +6926,8 @@ async function ibLoop(){
       if(st.side!=='f'&&Math.abs(a.getBoundingClientRect().top-st.ar)>.5)place()}
     raf=requestAnimationFrame(follow)}
   function open(o){close();st=o;
-    el.innerHTML=`<div class="pkh"><b>${o.title||'Выбор'}</b><button type="button" tabindex="-1" data-x aria-label="Закрыть">×</button></div><div class="pkl">`+
-      o.items.map(it=>`<button type="button" tabindex="-1" data-v="${String(it.v).replace(/"/g,'&quot;')}" class="${String(it.v)===String(o.value)?'on':''}">${it.e?`<i>${it.e}</i>`:''}<span>${it.l}</span></button>`).join('')+'</div>';
+    el.innerHTML=`<div class="pkh"><b>${E(o.title||'Выбор')}</b><button type="button" tabindex="-1" data-x aria-label="Закрыть">×</button></div><div class="pkl">`+
+      o.items.map(it=>`<button type="button" tabindex="-1" data-v="${E(it.v)}" class="${String(it.v)===String(o.value)?'on':''}">${it.e?`<i>${E(it.e)}</i>`:''}<span>${E(it.l)}</span></button>`).join('')+'</div>';
     el.style.transition='none';st.side='f';
     if(o.anchor){el.classList.add('pop');el.style.height='';el.style.top='0px';const r=o.anchor.getBoundingClientRect();hz(r);const h=el.offsetHeight,v=vis(),T=v.top+satPx()+8,B=v.bot-8;
       if(h<=B-(r.bottom+6))st.side='b';else if(h<=r.top-6-T)st.side='a';st.h=h}

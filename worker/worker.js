@@ -63,7 +63,8 @@ export default {
       }
       if (url.pathname === '/api/ack' && req.method === 'POST') {
         const uid = await authUser(req, env); if (!uid) return cors(json({ error: 'auth' }, 401));
-        const body = await req.json();
+        const rawAck = await req.text(); if (rawAck.length > 300000) return cors(json({ error: 'big' }, 413));   // v286: предел размера запроса
+        const body = JSON.parse(rawAck);
         const ids = Array.isArray(body.ids) ? body.ids.slice(0, 200) : [];
         const bad = Array.isArray(body.bad) ? body.bad.map(String).slice(0, 200) : [];   // записи, которые приложение не смогло разобрать
         const notes = {};                                                                  // что именно сделало приложение: {id: «Долг: Иван должен вам 500»}
@@ -1130,6 +1131,10 @@ async function rollup(env, now = Date.now()) {
   // v269: словарь категорий тех, кто 30 дней не открывал приложение
   try { await env.DB.prepare('DELETE FROM prof WHERE at < ?').bind(now - TTL * 1000).run(); } catch {}
   try { await env.DB.prepare('DELETE FROM sums WHERE at < ?').bind(now - TTL * 1000).run(); } catch {}   // v275: итоги тех, кто 30 дней не открывал приложение
+  // v286: очередь, квитанции, команды кнопок и вопросы — по сроку у всех. Раньше они убирались, только когда тот же человек писал боту снова:
+  // у переставших писать строки лежали дольше обещанных 30 дней
+  try { await d1Init(env); await env.DB.batch([q('DELETE FROM msgs WHERE at < ?', now - TTL * 1000), q('DELETE FROM rcpt WHERE at < ?', now - TTL * 1000),
+    q('DELETE FROM cmds WHERE at < ?', now - TTL * 1000), q('DELETE FROM asks WHERE at < ?', now - 864e5)]); } catch (e) { console.error('ttl', e && e.message); }
 }
 const N = x => Number(x) || 0;
 // период [from, to] (YYYY-MM-DD): люди, новые, сообщения. Сообщения: старые дни — из agg, последние 3 дня (по настоящей дате) — из cnt
