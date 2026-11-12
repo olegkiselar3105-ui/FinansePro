@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://*.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v281';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v282';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -870,44 +870,44 @@ html.intro #tabs,html.intro #fab{animation:inUp .9s cubic-bezier(.22,1,.36,1) .4
 /* 1. логотип */
 /* v276: сцены «бот в Telegram» для обучения и знакомства — зацикленные мини-карточки (как в чате): сообщение → карточка, точка мигает → зелёная,
    «палец» нажимает меню, долг закрывается с конфетти, статистика переключает вкладки. Анимации идут только на видимом слайде */
-.bw{position:relative;width:272px;max-width:100%;margin:0 auto;font-size:12.5px;text-align:left;--bwc:rgba(128,128,128,.15);--bwb:rgba(128,128,128,.28);--bwe:#2fa65a;--bwB:#3390ec}
-.bw .bu{margin-left:auto;width:max-content;max-width:78%;padding:8px 12px;border-radius:16px 16px 4px 16px;background:#3390ec;color:#fff;font-weight:600}
-.bw .bc{margin-top:8px;padding:10px;border-radius:16px 16px 16px 4px;background:var(--bwc);border:.5px solid var(--bwb)}
-.bw .br{display:flex;align-items:center;gap:8px}
-.bw .bs{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-weight:700;color:#e5484d;background:rgba(229,72,77,.15)}
-.bw .bi{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:15px;background:rgba(128,128,128,.18);position:relative}
-.bw .bm{flex:1;min-width:0;position:relative;height:30px}
-.bw .bm>div{position:absolute;inset:0}
-.bw .bm b{display:block;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bw .bm small{display:block;font-size:11px;opacity:.6;white-space:nowrap}
-.bw .ba{font-weight:700;white-space:nowrap}
-.bw .bd{flex:none;width:8px;height:8px;border-radius:50%;background:#8a8a8e}
-.bw .bk{display:flex;gap:5px;margin-top:8px}
-.bw .bk i{flex:1;font-style:normal;text-align:center;padding:6px 0;border-radius:10px;background:rgba(128,128,128,.16);font-size:11px;position:relative;overflow:hidden}
-.bw .bk i:first-child{color:var(--bwB)}
-.bw .bp{display:grid;grid-template-columns:1fr 1fr;gap:5px;max-height:0;overflow:hidden;opacity:0}
-.bw .bp i{font-style:normal;padding:5px 7px;border-radius:9px;background:rgba(128,128,128,.16);font-size:11px;white-space:nowrap}
-.bw .bf{position:absolute;width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.55);box-shadow:0 2px 10px rgba(0,0,0,.35),inset 0 0 0 2px rgba(255,255,255,.8);left:0;top:0;opacity:0;pointer-events:none;z-index:3}
-.bw .bok{display:flex;align-items:center;gap:6px;margin-top:7px;font-weight:600;color:var(--bwe);opacity:0;height:0}
-.bw .av{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;background:var(--bwe)}
-.bw .bb{height:6px;border-radius:3px;background:rgba(128,128,128,.2);margin:8px 0 4px;overflow:hidden}
-.bw .bb i{display:block;height:100%;width:56%;border-radius:3px;background:var(--bwe)}
-.bw .bg{display:block;overflow:hidden;font-style:normal;text-align:center;margin-top:7px;padding:7px;border-radius:10px;background:var(--bwe);color:#fff;font-weight:600;position:relative}
-.bw .cf{position:absolute;top:0;width:6px;height:9px;border-radius:2px;opacity:0}
-.bw .tb{position:relative;display:flex;padding:2px;border-radius:9px;background:rgba(128,128,128,.16);font-size:10.5px;margin-bottom:8px}
-.bw .tb u{position:absolute;top:2px;bottom:2px;left:2px;width:calc((100% - 4px)/3);border-radius:7px;background:rgba(128,128,128,.3)}
-.bw .tb span{flex:1;text-align:center;padding:3px 0;position:relative}
-.bw .sh{display:flex;align-items:center;gap:10px}
-.bw .dn{flex:none;width:58px;height:58px;transform:rotate(-90deg)}
-.bw .dn circle{fill:none;stroke-width:9}
-.bw .sv{position:relative;height:22px;flex:1}
-.bw .sv b{position:absolute;left:0;top:0;font-size:17px;opacity:0}
-.bw .ch{display:flex;align-items:flex-end;gap:4px;height:34px;margin-top:8px}
-.bw .ch i{flex:1;border-radius:3px 3px 1px 1px;background:var(--bwB);height:0}
-.bw .ch i:last-child{background:var(--bwe)}
-.bw .cap{margin-top:6px;font-size:10.5px;opacity:.6;text-align:center}
+.bws{position:relative;width:272px;max-width:100%;margin:0 auto;font-size:12.5px;text-align:left;--bwc:rgba(128,128,128,.15);--bwb:rgba(128,128,128,.28);--bwe:#2fa65a;--bwB:#3390ec}
+.bws .bu{margin-left:auto;width:max-content;max-width:78%;padding:8px 12px;border-radius:16px 16px 4px 16px;background:#3390ec;color:#fff;font-weight:600}
+.bws .bc{margin-top:8px;padding:10px;border-radius:16px 16px 16px 4px;background:var(--bwc);border:.5px solid var(--bwb)}
+.bws .br{display:flex;align-items:center;gap:8px}
+.bws .bs{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-weight:700;color:#e5484d;background:rgba(229,72,77,.15)}
+.bws .bi{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:15px;background:rgba(128,128,128,.18);position:relative}
+.bws .bm{flex:1;min-width:0;position:relative;height:30px}
+.bws .bm>div{position:absolute;inset:0}
+.bws .bm b{display:block;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bws .bm small{display:block;font-size:11px;opacity:.6;white-space:nowrap}
+.bws .ba{font-weight:700;white-space:nowrap}
+.bws .bd{flex:none;width:8px;height:8px;border-radius:50%;background:#8a8a8e}
+.bws .bk{display:flex;gap:5px;margin-top:8px}
+.bws .bk i{flex:1;font-style:normal;text-align:center;padding:6px 0;border-radius:10px;background:rgba(128,128,128,.16);font-size:11px;position:relative;overflow:hidden}
+.bws .bk i:first-child{color:var(--bwB)}
+.bws .bp{display:grid;grid-template-columns:1fr 1fr;gap:5px;max-height:0;overflow:hidden;opacity:0}
+.bws .bp i{font-style:normal;padding:5px 7px;border-radius:9px;background:rgba(128,128,128,.16);font-size:11px;white-space:nowrap}
+.bws .bf{position:absolute;width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.55);box-shadow:0 2px 10px rgba(0,0,0,.35),inset 0 0 0 2px rgba(255,255,255,.8);left:0;top:0;opacity:0;pointer-events:none;z-index:3}
+.bws .bok{display:flex;align-items:center;gap:6px;margin-top:7px;font-weight:600;color:var(--bwe);opacity:0;height:0}
+.bws .av{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;background:var(--bwe)}
+.bws .bb{height:6px;border-radius:3px;background:rgba(128,128,128,.2);margin:8px 0 4px;overflow:hidden}
+.bws .bb i{display:block;height:100%;width:56%;border-radius:3px;background:var(--bwe)}
+.bws .bg{display:block;overflow:hidden;font-style:normal;text-align:center;margin-top:7px;padding:7px;border-radius:10px;background:var(--bwe);color:#fff;font-weight:600;position:relative}
+.bws .cf{position:absolute;top:0;width:6px;height:9px;border-radius:2px;opacity:0}
+.bws .tb{position:relative;display:flex;padding:2px;border-radius:9px;background:rgba(128,128,128,.16);font-size:10.5px;margin-bottom:8px}
+.bws .tb u{position:absolute;top:2px;bottom:2px;left:2px;width:calc((100% - 4px)/3);border-radius:7px;background:rgba(128,128,128,.3)}
+.bws .tb span{flex:1;text-align:center;padding:3px 0;position:relative}
+.bws .sh{display:flex;align-items:center;gap:10px}
+.bws .dn{flex:none;width:58px;height:58px;transform:rotate(-90deg)}
+.bws .dn circle{fill:none;stroke-width:9}
+.bws .sv{position:relative;height:22px;flex:1}
+.bws .sv b{position:absolute;left:0;top:0;font-size:17px;opacity:0}
+.bws .ch{display:flex;align-items:flex-end;gap:4px;height:34px;margin-top:8px}
+.bws .ch i{flex:1;border-radius:3px 3px 1px 1px;background:var(--bwB);height:0}
+.bws .ch i:last-child{background:var(--bwe)}
+.bws .cap{margin-top:6px;font-size:10.5px;opacity:.6;text-align:center}
 /* время — общий цикл 5,33 с (v278: в 1,5 раза быстрее, было 8 с) */
-:is(#tour .tr-sl.on,#onb) .bw *{animation-duration:5.333s;animation-iteration-count:infinite;animation-timing-function:cubic-bezier(.22,1,.36,1);animation-fill-mode:both}
+:is(#tour .tr-sl.on,#onb) .bws *{animation-duration:5.333s;animation-iteration-count:infinite;animation-timing-function:cubic-bezier(.22,1,.36,1);animation-fill-mode:both}
 :is(#tour .tr-sl.on,#onb) .bwA .bu{animation-name:bwIn0}
 :is(#tour .tr-sl.on,#onb) .bwA .bc{animation-name:bwIn1}
 :is(#tour .tr-sl.on,#onb) .bwA .bd{animation-name:bwDot;animation-timing-function:linear}
@@ -962,22 +962,22 @@ html.intro #tabs,html.intro #fab{animation:inUp .9s cubic-bezier(.22,1,.36,1) .4
 /* v278: знакомство — сцены по очереди в одном окне: кофе → долг → цель → взнос. Цикл 4 × 5,33 с; внутренние анимации сцены
    идут с задержкой её места в очереди — к началу показа каждая сцена в нулевой точке */
 .bwq{display:grid}
-#onb .bwq{width:100%;max-width:330px;align-self:center;justify-self:center}#onb .bw{width:100%;max-width:none;font-size:13.5px}   /* v279: во всю ширину, как у соседних шагов (было 272 px — выглядело стянутым к середине) */
-#onb .bw .bm{height:34px}#onb .bw .bm b{font-size:14px}#onb .bw .bm small{font-size:12px}#onb .bw .bi,#onb .bw .av{width:32px;height:32px}
+#onb .bwq{width:100%;max-width:330px;align-self:center;justify-self:center}#onb .bws{width:100%;max-width:none;font-size:13.5px}   /* v279: во всю ширину, как у соседних шагов (было 272 px — выглядело стянутым к середине) */
+#onb .bws .bm{height:34px}#onb .bws .bm b{font-size:14px}#onb .bws .bm small{font-size:12px}#onb .bws .bi,#onb .bws .av{width:32px;height:32px}
 .bwq>div{grid-area:1/1;opacity:0}
 #onb .bwq>div{animation:bwSeq 21.333s infinite both}
-#onb .bwq>div:nth-child(2),#onb .bwq>div:nth-child(2) .bw *{animation-delay:5.333s}
-#onb .bwq>div:nth-child(3),#onb .bwq>div:nth-child(3) .bw *{animation-delay:10.667s}
-#onb .bwq>div:nth-child(4),#onb .bwq>div:nth-child(4) .bw *{animation-delay:16s}
+#onb .bwq>div:nth-child(2),#onb .bwq>div:nth-child(2) .bws *{animation-delay:5.333s}
+#onb .bwq>div:nth-child(3),#onb .bwq>div:nth-child(3) .bws *{animation-delay:10.667s}
+#onb .bwq>div:nth-child(4),#onb .bwq>div:nth-child(4) .bws *{animation-delay:16s}
 @keyframes bwSeq{0%{opacity:0;transform:translateX(26px)}3%,22%{opacity:1;transform:none}25%,100%{opacity:0;transform:translateX(-26px)}}
-.bw .bch{font-style:normal;display:inline-block;margin-top:7px;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:600;color:#3390ec;background:rgba(51,144,236,.15)}
-.bw .bch.e{color:#2fa65a;background:rgba(47,166,90,.15)}
-.bw .rgm{flex:none;width:30px;height:30px;transform:rotate(-90deg)}
-.bw .rgm circle{fill:none;stroke-width:5}
-.bw .rgm .f{stroke:#2fa65a;stroke-linecap:round;stroke-dasharray:var(--a0) 151}
+.bws .bch{font-style:normal;display:inline-block;margin-top:7px;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:600;color:#3390ec;background:rgba(51,144,236,.15)}
+.bws .bch.e{color:#2fa65a;background:rgba(47,166,90,.15)}
+.bws .rgm{flex:none;width:30px;height:30px;transform:rotate(-90deg)}
+.bws .rgm circle{fill:none;stroke-width:5}
+.bws .rgm .f{stroke:#2fa65a;stroke-linecap:round;stroke-dasharray:var(--a0) 151}
 :is(#tour .tr-sl.on,#onb) .bwA .rgm .f.go{animation-name:bwRgF}
 @keyframes bwRgF{0%,52%{stroke-dasharray:var(--a0) 151}64%,100%{stroke-dasharray:var(--a1) 151}}
-@media (prefers-reduced-motion:reduce){.bwq>div:not(:first-child){display:none}.bwq>div{opacity:1}.bw *{animation:none!important}.bw .bp{max-height:none;opacity:1;margin-top:6px}.bw .bok{opacity:1;height:16px}.bw .bd{background:#2fa65a}.bw .bf{display:none}.bw .m2{opacity:0}}
+@media (prefers-reduced-motion:reduce){.bwq>div:not(:first-child){display:none}.bwq>div{opacity:1}.bws *{animation:none!important}.bws .bp{max-height:none;opacity:1;margin-top:6px}.bws .bok{opacity:1;height:16px}.bws .bd{background:#2fa65a}.bws .bf{display:none}.bws .m2{opacity:0}}
 #tour .v1g{position:absolute;width:150px;height:150px;border-radius:50%;background:radial-gradient(closest-side,rgba(143,201,160,.30),rgba(143,201,160,0));opacity:.9}
 :root[data-theme=light] #tour .v1g{background:radial-gradient(closest-side,rgba(46,139,87,.22),rgba(46,139,87,0))}
 #tour .v1{position:relative;color:var(--t);overflow:visible}
@@ -7392,7 +7392,7 @@ window.AppSel={exit,enter};
 /* v276: сцены «бот в Telegram» (стили .bw) — общие для обучения (AppTour) и знакомства (AppOnb) */
 window.BWS={
  // v278: «сообщение → карточка» с любым содержимым (анимации — как у A: всплывает, точка мигает → зелёная, «✓ …»)
- M:(msg,body,ok)=>`<div class="bw bwA"><div class="bu">${msg}</div><div class="bc">${body}<div class="bok">✓ ${ok}</div></div></div>`,
+ M:(msg,body,ok)=>`<div class="bws bwA"><div class="bu">${msg}</div><div class="bc">${body}<div class="bok">✓ ${ok}</div></div></div>`,
  ring:(a0,a1,go)=>`<svg class="rgm" viewBox="0 0 30 30"><circle cx="15" cy="15" r="12" stroke="rgba(128,128,128,.22)"/><circle class="f${go?' go':''}" cx="15" cy="15" r="12" style="--a0:${a0};--a1:${a1}"/></svg>`,
  Q:()=>`<div class="bwq">${[
    BWS.M('кофе 30 кафе','<div class="br"><i class="bs">−</i><i class="bi">🍽️</i><div class="bm"><div><b>Кафе и рестораны</b><small>Кофе · сегодня</small></div></div><span class="ba">−30</span><u class="bd"></u></div>','Записано'),
@@ -7400,12 +7400,12 @@ window.BWS={
    BWS.M('цель отпуск 50000','<div class="br">'+BWS.ring(0,0)+'<div class="bm"><div><b>🎯 Отпуск</b><small>Цель 50 000</small></div></div><span class="ba">0%</span><u class="bd"></u></div><i class="bch">Новая цель</i>','Цель создана'),
    BWS.M('в цель отпуск 5000','<div class="br">'+BWS.ring(15,30,1)+'<div class="bm"><div><b>🎯 Отпуск</b><small>Накоплено 10 000 из 50 000</small></div></div><span class="ba">20%</span><u class="bd"></u></div><i class="bch e">В копилку · 5 000</i>','В копилке')
  ].map(x=>`<div>${x}</div>`).join('')}</div>`,
- A:()=>`<div class="bw bwA"><div class="bu">кофе 300 кафе</div><div class="bc"><div class="br"><i class="bs">−</i><i class="bi">🍽️</i><div class="bm"><div><b>Кафе и рестораны</b><small>Кофе · сегодня</small></div></div><span class="ba">−300</span><u class="bd"></u></div><div class="bok">✓ Записано в приложение</div></div></div>`,
- B:()=>`<div class="bw bwB"><div class="bc"><div class="br"><i class="bs">−</i><i class="bi"><span class="m1" style="position:absolute">❓</span><span class="m2">🛒</span></i><div class="bm"><div class="m1"><b>Категория?</b><small>Хлеб · сегодня</small></div><div class="m2"><b>Продукты</b><small>Хлеб · сегодня</small></div></div><span class="ba">−45</span><u class="bd"></u></div>
+ A:()=>`<div class="bws bwA"><div class="bu">кофе 300 кафе</div><div class="bc"><div class="br"><i class="bs">−</i><i class="bi">🍽️</i><div class="bm"><div><b>Кафе и рестораны</b><small>Кофе · сегодня</small></div></div><span class="ba">−300</span><u class="bd"></u></div><div class="bok">✓ Записано в приложение</div></div></div>`,
+ B:()=>`<div class="bws bwB"><div class="bc"><div class="br"><i class="bs">−</i><i class="bi"><span class="m1" style="position:absolute">❓</span><span class="m2">🛒</span></i><div class="bm"><div class="m1"><b>Категория?</b><small>Хлеб · сегодня</small></div><div class="m2"><b>Продукты</b><small>Хлеб · сегодня</small></div></div><span class="ba">−45</span><u class="bd"></u></div>
   <div class="bk"><i>Категория</i><i>Дата</i><i>Убрать</i></div><div class="bp"><i>🛒 Продукты</i><i>🍽️ Кафе</i><i>🚌 Транспорт</i><i>🏠 Жильё</i></div></div><i class="bf"></i></div>`,
- C:()=>`<div class="bw bwC"><div class="bc"><div class="br"><i class="av">К</i><div class="bm"><div><b>Ксюша</b><small>Вам должны</small></div></div><div class="bm" style="flex:none;width:74px;text-align:right"><div class="m1"><b>2 950</b><small>осталось</small></div><div class="m2"><b>6 750</b><small>закрыт</small></div></div></div>
+ C:()=>`<div class="bws bwC"><div class="bc"><div class="br"><i class="av">К</i><div class="bm"><div><b>Ксюша</b><small>Вам должны</small></div></div><div class="bm" style="flex:none;width:74px;text-align:right"><div class="m1"><b>2 950</b><small>осталось</small></div><div class="m2"><b>6 750</b><small>закрыт</small></div></div></div>
   <div class="bb"><i></i></div><i class="bg">Вернули всё</i><div class="bok">✓ Долг закрыт полностью</div>${[...Array(12)].map((_,k)=>`<i class="cf" style="left:${8+k*7.5}%;background:${['#2fa65a','#3390ec','#f08c2e','#e5484d','#f2c94c'][k%5]};--x:${(k%2?1:-1)*(10+k*3)}px;--r:${(k%3-1)*300}deg;animation-delay:${(k%4)*.06}s"></i>`).join('')}</div><i class="bf"></i></div>`,
- D:()=>`<div class="bw bwD"><div class="bc"><div class="tb"><u></u><span>Сегодня</span><span>Неделя</span><span>Месяц</span></div><div class="sh"><svg class="dn" viewBox="0 0 58 58"><circle cx="29" cy="29" r="24" stroke="rgba(128,128,128,.2)"/><circle class="s" cx="29" cy="29" r="24" stroke="#5fb0e8" style="--a:68"/><circle class="s" cx="29" cy="29" r="24" stroke="#e0703c" style="--a:42;stroke-dashoffset:-68"/><circle class="s" cx="29" cy="29" r="24" stroke="#8a5cf0" style="--a:26;stroke-dashoffset:-110"/></svg>
+ D:()=>`<div class="bws bwD"><div class="bc"><div class="tb"><u></u><span>Сегодня</span><span>Неделя</span><span>Месяц</span></div><div class="sh"><svg class="dn" viewBox="0 0 58 58"><circle cx="29" cy="29" r="24" stroke="rgba(128,128,128,.2)"/><circle class="s" cx="29" cy="29" r="24" stroke="#5fb0e8" style="--a:68"/><circle class="s" cx="29" cy="29" r="24" stroke="#e0703c" style="--a:42;stroke-dashoffset:-68"/><circle class="s" cx="29" cy="29" r="24" stroke="#8a5cf0" style="--a:26;stroke-dashoffset:-110"/></svg>
   <div style="flex:1"><small style="opacity:.6;font-size:10.5px">Расходы</small><div class="sv"><b>1 420</b><b>8 640</b><b>14 860</b></div></div></div><div class="ch">${[[40,60,30],[25,35,70],[60,90,45],[30,50,80],[50,70,55],[20,40,95],[70,85,60]].map(h=>`<i style="--h:${h[0]}%;--h2:${h[1]}%;--h3:${h[2]}%"></i>`).join('')}</div><div class="cap">«статистика» или /report · сводка в 21:00</div></div></div>`
 };
 (function(){
