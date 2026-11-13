@@ -495,6 +495,15 @@ async function handleUpdate(upd, env) {
     return sendSt(env, box0, chat, sm, tab);
   }
   if (t === '/diag' && isOwner(env, uid)) { let L0 = []; try { L0 = JSON.parse((await kv(env).get('wdiag')) || '[]'); } catch {}   // v290: последние ошибки отправки карточек
+    // пробные отправки: что именно Telegram не принимает (успешные сразу удаляются)
+    const tryW = async (name, b) => { const r = await (await tg(env, 'sendWidget', { chat_id: chat, ...b })).json().catch(e => ({ description: 'сеть: ' + e.message }));
+      if (r && r.ok && r.result) { await tg(env, 'deleteMessage', { chat_id: chat, message_id: r.result.message_id }).catch(() => {}); return name + ': ✅ принят'; } return name + ': ❌ ' + ((r && r.description) || 'нет ответа'); };
+    const me = await (await tg(env, 'getMe', {})).json().catch(() => null), wh = await (await tg(env, 'getWebhookInfo', {})).json().catch(() => null);
+    const meS = me && me.result ? Object.entries(me.result).filter(([k]) => !/^(id|first_name|username)$/.test(k)).map(([k, v]) => k + '=' + JSON.stringify(v)).join(', ') : 'нет ответа';
+    const tests = [await tryW('простейший виджет', { html: '<!doctype html><html><body>test</body></html>' }),
+      await tryW('карточка без меню', { html: RC_HTML, public_data: RC_PUB, chat_data: rcData('q', null, '', { ph: 'тест' }) }),
+      await tryW('карточка с меню', { html: RC_HTML, public_data: RC_PUB, chat_data: rcData('q', null, '', { ph: 'тест' }), allow_queries: true })];
+    await reply('🔧 Проверка виджетов\n' + tests.join('\n') + '\n\ngetMe: ' + meS + '\nwebhook: ' + (wh && wh.result ? JSON.stringify(wh.result.allowed_updates || 'все') + (wh.result.last_error_message ? ' · ошибка: ' + wh.result.last_error_message : '') : '—'));
     return reply(L0.length ? L0.map(x => `${x.at.slice(5, 16).replace('T', ' ')} ${x.kind}/${x.lg}: ${x.err}\nhtml ${x.html} · pub ${x.pub} · data ${x.data}${x.cap ? ' · cap ' + x.cap : ''}`).join('\n\n') : 'Ошибок отправки карточек нет'); }
   if (t === '/stats') { if (!isOwner(env, uid)) return; await ensureCallbacks(env).catch(e => console.error('hook', e && e.message)); return sendAd(env, chat, false); }   // v276: карточкой   // только владельцу (OWNER_ID); остальным — молчание
   if (t === '/queue') { const qn = await store(env, uid).count(); return reply(L(lg, `В очереди на запись в приложение: ${qn}`, `Waiting to be saved in the app: ${qn}`, `Așteaptă înregistrarea în aplicație: ${qn}`)); }   // 0 = всё забрано приложением
