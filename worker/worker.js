@@ -494,6 +494,8 @@ async function handleUpdate(upd, env) {
     if (!sm) return reply(L(lg, '📊 Откройте приложение один раз — после этого здесь можно будет смотреть статистику.', '📊 Open the app once — after that you can view statistics here.', '📊 Deschideți aplicația o dată — după aceea statisticile pot fi văzute aici.'), open);
     return sendSt(env, box0, chat, sm, tab);
   }
+  if (t === '/diag' && isOwner(env, uid)) { let L0 = []; try { L0 = JSON.parse((await kv(env).get('wdiag')) || '[]'); } catch {}   // v290: последние ошибки отправки карточек
+    return reply(L0.length ? L0.map(x => `${x.at.slice(5, 16).replace('T', ' ')} ${x.kind}/${x.lg}: ${x.err}\nhtml ${x.html} · pub ${x.pub} · data ${x.data}${x.cap ? ' · cap ' + x.cap : ''}`).join('\n\n') : 'Ошибок отправки карточек нет'); }
   if (t === '/stats') { if (!isOwner(env, uid)) return; await ensureCallbacks(env).catch(e => console.error('hook', e && e.message)); return sendAd(env, chat, false); }   // v276: карточкой   // только владельцу (OWNER_ID); остальным — молчание
   if (t === '/queue') { const qn = await store(env, uid).count(); return reply(L(lg, `В очереди на запись в приложение: ${qn}`, `Waiting to be saved in the app: ${qn}`, `Așteaptă înregistrarea în aplicație: ${qn}`)); }   // 0 = всё забрано приложением
   if (t === '/start') return reply(L(lg, 'Привет! Я записываю ваши доходы и расходы.\n\n' +
@@ -642,12 +644,22 @@ function rcData(s, card, note, x, lg) {
 async function sendRcWidget(env, chat, shown, open, card, act, plain) {
   const lg = lgNow(chat), dg = !plain && !act && PV_DG.test(plxN(shown, lg)), wq = useWQ(env) && !dg, x = dg ? { ph: shown } : wq ? { a: waOf(act, []), ...(!card ? { ph: shown } : {}) } : null;   // v276: без предпросмотра — сама фраза в карточке
   if (wq && !hookOk) { hookOk = true; await ensureCallbacks(env).catch(() => {}); }   // widget_query должен доходить до бота
-  const r = await (await tg(env, 'sendWidget', { chat_id: chat, html: cardHtml(dg ? 'dg' : 'rc', lg), public_data: cardPub(dg, lg), chat_data: rcData('q', card, '', x, lg),
+  const body = g => ({ chat_id: chat, html: cardHtml(dg ? 'dg' : 'rc', g), public_data: cardPub(dg, g), chat_data: rcData('q', card, '', x, lg),
     ...(wq || (dg && useWQ(env)) ? {} : { caption: `${capOf(lg, 'q')}: «${shown}»`, show_caption_above_media: true }),
-    ...(wq || (dg && useWQ(env)) ? { allow_queries: true } : open) })).json().catch(() => null);   // v273: и у карточки долгов/целей — кнопки «Вернули всё», «Пополнить»
+    ...(wq || (dg && useWQ(env)) ? { allow_queries: true } : open) });   // v273: и у карточки долгов/целей — кнопки «Вернули всё», «Пополнить»
+  let b = body(lg), r = await (await tg(env, 'sendWidget', b)).json().catch(() => null);
   if (r && r.ok && r.result && r.result.message_id) return r.result.message_id;
-  console.error('widget', r && r.description); return null;
+  await wDiag(env, dg ? 'dg' : 'rc', lg, b, r);
+  if (lg !== 'ru') { b = body('ru'); r = await (await tg(env, 'sendWidget', b)).json().catch(() => null);   // v290: карточка на другом языке не прошла — та же в русском виде, потом уже текст
+    if (r && r.ok && r.result && r.result.message_id) return r.result.message_id; await wDiag(env, dg ? 'dg' : 'rc', 'ru*', b, r); }
+  return null;
 }
+// v290: почему Telegram не принял карточку — последние 10 ответов в KV на 7 дней (тип, язык, размеры, текст ошибки; без данных записей). Читать: /diag (владелец) или KV «wdiag»
+async function wDiag(env, kind, lg, b, r) { console.error('widget', kind, lg, r && r.description);
+  try { const k = kv(env); if (!k) return; const L0 = JSON.parse((await k.get('wdiag')) || '[]');
+    const u8 = v => v == null ? 0 : new TextEncoder().encode(typeof v === 'string' ? v : JSON.stringify(v)).length;
+    L0.unshift({ at: new Date().toISOString(), kind, lg, err: String((r && (r.description || r.error_code)) || (r ? 'not ok' : 'нет ответа')).slice(0, 300), html: u8(b.html), pub: u8(b.public_data), data: u8(b.chat_data), cap: u8(b.caption), q: !!b.allow_queries });
+    await k.put('wdiag', JSON.stringify(L0.slice(0, 10)), { expirationTtl: 7 * 86400 }); } catch (e) { console.error('wdiag', e && e.message); } }
 // HTML карточки (≤32 КБ, ≤4 КБ после zlib — сейчас ~2 КБ); цвета — из темы Telegram (--tg-theme-*), есть светлая/тёмная
 const RC_HTML = String.raw`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
 :root{--B:var(--tg-theme-button-color,#3390ec);--S:var(--tg-theme-secondary-bg-color,#f0f0f2);--H:var(--tg-theme-hint-color,#8a8a8e);--G:var(--tg-theme-bg-color,#fff);--T:var(--tg-theme-text-color,#000);--R:#e5484d;--E:#2fa65a}
@@ -1207,7 +1219,7 @@ function stData(sm, tab) {
 async function sendSt(env, box, chat, sm, tab) {
   const r = await (await tg(env, 'sendWidget', { chat_id: chat, html: cardHtml('st', lgNow(chat)), chat_data: stData(sm, tab), allow_queries: true })).json().catch(() => null);
   if (r && r.ok && r.result) { await box.rc.sumUp('mid', r.result.message_id); if (!hookOk) { hookOk = true; await ensureCallbacks(env).catch(() => {}); } return r.result.message_id; }
-  console.error('st widget', r && r.description);
+  await wDiag(env, 'st', lgNow(chat), { html: cardHtml('st', lgNow(chat)), chat_data: stData(sm, tab), allow_queries: true }, r);
   const s = sm.data, P = s.ds === locNow(s.tz).toISOString().slice(0, 10) ? s.d : null;   // запасной путь — текстом
   return tg(env, 'sendMessage', { chat_id: chat, text: `📊 ${L(lgNow(chat), 'Сегодня', 'Today', 'Azi')}: ${P ? num(P.e) : 0} ${s.cur}\n${s.m ? s.m.l : L(lgNow(chat), 'Месяц', 'Month', 'Lună')}: ${s.m ? num(s.m.e) : 0} ${s.cur}` });
 }
