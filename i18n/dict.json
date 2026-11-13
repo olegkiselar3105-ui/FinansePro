@@ -1249,5 +1249,6 @@
 "», «":{"en":"”, “","ro":"”, „"},
 "Язык · Language":{"en":"Language","ro":"Limba · Language"},
 "Русский":{"x":1},
-"{0}Обучение":{"en":"{0}Education","ro":"{0}Educație"}
+"{0}Обучение":{"en":"{0}Education","ro":"{0}Educație"},
+"Язык · Language · Limba":{"x":1}
 }

@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://finansepro.olegkiselar3105.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v288';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v289';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -2090,6 +2090,8 @@ html:root #ed #eam,html:root #ed label.ef,html:root #ed .ef.tgf,html:root #ed in
 #onb .ob-in em{font-style:normal;font-size:16px;color:var(--m2)}
 #onb .ob-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 #onb .ob-chips button{height:36px;padding:0 14px;border-radius:999px;font-size:14px;color:var(--t);background:rgba(var(--wr),.08)}
+#onb .ob-lg{justify-content:center;margin-top:4px}#onb .ob-lg button{transition:background .25s ease,color .25s ease,box-shadow .25s ease}#onb .ob-lg button.on{background:rgba(var(--wr),.16);box-shadow:inset 0 0 0 1.5px var(--g);font-weight:600}
+#onb.lgo{transition:opacity .25s ease;opacity:0}   /* v289: язык выбран — знакомство гаснет перед перезапуском */
 /* категории */
 #onb .ob-cats{display:flex;flex-wrap:wrap;gap:8px}
 #onb .ob-c{height:42px;padding:0 14px 0 10px;border-radius:999px;display:flex;align-items:center;gap:6px;font-size:14px;color:var(--t);transition:transform .3s cubic-bezier(.34,1.56,.64,1),opacity .2s ease,box-shadow .2s ease}
@@ -7892,8 +7894,11 @@ const WAL=`<svg class="ob-wal" viewBox="96 96 320 320" fill="none" stroke="curre
 const LKI=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9.5" rx="2.6"/><path class="sh" d="M8 11V8a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.6" r="1.3" fill="currentColor" stroke="none"/></svg>`;
 const SH=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6z"/><path class="ck2" pathLength="1" d="M8.5 12.2l2.4 2.4 4.6-4.8"/></svg>`;
 // шаги: h — заголовок, b() — содержимое, go — подпись кнопки, alt — вторая кнопка, w — приветствие (кнопка «Пропустить» — всё приветствие)
+// v289: выбор языка — на первом экране знакомства. Названия языков — каждое на своём языке. Смена — перезапуск страницы (как в настройках),
+// после него знакомство открывается снова с начала уже на новом языке (отметка finapp.onbre — и для «Настроить заново», где cfg.onb уже стоит)
+const LGS=()=>LH`<div class="ob-chips ob-lg" role="radiogroup" aria-label="Язык · Language · Limba">${[['ru',LT('Русский')],['en','English'],['ro','Română']].map(x=>`<button type="button" role="radio" aria-checked="${x[0]===LNG}" class="${x[0]===LNG?'on':''}" data-lg="${x[0]}" lang="${x[0]}">${x[1]}</button>`).join('')}</div>`;
 const STEPS=[
- {w:1,go:LT('Далее'),b:()=>LH`<div class="ob-v" style="position:relative"><div class="ob-glow"></div>${WAL}</div><h2>Деньги под&nbsp;контролем</h2><p class="ob-p">Записывайте доходы и расходы за секунду, видьте, куда уходят деньги, и копите на важное.</p>`},
+ {w:1,go:LT('Далее'),b:()=>LH`<div class="ob-v" style="position:relative"><div class="ob-glow"></div>${WAL}</div><h2>Деньги под&nbsp;контролем</h2><p class="ob-p">Записывайте доходы и расходы за секунду, видьте, куда уходят деньги, и копите на важное.</p>`+LGS()},
  {w:1,go:LT('Далее'),b:()=>LH`<div class="ob-v"><div class="ob-demo"><div class="ob-say ob-g"><span>кофе 300 кафе</span><s></s></div><div class="ob-rec ob-g"><i>☕</i><span><b>Кофе</b><small>Кафе и рестораны · сегодня</small></span><em>−300</em></div></div></div><h2>Пишите или говорите — как&nbsp;другу</h2><p class="ob-p">Заметка, сумма, категория — и запись готова. Так же можно писать боту в Telegram, текстом или голосом.</p>`},
  {w:1,go:LT('Настроить под себя'),b:()=>LH`<div class="ob-v">${window.BWS?BWS.Q():''}</div><h2>Бот в&nbsp;Telegram</h2><p class="ob-p">Напишите боту — карточка в чате сразу покажет запись. Поправить категорию, дату или убрать можно прямо там, а «статистика» покажет траты за день, неделю и месяц.</p>`},   // v276
  {k:'cur',go:LT('Далее'),b:()=>{const lock=hasData(),cur=st.cur,other=!TOP.includes(cur);
@@ -7955,6 +7960,8 @@ function build(){if(root)return;
   root.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'){e.preventDefault();e.target.blur();if(e.target.id==='obtx'&&st.txt&&st.txt.trim())next(false)}});
   root.addEventListener('change',e=>{if(e.target.id==='obcs'&&e.target.value){st.cur=e.target.value;applyCur();paint()}})}
 function onPick(e){if(Date.now()-swT<400)return;const b=e.target.closest('button');if(!b||b.disabled||!root.contains(b))return;
+  if(b.dataset.lg){vib();const l=b.dataset.lg;if(l===LNG)return;root.querySelectorAll('[data-lg]').forEach(x=>{const on=x===b;x.classList.toggle('on',on);x.setAttribute('aria-checked',on)});
+    try{sessionStorage.setItem('finapp.onbre','1')}catch(x){}root.classList.add('lgo');setTimeout(()=>setLang(l),260);return}
   if(b.dataset.cur){st.cur=b.dataset.cur;applyCur();vib();root.querySelectorAll('[data-cur]').forEach(x=>x.classList.toggle('on',x===b));const s=$q('#obcs');if(s)s.value='';const n=$q('.ob-note',stEl);if(n&&!hasData())n.remove()}
   else if(b.dataset.ms){vib();st.ms=b.dataset.ms==='1'?1:Math.max(2,st.msPay||10);if(st.ms>=2)st.msPay=st.ms;applyMs();root.querySelectorAll('[data-ms]').forEach(x=>x.classList.toggle('on',x===b));$q('.ob-day',stEl).classList.toggle('off',st.ms<2);$q('#obmd').textContent=LH`${(st.ms>=2?st.ms:(st.msPay||10))} число`}
   else if(b.dataset.md){vib();st.ms=Math.min(28,Math.max(2,(st.ms>=2?st.ms:10)+(+b.dataset.md)));st.msPay=st.ms;applyMs();$q('#obmd').textContent=LH`${st.ms} число`}
@@ -8024,15 +8031,15 @@ function show(){if(root&&root.classList.contains('on'))return;
   if(st.ms>=2)st.msPay=st.ms;
   build();i=0;paint();window.__onbOn=true;void root.offsetWidth;root.classList.add('on')}
 // первый запуск: ждём заставку, PIN-экран и первую сверку с облаком (в Telegram); облако так и не ответило — покажем в следующий раз
-function boot(){const t0=Date.now();
+function boot(){const t0=Date.now();let re=false;try{re=!!sessionStorage.getItem('finapp.onbre');sessionStorage.removeItem('finapp.onbre')}catch(e){}
   (function wait(){
-    let done=false;try{done=cfg.onb===1}catch(e){}
+    let done=false;try{done=cfg.onb===1&&!re}catch(e){}
     if(done){window.__onbWait=false;return}
     const lk=D.getElementById('lk'),tgWait=!!window.__TG&&typeof CL==='object'&&!CL.ready;
     let mo=false;try{mo=isModalOpen()}catch(e){}
     if(Date.now()-t0>30000&&tgWait){window.__onbWait=false;return}
     if(D.getElementById('spl')||tgWait||mo||(lk&&lk.classList.contains('on'))||D.hidden||D.readyState==='loading')return void setTimeout(wait,300);
-    try{if(cfg.onb===1){window.__onbWait=false;return}}catch(e){}
+    try{if(cfg.onb===1&&!re){window.__onbWait=false;return}}catch(e){}
     show()})()}
 window.AppOnb={show};
 if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',()=>setTimeout(boot,600));else setTimeout(boot,600);
