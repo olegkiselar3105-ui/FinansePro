@@ -24,7 +24,7 @@ function blocks() { const out = [], re = /<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)
 
 // названия объявлений верхнего уровня, внутри которых строки — данные разбора фраз, а не интерфейс
 const SKIP_TOP = new Set((process.env.I18N_SKIP || '').split(',').filter(Boolean).concat([
-  'CURS', 'NAMES_F', 'NAMES_M', 'NWD', 'NUMW', 'NUMW2', 'ORDW', 'MI', 'WDI', 'CAT_AL', 'XI_H', 'xiDate', 'TRANSLIT', 'nomName', 'nomW', 'isFem', 'catStem', 'numWords', 'wordNums', 'xiParse', 'xiN', 'norm', 'saveCmd', 'lkMigrate', 'lkGoalEdit', 'lkDebtEdit', 'detect']));
+  'PL_MO', 'PL_WD', 'PL_R', 'PL_C', 'plxBack', 'CURS', 'NAMES_F', 'NAMES_M', 'NWD', 'NUMW', 'NUMW2', 'ORDW', 'MI', 'WDI', 'CAT_AL', 'XI_H', 'xiDate', 'TRANSLIT', 'nomName', 'nomW', 'isFem', 'catStem', 'numWords', 'wordNums', 'xiParse', 'xiN', 'norm', 'saveCmd', 'lkMigrate', 'lkGoalEdit', 'lkDebtEdit', 'detect']));
 const SKIP_M = new Set(['includes', 'indexOf', 'lastIndexOf', 'startsWith', 'endsWith', 'split', 'match', 'matchAll', 'test', 'search', 'getItem', 'setItem', 'removeItem', 'has', 'get', 'delete',
   'querySelector', 'querySelectorAll', 'getElementById', 'closest', 'matches', 'localeCompare', 'normalize', 'error', 'warn', 'log', 'debug', 'exec']);
 

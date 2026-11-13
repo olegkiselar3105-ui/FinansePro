@@ -10,7 +10,7 @@ globalThis.fetch = async (u, o) => { const m = String(u).split('/').pop(), b = J
   if (failWidget && /Widget/.test(m)) return new Response(JSON.stringify({ ok: false, description: 'Bad Request: method not found' }));
   return new Response(JSON.stringify({ ok: true, result: { message_id: ++mid } })); };
 const src = new URL('../worker/worker.js', import.meta.url), tmp = path.join(os.tmpdir(), 'fp-rc-test-' + process.pid + '.mjs');
-fs.writeFileSync(tmp, fs.readFileSync(src, 'utf8') + '\nexport const _t = { finishReceipts, rcData, RC_HTML, RC_DG, RC_PUB, RC_ST, store, cmdFinish, profClean, staleRemind, sumClean, evening, lkH };\n');
+fs.writeFileSync(tmp, fs.readFileSync(src, 'utf8') + '\nexport const _t = { finishReceipts, rcData, RC_HTML, RC_DG, RC_PUB, RC_ST, store, cmdFinish, profClean, staleRemind, sumClean, evening, lkH, cardHtml, cardPub, CARD_TR, plxN, lgSet, dgPreview };\n');
 const W = await import(tmp); fs.unlinkSync(tmp);
 const env = { DB, BOT_TOKEN: 'x', WEBHOOK_SECRET: 's', APP_URL: 'https://a.example/' };
 const ctx = { ps: [], waitUntil(p) { this.ps.push(p.catch(() => {})); } };
@@ -282,3 +282,25 @@ sent = []; await W.default.fetch(new Request('https://w/webhook', { method: 'POS
 m8 = await pv8('кофе 30'); assert(m8.o[0][4] === 'Кафе и рестораны', 'выбрал категорию в боте → «кофе 30» сразу «Кафе и рестораны»');
 m8 = await pv8('Кофе 40'); assert(m8.o[0][4] === 'Кафе и рестораны', 'регистр не важен');
 assert(W._t.lkH('кофе') === W._t.lkH('Кофе ') && W._t.lkH('ёлка') === W._t.lkH('елка'), 'отпечаток: регистр, пробелы, ё');
+// ---------- v288: языки ----------
+for (const kind of ['rc', 'dg', 'st']) { const base = W._t.cardHtml(kind, 'ru');
+  assert(W._t.CARD_TR[kind].every(t => base.includes(t[0])), `карточка ${kind}: все русские подписи из таблицы есть в HTML`);
+  for (const lg of ['en', 'ro']) { const h = W._t.cardHtml(kind, lg), zz = zlib.deflateSync(Buffer.from(h), { level: 9 }).length;
+    assert(zz <= 4096 && !/[а-яё]{2,}/i.test(h.replace(/\/\/[^\n]*/g, '')), `карточка ${kind}/${lg}: zlib ${zz} Б, русских подписей не осталось`); } }
+for (const lg of ['en', 'ro']) for (const dg of [false, true]) { const pd = W._t.cardPub(dg, lg);
+  assert(Buffer.byteLength(pd) <= 1024 && JSON.parse(pd).t.length === JSON.parse(W._t.cardPub(dg, 'ru')).t.length && !/[а-яё]/i.test(pd), `public_data ${dg ? 'долг/цель' : 'запись'}/${lg}: ${Buffer.byteLength(pd)} Б`); }
+const msgL = async (uid, text, lc) => W.default.fetch(new Request('https://w/webhook', { method: 'POST', headers: { 'X-Telegram-Bot-Api-Secret-Token': 's' },
+  body: JSON.stringify({ message: { message_id: Math.random() * 1e6 | 0, date: Math.floor(Date.now() / 1000), from: { id: uid, language_code: lc }, chat: { id: uid, type: 'private' }, text } }) }), env, ctx).then(() => Promise.all(ctx.ps.splice(0)));
+delete env.WQ; sent = []; await msgL(9031, '/start', 'en');
+assert(sent.some(x => x.m === 'sendMessage' && /^Hi! I record/.test(x.text) && x.reply_markup.inline_keyboard[0][0].text === 'Open finances'), 'новый человек с английским Telegram: /start по-английски');
+sent = []; await msgL(9031, 'coffee 300 cafe', 'en'); let swe = sent.find(x => x.m === 'sendWidget');
+assert(swe && swe.html.includes('"Save"') && !swe.html.includes('"Записать"') && JSON.parse(swe.public_data).t[0] === 'Wait a couple of seconds', 'карточка записи — английские подписи');
+sent = []; await msgL(9031, 'lent Peter 300 until the 20th', 'en'); swe = sent.find(x => x.m === 'sendWidget');
+assert(swe && swe.html.includes('"Lent"') && JSON.parse(swe.chat_data).g && JSON.parse(swe.chat_data).g[0].w === 'Peter', 'английская фраза о долге — карточка долга, имя Peter');
+sent = []; await msgL(9032, '/help', 'ro'); assert(sent.some(x => /^Ce puteți scrie/.test(x.text || '')), 'румынский Telegram: /help по-румынски');
+sent = []; await msgL(9032, 'obiectiv vacanță 50000', 'ro'); swe = sent.find(x => x.m === 'sendWidget');
+assert(swe && swe.html.includes('"Obiectiv nou"') && JSON.parse(swe.chat_data).g[0].w === 'Vacanță', 'румынская фраза о цели — карточка цели');
+sent = []; await msgL(9033, '/start', 'ru'); assert(sent.some(x => /^Привет!/.test(x.text || '')), 'русский Telegram: по-русски, как раньше');
+W._t.lgSet(9033, 'en'); sent = []; await msgL(9033, '/queue', 'ru'); assert(sent.some(x => /^Waiting to be saved/.test(x.text || '')), 'язык, выбранный в приложении, важнее языка Telegram');
+assert(/одолжил peter 300 до 20 числа/.test(W._t.plxN('Lent Peter 300 until the 20th', 'en')) && /вернул → elena 100/.test(W._t.plxN('am returnat Elenei 100', 'ro')) && W._t.plxN('кофе 300 кафе', 'ru').trim() === 'кофе 300 кафе', 'правила фраз в боте: английский, румынский, русский без изменений');
+

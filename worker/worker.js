@@ -46,8 +46,10 @@ export default {
         const raw = await req.text(), box = store(env, uid);
         if (!box.rc || !box.rc.setProf) return cors(json({ ok: false }));
         let b = null; try { b = JSON.parse(raw); } catch {}
-        if (!b || typeof b !== 'object' || raw.length > 20000) return cors(json({ error: 'bad' }, 400));
-        await box.rc.setProf(b.off ? null : JSON.stringify(profClean(b)));
+        if (!b || typeof b !== 'object' || raw.length > 40000) return cors(json({ error: 'bad' }, 400));
+        // v288: язык приложения хранится и при выключенной записи «сразу» (тогда — только он, без словаря)
+        await box.rc.setProf(b.off ? (/^(ru|en|ro)$/.test(b.lg) ? JSON.stringify({ lg: b.lg }) : null) : JSON.stringify(profClean(b)));
+        if (/^(ru|en|ro)$/.test(b.lg)) lgSet(uid, b.lg);
         return cors(json({ ok: true }));
       }
       if (url.pathname === '/api/sum' && req.method === 'POST') {   // v275: итоги для карточки статистики; {off:1} — удалить
@@ -73,6 +75,7 @@ export default {
         const drop = Array.isArray(body.drop) ? body.drop.map(String).slice(0, 200) : [];   // v167: удалены в приложении, не записаны   // v167: записи на проверке в приложении — квитанцию не удаляем, «✅ Записано» придёт вторым ack
         const cards = {};                                                                  // v265: данные карточки-квитанции {id: {o, b, n}}; старое приложение не шлёт — карточка покажет notes
         if (body.cards && typeof body.cards === 'object') for (const k of Object.keys(body.cards).slice(0, 200)) cards[String(k)] = body.cards[k];
+        await lgLoad(env, uid);
         const box = store(env, uid), out = await box.ack(ids);
         // v267: приложение применило команды из кнопок: cmds — какие именно (sid, op, at), cres — итог по записи: ok / del / gone
         const cmdsDone = Array.isArray(body.cmds) ? body.cmds.filter(c => c && c.sid).slice(0, 100) : [];
@@ -250,6 +253,197 @@ async function verifyInitData(initData, token) {
 
 const tg = (env, method, body) => fetch(`https://api.telegram.org/bot${env.BOT_TOKEN}/${method}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 
+
+// ---------- v288: язык ответов бота — русский, английский, румынский ----------
+// Язык человека: тот, что выбран в приложении (приложение присылает его вместе со словарём категорий, поле lg в D1 prof; хранится и при выключенной
+// записи «сразу»). Словаря ещё нет: кто писал боту до LANG_DAY — русский, как было; новый человек — по языку его Telegram (language_code).
+// Тексты — на месте: L(lg, 'рус', 'en', 'ro'). В глубине кода язык берётся по id чата (личный чат = id человека): lgNow(chat) — из памяти экземпляра,
+// её наполняет lgLoad в начале каждого запроса. Карточки: HTML закрепляется за сообщением при отправке, подписи в нём подменяются по таблицам CARD_TR.
+const LANG_DAY = '2026-11-13';
+const LG = new Map();
+const lgNow = id => (LG.get(String(id)) || {}).lg || 'ru';
+const L = (lg, ru, en, ro) => lg === 'en' ? en : lg === 'ro' ? ro : ru;
+const lgCode = c => { c = String(c || '').toLowerCase().slice(0, 2); return !c || /^(ru|uk|be|kk|uz|ky|tg|az|hy|ka)$/.test(c) ? 'ru' : c === 'ro' || c === 'mo' ? 'ro' : 'en'; };
+const lgSet = (uid, lg) => { if (LG.size > 5000) LG.clear(); LG.set(String(uid), { lg, at: Date.now() }); return lg; };
+async function lgLoad(env, uid, from) {
+  const c = LG.get(String(uid)); if (c && Date.now() - c.at < 600000) return c.lg;
+  let lg = '';
+  try { const box = store(env, uid), P = box.rc && box.rc.prof ? await box.rc.prof() : null;
+    if (P) lg = /^(en|ro)$/.test(P.lg) ? P.lg : 'ru';
+    else if (env.DB && env.STATS_SALT) { await stInit(env); const u = await env.DB.prepare('SELECT first FROM usr WHERE h = ?').bind(await uhash(env, uid)).first(); if (u && u.first && u.first < LANG_DAY) lg = 'ru'; }
+    else if (!box.rc) lg = 'ru';
+  } catch (e) { console.error('lg', e && e.message); }
+  return lgSet(uid, lg || (from ? lgCode(from.language_code) : 'ru'));
+}
+const NLOC = lg => L(lg, 'ru-RU', 'en-US', 'ro-RO');
+const HELP_L = { en: `What you can write or say to the bot:
+
+💸 Expenses and income
+Order: note → amount → category (the word right after the amount).
+“coffee 300 cafe”, “taxi 120 transport”, “salary 15000 salary”
+You can skip the category: “coffee 300” — the app will use the one you chose for this note.
+Date and currency: “coffee 5 euro cafe yesterday”
+
+🤝 Debts
+“lent Ivan 500 until the 20th” — you are owed
+“borrowed 1000 from Maria” — you owe
+“Ivan repaid 200” — you were repaid
+“repaid Maria 300” — you repaid
+
+🎯 Goals
+“goal vacation 50000 by december” — new goal
+“to goal vacation 2000” — deposit
+“withdraw 500 from goal vacation” — withdraw
+
+📏 Limit and budget
+“limit food 3000”, “limit on cafe 1500”
+“budget 20000”, “budget for november 25000”
+
+💱 Rate: “rate euro 19.5”
+
+📊 Statistics: /report (month), /today (today), /week (week) — or “stats”. Every evening at 21:00 — a daily summary (turn it off in the card itself)
+
+Records appear in the app when it is open. /queue — how many are waiting.`,
+  ro: `Ce puteți scrie sau spune botului:
+
+💸 Cheltuieli și venituri
+Ordinea: notă → sumă → categorie (cuvântul imediat după sumă).
+„cafea 300 cafenea”, „taxi 120 transport”, „salariu 15000 salariu”
+Categoria poate lipsi: „cafea 300” — aplicația o pune pe cea aleasă de dvs. pentru această notă.
+Data și valuta: „cafea 5 euro cafenea ieri”
+
+🤝 Datorii
+„am împrumutat lui Ion 500 până pe 20” — vi se datorează
+„am luat cu împrumut 1000 de la Maria” — datorați dvs.
+„Ion a returnat 200” — vi s-a returnat
+„am returnat lui Maria 300” — ați returnat dvs.
+
+🎯 Obiective
+„obiectiv vacanță 50000 până în decembrie” — obiectiv nou
+„la obiectiv vacanță 2000” — depunere
+„am retras 500 din obiectivul vacanță” — retragere
+
+📏 Limită și buget
+„limită alimente 3000”, „limită pentru cafenea 1500”
+„buget 20000”, „buget pentru noiembrie 25000”
+
+💱 Curs: „curs euro 19.5”
+
+📊 Statistici: /report (lună), /today (azi), /week (săptămână) — sau „statistică”. În fiecare seară la 21:00 — rezumatul zilei (se dezactivează chiar din fișă)
+
+Înregistrările apar în aplicație când aceasta este deschisă. /queue — câte așteaptă.` };
+const CAP_L = { en: { q: '⏳ In queue', h: '📝 Received', ok: '✅ Saved', drop: '🗑 Not saved', bad: '⚠ The app did not understand' },
+  ro: { q: '⏳ În așteptare', h: '📝 Primit', ok: '✅ Înregistrat', drop: '🗑 Neînregistrat', bad: '⚠ Aplicația nu a înțeles' } };
+const TX_L = { en: { drop: { hn: 'Not added to your records.' }, bad: { hn: 'Write, for example:\n• “coffee 300 cafe”\n• “Ivan owes me 500”' } },
+  ro: { drop: { hn: 'Nu a intrat în evidență.' }, bad: { hn: 'Scrieți, de exemplu:\n• „cafea 300 cafenea”\n• „Ion îmi datorează 500”' } } };
+// подписи карточки основной записи, долга/цели и статистики: [как в HTML, en, ro] — подменяются в HTML перед отправкой (в кавычках, как стоят в коде карточки)
+const CARD_TR = {
+  rc: [['"Записать"', '"Save"', '"Salvează"'], ['"Не отменять"', '"Keep"', '"Păstrează"'], ['"Категория"', '"Category"', '"Categorie"'], ['"Дата"', '"Date"', '"Data"'], ['"Убрать"', '"Remove"', '"Elimină"'],
+    ['"Отменить"', '"Undo"', '"Anulează"'], ['"Да, не записывать"', '"Yes, remove"', '"Da, elimină"'], ['"Да, отменить"', '"Yes, undo"', '"Da, anulează"'], ['"Нет"', '"No"', '"Nu"'],
+    ['"Пн Вт Ср Чт Пт Сб Вс"', '"Mo Tu We Th Fr Sa Su"', '"Lu Ma Mi Jo Vi Sâ Du"']],
+  dg: [['"Вернули всё"', '"Repaid in full"', '"S-a returnat tot"'], ['"Вернул всё"', '"I repaid all"', '"Am returnat tot"'], ['"Дали в долг"', '"Lent"', '"Dat cu împrumut"'], ['"Взяли в долг"', '"Borrowed"', '"Luat cu împrumut"'],
+    ['"Добавлено к долгу"', '"Added to debt"', '"Adăugat la datorie"'], ['"Вам вернули"', '"Repaid to you"', '"Vi s-a returnat"'], ['"Вы вернули"', '"You repaid"', '"Ați returnat"'], ['"Цель "', '"Goal "', '"Obiectiv "'],
+    ['"Новая цель"', '"New goal"', '"Obiectiv nou"'], ['"В копилку"', '"Deposit"', '"Depunere"'], ['"Из цели"', '"Withdrawal"', '"Retragere"'], ['" из "', '" of "', '" din "']],
+  st: [['Статистика"', 'Statistics"', 'Statistici"'], ['"обновлено "', '"updated "', '"actualizat "'], ['"Сегодня"', '"Today"', '"Azi"'], ['"Неделя"', '"Week"', '"Săpt."'], ['"Месяц"', '"Month"', '"Lună"'],
+    ['"Откройте приложение — здесь появятся цифры"', '"Open the app — numbers will appear here"', '"Deschideți aplicația — aici vor apărea cifrele"'], ['"Расходы"', '"Expenses"', '"Cheltuieli"'], ['" доход"', '" income"', '" venit"'],
+    ['"запись"', '"rec."', '"înreg."'], ['"записи"', '"rec."', '"înreg."'], ['"записей"', '"rec."', '"înreg."'], ['"Записей нет"', '"No records"', '"Fără înregistrări"'],
+    ['"Вс Пн Вт Ср Чт Пт Сб"', '"Su Mo Tu We Th Fr Sa"', '"Du Lu Ma Mi Jo Vi Sâ"'], ['"Бюджет"', '"Budget"', '"Buget"'], ['" из "', '" of "', '" din "'], ['"перерасход "', '"over by "', '"depășit cu "'],
+    ['"осталось "', '"left "', '"rămas "'], ['Сводка в 21:00', 'Summary at 21:00', 'Rezumat la 21:00'], ['"вкл"', '"on"', '"da"'], ['"выкл"', '"off"', '"nu"']] };
+const _hc = {};
+function cardHtml(kind, lg) { const base = kind === 'dg' ? RC_DG : kind === 'st' ? RC_ST : RC_HTML; if (lg !== 'en' && lg !== 'ro') return base;
+  const k = kind + lg; if (_hc[k]) return _hc[k]; let h = base; const i = lg === 'en' ? 1 : 2;
+  for (const t of CARD_TR[kind]) h = h.split(t[0]).join(t[i]);
+  return _hc[k] = h; }
+// тексты в public_data карточек — в том же порядке, что в RC_PUB.t и RC_DGPUB.t
+const PUB_L = { en: ['Wait a couple of seconds', 'It did not work, try again', 'Will apply when the app opens', 'Update Telegram'], ro: ['Așteptați câteva secunde', 'Nu a reușit, încercați din nou', 'Se aplică la deschiderea aplicației', 'Actualizați Telegram'] };
+const DGPUB_L = { en: ['✓ Sent — the new record is below', 'Wait a couple of seconds', 'It did not work, try again', 'Other amount', 'Type the amount ↓', '＋ Top up', 'Debt fully closed', 'Goal reached', 'waiting for the app', 'You are owed', 'You owe', 'left', 'closed', 'Repaid ', 'total ', 'Saved ', 'Left '],
+  ro: ['✓ Trimis — înregistrarea nouă e mai jos', 'Așteptați câteva secunde', 'Nu a reușit, încercați din nou', 'Altă sumă', 'Scrieți suma ↓', '＋ Alimentează', 'Datorie închisă complet', 'Obiectiv atins', 'așteaptă aplicația', 'Vi se datorează', 'Datorați', 'rămas', 'închisă', 'Returnat ', 'total ', 'Economisit ', 'Rămas '] };
+const _pc = {};
+function cardPub(dg, lg) { const base = dg ? RC_DGPUB : RC_PUB; if (lg !== 'en' && lg !== 'ro') return base; const k = (dg ? 'd' : 'r') + lg; if (_pc[k]) return _pc[k];
+  const o = JSON.parse(base); o.t = (dg ? DGPUB_L : PUB_L)[lg]; return _pc[k] = JSON.stringify(o); }
+const capOf = (lg, s) => ((CAP_L[lg] || RC_CAP)[s]) || RC_CAP[s];
+// фразы на английском и румынском: те же правила, что в приложении (index.html, plx и plxCmd) — копия, её обновляет tools/plxsync.py
+/*PLX-BEGIN*/
+const roA=s=>String(s).replace(/[ăâ]/g,'a').replace(/î/g,'i').replace(/[șş]/g,'s').replace(/[țţ]/g,'t');   // румынские буквы без значков: «locuință» = «locuinta»
+const PL_MO={jan:'янв',ian:'янв',feb:'фев',mar:'мар',apr:'апр',may:'мая',mai:'мая',jun:'июн',iun:'июн',jul:'июл',iul:'июл',aug:'авг',sep:'сен',oct:'окт',nov:'ноя',noi:'ноя',dec:'дек'};
+const PL_MOS='january|february|march|april|june|july|august|september|october|november|december|ianuarie|februarie|martie|aprilie|iunie|iulie|septembrie|octombrie|noiembrie|decembrie|sept|jan|ian|feb|mar|apr|may|mai|jun|iun|jul|iul|aug|sep|oct|nov|noi|dec';
+const PL_WD={monday:'понедельник',tuesday:'вторник',wednesday:'среду',thursday:'четверг',friday:'пятницу',saturday:'субботу',sunday:'воскресенье',
+  luni:'понедельник',marti:'вторник',miercuri:'среду',joi:'четверг',vineri:'пятницу',sambata:'субботу',duminica:'воскресенье'};
+const PL_B='(^|[\\s,;.(])',PL_E='(?=[\\s,;.!?)]|$)';
+const mkPLR=ro=>{const R=(s,f)=>[new RegExp(s,'g'),f],mo=w=>PL_MO[roA(w).slice(0,3)],one=n=>!n||/^(?:a|an|one|o|un|una)$/.test(n)?1:+n;
+  return [
+  // числа: «1,500» и «15,000.50» — тысячи через запятую (для всех языков); «1.500» и «15.000,50» — только при румынском интерфейсе
+  R('(?<![\\d.,])(\\d{1,3})((?:,\\d{3})+)(?:\\.(\\d{1,2}))?(?![\\d,])',(m,a,g,d)=>a+g.replace(/,/g,'')+(d?'.'+d:'')),
+  ...(ro?[R('(?<![\\d.,])(\\d{1,3})((?:\\.\\d{3})+)(?:,(\\d{1,2}))?(?![\\d.])',(m,a,g,d)=>a+g.replace(/\./g,'')+(d?'.'+d:''))]:[]),
+  R(PL_B+'(?:o\\s+mie|one\\s+thousand|a\\s+thousand)'+PL_E,'$11 тыс'),
+  R('(\\d)\\s*(?:thousand|thou|mii)'+PL_E,'$1 тыс'),
+  // даты: «5 nov», «5th of november 2025», «nov 5», «5 noiembrie»
+  R(PL_B+'(\\d{1,2})(?:st|nd|rd|th)?\\s+(?:of\\s+)?('+PL_MOS+')\\.?(?:\\s+(20\\d\\d))?'+PL_E,(m,a,d,w,y)=>a+d+' '+mo(w)+(y?' '+y:'')),
+  R(PL_B+'(january|february|march|april|may|june|july|august|september|october|november|december|sept|jan|feb|mar|apr|jun|jul|aug|sep|oct|nov|dec)\\.?\\s+(\\d{1,2})(?:st|nd|rd|th)?(?:,?\\s+(20\\d\\d))?'+PL_E,(m,a,w,d,y)=>a+d+' '+mo(w)+(y?' '+y:'')),
+  R(PL_B+'(?:the\\s+)?day\\s+before\\s+yesterday'+PL_E,'$1позавчера'),R(PL_B+'alalt[aă]ieri'+PL_E,'$1позавчера'),
+  R(PL_B+'(?:yesterday|ieri)'+PL_E,'$1вчера'),R(PL_B+'(?:today|azi|ast[aă]zi)'+PL_E,'$1сегодня'),
+  R(PL_B+'(?:(\\d+|a|an|one)\\s+)?(day|week)s?\\s+ago'+PL_E,(m,a,n,u)=>a+one(n)+(u==='week'?' недель':' дней')+' назад'),
+  R(PL_B+'acum\\s+(\\d+|o|un|una)\\s+(zi|zile|s[aă]pt[aă]m[aâ]n[aăi])'+PL_E,(m,a,n,u)=>a+one(n)+(/^s/.test(u)?' недель':' дней')+' назад'),
+  R(PL_B+'(?:(?:on|last)\\s+)*(monday|tuesday|wednesday|thursday|friday|saturday|sunday)'+PL_E,(m,a,w)=>a+PL_WD[w]),
+  R('(?<![\\p{L}\\d])(?:(?:de|pe)\\s+)?(mar[tțţ]i|miercuri|joi|vineri|s[aâ]mb[aă]t[aă]|duminic[aă]|(?<!\\d\\s)luni)(?:\\s+trecut[aă])?'+PL_E,(m,w)=>PL_WD[roA(w)]||m).map((x,i)=>i?x:new RegExp(x.source,'gu')),   // «3 luni» — три месяца, не понедельник
+  R('(^|[\\s,;])(?:category|categorie|categoria)(?=\\s*[:—-]?\\s*\\S)','$1категория'),
+  R(PL_B+'(?:(?:with\\s+)?tags?|tagged|(?:cu\\s+)?etichet[aă])\\s+(?=[\\p{L}#])','$1тег ').map((x,i)=>i?x:new RegExp(x.source,'gu'))]};
+const PL_C=(()=>{const L='[a-zăâîșşțţ]',W='(?!(?:i|me|my|we|to|from|the|a|an|for|on|in|of|and|then|also|by|until|till|before|eu|mie|lui|de|la|pe|din|cu|si|și|şi|apoi|am|un|o|[iî]mi|[iî]i|mi|p[aâ]n[aă]|peste)(?=\\s))'+L+'+(?:-'+L+'+)*',N='('+W+'(?:\\s+'+W+')?)',
+    A='(\\d+(?:[.,]\\d+)?(?:\\s*(?:k|тыс))?)',B=PL_B,E=PL_E,mo=w=>PL_MO[roA(w).slice(0,3)],one=n=>!n||/^(?:a|an|one|o|un|una)$/.test(n)?1:+n,
+    nom=n=>n.split(/\s+/).map(w=>w.length>3?w.replace(/iei$/,'ia').replace(/ei$/,'a'):w).join(' '),   // «Mariei» → «Maria», «Elenei» → «Elena»
+    U=u=>/^(?:w|s)/.test(u)?' недель':/^(?:m|l)/.test(u)?' месяцев':' дней',R=(s,f)=>[new RegExp(B+s,'g'),f],
+    RV='(?:repaid|returned|paid\\s+(?:me\\s+)?back|gave\\s+back)',RO_L='(?:dat\\s+(?:cu\\s+)?[iî]mprumut|[iî]mprumutat)',RO_R='(?:returnat|restituit|dat\\s+[iî]napoi|[iî]ntors)';
+  return [
+  // --- долги, английский ---
+  R(N+'\\s+lent\\s+me\\s+(?=\\d)',(m,b,n)=>b+n+' одолжил мне '),
+  R('(?:i\\s+)?(?:lent|loaned)\\s+'+A+'\\s+to\\s+'+N+E,(m,b,a,n)=>b+'одолжил '+n+' '+a),
+  R('(?:i\\s+)?(?:lent|loaned)\\s+(?:to\\s+)?'+N+'\\s+(?=\\d)',(m,b,n)=>b+'одолжил '+n+' '),
+  R('(?:i\\s+)?borrowed\\s+'+A+'\\s+from\\s+'+N+E,(m,b,a,n)=>b+'занял у '+n+' '+a),
+  R('(?:i\\s+)?borrowed\\s+from\\s+'+N+'\\s+(?=\\d)',(m,b,n)=>b+'занял у '+n+' '),
+  R(N+'\\s+borrowed\\s+(?:from\\s+me\\s+)?(?=\\d)',(m,b,n)=>b+n+' занял у меня '),
+  R('(?:i\\s+)?owe\\s+'+N+'\\s+(?=\\d)',(m,b,n)=>b+'я должен '+n+' '),
+  R(N+'\\s+owes\\s+(?:me\\s+)?(?=\\d)',(m,b,n)=>b+n+' должен мне '),
+  R(N+'\\s+'+RV+'\\s+(?:me\\s+)?(?=\\d)',(m,b,n)=>b+n+' вернул мне '),
+  R('(?:i\\s+)?(?:repaid|returned|paid\\s+back)\\s+'+A+'\\s+to\\s+'+N+E,(m,b,a,n)=>b+'вернул → '+n+' '+a),
+  R('(?:i\\s+)?(?:repaid|returned|paid\\s+back)\\s+(?:to\\s+)?'+N+'\\s+(?=\\d)',(m,b,n)=>b+'вернул → '+n+' '),
+  // --- долги, румынский ---
+  R(N+'\\s+mi-a\\s+'+RO_L+'\\s+(?=\\d)',(m,b,n)=>b+n+' одолжил мне '),
+  R('(?:am\\s+)?(?:[iî]mprumutat|luat(?:\\s+cu\\s+[iî]mprumut)?)\\s+de\\s+la\\s+'+N+'\\s+(?=\\d)',(m,b,n)=>b+'занял у '+n+' '),
+  R('(?:am\\s+)?(?:[iî]mprumutat|luat(?:\\s+cu\\s+[iî]mprumut)?)\\s+'+A+'\\s+de\\s+la\\s+'+N+E,(m,b,a,n)=>b+'занял у '+n+' '+a),
+  R('(?:(?:i|le)-am\\s+|am\\s+)?'+RO_L+'\\s+'+A+'\\s+(?:lui\\s+)?'+N+E,(m,b,a,n)=>b+'одолжил '+nom(n)+' '+a),
+  R('(?:(?:i|le)-am\\s+|am\\s+)?'+RO_L+'\\s+(?:lui\\s+)?'+N+'\\s+(?=\\d)',(m,b,n)=>b+'одолжил '+nom(n)+' '),
+  R('(?:[iî]i\\s+)?datorez\\s+(?:lui\\s+)?'+N+'\\s+(?=\\d)',(m,b,n)=>b+'я должен '+nom(n)+' '),
+  R(N+'\\s+(?:[iî]mi\\s+)?datoreaz[aă]\\s+(?=\\d)',(m,b,n)=>b+n+' должен мне '),
+  R(N+'\\s+(?:mi-)?a\\s+'+RO_R+'\\s+(?=\\d)',(m,b,n)=>b+n+' вернул мне '),
+  R('(?:i-)?am\\s+'+RO_R+'\\s+'+A+'\\s+(?:lui\\s+)?'+N+E,(m,b,a,n)=>b+'вернул → '+nom(n)+' '+a),
+  R('(?:i-)?am\\s+'+RO_R+'\\s+(?:lui\\s+)?'+N+'\\s+(?=\\d)',(m,b,n)=>b+'вернул → '+nom(n)+' '),
+  // --- срок ---
+  R('(?:until|till|by|before|p[aâ]n[aă]\\s+(?:pe|la|[iî]n))\\s+(?:the\\s+)?(?=\\d{1,2}\\s+[а-я]|\\d{1,2}[./]\\d)',(m,b)=>b+'до '),
+  R('(?:until|till|by|before)\\s+(?:the\\s+)?(\\d{1,2})(?:st|nd|rd|th)?'+E,(m,b,d)=>b+'до '+d+' числа'),
+  R('p[aâ]n[aă]\\s+(?:pe|la|[iî]n)\\s+(\\d{1,2})'+E,(m,b,d)=>b+'до '+d+' числа'),
+  R('(?:(?:until|till|by)\\s+(?:the\\s+end\\s+of\\s+)?|p[aâ]n[aă]\\s+(?:la\\s+sf[aâ]r[sșş]itul\\s+lui\\s+|[iî]n\\s+|la\\s+))('+PL_MOS+')'+E,(m,b,w)=>b+'до '+mo(w)),
+  R('in\\s+(?:(\\d+|a|an|one)\\s+)?(day|week|month)s?'+E,(m,b,n,u)=>b+'через '+one(n)+U(u)),
+  R('peste\\s+(?:(\\d+|o|un|una)\\s+)?(zi|zile|s[aă]pt[aă]m[aâ]n[aăi]|lun[aăi])'+E,(m,b,n,u)=>b+'через '+one(n)+U(u)),
+  // --- цели ---
+  R('(?:add(?:ed)?|put|deposit(?:ed)?|top\\s*up|topped\\s+up|saved)\\s+'+A+'\\s+(?:to|into|in|for)\\s+(?:the\\s+)?(?:goal\\s+)?'+N+E,(m,b,a,n)=>b+'в цель '+n+' '+a),
+  R('(?:am\\s+)?(?:depus|pus|ad[aă]ugat)\\s+'+A+'\\s+(?:la|[iî]n|pentru)\\s+(?:obiectiv(?:ul)?\\s+)?'+N+E,(m,b,a,n)=>b+'в цель '+n+' '+a),
+  R('(?:(?:to|into)\\s+(?:the\\s+)?goal|top\\s*up(?:\\s+goal)?|(?:la|[iî]n)\\s+obiectiv(?:ul)?|alimenteaz[aă](?:\\s+obiectiv(?:ul)?)?)\\s+(?='+W+'(?:\\s+'+W+')?\\s+\\d)',(m,b)=>b+'в цель '),
+  R('(?:withdraw|withdrew|took|take)\\s+'+A+'\\s+from\\s+(?:the\\s+)?(?:goal\\s+)?'+N+E,(m,b,a,n)=>b+'снял из цели '+n+' '+a),
+  R('(?:am\\s+)?(?:retras|scos|luat)\\s+'+A+'\\s+din\\s+(?:obiectiv(?:ul)?\\s+)?'+N+E,(m,b,a,n)=>b+'снял из цели '+n+' '+a),
+  R('(?:(?:new\\s+)?goal|sav(?:e|ing)\\s+(?:up\\s+)?for|obiectiv\\s+nou|(?:un\\s+)?obiectiv(?:ul)?)\\s+(?=[^\\d,;.]+?\\s+\\d)',(m,b)=>b+'цель '),
+  // --- бюджет, лимит, курс, начало месяца ---
+  R('(?:(?:set|my|new)\\s+)*budget\\s+(?:for\\s+|in\\s+)?('+PL_MOS+')\\s*(?:to\\s+|=|:)?\\s*(?=\\d)',(m,b,w)=>b+'бюджет на '+mo(w)+' '),
+  R('buget(?:ul)?\\s+(?:pentru\\s+|pe\\s+|[iî]n\\s+|la\\s+)?('+PL_MOS+')\\s*(?:=|:)?\\s*(?=\\d)',(m,b,w)=>b+'бюджет на '+mo(w)+' '),
+  R('(?:(?:(?:set|my|new)\\s+)*budget\\s+(?:for\\s+)?(?:this|the\\s+current)\\s+month|buget(?:ul)?\\s+(?:pentru\\s+|pe\\s+)?(?:luna\\s+aceasta|aceast[aă]\\s+lun[aă]))\\s*(?:to\\s+|=|:)?\\s*(?=\\d)',(m,b)=>b+'бюджет на этот месяц '),
+  R('(?:(?:(?:set|my|new)\\s+)*budget\\s*(?:per\\s+month\\s*|monthly\\s*|for\\s+the\\s+month\\s*)?(?:to\\s+|of\\s+)?|buget(?:ul)?\\s*(?:lunar\\s*|pe\\s+lun[aă]\\s*)?(?:de\\s+)?)(?:=|:)?\\s*(?=\\d)',(m,b)=>b+'бюджет '),
+  R('(?:(?:set\\s+)?limit\\s+(?:of\\s+)?'+A+'\\s+(?:for|on)|limit[aă]\\s+(?:de\\s+)?'+A+'\\s+(?:pentru|la|pe))\\s+(?='+L+')',(m,b,a,a2)=>b+'лимит '+(a||a2)+' на '),
+  R('(?:(?:set\\s+)?limit\\s+(?:for\\s+|on\\s+)?|limit[aă]\\s+(?:pentru\\s+|la\\s+|pe\\s+)?)(?='+L+'+(?:\\s+'+L+'+)?\\s*(?:=|:)?\\s*\\d)',(m,b)=>b+'лимит '),
+  R('(?:(?:exchange\\s+)?rate\\s+(?:of\\s+|for\\s+)?|curs(?:ul)?\\s+(?:pentru\\s+)?)(?=(?:1\\s*)?[a-z€$£]+\\s*(?:=|:)?\\s*\\d)',(m,b)=>b+'курс '),
+  R('(?:month\\s+starts?\\s+(?:on\\s+|from\\s+)?(?:the\\s+)?|luna\\s+[iî]ncepe\\s+(?:pe|din|de\\s+la|la)\\s+)(\\d{1,2})(?:st|nd|rd|th)?'+E,(m,b,d)=>b+'месяц начинается с '+d)]})();
+const PL_R0=mkPLR(false),PL_R1=mkPLR(true);
+function plxN(s,lg){s=' '+String(s||'').toLowerCase().replace(/ё/g,'е').replace(/\s+/g,' ')+' ';if(!/[a-z\d]/.test(s))return s;for(const[re,f]of(lg==='ro'?PL_R1:PL_R0))s=s.replace(re,f);for(const[re,f]of PL_C)s=s.replace(re,f);return s}
+/*PLX-END*/
+
 const HELP = `Что можно написать или сказать боту:
 
 💸 Траты и доходы
@@ -284,51 +478,57 @@ async function handleUpdate(upd, env) {
   if (upd.widget_query) return onWidgetQuery(upd.widget_query, env);   // v270: нажатия в меню карточки
   const msg = upd.message; if (!msg || !msg.from || msg.chat.type !== 'private') return;
   const uid = msg.from.id, chat = msg.chat.id, reply = (text, extra) => tg(env, 'sendMessage', { chat_id: chat, text, ...extra });
-  const t = (msg.text || '').trim();
+  const t = (msg.text || '').trim(), lg = await lgLoad(env, uid, msg.from);
 
-  if (t === '/id') return reply(`Ваш Telegram id: ${uid}`);                 // чтобы владелец мог добавить жену в ALLOWED_IDS
-  if (!allowed(env, uid)) return reply('Доступ закрыт. Попросите владельца добавить ваш id (команда /id).');
-  const open = env.APP_URL ? { reply_markup: { inline_keyboard: [[{ text: 'Открыть финансы', web_app: { url: env.APP_URL } }]] } } : {};
+  if (t === '/id') return reply(L(lg, `Ваш Telegram id: ${uid}`, `Your Telegram id: ${uid}`, `ID-ul dvs. Telegram: ${uid}`));                 // чтобы владелец мог добавить жену в ALLOWED_IDS
+  if (!allowed(env, uid)) return reply(L(lg, 'Доступ закрыт. Попросите владельца добавить ваш id (команда /id).', 'Access is closed. Ask the owner to add your id (command /id).', 'Accesul este închis. Rugați proprietarul să adauge id-ul dvs. (comanda /id).'));
+  const open = env.APP_URL ? { reply_markup: { inline_keyboard: [[{ text: L(lg, 'Открыть финансы', 'Open finances', 'Deschide finanțele'), web_app: { url: env.APP_URL } }]] } } : {};
   const priv = env.APP_URL ? new URL('privacy.html', env.APP_URL).href : '';
-  if (t === '/privacy') return reply(priv ? `🔒 Политика конфиденциальности: ${priv}` : 'Политика конфиденциальности пока не опубликована.');
-  if (t === '/help' || t === '/помощь') return reply(HELP + (priv ? `\n\n🔒 Политика конфиденциальности: /privacy` : ''));
+  if (t === '/privacy') return reply(priv ? L(lg, `🔒 Политика конфиденциальности: ${priv}`, `🔒 Privacy policy: ${priv}#en`, `🔒 Politica de confidențialitate: ${priv}#ro`) : L(lg, 'Политика конфиденциальности пока не опубликована.', 'The privacy policy is not published yet.', 'Politica de confidențialitate nu este încă publicată.'));
+  if (t === '/help' || t === '/помощь') return reply((HELP_L[lg] || HELP) + (priv ? L(lg, `\n\n🔒 Политика конфиденциальности: /privacy`, `\n\n🔒 Privacy policy: /privacy`, `\n\n🔒 Politica de confidențialitate: /privacy`) : ''));
   // v275: карточка статистики (из итогов, что прислало приложение)
-  if (/^\/(report|today|month|week)(@\w+)?$/i.test(t) || /^(статистика|отч[её]т|итоги|сводка|stats?|статс)$/i.test(t)) {
+  if (/^\/(report|today|month|week)(@\w+)?$/i.test(t) || /^(статистика|отч[её]т|итоги|сводка|stats?|статс|statistics|statistic[aă]|statistici|raport|rezumat|summary)$/i.test(t)) {
     const box0 = store(env, uid), tab = /today/i.test(t) ? 0 : /week/i.test(t) ? 1 : 2;
-    if (!box0.rc || !box0.rc.sumGet) return reply('Статистика недоступна.');
+    if (!box0.rc || !box0.rc.sumGet) return reply(L(lg, 'Статистика недоступна.', 'Statistics are unavailable.', 'Statisticile nu sunt disponibile.'));
     const sm = await box0.rc.sumGet();
-    if (!sm) return reply('📊 Откройте приложение один раз — после этого здесь можно будет смотреть статистику.', open);
+    if (!sm) return reply(L(lg, '📊 Откройте приложение один раз — после этого здесь можно будет смотреть статистику.', '📊 Open the app once — after that you can view statistics here.', '📊 Deschideți aplicația o dată — după aceea statisticile pot fi văzute aici.'), open);
     return sendSt(env, box0, chat, sm, tab);
   }
   if (t === '/stats') { if (!isOwner(env, uid)) return; await ensureCallbacks(env).catch(e => console.error('hook', e && e.message)); return sendAd(env, chat, false); }   // v276: карточкой   // только владельцу (OWNER_ID); остальным — молчание
-  if (t === '/queue') return reply(`В очереди на запись в приложение: ${await store(env, uid).count()}`);   // 0 = всё забрано приложением
-  if (t === '/start') return reply('Привет! Я записываю ваши доходы и расходы.\n\n' +
+  if (t === '/queue') { const qn = await store(env, uid).count(); return reply(L(lg, `В очереди на запись в приложение: ${qn}`, `Waiting to be saved in the app: ${qn}`, `Așteaptă înregistrarea în aplicație: ${qn}`)); }   // 0 = всё забрано приложением
+  if (t === '/start') return reply(L(lg, 'Привет! Я записываю ваши доходы и расходы.\n\n' +
     '✍️ Пишите или говорите: заметка, сумма, категория — «кофе 300 кафе», «такси 120 транспорт».\nЕщё: «одолжил Ивану 500», «цель отпуск 50000», «лимит еда 3000».\n' +
     '📲 Записи появляются в приложении, когда вы его открываете — кнопка ниже.\n' +
-    '❓ Примеры — /help' + (priv ? `\n🔒 Политика конфиденциальности: ${priv}` : ''), open);
+    '❓ Примеры — /help' + (priv ? `\n🔒 Политика конфиденциальности: ${priv}` : ''),
+    'Hi! I record your income and expenses.\n\n✍️ Write or say: note, amount, category — “coffee 300 cafe”, “taxi 120 transport”.\nAlso: “lent Ivan 500”, “goal vacation 50000”, “limit food 3000”.\n' +
+    '📲 Records appear in the app when you open it — the button below.\n❓ Examples — /help' + (priv ? `\n🔒 Privacy policy: ${priv}#en` : ''),
+    'Salut! Înregistrez veniturile și cheltuielile dvs.\n\n✍️ Scrieți sau spuneți: notă, sumă, categorie — „cafea 300 cafenea”, „taxi 120 transport”.\nDe asemenea: „am împrumutat lui Ion 500”, „obiectiv vacanță 50000”, „limită alimente 3000”.\n' +
+    '📲 Înregistrările apar în aplicație când o deschideți — butonul de mai jos.\n❓ Exemple — /help' + (priv ? `\n🔒 Politica de confidențialitate: ${priv}#ro` : '')), open);
 
-  if (!t && !msg.voice && !msg.audio) return reply('Я понимаю только текст и голосовые. Напишите, например: «кофе 300 кафе» — заметка, сумма, категория.');   // фото, стикеры и прочее — без списания лимита
+  if (!t && !msg.voice && !msg.audio) return reply(L(lg, 'Я понимаю только текст и голосовые. Напишите, например: «кофе 300 кафе» — заметка, сумма, категория.', 'I only understand text and voice messages. Write, for example: “coffee 300 cafe” — note, amount, category.', 'Înțeleg doar text și mesaje vocale. Scrieți, de exemplu: „cafea 300 cafenea” — notă, sumă, categorie.'));   // фото, стикеры и прочее — без списания лимита
   if (t.startsWith('/')) return;
   // защита квоты: у каждого человека не больше DAILY_LIMIT сообщений в сутки (по умолчанию 30); ответ о лимите лимит не тратит
   const day = new Date().toISOString().slice(0, 10), box = store(env, uid), lim = Number(env.DAILY_LIMIT || 30);
-  if (!(await box.inc(day, lim, !t && !!(msg.voice || msg.audio))).ok) return reply(`🌙 На сегодня всё — лимит ${lim} сообщений в день исчерпан.\n\n` +
+  if (!(await box.inc(day, lim, !t && !!(msg.voice || msg.audio))).ok) return reply(L(lg, `🌙 На сегодня всё — лимит ${lim} сообщений в день исчерпан.\n\n` +
     'Записывать можно и дальше, прямо в приложении: нажмите «＋» в правом верхнем углу и напишите запись в строку ввода — так же, как боту.\n\n' +
-    'Завтра бот снова будет принимать сообщения ✨', open);
+    'Завтра бот снова будет принимать сообщения ✨',
+    `🌙 That's all for today — the limit of ${lim} messages a day is used up.\n\nYou can keep recording right in the app: tap “＋” in the top right corner and type the record in the input line — the same way as to the bot.\n\nTomorrow the bot will accept messages again ✨`,
+    `🌙 Atât pentru azi — limita de ${lim} mesaje pe zi a fost atinsă.\n\nPuteți înregistra în continuare direct în aplicație: apăsați „＋” în colțul din dreapta sus și scrieți înregistrarea în linia de introducere — la fel ca botului.\n\nMâine botul va primi din nou mesaje ✨`), open);
 
   let text = t;
   // v273: ответ на вопрос бота «Сколько вернули / отложить?» — сумма подставляется в готовую фразу
   const rq = msg.reply_to_message && box.rc && box.rc.askGet ? await box.rc.askGet(msg.reply_to_message.message_id) : null;
-  if (rq) { const n = /(\d[\d\s]*(?:[.,]\d{1,2})?)/.exec(t || ''); if (!n) return reply('Нужна сумма цифрами, например: 200');
+  if (rq) { const n = /(\d[\d\s]*(?:[.,]\d{1,2})?)/.exec(t || ''); if (!n) return reply(L(lg, 'Нужна сумма цифрами, например: 200', 'An amount in digits is needed, for example: 200', 'Este nevoie de o sumă în cifre, de exemplu: 200'));
     text = rq.tpl.replace('{n}', n[1].replace(/\s/g, '').replace(',', '.')); await box.rc.askDel(msg.reply_to_message.message_id); }
   if (!text && (msg.voice || msg.audio)) {
     const f = msg.voice || msg.audio;
-    if ((f.duration || 0) > 120) return reply('Голосовое длиннее 2 минут — скажите короче.');
-    text = await transcribe(f.file_id, env);
-    if (!text) return reply('Не смог разобрать голос. Попробуйте ещё раз или напишите текстом.');
+    if ((f.duration || 0) > 120) return reply(L(lg, 'Голосовое длиннее 2 минут — скажите короче.', 'The voice message is longer than 2 minutes — make it shorter.', 'Mesajul vocal depășește 2 minute — spuneți mai scurt.'));
+    text = await transcribe(f.file_id, env, lg);
+    if (!text) return reply(L(lg, 'Не смог разобрать голос. Попробуйте ещё раз или напишите текстом.', "Couldn't make out the voice message. Try again or type it.", 'Nu am înțeles mesajul vocal. Încercați din nou sau scrieți textul.'));
   }
   if (!text || text.startsWith('/')) return;
   // v274: «кофе 300 и такси 200» — каждая запись своей карточкой (части — по тем же разделителям, что и parse в приложении)
-  const parts = box.rc ? splitPhrase(text) : null;
+  const parts = box.rc ? splitPhrase(text, lg) : null;
   if (parts) { for (let k = 0; k < parts.length; k++) await queuePhrase(env, box, chat, parts[k], msg.date, msg.message_id + '-' + k, open, reply); return; }
   return queuePhrase(env, box, chat, text, msg.date, msg.message_id, open, reply);
 }
@@ -337,29 +537,30 @@ async function handleUpdate(upd, env) {
 async function queuePhrase(env, box, chat, text, ts, mid0, open, reply) {
   const id = `${Date.now()}-${mid0}`;
   await box.add(id, text.slice(0, 500), ts);              // сначала кладём в очередь (приложение получает мгновенно), потом отвечаем в чат
-  const shown = text.slice(0, 200);
-  if (!box.rc) return reply(`📥 В очереди: «${shown}»\nПоявится в приложении, когда оно откроется.`, open);
+  const shown = text.slice(0, 200), lg = lgNow(chat), nt = plxN(text, lg), later = L(lg, 'Появится в приложении, когда оно откроется.', 'It will appear in the app when it opens.', 'Va apărea în aplicație când aceasta se deschide.');   // nt — фраза с русскими словами-командами (только для предпросмотра)
+  if (!box.rc) return reply(`📥 ${L(lg, 'В очереди', 'In queue', 'În așteptare')}: «${shown}»\n${later}`, open);
   // Бот не может сам записать в облако Telegram — это делает только открытое приложение. Поэтому: сначала «в очереди», а когда приложение
   // заберёт запись (api/ack), это же сообщение сменится на «Записано».
   // v265: квитанция-карточка (виджет Bot API 10.4); не отправилась (старый API, ошибка, WIDGETS=0) — текст, как раньше
   // v269: предпросмотр — сумма и категория сразу, кнопки до открытия приложения (нужен словарь категорий от приложения)
-  let pv = null, pf = null; try { pf = box.rc.prof && await box.rc.prof(); pv = pf && preview(pf, text, ts); } catch (e) { console.error('preview', e && e.message); }
-  const dgp = !pv ? dgPreview(text, pf && pf.cur) : null;   // v274: долг/цель — оформленная карточка сразу (имя, сумма, событие)
+  let pv = null, pf = null; try { pf = box.rc.prof && await box.rc.prof(); pv = pf && preview(pf, nt, ts, lg); } catch (e) { console.error('preview', e && e.message); }
+  const dgp = !pv ? dgPreview(nt, pf && pf.cur, lg) : null;   // v274: долг/цель — оформленная карточка сразу (имя, сумма, событие)
   const kb = pv ? kbFor(env, pv.act, pv.cw ? kbCat(pv.act, true) : null) : open.reply_markup;
   let mid = useW(env) ? await sendRcWidget(env, chat, shown, kb ? { reply_markup: kb } : {}, pv ? pv.card : dgp ? { o: [], g: [dgp] } : null, pv && pv.act) : null;
-  if (!mid) { const sent = await (await reply(`⏳ В очереди: «${shown}»\n` + (pv ? pvText(pv) + '\n' : '') + 'Появится в приложении, когда оно откроется.', kb ? { reply_markup: kb } : {})).json().catch(() => null);
+  if (!mid) { const sent = await (await reply(`${capOf(lg, 'q')}: «${shown}»\n` + (pv ? pvText(pv) + '\n' : '') + later, kb ? { reply_markup: kb } : {})).json().catch(() => null);
     mid = sent && sent.result && sent.result.message_id; }
   if (pv && mid) { if (!hookOk) { hookOk = true; await ensureCallbacks(env).catch(() => {}); } }
   if (mid) {
     await box.rc.add(id, chat, mid, shown);
     if (pv) await box.rc.setAct(id, JSON.stringify(pv.act));
-    else if (dgp || (useW(env) && PV_DG.test(' ' + shown.toLowerCase().replace(/ё/g, 'е')))) await box.rc.setAct(id, JSON.stringify({ st: 'dgq', ...(dgp ? { g: [dgp] } : {}) }));   // v275: отправлена карточкой долга/цели
+    else if (dgp || (useW(env) && PV_DG.test(plxN(shown, lg)))) await box.rc.setAct(id, JSON.stringify({ st: 'dgq', ...(dgp ? { g: [dgp] } : {}) }));   // v275: отправлена карточкой долга/цели
     if (!(await box.has(id))) await finishReceipts(env, box, [id], []);   // приложение успело забрать запись, пока мы отвечали
   }
 }
 
 async function finishReceipts(env, box, ids, bad, notes = {}, hold = [], drop = [], cards = {}) {
   if (!box.rc || !ids.length) return;
+  const lgq = r => lgNow(r.chat), rcT = (r, s) => `${capOf(lgq(r), s)}: «${r.text}»`;
   // v275: ушла карточкой долга/цели, а приложение записало обычную операцию — та карточка покажет лишь строку текста.
   // Шлём обычную карточку (с меню), старую удаляем; дальше всё — как обычно, по новому сообщению
   if (box.rc.dgq && useW(env)) { const dq = await box.rc.dgq(ids.map(String).filter(i => cards[i] && !(cards[i].g && cards[i].g.length) && cards[i].o && cards[i].o.length));
@@ -371,9 +572,9 @@ async function finishReceipts(env, box, ids, bad, notes = {}, hold = [], drop = 
   const badSet = new Set(bad.map(String)), holdSet = new Set(hold.map(String)), dropSet = new Set(drop.map(String));
   // v167: «на проверке» — сообщение меняется, квитанция остаётся (после подтверждения в приложении придёт второй ack → «✅ Записано»)
   const held = await box.rc.take(ids.map(String).filter(i => holdSet.has(i)), true);
-  await Promise.all(held.map(async r => { const act = actOf(cards[r.id]);   // v269: черновик можно поправить из чата (категория, дата, «не записывать»)
+  await Promise.all(held.map(async r => { const act = actOf(cards[r.id]); if (act) act.lg = lgq(r);   // v269: черновик можно поправить из чата (категория, дата, «не записывать»)
     await box.rc.setAct(r.id, act ? JSON.stringify({ ...act, st: 'h' }) : null);
-    return rcEdit(env, r, 'h', `📝 Получено: «${r.text}»` + (notes[r.id] ? `\n\n${notes[r.id]}` : ''), notes[r.id], cards[r.id], act ? kbFor(env, { ...act, st: 'h' }, act.w ? kbCat(act, true) : null) : null, null, act ? { ...act, st: 'h' } : null); }));
+    return rcEdit(env, r, 'h', rcT(r, 'h') + (notes[r.id] ? `\n\n${notes[r.id]}` : ''), notes[r.id], cards[r.id], act ? kbFor(env, { ...act, st: 'h' }, act.w ? kbCat(act, true) : null) : null, null, act ? { ...act, st: 'h' } : null); }));
   // v267: «✅ Записано» у записи «сразу» (card.a) — квитанция остаётся с кнопками; остальные — удаляются, как раньше
   const okA = i => !dropSet.has(i) && !badSet.has(i) && cards[i] && cards[i].a && box.rc.setAct;
   const kept = await box.rc.take(ids.map(String).filter(i => !holdSet.has(i) && okA(i)), true);
@@ -382,11 +583,11 @@ async function finishReceipts(env, box, ids, bad, notes = {}, hold = [], drop = 
   const dgA = i => !okA(i) && !dropSet.has(i) && !badSet.has(i) && useWQ(env) && box.rc.setAct && cards[i] && Array.isArray(cards[i].g) && cards[i].g.some(x => x && !x.c && x.n);
   const keptDg = await box.rc.take(ids.map(String).filter(i => !holdSet.has(i) && dgA(i)), true);
   await Promise.all(keptDg.map(async r => { const g = JSON.parse(rcData('ok', { o: [], g: cards[r.id].g })).g || [];
-    await box.rc.setAct(r.id, JSON.stringify({ st: 'dg', g })); return rcEdit(env, r, 'ok', `✅ Записано: «${r.text}»` + (notes[r.id] ? `\n\n${notes[r.id]}` : ''), notes[r.id], cards[r.id]); }));
+    await box.rc.setAct(r.id, JSON.stringify({ st: 'dg', g })); return rcEdit(env, r, 'ok', rcT(r, 'ok') + (notes[r.id] ? `\n\n${notes[r.id]}` : ''), notes[r.id], cards[r.id]); }));
   const list = await box.rc.take(ids.map(String).filter(i => !holdSet.has(i) && !okA(i) && !dgA(i)));
-  await Promise.all(list.map(r => dropSet.has(r.id) ? rcEdit(env, r, 'drop', `🗑 Не записано: «${r.text}»\nВ учёт не попало.`)
-    : badSet.has(r.id) ? rcEdit(env, r, 'bad', `⚠ Приложение не поняло: «${r.text}»\n\nНапишите, например:\n• «кофе 300 кафе» (заметка, сумма, категория)\n• «бюджет 20000»\n• «Иван должен 500»`)
-    : rcEdit(env, r, 'ok', `✅ Записано: «${r.text}»` + (notes[r.id] ? `\n\n${notes[r.id]}` : ''), notes[r.id], cards[r.id])));   // v166: подробный ответ из приложения отдельным абзацем
+  await Promise.all(list.map(r => dropSet.has(r.id) ? rcEdit(env, r, 'drop', rcT(r, 'drop') + '\n' + ((TX_L[lgq(r)] || RC_TX).drop.hn))
+    : badSet.has(r.id) ? rcEdit(env, r, 'bad', rcT(r, 'bad') + '\n\n' + ((TX_L[lgq(r)] || RC_TX).bad.hn))
+    : rcEdit(env, r, 'ok', rcT(r, 'ok') + (notes[r.id] ? `\n\n${notes[r.id]}` : ''), notes[r.id], cards[r.id])));   // v166: подробный ответ из приложения отдельным абзацем
 }
 
 // ---------- v265: квитанция-карточка (виджет, Bot API 10.4) ----------
@@ -415,8 +616,8 @@ const dgClean = x => { const o = { k: x.k === 'g' ? 'g' : 'd' };
 const PV_DG = /(^|\s)(долг|долж|одолж|занял|заняла|займ|верн|цел[ьиюя]|копи|накоп|отлож)/u;
 const str = (v, n) => String(v ?? '').slice(0, n);
 // данные карточки: s — статус; o — операции [доход?, сумма, эмодзи, цвет, категория, подпись, доля лимита, текст лимита]; b — бюджет [доля, заголовок, значение, остаток]; n — текст
-function rcData(s, card, note, x) {
-  const d = { s, ...(RC_TX[s] || {}) }, c = card && typeof card === 'object' ? card : null;
+function rcData(s, card, note, x, lg) {
+  const d = { s, ...((TX_L[lg] || RC_TX)[s] || {}) }, c = card && typeof card === 'object' ? card : null;
   if (x && x.a) d.a = x.a;
   if (c && Array.isArray(c.o) && c.o.length) d.o = c.o.slice(0, 4).filter(Array.isArray).map(p => [p[0] ? 1 : 0, str(p[1], 40), str(p[2], 16), /^#[0-9a-f]{6}$/i.test(p[3]) ? p[3] : '', str(p[4], 40), str(p[5], 80), Math.max(0, Math.min(9, Number(p[6]) || 0)), str(p[7], 80)]);
   if (c && Array.isArray(c.g)) d.g = c.g.slice(0, 2).filter(x => x && typeof x === 'object').map(dgClean);   // v272: долг/цель
@@ -439,10 +640,10 @@ function rcData(s, card, note, x) {
   return j;
 }
 async function sendRcWidget(env, chat, shown, open, card, act, plain) {
-  const dg = !plain && !act && PV_DG.test(' ' + String(shown).toLowerCase().replace(/ё/g, 'е')), wq = useWQ(env) && !dg, x = dg ? { ph: shown } : wq ? { a: waOf(act, []), ...(!card ? { ph: shown } : {}) } : null;   // v276: без предпросмотра — сама фраза в карточке
+  const lg = lgNow(chat), dg = !plain && !act && PV_DG.test(plxN(shown, lg)), wq = useWQ(env) && !dg, x = dg ? { ph: shown } : wq ? { a: waOf(act, []), ...(!card ? { ph: shown } : {}) } : null;   // v276: без предпросмотра — сама фраза в карточке
   if (wq && !hookOk) { hookOk = true; await ensureCallbacks(env).catch(() => {}); }   // widget_query должен доходить до бота
-  const r = await (await tg(env, 'sendWidget', { chat_id: chat, html: dg ? RC_DG : RC_HTML, public_data: dg ? RC_DGPUB : RC_PUB, chat_data: rcData('q', card, '', x),
-    ...(wq || (dg && useWQ(env)) ? {} : { caption: `${RC_CAP.q}: «${shown}»`, show_caption_above_media: true }),
+  const r = await (await tg(env, 'sendWidget', { chat_id: chat, html: cardHtml(dg ? 'dg' : 'rc', lg), public_data: cardPub(dg, lg), chat_data: rcData('q', card, '', x, lg),
+    ...(wq || (dg && useWQ(env)) ? {} : { caption: `${capOf(lg, 'q')}: «${shown}»`, show_caption_above_media: true }),
     ...(wq || (dg && useWQ(env)) ? { allow_queries: true } : open) })).json().catch(() => null);   // v273: и у карточки долгов/целей — кнопки «Вернули всё», «Пополнить»
   if (r && r.ok && r.result && r.result.message_id) return r.result.message_id;
   console.error('widget', r && r.description); return null;
@@ -665,8 +866,8 @@ async function rcEdit(env, r, s, text, note, card, kb, cap, act) {
   const mk = kb ? { reply_markup: kb } : {}, wq = useWQ(env);
   if (useW(env)) {
     const x = wq ? { a: act ? waOf(act, await rcPend(r)) : null } : null;
-    const w = await (await tg(env, 'editMessageWidgetData', { chat_id: r.chat, message_id: r.mid, chat_data: rcData(s, card, note, x) })).json().catch(() => null);
-    if (w && w.ok) return wq ? w : tg(env, 'editMessageCaption', { chat_id: r.chat, message_id: r.mid, caption: cap || `${RC_CAP[s]}: «${r.text}»`, show_caption_above_media: true, ...mk }).catch(() => {});   // v271: в режиме меню подписи нет — только карточка
+    const w = await (await tg(env, 'editMessageWidgetData', { chat_id: r.chat, message_id: r.mid, chat_data: rcData(s, card, note, x, lgNow(r.chat)) })).json().catch(() => null);
+    if (w && w.ok) return wq ? w : tg(env, 'editMessageCaption', { chat_id: r.chat, message_id: r.mid, caption: cap || `${capOf(lgNow(r.chat), s)}: «${r.text}»`, show_caption_above_media: true, ...mk }).catch(() => {});   // v271: в режиме меню подписи нет — только карточка
   }
   return tg(env, 'editMessageText', { chat_id: r.chat, message_id: r.mid, text, ...mk }).catch(() => {});   // квитанция-текст (не виджет)
 }
@@ -677,7 +878,8 @@ async function rcEdit(env, r, s, text, note, card, kb, cap, act) {
 const CAL_M = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
 const CAL_G = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
 const isD = d => /^\d{4}-\d\d-\d\d$/.test(String(d || ''));
-const dLbl = d => +d.slice(8) + ' ' + CAL_G[+d.slice(5, 7) - 1];
+const CAL_GL = { en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], ro: ['ian', 'feb', 'mar', 'apr', 'mai', 'iun', 'iul', 'aug', 'sept', 'oct', 'nov', 'dec'] };
+const dLbl = (d, lg) => +d.slice(8) + ' ' + (CAL_GL[lg] || CAL_G)[+d.slice(5, 7) - 1];
 const dAdd = (d, n) => new Date(Date.parse(d + 'T00:00:00Z') + n * 864e5).toISOString().slice(0, 10);
 const ymAdd = (ym, n) => { const [y, m] = ym.split('-').map(Number), t = new Date(Date.UTC(y, m - 1 + n, 1)); return t.toISOString().slice(0, 7); };
 const B = (text, d) => ({ text, callback_data: 'rc:' + d });
@@ -715,44 +917,46 @@ const actOf = card => { const a = card && card.a; if (!a || !Array.isArray(a.k) 
   const r = card.o && Array.isArray(card.o[0]) ? JSON.parse(rcData('ok', { o: [card.o[0]] })).o[0] : null;
   return { k, td: a.td, d: a.d, v: str(a.v, 20), ...(r ? { r } : {}), ...(Array.isArray(card.b) ? { b: JSON.parse(rcData('ok', { o: [], b: card.b })).b } : {}),
     n: str(a.n, 60), w: str(a.w, 30) }; };
-const dayLbl = (d, td) => (d === td ? 'сегодня, ' : d === dAdd(td, -1) ? 'вчера, ' : '') + dLbl(d);
+const dayLbl = (d, td, lg) => (d === td ? L(lg, 'сегодня, ', 'today, ', 'azi, ') : d === dAdd(td, -1) ? L(lg, 'вчера, ', 'yesterday, ', 'ieri, ') : '') + dLbl(d, lg);
 // карточка с учётом нажатий: выбранная категория и дата видны сразу, до открытия приложения
 const incOf = (act, pend) => { const t = (pend || []).find(p => p.op === 'type'); return t ? t.val === 'i' : !!(act.r && act.r[0]); };
 const cardOf = (act, pend) => { if (!act.r) return null; const r = act.r.slice(); let d = act.d, cat = false;
   for (const p of pend) { if (p.op === 'cat') { const c = act.k.find(x => x[0] === p.val); if (c) { r[2] = c[2] || r[2]; r[3] = c[4] || ''; r[4] = c[3] || c[1]; cat = true; } } if (p.op === 'date' && isD(p.val)) d = p.val; }
   const ty = pend.find(p => p.op === 'type');
   if (ty) { const inc = ty.val === 'i'; r[0] = inc ? 1 : 0; r[1] = (inc ? '+' : '−') + String(r[1]).replace(/^[+−-]\s*/, '');
-    if (!cat && !!act.r[0] !== inc) { r[2] = '❓'; r[3] = ''; r[4] = 'Категория?'; } }
-  r[5] = [act.n, dayLbl(d, act.td)].filter(Boolean).join(' · ');
+    if (!cat && !!act.r[0] !== inc) { r[2] = '❓'; r[3] = ''; r[4] = L(act.lg, 'Категория?', 'Category?', 'Categorie?'); } }
+  r[5] = [act.n, dayLbl(d, act.td, act.lg)].filter(Boolean).join(' · ');
   return { o: [r], ...(act.b ? { b: act.b } : {}) }; };
 const pendLine = (act, pend) => { const l = [];
-  for (const p of pend) { if (p.op === 'del') return isQ(act) ? '🗑 Не будет записано' : '⏳ Запись отменится, когда откроется приложение';
-    if (p.op === 'type') l.push(p.val === 'i' ? 'доход' : 'расход');
-    if (p.op === 'cat') { const c = (act.k || []).find(x => x[0] === p.val); l.push('категория — ' + (c ? c[1] : p.val)); }
-    if (p.op === 'date' && isD(p.val)) l.push('дата — ' + dLbl(p.val)); }
-  return l.length ? '⏳ Когда откроется приложение: ' + l.join(', ') : ''; };
+  const g = act.lg;
+  for (const p of pend) { if (p.op === 'del') return isQ(act) ? L(g, '🗑 Не будет записано', '🗑 Will not be saved', '🗑 Nu se va înregistra') : L(g, '⏳ Запись отменится, когда откроется приложение', '⏳ The record will be undone when the app opens', '⏳ Înregistrarea se anulează la deschiderea aplicației');
+    if (p.op === 'type') l.push(p.val === 'i' ? L(g, 'доход', 'income', 'venit') : L(g, 'расход', 'expense', 'cheltuială'));
+    if (p.op === 'cat') { const c = (act.k || []).find(x => x[0] === p.val); l.push(L(g, 'категория — ', 'category — ', 'categorie — ') + (c ? c[1] : p.val)); }
+    if (p.op === 'date' && isD(p.val)) l.push(L(g, 'дата — ', 'date — ', 'data — ') + dLbl(p.val, g)); }
+  return l.length ? L(g, '⏳ Когда откроется приложение: ', '⏳ When the app opens: ', '⏳ La deschiderea aplicației: ') + l.join(', ') : ''; };
 let hookOk = false;
 async function rcKeep(env, box, r, note, card) {   // «✅ Записано» + кнопки; act — в квитанцию
-  const act = actOf(card); if (!act) { await box.rc.drop(r.id); return rcEdit(env, r, 'ok', `✅ Записано: «${r.text}»` + (note ? `\n\n${note}` : ''), note, card); }
-  act.st = 'ok'; await box.rc.setAct(r.id, JSON.stringify(act));
+  const act = actOf(card), okT = `${capOf(lgNow(r.chat), 'ok')}: «${r.text}»`; if (!act) { await box.rc.drop(r.id); return rcEdit(env, r, 'ok', okT + (note ? `\n\n${note}` : ''), note, card); }
+  act.st = 'ok'; act.lg = lgNow(r.chat); await box.rc.setAct(r.id, JSON.stringify(act));
   if (!hookOk) { hookOk = true; await ensureCallbacks(env).catch(() => {}); }   // нажатия кнопок (callback_query) должны доходить до бота
-  return rcEdit(env, r, 'ok', `✅ Записано: «${r.text}»` + (note ? `\n\n${note}` : ''), note, card, KB_MAIN, null, act);
+  return rcEdit(env, r, 'ok', okT + (note ? `\n\n${note}` : ''), note, card, KB_MAIN, null, act);
 }
 async function cmdFinish(env, box, done, cres, cards) {
   if (!box.rc || !box.rc.cmdDone) return;
   await box.rc.cmdDone(done);
   for (const sid of Object.keys(cres).slice(0, 50)) {
     const r = await box.rc.get(sid); if (!r) continue;
-    const res = cres[sid], cap = s => ({ chat_id: r.chat, message_id: r.mid, caption: s, show_caption_above_media: true });
+    const res = cres[sid], cap = s => ({ chat_id: r.chat, message_id: r.mid, caption: s, show_caption_above_media: true }), g = lgNow(r.chat);
     if (res === 'ok') { if ((await box.rc.cmdsOf(sid)).length) continue; await rcKeep(env, box, r, '', cards[sid]); continue; }
     if (res === 'c') continue;   // v269: черновик записан или убран — квитанцию уже обновил ack «Записать» (bhFinish)
     if (res === 'h') { if ((await box.rc.cmdsOf(sid)).length) continue; const act = actOf(cards[sid]);   // черновик поправлен, но ещё не понятен — ждёт проверки
-      if (act) { act.st = 'h'; await box.rc.setAct(sid, JSON.stringify(act)); }
-      await rcEdit(env, r, 'h', `📝 Получено: «${r.text}»`, '', cards[sid], act ? kbFor(env, act) : null, null, act); continue; }   // ещё есть новые нажатия — карточку обновим после них
+      if (act) { act.st = 'h'; act.lg = g; await box.rc.setAct(sid, JSON.stringify(act)); }
+      await rcEdit(env, r, 'h', `${capOf(g, 'h')}: «${r.text}»`, '', cards[sid], act ? kbFor(env, act) : null, null, act); continue; }   // ещё есть новые нажатия — карточку обновим после них
     await box.rc.drop(sid);
-    const t = res === 'del' ? `↩ Отменено: «${r.text}»\nЗапись удалена из учёта.` : `✅ Записано: «${r.text}»\nℹ️ Запись уже изменили в приложении — кнопки отключены.`;
-    if (res === 'del') { await rcEdit(env, r, 'un', t, 'Запись удалена из учёта.', null, null, `↩ Отменено: «${r.text}»`); continue; }
-    if (useWQ(env)) { await tg(env, 'editMessageWidgetData', { chat_id: r.chat, message_id: r.mid, chat_data: rcData('gone', null, 'Запись уже изменили в приложении — здесь её больше не поправить.') }).catch(() => {}); continue; }
+    const undone = `↩ ${L(g, 'Отменено', 'Undone', 'Anulat')}: «${r.text}»`, gone = L(g, 'Запись удалена из учёта.', 'The record was removed.', 'Înregistrarea a fost eliminată.');
+    const t = res === 'del' ? `${undone}\n${gone}` : `${capOf(g, 'ok')}: «${r.text}»\nℹ️ ${L(g, 'Запись уже изменили в приложении — кнопки отключены.', 'The record was already changed in the app — the buttons are off.', 'Înregistrarea a fost deja modificată în aplicație — butoanele sunt dezactivate.')}`;
+    if (res === 'del') { await rcEdit(env, r, 'un', t, gone, null, null, undone); continue; }
+    if (useWQ(env)) { await tg(env, 'editMessageWidgetData', { chat_id: r.chat, message_id: r.mid, chat_data: rcData('gone', null, L(g, 'Запись уже изменили в приложении — здесь её больше не поправить.', 'The record was already changed in the app — it can no longer be edited here.', 'Înregistrarea a fost deja modificată în aplicație — aici nu mai poate fi corectată.')) }).catch(() => {}); continue; }
     const c = await (await tg(env, 'editMessageCaption', cap(t))).json().catch(() => null);   // карточка остаётся как есть, меняется подпись, кнопки убираются
     if (!(c && c.ok)) await tg(env, 'editMessageText', { chat_id: r.chat, message_id: r.mid, text: t }).catch(() => {});
   }
@@ -771,7 +975,7 @@ function profClean(b) {
   const d = (Array.isArray(b.d) ? b.d : []).slice(0, 600).filter(x => Array.isArray(x) && x[0] && x[1]).map(x => [str(x[0], 40), str(x[1], 40), Math.max(0, Math.min(3, Number(x[2]) || 0))]);
   // v281: память «заметка → категория» — хеш заметки (lkH) и id категории
   const l = (Array.isArray(b.l) ? b.l : []).slice(-400).filter(x => Array.isArray(x) && /^[0-9a-f]{8}$/.test(x[0]) && x[1]).map(x => [x[0], str(x[1], 40)]);
-  return { c, d, l, cur: str(b.cur, 8), tz: Math.max(-900, Math.min(900, Number(b.tz) || 0)), cx: str(b.cx, 3000), sk: str(b.sk, 3000), ir: (Array.isArray(b.ir) ? b.ir : []).slice(0, 2).map(x => str(x, 3000)) };
+  return { ...(/^(ru|en|ro)$/.test(b.lg) ? { lg: b.lg } : {}), c, d, l, cur: str(b.cur, 8), tz: Math.max(-900, Math.min(900, Number(b.tz) || 0)), cx: str(b.cx, 3000), sk: str(b.sk, 3000), ir: (Array.isArray(b.ir) ? b.ir : []).slice(0, 2).map(x => str(x, 3000)) };
 }
 // v281: отпечаток заметки — тот же, что lkH в приложении (FNV-1a 32 бит, 'fp:' + нижний регистр, ё → е, одиночные пробелы)
 const lkH = s => { s = 'fp:' + String(s || '').toLowerCase().replace(/ё/g, 'е').replace(/\s+/g, ' ').trim(); let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h.toString(16).padStart(8, '0'); };
@@ -787,8 +991,8 @@ function pvHit(P, ws) {   // как catByWords: полные названия �
     if (best) { const c = P.c.find(x => x[0] === best.id); if (c) return { c, n: best.n }; } }
   return null;
 }
-const fmtA = (a, cur) => new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 }).format(a) + ' ' + cur;
-function preview(P, text, ts) {
+const fmtA = (a, cur, lg) => new Intl.NumberFormat(NLOC(lg), { maximumFractionDigits: 2 }).format(a) + ' ' + cur;
+function preview(P, text, ts, lg) {
   if (!P || !Array.isArray(P.c) || !P.c.length) return null;
   let t = ' ' + String(text || '').toLowerCase().replace(/ё/g, 'е').replace(/\s+/g, ' ') + ' ';
   if (PV_APP.test(t) || PV_DATE.test(t)) return null;
@@ -812,21 +1016,21 @@ function preview(P, text, ts) {
   let n = rest.join(' '); n = n ? n[0].toUpperCase() + n.slice(1) : '';
   const kc = c => [c[0], (c[1] ? c[1] + ' ' : '') + c[2], c[1], c[2], c[4], c[3] ? 1 : 0];
   const k = [...P.c.filter(c => !!c[3] === inc).slice(0, 8), ...P.c.filter(c => !!c[3] !== inc).slice(0, 4)].map(kc);
-  const amt = (hit || cw || sign || iw ? (inc ? '+' : '−') : '') + fmtA(a, P.cur || '');
-  const r = hit ? [inc ? 1 : 0, amt, hit.c[1] || '•', hit.c[4], hit.c[2], '', 0, ''] : cw ? [0, amt, '❓', '', 'Категория?', '', 0, ''] : [inc ? 1 : 0, amt, '🔹', '', 'Категорию подберёт приложение', '', 0, ''];
-  const act = { k, td, d, v: 'q', st: 'q', r, n, w: cw };
+  const amt = (hit || cw || sign || iw ? (inc ? '+' : '−') : '') + fmtA(a, P.cur || '', lg);
+  const r = hit ? [inc ? 1 : 0, amt, hit.c[1] || '•', hit.c[4], hit.c[2], '', 0, ''] : cw ? [0, amt, '❓', '', L(lg, 'Категория?', 'Category?', 'Categorie?'), '', 0, ''] : [inc ? 1 : 0, amt, '🔹', '', L(lg, 'Категорию подберёт приложение', 'The app will pick the category', 'Aplicația va alege categoria'), '', 0, ''];
+  const act = { k, td, d, v: 'q', st: 'q', r, n, w: cw, ...(lg && lg !== 'ru' ? { lg } : {}) };
   return { act, card: cardOf(act, []), cw: !!cw, hit: !!hit };
 }
 // v274: деление фразы на записи — как t.split(...) в parse: части без цифр — к следующей (хвост без цифр parse отбрасывает), «вчера» первой части — и к остальным
-const SPLIT_RX = /[;\n]+|,(?!\d)|\.(?!\d)|(?:^|\s)(?:и|а также|потом|затем|плюс|ещ[её]|дальше|далее|следующ[а-яё]*)(?=\s)/iu;
-function splitPhrase(text) {
-  const t = String(text || '').trim(), low = ' ' + t.toLowerCase().replace(/ё/g, 'е') + ' ';
+const SPLIT_RX = /[;\n]+|,(?!\d)|\.(?!\d)|(?:^|\s)(?:и|а также|потом|затем|плюс|ещ[её]|дальше|далее|следующ[а-яё]*|and|then|also|plus|[sșş]i|apoi)(?=\s)/iu;
+function splitPhrase(text, lg) {
+  const t = String(text || '').trim(), low = plxN(t, lg);
   if (PV_APP.test(low) || PV_DG.test(low) || PV_DATE.test(low)) return null;   // команды и даты — целиком в приложение
   const out = []; let pend = '';
   for (const p of t.split(SPLIT_RX).map(x => (x || '').trim()).filter(Boolean)) { if (!/\d/.test(p)) { pend += (pend ? ' ' : '') + p; continue; } out.push((pend ? pend + ' ' : '') + p); pend = ''; }
   if (out.length < 2) return null;
-  const dw = /(^|\s)(позавчера|вчера)(?=\s|$)/i.exec(out[0]);
-  if (dw) for (let i = 1; i < out.length; i++) if (!/(позавчера|вчера|сегодня)/i.test(out[i])) out[i] += ' ' + dw[2].toLowerCase();
+  const dw = /(^|\s)(позавчера|вчера|the day before yesterday|yesterday|alalt[aă]ieri|ieri)(?=\s|$)/i.exec(out[0]);
+  if (dw) for (let i = 1; i < out.length; i++) if (!/(позавчера|вчера|сегодня|yesterday|today|ieri|azi)/i.test(out[i])) out[i] += ' ' + dw[2].toLowerCase();
   return out.slice(0, 6);
 }
 // v274: предпросмотр долга/цели по фразе (до открытия приложения) — грубо: сумма, имя/название, событие; итог — от приложения
@@ -836,13 +1040,13 @@ const nomW = w => { w = w.toLowerCase(); if (w.length < 4) return w;
   if (/[тнлсдр]и$/.test(w)) return w.slice(0, -1) + 'я';   // Пети → Петя, Оли → Оля
   if (/[бвгджзклмнпрстфхцчшщ][еи]$/.test(w)) return w.slice(0, -1) + 'а'; return w; };
 const DG_STOP = /^(одолжил[аи]?|дал[аи]?|взял[аи]?|занял[аи]?|верн\S*|в|во|у|с|долг\S*|взаймы|мне|нам|я|мы|ему|ей|им|должен|должна|должны|на|из|цел[ьиюяей]*|отлож\S*|копи\S*|накоп\S*|сегодня|вчера|позавчера|деньги|денег|тыс\S*|к)$/;
-function dgPreview(text, cur) {
-  const t0 = ' ' + String(text || '').toLowerCase().replace(/ё/g, 'е').replace(/\s+/g, ' ') + ' ';
+function dgPreview(text, cur, lg) {
+  const t0 = (' ' + String(text || '').toLowerCase().replace(/ё/g, 'е').replace(/\s+/g, ' ') + ' ').replace(/→/g, ' ');
   if (!PV_DG.test(t0)) return null;
   let t = t0.replace(/(^|[^\d.,])(\d{1,3}(?:\s\d{3})+)(?!\d)/g, (m, a, n) => a + n.replace(/\s/g, ''));
   const m = /(\d+(?:[.,]\d{1,2})?)\s*(тыс\S*|к(?=\s|$)|k(?=\s|$))?/u.exec(t); if (!m) return null;
   let a = parseFloat(m[1].replace(',', '.')); if (m[2]) a *= 1000; if (!(a > 0 && a <= 1e12)) return null;
-  const amt = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 }).format(a) + (cur ? ' ' + cur : '');
+  const amt = new Intl.NumberFormat(NLOC(lg), { maximumFractionDigits: 2 }).format(a) + (cur ? ' ' + cur : '');
   const head = t.replace(/\s(до|к)\s.*$/, ' ').replace(m[0], ' ');   // «до 20 декабря» — срок, не имя
   const ws = cwords(head).filter(w => !/\d/.test(w) && !DG_STOP.test(w));
   if (/(^|\s)(цел[ьиюя]|копи|накоп|отлож)/.test(t0)) {
@@ -859,43 +1063,45 @@ const pvText = pv => { const r = pv.card.o[0]; return `${r[1]} · ${r[2]} ${r[4]
 async function wPaint(env, id, act, pend) {
   const del = pend.some(p => p.op === 'del'), q = isQ(act), c = cardOf(act, pend) || { o: [] };
   const x = useWQ(env) ? { a: waOf(act, pend) } : null;
-  return tg(env, 'editMessageWidgetData', { ...id, chat_data: rcData(del ? 'un' : act.st === 'ok' ? 'ok' : act.st, c, del ? (q ? 'Не будет записано.' : 'Отменится, когда откроется приложение.') : '', x) });
+  return tg(env, 'editMessageWidgetData', { ...id, chat_data: rcData(del ? 'un' : act.st === 'ok' ? 'ok' : act.st, c, del ? (q ? L(act.lg, 'Не будет записано.', 'Will not be saved.', 'Nu se va înregistra.') : L(act.lg, 'Отменится, когда откроется приложение.', 'Will be undone when the app opens.', 'Se anulează la deschiderea aplicației.')) : '', x, act.lg) });
 }
 // одно действие из меню (кнопки Telegram или запрос виджета): c:<номер> — категория, d:<дата>, x — не записывать / отменить, u — вернуть
 async function rcDo(box, row, act, a, b) {
-  const q = isQ(act), later = q ? 'Запишется так, когда откроется приложение' : 'Изменится, когда откроется приложение';
+  const g = act.lg || lgNow(row.chat), q = isQ(act), later = q ? L(g, 'Запишется так, когда откроется приложение', 'Will be saved this way when the app opens', 'Se va înregistra așa la deschiderea aplicației') : L(g, 'Изменится, когда откроется приложение', 'Will change when the app opens', 'Se va modifica la deschiderea aplicației');
   const inc0 = !!(act.r && act.r[0]);
   if (a === 't' && (b === 'i' || b === 'e')) {   // v271: «−/+»: расход ↔ доход; категория другого типа сбрасывается
     if ((b === 'i') === inc0) await box.rc.unCmd(row.id, 'type'); else await box.rc.cmd(row.id, 'type', b, act.v);
     const pc = (await box.rc.cmdsOf(row.id)).find(p => p.op === 'cat'), c = pc && act.k.find(x => x[0] === pc.val);
     if (c && !!c[5] !== (b === 'i')) await box.rc.unCmd(row.id, 'cat');
-    return b === 'i' ? 'Доход' : 'Расход'; }
+    return b === 'i' ? L(g, 'Доход', 'Income', 'Venit') : L(g, 'Расход', 'Expense', 'Cheltuială'); }
   if (a === 'c') { const c = act.k[Number(b)]; if (!c) return null; await box.rc.cmd(row.id, 'cat', c[0], act.v);
     if (act.n && !/^(in_)?other$/.test(c[0])) await profLearn(box, act.n, c[0]).catch(() => {});   // v281: запомнить для заметки сразу
     if (!!c[5] === inc0) await box.rc.unCmd(row.id, 'type'); else await box.rc.cmd(row.id, 'type', c[5] ? 'i' : 'e', act.v); return later; }
-  if (a === 'd' && isD(b) && b <= act.td) { if (b === act.d) await box.rc.unCmd(row.id, 'date'); else await box.rc.cmd(row.id, 'date', b, act.v); return b === act.d ? 'Дата остаётся прежней' : later; }
-  if (a === 'x' || a === 'Y') { await box.rc.cmd(row.id, 'del', '1', act.v); return q ? 'Не будет записано' : 'Запись отменится, когда откроется приложение'; }
-  if (a === 'u' || a === 'U') { await box.rc.unCmd(row.id, 'del'); return q ? 'Запишется' : 'Отмена снята'; }
+  if (a === 'd' && isD(b) && b <= act.td) { if (b === act.d) await box.rc.unCmd(row.id, 'date'); else await box.rc.cmd(row.id, 'date', b, act.v); return b === act.d ? L(g, 'Дата остаётся прежней', 'The date stays the same', 'Data rămâne aceeași') : later; }
+  if (a === 'x' || a === 'Y') { await box.rc.cmd(row.id, 'del', '1', act.v); return q ? L(g, 'Не будет записано', 'Will not be saved', 'Nu se va înregistra') : L(g, 'Запись отменится, когда откроется приложение', 'The record will be undone when the app opens', 'Înregistrarea se anulează la deschiderea aplicației'); }
+  if (a === 'u' || a === 'U') { await box.rc.unCmd(row.id, 'del'); return q ? L(g, 'Запишется', 'Will be saved', 'Se va înregistra') : L(g, 'Отмена снята', 'Undo cancelled', 'Anularea a fost retrasă'); }
   return null;
 }
 // v273: «Вернули всё» — сразу фраза в очередь (как будто написали сами); «Другая сумма» / «Пополнить» — вопрос «Сколько?», ответом — сумма
 // фразы — те, что приложение понимает (проверено): «Иван вернул 300», «вернул Маша 300», «в цель Отпуск 5000»
-const dgTpl = x => x.k === 'g' ? `в цель ${x.n} {n}` : x.i ? `${x.n} вернул {n}` : `вернул ${x.n} {n}`;
-const dgAsk = x => x.k === 'g' ? `🎯 Цель «${x.n}»: сколько отложить? Напишите сумму ответом на это сообщение.` : x.i ? `💵 Сколько вернул(а) ${x.n}? Напишите сумму ответом на это сообщение.` : `💵 Долг «${x.n}»: сколько вы вернули? Напишите сумму ответом на это сообщение.`;
+const dgTpl = (x, lg) => x.k === 'g' ? L(lg, `в цель ${x.n} {n}`, `to goal ${x.n} {n}`, `la obiectiv ${x.n} {n}`) : x.i ? L(lg, `${x.n} вернул {n}`, `${x.n} repaid {n}`, `${x.n} a returnat {n}`) : L(lg, `вернул ${x.n} {n}`, `repaid ${x.n} {n}`, `am returnat lui ${x.n} {n}`);
+const dgAsk = (x, lg) => x.k === 'g' ? L(lg, `🎯 Цель «${x.n}»: сколько отложить? Напишите сумму ответом на это сообщение.`, `🎯 Goal “${x.n}”: how much to add? Reply to this message with the amount.`, `🎯 Obiectiv „${x.n}”: cât depuneți? Scrieți suma ca răspuns la acest mesaj.`)
+  : x.i ? L(lg, `💵 Сколько вернул(а) ${x.n}? Напишите сумму ответом на это сообщение.`, `💵 How much did ${x.n} repay? Reply to this message with the amount.`, `💵 Cât a returnat ${x.n}? Scrieți suma ca răspuns la acest mesaj.`)
+  : L(lg, `💵 Долг «${x.n}»: сколько вы вернули? Напишите сумму ответом на это сообщение.`, `💵 Debt “${x.n}”: how much did you repay? Reply to this message with the amount.`, `💵 Datorie „${x.n}”: cât ați returnat? Scrieți suma ca răspuns la acest mesaj.`);
 async function dgDo(env, box, row, act, wq, ans) {
   const [a, i, how] = String(wq.data || '').split(':'), x = (act.g || [])[Number(i)];
   if (!x || x.c || !x.n || (a !== 'r' && a !== 'p') || (a === 'r') !== (x.k === 'd')) return ans({ e: 'bad' });
-  const chat = wq.chat.id, reply = (text, extra) => tg(env, 'sendMessage', { chat_id: chat, text, ...extra });
+  const chat = wq.chat.id, reply = (text, extra) => tg(env, 'sendMessage', { chat_id: chat, text, ...extra }), lg = lgNow(chat);
   if (how === 'a' && x.k === 'd' && x.ln > 0) {
     await ans({ ok: 1 });
     x.x = 1; await box.rc.setAct(row.id, JSON.stringify(act));
     await tg(env, 'editMessageWidgetData', { chat_id: chat, message_id: wq.message_id, chat_data: rcData('ok', { o: [], g: act.g }) }).catch(() => {});
-    return queuePhrase(env, box, chat, dgTpl(x).replace('{n}', String(x.ln)), Math.floor(Date.now() / 1000), 'w' + wq.message_id, {}, reply);
+    return queuePhrase(env, box, chat, dgTpl(x, lg).replace('{n}', String(x.ln)), Math.floor(Date.now() / 1000), 'w' + wq.message_id, {}, reply);
   }
   if (how !== 'o') return ans({ e: 'bad' });
   await ans({ ok: 1 });
-  const m = await (await reply(dgAsk(x), { reply_markup: { force_reply: true, input_field_placeholder: 'Например, 500' } })).json().catch(() => null);
-  if (m && m.ok && m.result) await box.rc.ask(m.result.message_id, dgTpl(x));
+  const m = await (await reply(dgAsk(x, lg), { reply_markup: { force_reply: true, input_field_placeholder: L(lg, 'Например, 500', 'For example, 500', 'De exemplu, 500') } })).json().catch(() => null);
+  if (m && m.ok && m.result) await box.rc.ask(m.result.message_id, dgTpl(x, lg));
 }
 // v275: раз в сутки (cron итогов) — карточки, чья запись так и ждёт приложения дольше суток: «Ждёт N дн. — откройте приложение».
 // Меняются только данные карточки (тихо, без уведомления); сам бот по-прежнему ничего не записывает
@@ -904,12 +1110,12 @@ async function staleRemind(env, now = Date.now()) {
   await d1Init(env);
   const rows = (await env.DB.prepare('SELECT r.uid, r.id, r.chat, r.mid, r.text, r.act, r.at FROM rcpt r WHERE r.at < ? AND EXISTS (SELECT 1 FROM msgs m WHERE m.uid = r.uid AND m.id = r.id) ORDER BY r.at LIMIT 200').bind(now - 864e5).all()).results || [];
   for (const r of rows) {
-    const days = Math.max(1, Math.floor((now - r.at) / 864e5)), hn = `⏳ Ждёт ${days} ${days === 1 ? 'день' : days < 5 ? 'дня' : 'дней'} — откройте приложение, чтобы записать`;
+    const g = await lgLoad(env, r.uid), days = Math.max(1, Math.floor((now - r.at) / 864e5)), hn = L(g, `⏳ Ждёт ${days} ${days === 1 ? 'день' : days < 5 ? 'дня' : 'дней'} — откройте приложение, чтобы записать`, `⏳ Waiting ${days} ${days === 1 ? 'day' : 'days'} — open the app to save it`, `⏳ Așteaptă de ${days} ${days === 1 ? 'zi' : 'zile'} — deschideți aplicația pentru a înregistra`);
     let act = null; try { act = JSON.parse(r.act || 'null'); } catch {}
     const box = store(env, r.uid), pend = act && act.r ? await box.rc.cmdsOf(String(r.id)) : [];
     const card = act && act.st === 'dgq' ? (act.g ? { o: [], g: act.g } : null) : act && act.r ? cardOf(act, pend) : null;
     const x = { hn, ...(act && act.r && useWQ(env) ? { a: waOf(act, pend) } : act && act.st === 'dgq' ? { ph: r.text } : {}) };
-    await tg(env, 'editMessageWidgetData', { chat_id: r.chat, message_id: r.mid, chat_data: rcData('q', card, '', x) }).catch(() => {});
+    await tg(env, 'editMessageWidgetData', { chat_id: r.chat, message_id: r.mid, chat_data: rcData('q', card, '', x, g) }).catch(() => {});
   }
 }
 // ---------- v275: карточка статистики (worker/card-st.html) ----------
@@ -999,11 +1205,11 @@ function stData(sm, tab) {
   return j;
 }
 async function sendSt(env, box, chat, sm, tab) {
-  const r = await (await tg(env, 'sendWidget', { chat_id: chat, html: RC_ST, chat_data: stData(sm, tab), allow_queries: true })).json().catch(() => null);
+  const r = await (await tg(env, 'sendWidget', { chat_id: chat, html: cardHtml('st', lgNow(chat)), chat_data: stData(sm, tab), allow_queries: true })).json().catch(() => null);
   if (r && r.ok && r.result) { await box.rc.sumUp('mid', r.result.message_id); if (!hookOk) { hookOk = true; await ensureCallbacks(env).catch(() => {}); } return r.result.message_id; }
   console.error('st widget', r && r.description);
   const s = sm.data, P = s.ds === locNow(s.tz).toISOString().slice(0, 10) ? s.d : null;   // запасной путь — текстом
-  return tg(env, 'sendMessage', { chat_id: chat, text: `📊 Сегодня: ${P ? num(P.e) : 0} ${s.cur}\n${s.m ? s.m.l : 'Месяц'}: ${s.m ? num(s.m.e) : 0} ${s.cur}` });
+  return tg(env, 'sendMessage', { chat_id: chat, text: `📊 ${L(lgNow(chat), 'Сегодня', 'Today', 'Azi')}: ${P ? num(P.e) : 0} ${s.cur}\n${s.m ? s.m.l : L(lgNow(chat), 'Месяц', 'Month', 'Lună')}: ${s.m ? num(s.m.e) : 0} ${s.cur}` });
 }
 async function stLive(env, box, uid) { const sm = await box.rc.sumGet(); if (sm && sm.mid) await tg(env, 'editMessageWidgetData', { chat_id: Number(uid), message_id: sm.mid, chat_data: stData(sm, null) }).catch(() => {}); }
 // вечерняя сводка: ежечасный cron, в 21 час по поясу человека; только если сегодня что-то записано и сводка не отключена
@@ -1014,11 +1220,12 @@ async function evening(env, now = Date.now()) {
   for (const r of rows) { let data = null; try { data = JSON.parse(r.data); } catch {} if (!data) continue;
     const loc = locNow(data.tz, now), day = loc.toISOString().slice(0, 10);
     if (loc.getUTCHours() !== 21 || r.sent === day || data.ds !== day || !(data.d && data.d.n > 0)) continue;
-    const box = store(env, r.uid); await box.rc.sumUp('sent', day); await sendSt(env, box, Number(r.uid), { ...r, data }, 0); }
+    const box = store(env, r.uid); await lgLoad(env, r.uid); await box.rc.sumUp('sent', day); await sendSt(env, box, Number(r.uid), { ...r, data }, 0); }
 }
 async function onWidgetQuery(wq, env) {
   const ans = o => tg(env, 'answerWidgetQuery', { widget_query_id: wq.id, data: JSON.stringify(o) }).catch(() => {});
   if (!wq.chat || !wq.message_id || !env.DB || !wq.from) return ans({ e: 'old' });
+  await lgLoad(env, wq.from.id, wq.from);
   if (/^ad:(up|wk)$/.test(String(wq.data))) {   // v276: «Обновить» в карточке /stats — только владельцу
     if (!isOwner(env, wq.from.id)) return ans({ e: 'bad' }); await ans({ ok: 1 });
     return tg(env, 'editMessageWidgetData', { chat_id: wq.chat.id, message_id: wq.message_id, chat_data: await adData(env, String(wq.data) === 'ad:wk') }).catch(() => {}); }
@@ -1064,15 +1271,15 @@ async function onRcCallback(cq, env) {
   return ans();
 }
 
-async function transcribe(fileId, env) {
+async function transcribe(fileId, env, lg) {
   const info = await (await tg(env, 'getFile', { file_id: fileId })).json();
   const path = info && info.result && info.result.file_path; if (!path) return '';
   const audio = await fetch(`https://api.telegram.org/file/bot${env.BOT_TOKEN}/${path}`); if (!audio.ok) return '';
   const fd = new FormData();
   fd.append('file', new File([await audio.arrayBuffer()], 'voice.ogg', { type: 'audio/ogg' }));
-  fd.append('model', 'whisper-large-v3-turbo'); fd.append('language', 'ru'); fd.append('temperature', '0');
+  fd.append('model', 'whisper-large-v3-turbo'); fd.append('language', L(lg, 'ru', 'en', 'ro')); fd.append('temperature', '0');   // v288: язык голоса — язык, выбранный в приложении
   // v262: образец фразы — распознавание чаще ставит точку после категории, и несколько записей в одном голосовом делятся верно («такси 200 плюшки. линелла 100 продукты»)
-  fd.append('prompt', 'Кофе 300 кафе. Такси 120 транспорт. Линелла 450 продукты. Зарплата 15000.');
+  fd.append('prompt', L(lg, 'Кофе 300 кафе. Такси 120 транспорт. Линелла 450 продукты. Зарплата 15000.', 'Coffee 300 cafe. Taxi 120 transport. Linella 450 groceries. Salary 15000.', 'Cafea 300 cafenea. Taxi 120 transport. Linella 450 alimente. Salariu 15000.'));
   const r = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', { method: 'POST', headers: { Authorization: `Bearer ${env.GROQ_KEY}` }, body: fd });
   if (!r.ok) return ''; const j = await r.json(); return String(j.text || '').trim();
 }
