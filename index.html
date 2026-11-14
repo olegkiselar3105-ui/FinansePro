@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://t.me https://*.telegram.org https://*.telesco.pe; connect-src 'self' https://open.er-api.com https://finansepro.olegkiselar3105.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <script>/* v179: номер сборки — в самом начале файла: проверка новой версии читает только начало страницы и обрывает загрузку */
-const IB_VER='v289';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
+const IB_VER='v290';   // номер сборки для автообновления (должен расти на каждой правке; формат v+число обязателен; должен стоять в первых ~4 КБ файла)
 const APP_VER='1.'+IB_VER.slice(1);  // v224: версия для человека — «1.<номер сборки>» (внизу экрана и в письме в поддержку); основная версия 1, сборка — из IB_VER
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -23,8 +23,15 @@ window.tgChrome=function(l){if(!TGI)return;var c=l?"#e4e4e1":"#111111";try{W.set
 if(TGI){document.documentElement.classList.add("tgapp");try{W.ready()}catch(e){}try{W.expand()}catch(e){}try{W.isVersionAtLeast("7.7")&&W.disableVerticalSwipes()}catch(e){}}
 /* v256: на телефоне — только вертикально (планшеты и компьютеры поворачиваются как угодно). Telegram 8.0+: lockOrientation закрепляет текущее положение —
    вызываем, когда телефон стоит вертикально; вне Telegram — screen.orientation.lock, где браузер позволяет. Если всё же повернули — экран «Поверните телефон» (#rotx, CSS) */
+/* v290: положение телефона берём у самого устройства (screen.orientation / window.orientation), а не из размеров окна: экранная клавиатура Android уменьшает окно
+   (viewport) — оно становилось ниже, чем шире, и CSS (orientation:landscape) принимал вертикальный телефон за горизонтальный → «Поверните телефон» при вводе */
 (function(){var ph=function(){var a=Math.min(screen.width||0,screen.height||0);return a>0&&a<600&&!!(window.matchMedia&&matchMedia("(pointer:coarse)").matches)};if(!ph())return;
-  var done=false,go=function(){if(innerHeight<innerWidth)return;
+  var land=function(){try{var t=screen.orientation&&screen.orientation.type;if(t)return /^landscape/.test(t)}catch(e){}
+    if(typeof window.orientation==="number")return Math.abs(window.orientation)===90;
+    return (screen.width||0)>(screen.height||0)};   // последний запас: размеры экрана (не окна), на Android они меняются при повороте
+  var mark=function(){document.documentElement.classList.toggle("rot",land())};window.__isLand=land;mark();
+  try{screen.orientation.addEventListener("change",mark)}catch(e){}addEventListener("orientationchange",function(){setTimeout(mark,100);setTimeout(mark,400)});
+  var done=false,go=function(){if(land())return;
     if(!done&&TGI){try{if(W.isVersionAtLeast&&W.isVersionAtLeast("8.0")&&W.lockOrientation){W.lockOrientation();done=true}}catch(e){}}
     try{if(screen.orientation&&screen.orientation.lock)screen.orientation.lock("portrait").catch(function(){})}catch(e){}};
   go();addEventListener("resize",go);addEventListener("orientationchange",function(){setTimeout(go,300)})})();
@@ -110,14 +117,14 @@ addEventListener('click',function(e){
 <script>document.documentElement.classList.add("splh");setTimeout(function(){document.documentElement.classList.remove("splh")},7000)</script>
 <title>FinansePro</title>
 <style>
-/* v256: телефон в горизонтальном положении — экран «Поверните телефон» (планшеты и компьютеры: высота окна > 500 px — не затрагиваются) */
+/* v256: телефон в горизонтальном положении — экран «Поверните телефон»; класс html.rot ставит head-скрипт только для телефонов (v290: по положению устройства, а не по размеру окна) */
 #rotx{display:none}
-@media (orientation:landscape) and (max-height:500px) and (pointer:coarse){
-  #rotx{display:flex;visibility:visible!important;opacity:1!important;position:fixed;inset:0;z-index:2147483646;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px;text-align:center;background:var(--bg,#111);color:var(--t,#fff)}
-  #rotx b{font-size:20px;font-weight:700}#rotx span{font-size:14px;opacity:.65}
-  #rotx .rph{transform-box:view-box;transform-origin:32px 30px;animation:rotPh 2.4s cubic-bezier(.65,0,.35,1) infinite}
-  #rotx .rar{opacity:.55;animation:rotAr 2.4s ease-in-out infinite}
-  html,body{overflow:hidden!important}}
+@media (pointer:coarse){
+  html.rot #rotx{display:flex;visibility:visible!important;opacity:1!important;position:fixed;inset:0;z-index:2147483646;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px;text-align:center;background:var(--bg,#111);color:var(--t,#fff)}
+  html.rot #rotx b{font-size:20px;font-weight:700}html.rot #rotx span{font-size:14px;opacity:.65}
+  html.rot #rotx .rph{transform-box:view-box;transform-origin:32px 30px;animation:rotPh 2.4s cubic-bezier(.65,0,.35,1) infinite}
+  html.rot #rotx .rar{opacity:.55;animation:rotAr 2.4s ease-in-out infinite}
+  html.rot,html.rot body{overflow:hidden!important}}
 @keyframes rotPh{0%,20%{transform:rotate(-90deg)}55%,100%{transform:rotate(0)}}
 @keyframes rotAr{0%,20%{opacity:0}40%,70%{opacity:.6}100%{opacity:0}}
 @media (prefers-reduced-motion:reduce){#rotx .rph,#rotx .rar{animation:none}}
@@ -272,7 +279,7 @@ html:root #nc .ncs,html:root #rc div.rch{opacity:.62}   /* v191: пояснен�
 #cf .rt{width:80px}
 #cf #cats input{width:auto;text-align:left;font-size:14px}
 #cf #cats input[type=color]{width:22px;height:22px;padding:0;border:0;border-radius:50%;background:none;cursor:pointer}
-#cf{position:fixed;left:16px;right:16px;max-width:520px;margin:0 auto;top:calc(var(--sat) + 72px + var(--vvt,0px));max-height:min(calc(100vh - var(--sat) - 72px - 28px),var(--kmax,100vh));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;z-index:40;border-radius:28px;display:block;translate:0 calc(var(--ky,0px) + var(--fx,0px));visibility:hidden;opacity:0;pointer-events:none;transform:scale(.18);transform-origin:var(--o,50% 100%);transition:transform .38s cubic-bezier(.4,0,.2,1),opacity .22s ease,visibility 0s .38s,translate .45s cubic-bezier(.22,1,.36,1);padding:18px 18px 12px}
+#cf{position:fixed;left:16px;right:16px;max-width:520px;margin:0 auto;top:calc(var(--sat) + 72px + var(--vvt,0px));max-height:min(calc(var(--baseh,100vh) - var(--sat) - 72px - 28px),var(--kmax,var(--baseh,100vh)));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;z-index:40;border-radius:28px;display:block;translate:0 calc(var(--ky,0px) + var(--fx,0px));visibility:hidden;opacity:0;pointer-events:none;transform:scale(.18);transform-origin:var(--o,50% 100%);transition:transform .38s cubic-bezier(.4,0,.2,1),opacity .22s ease,visibility 0s .38s,translate .45s cubic-bezier(.22,1,.36,1);padding:18px 18px 12px}
 #cf.on{visibility:visible;opacity:1;pointer-events:auto;transform:none;transition:transform .6s cubic-bezier(.2,.95,.25,1.06),opacity .2s ease,visibility 0s,translate .45s cubic-bezier(.22,1,.36,1)}
 #cf .eh{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
 #cf .eh b{font-weight:500;font-size:15px}
@@ -463,7 +470,7 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:calc(110px 
 #cp.on{visibility:visible;opacity:1;pointer-events:auto;transform:none;transition:transform .5s cubic-bezier(.2,.95,.25,1.06),opacity .2s ease,visibility 0s,translate .45s cubic-bezier(.22,1,.36,1)}
 #cp .cpt0{font-size:15px;font-weight:500;margin:0 2px 12px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 #cp .cpt0 small{font-size:12px;color:var(--m);font-weight:400}
-#cp .cpg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;max-height:min(46vh,calc(100vh - var(--sat) - 72px - 150px));overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;padding:2px;margin:-2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+#cp .cpg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;max-height:min(calc(var(--baseh,100vh)*.46),calc(var(--baseh,100vh) - var(--sat) - 72px - 150px));overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;padding:2px;margin:-2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 #cp .cpg::-webkit-scrollbar{display:none}
 #cp .cpi{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:78px;padding:10px 4px;border:.5px solid var(--b1);border-radius:18px;background:rgba(var(--wr),.06);color:var(--t);font-size:12px;line-height:1.2;text-align:center;touch-action:manipulation}
 #cp .cpi b{font-size:26px;font-weight:400;line-height:1}
@@ -1334,7 +1341,7 @@ button,a,label,select,summary{touch-action:manipulation}
   top:calc(50% + var(--vvt,0px) + (var(--sat) - var(--sab,0px))/2);bottom:auto;
   translate:0 calc(-50% + var(--ky,0px));
   transform-origin:var(--o,50% 50%);
-  max-height:min(calc(100vh - var(--sat) - var(--sab,0px) - 28px),var(--kmax,100vh));
+  max-height:min(calc(var(--baseh,100vh) - var(--sat) - var(--sab,0px) - 28px),var(--kmax,var(--baseh,100vh)));
   overflow-y:auto;overscroll-behavior:contain}
 :root :is(#sh,#ed,#gd,#cf,#bq,#nc,#cp,#rc):not(.on){transform:scale(.14)}
 </style>
@@ -2555,7 +2562,7 @@ function lkMigrate(){if(cfg.lkM)return false;cfg.lkM=1;
   return true}
 
 // переход на новый список категорий (один раз): старые операции, лимиты и повторы переезжают в новые категории
-if(cfg.catV!==2&&tx.length){   // v165: только для старых данных (до catV=2); новому пользователю отметку не ставим — у него общий набор
+if(cfg.catV!==2&&tx.length&&cfg.catSet!=='v3'&&!cfg.onb){   // v165: только для старых данных (до catV=2); новому пользователю отметку не ставим — у него общий набор. v290: общий набор (catSet v3 / пройдено знакомство) не трогаем — раньше при втором запуске миграция стирала свои категории и переносила «Кафе» в «Плюшки» (id, которого в общем наборе нет → «Прочее»)
   const M={food:'food',cafe:'plush',transport:'transport',auto:'transport',home:'comm',phone:'phone',health:'health',beauty:'beauty',clothes:'clothes',fun:'fun',subs:'fun',edu:'edu',kids:'kid',house:'byt',gift:'gift',pets:'byt',trip:'fun',salary:'salary',freelance:'salary',grant:'salary',giftin:'in_other',refund:'in_other'};
   const nm_=x=>String(x||'').toLowerCase().replace(/ё/g,'е').replace(/[^a-zа-я0-9 ]/g,'').replace(/\s+/g,' ').trim(),byName={};
   [...CAT2.e.map(c=>[c,0]),...CAT2.i.map(c=>[c,1])].forEach(([c,g])=>{byName[g+'|'+nm_(c[1])]=c[0]});
@@ -2567,6 +2574,12 @@ if(cfg.catV!==2&&tx.length){   // v165: только для старых дан�
   Object.keys(learn).forEach(k=>{learn[k]=mp(learn[k])});
   cfg.custom=[];cfg.catOv={};cfg.hide=['other','in_other'];cfg.catV=2;save();buildAll();
 }
+// v290: починка тех, кого уже затронуло: в общем наборе нет id «plush» (его дала старая миграция вместо «cafe») — возвращаем «Кафе и рестораны»
+if(catSet()==='v3'&&!ALL.some(c=>c.id==='plush')&&(tx.some(t=>t.category==='plush')||(cfg.rec||[]).some(r=>r&&r.category==='plush')||(cfg.tpls||[]).some(r=>r&&r.category==='plush')||Object.values(learn).includes('plush')||(cfg.limits&&cfg.limits.plush!=null))){
+  tx.forEach(t=>{if(t.category==='plush')t.category='cafe'});(cfg.rec||[]).concat(cfg.tpls||[]).forEach(r=>{if(r&&r.category==='plush')r.category='cafe'});
+  Object.keys(learn).forEach(k=>{if(learn[k]==='plush')learn[k]='cafe'});
+  if(cfg.limits&&cfg.limits.plush!=null){cfg.limits.cafe=Math.max(+cfg.limits.cafe||0,+cfg.limits.plush||0);delete cfg.limits.plush}
+  try{save()}catch(e){}}
 let PRV=false;try{PRV=localStorage.getItem('finapp.prv')==='1'}catch(e){}   // режим приватности: только на этом устройстве
 const NLOC=LNG==='en'?'en-US':LNG==='ro'?'ro-RO':'ru-RU';   // v287: запись чисел по языку
 const _nf0=new Intl.NumberFormat(NLOC,{minimumFractionDigits:0,maximumFractionDigits:2}),_nf2=new Intl.NumberFormat(NLOC,{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -6954,7 +6967,7 @@ async function ibLoop(){
   // v153: время последнего касания/клавиши. iOS показывает клавиатуру только на фокус от касания; фокус из программы (окно само ставит курсор) — без клавиатуры
   ['touchend','pointerup','mouseup','keydown'].forEach(ev=>document.addEventListener(ev,()=>{lastUser=Date.now()},true));
   const st=new Map();   // окно -> {lift,target,tw}
-  const S=el=>{let x=st.get(el);if(!x){x={lift:0,target:0,tw:null};st.set(el,x)}return x};
+  const S=el=>{let x=st.get(el);if(!x){x={lift:0,target:0,tw:null,adj:0};st.set(el,x)}return x};
   const kbp={num:0,alpha:0,pick:0};
   try{const j=JSON.parse(localStorage.getItem('finapp.kbh3')||'null');if(j)Object.keys(j).forEach(k=>{const v=+j[k];if(/^[\w:]{1,12}$/.test(k)&&v>150&&v<600)kbp[k]=v})}catch(e){}
   const saveKb=()=>{try{localStorage.setItem('finapp.kbh3',JSON.stringify(kbp))}catch(e){}};
@@ -6984,7 +6997,7 @@ async function ibLoop(){
   // iOS рисует курсор и выделение отдельно от страницы, они не успевают за движущимся окном и на миг остаются на старом месте
   const mvT=new Map();function mv(el,on,ms){clearTimeout(mvT.get(el));if(on){el.classList.add('kbmv');mvT.set(el,setTimeout(()=>el.classList.remove('kbmv'),(ms||300)+200))}else el.classList.remove('kbmv')}
   function halt(el){const x=S(el),w=x.tw;if(!w)return;const v=cur(x);if(w.wa){try{w.wa.cancel()}catch(e){}}x.tw=null;x.lift=v;x.target=v;apply(el);mv(el,false)}   // остановить подъём там, где окно сейчас
-  function go(el,to,c){if(!el)return;const x=S(el);to=Math.max(0,Math.round(to));if(x.tw&&x.tw.to===to)return;if(!x.tw&&Math.abs(to-x.lift)<.5&&to===x.target)return;
+  function go(el,to,c){if(!el)return;const x=S(el);to=Math.max(0,Math.round(to));if(to<1)x.adj=0;if(x.tw&&x.tw.to===to)return;if(!x.tw&&Math.abs(to-x.lift)<.5&&to===x.target)return;
     const from=cur(x);if(x.tw&&x.tw.wa){try{x.tw.wa.cancel()}catch(e){}}x.tw=null;x.lift=from;
     x.target=to;
     if(RMQ.matches||Math.abs(to-from)<.5){x.lift=to;apply(el);mv(el,false);return}   // «уменьшение движения»: без анимации
@@ -7012,7 +7025,7 @@ async function ibLoop(){
     const sg=sigOf(f),pred=kbp[sg]||kbp[c]||(m>120?m:0)||kbp.alpha||kbp.num||Math.round(baseH*.36);
     seenKb=m>120;   // клавиатура уже стоит (переход между полями) — или только поедет: Telegram сообщает новую высоту экрана примерно через 0,5 с
     keepScroll(w,f,pred);
-    go(w,pred,x.lift<2?C_SHOW:C_FIT);setTimeout(reveal,420);
+    go(w,pred,x.lift<2?C_SHOW:C_FIT);setTimeout(reveal,420);setTimeout(guard,700);setTimeout(guard,1500);
     // v153/v154: клавиатура так и не появилась (webview так и не уменьшился за 1,5 с) — окно не висит посередине, а возвращается вниз
     clearTimeout(chkT);chkT=setTimeout(()=>{if(coarse&&!seenKb&&owner===w&&measure()<60&&!S(w).tw&&S(w).lift>1)go(w,0,C_HIDE)},1500)});
   // v154: при фокусе iOS сама мгновенно прокручивает содержимое окна к полю, даже когда поле и так будет видно над клавиатурой —
@@ -7025,9 +7038,15 @@ async function ibLoop(){
   document.addEventListener('focusout',e=>{const f=e.target;if(!editable(f)||!winOf(f))return;
     if(editable(e.relatedTarget)&&winOf(e.relatedTarget))return;        // переход к другому полю — решит focusin
     const w=winOf(f);lastBlur=Date.now();clearTimeout(hideT);hideT=setTimeout(()=>{if(!foc()&&w===owner&&isFront(w))go(w,0,C_HIDE);setTimeout(()=>{if(!foc())syncBase()},500)},70)});
+  // v290: страховка для Android: окно привязано к постоянной высоте экрана (baseH), а высота клавиатуры считается от неё. Если baseH устарел (Android-webview
+  // меняет высоту и без клавиатуры) или клавиатура выше замеренной, нижний край окна оказывается под клавиатурой — поле ввода не видно. Сверяем с настоящим
+  // видимым низом (visualViewport) и добираем недостающий подъём; добавка (adj) живёт, пока клавиатура открыта, и входит в каждый следующий замер
+  function guard(){const a=document.activeElement;if(!editable(a)||!owner||kindOf(a)==='pick'||winOf(a)!==owner||!owner.classList.contains('on'))return;
+    const x=S(owner);if(x.tw)return;const vb=Math.min(window.innerHeight,vv?vv.offsetTop+vv.height:window.innerHeight),over=owner.getBoundingClientRect().bottom-vb;
+    if(over>3&&over<baseH*.6&&vb<baseH-60){x.adj=(x.adj||0)+Math.round(over);go(owner,x.target+Math.round(over),C_FIT)}}
   // --- измерение высоты клавиатуры: после изменения высоты webview значение устаивается 90 мс
   function settle(){const K=measure();
-    if(K>120){if(foc())seenKb=true;if(foc()&&owner&&kindOf(document.activeElement)!=='pick'){const c=sigOf(document.activeElement);if(Math.abs(K-(kbp[c]||0))>2){kbp[c]=K;saveKb()}if(Math.abs(K-S(owner).target)>3)go(owner,K,C_FIT)}}
+    if(K>120){if(foc())seenKb=true;if(foc()&&owner&&kindOf(document.activeElement)!=='pick'){const c=sigOf(document.activeElement);if(Math.abs(K-(kbp[c]||0))>2){kbp[c]=K;saveKb()}{const ox=S(owner);if(Math.abs(K-(ox.lk||0))>3){ox.adj=0;ox.lk=K}const tg=K+(ox.adj||0);if(Math.abs(tg-S(owner).target)>3)go(owner,tg,C_FIT)}guard()}}
     else if(K<60){
       // v153: клавиатуры нет и поля в фокусе нет (поле перерисовали, пока клавиатура была открыта, — focusout не пришёл) — ни одно переднее окно не остаётся поднятым
       if(!foc())st.forEach((x,el)=>{if((x.lift>1||x.target>0)&&isFront(el))go(el,0,C_HIDE)});
